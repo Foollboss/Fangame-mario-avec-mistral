@@ -78,7 +78,7 @@ export class PlayerController {
     // ---- regard
     if (active) {
       const sens = 0.0024 * settings.sensitivity;
-      if (input.locked) {
+      if (input.locked || input.freeLook) {
         p.yaw -= input.mouseDX * sens;
         p.pitch -= input.mouseDY * sens * (settings.invertY ? -1 : 1);
       }

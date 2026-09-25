@@ -6,7 +6,8 @@
 import * as THREE from 'three';
 import type { Content } from '../registry/content';
 import type { World } from '../world/world';
-import { WorkerPool } from '../engine/workerPool';
+import { WorkerPool, LocalWorker } from '../engine/workerPool';
+import { createWorldHandler } from '../workers/worldHandler';
 import { ChunkStreamer } from '../world/chunkStreamer';
 import { ChunkRenderer } from '../render/chunkRenderer';
 import type { BlockAtlas } from '../render/atlas';
@@ -44,9 +45,19 @@ import { installGameModules } from './modules';
 import { advancementsScreen } from '../ui/advancementsUI';
 import type { RemoteSession } from '../net/client';
 
-export function createWorkerPool(): WorkerPool {
+export function createWorkerPool(forceLocal = false): WorkerPool {
   const n = Math.max(2, Math.min(4, (navigator.hardwareConcurrency || 4) - 1));
-  return new WorkerPool(() => new Worker(new URL('../workers/worldWorker.ts', import.meta.url), { type: 'module' }), n);
+  // Version « fichier unique » : le code du worker est fourni par la page (URL blob:)
+  const inline = (globalThis as { __VOXERRA_WORKER__?: string }).__VOXERRA_WORKER__;
+  if (!forceLocal) {
+    try {
+      // le worker intégré est un script classique (accepté aussi depuis un fichier local)
+      return new WorkerPool(() => (inline ? new Worker(inline) : new Worker(new URL('../workers/worldWorker.ts', import.meta.url), { type: 'module' })), n);
+    } catch (e) {
+      console.warn('Workers indisponibles, génération sur le fil principal :', e);
+    }
+  }
+  return new WorkerPool(() => new LocalWorker(createWorldHandler as never) as unknown as Worker, 1, true);
 }
 
 export interface GameHost {

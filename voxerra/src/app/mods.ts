@@ -64,7 +64,15 @@ function writeImported(list: ContentPack[]): void {
 export async function loadMods(): Promise<{ packs: ContentPack[]; infos: ModInfo[] }> {
   const packs: ContentPack[] = [];
   const infos: ModInfo[] = [];
-  try {
+  // Version « fichier unique » : les mods sont intégrés à la page
+  const embedded = (globalThis as { __VOXERRA_MODS__?: ContentPack[] }).__VOXERRA_MODS__;
+  if (embedded) {
+    for (const p of embedded) {
+      if (validatePack(p) !== null) continue;
+      packs.push(p);
+      infos.push({ id: p.id, name: p.name ?? p.id, summary: summarize(p), builtin: true });
+    }
+  } else try {
     const res = await fetch('mods/index.json', { cache: 'no-cache' });
     if (res.ok) {
       const index = (await res.json()) as { packs?: string[] };

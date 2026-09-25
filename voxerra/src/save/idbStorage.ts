@@ -40,7 +40,8 @@ export class IdbStorage implements WorldStorage {
     try {
       if (typeof indexedDB === 'undefined') throw new Error('IndexedDB indisponible');
       const s = new IdbStorage();
-      await s.dbp;
+      // certains cadres isolés laissent l'ouverture en suspens : on n'attend pas indéfiniment
+      await Promise.race([s.dbp, new Promise((_, rej) => setTimeout(() => rej(new Error('IndexedDB ne répond pas')), 4000))]);
       return s;
     } catch (e) {
       console.warn('Sauvegardes en mémoire uniquement :', e);

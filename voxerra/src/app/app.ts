@@ -136,6 +136,12 @@ export class App implements AppApi {
     });
     const boot = h('div', { class: 'screen', style: { background: '#1b1b22' } }, h('div', { class: 'title' }, 'Voxerra'), h('div', { class: 'subtitle' }, 'Chargement du contenu…'));
     this.ui.push({ el: boot, onEscape: () => {} });
+    // Écran tactile sans souris : le jeu demande clavier et souris (ou une manette)
+    if (typeof matchMedia === 'function' && !matchMedia('(any-pointer: fine)').matches) {
+      const note = h('div', { class: 'touch-note' }, 'Voxerra se joue au clavier et à la souris, ou avec une manette.');
+      note.addEventListener('click', () => note.remove());
+      document.body.appendChild(note);
+    }
     // Contenu + mods
     const { packs, infos } = await loadMods();
     this.packs = packs;
@@ -171,7 +177,17 @@ export class App implements AppApi {
   }
 
   async initPool(seed: number, worldType = 'normal', structures = true): Promise<void> {
-    await this.pool.broadcast({ type: 'init', seed, packs: this.packs, worldType, structures });
+    const msg = { type: 'init', seed, packs: this.packs, worldType, structures };
+    try {
+      // un worker bloqué (politique de sécurité, fichier local…) ne répond jamais
+      await Promise.race([this.pool.broadcast(msg), new Promise((_, rej) => setTimeout(() => rej(new Error('délai dépassé')), this.pool.local ? 30000 : 8000))]);
+    } catch (e) {
+      if (this.pool.local) throw e;
+      console.warn('Workers sans réponse, génération sur le fil principal :', e);
+      this.pool.terminate();
+      this.pool = createWorkerPool(true);
+      await this.pool.broadcast(msg);
+    }
     this.poolSeed = seed;
   }
 
@@ -199,7 +215,7 @@ export class App implements AppApi {
     this.audio.volumes = { master: s.masterVolume, music: s.musicVolume, sfx: s.sfxVolume };
     this.audio.applyVolumes();
     document.documentElement.style.setProperty('--ui-scale', String(s.guiScale));
-    (document.getElementById('ui') as HTMLElement).style.zoom = String(s.guiScale);
+    this.applyUiZoom();
     if (this.game) {
       if (!this.game.remote) this.game.streamer.radius = s.renderDistance;
       this.game.camera.fov = s.fov;
@@ -208,7 +224,14 @@ export class App implements AppApi {
     }
   }
 
+  /** Échelle de l'interface, réduite automatiquement sur les petits écrans. */
+  private applyUiZoom(): void {
+    const fit = Math.min(1, innerWidth / 860, innerHeight / 600);
+    (document.getElementById('ui') as HTMLElement).style.zoom = String(Math.max(0.4, this.settings.guiScale * fit));
+  }
+
   private onResize(): void {
+    this.applyUiZoom();
     this.renderer.setSize(innerWidth, innerHeight);
     this.panorama?.resize();
     this.game?.resize();
@@ -252,7 +275,7 @@ export class App implements AppApi {
       this.ui.hudLayer.innerHTML = '';
       await this.startPanorama();
       this.showMainMenu();
-      alert('Impossible de charger le monde : ' + (e as Error).message);
+      this.ui.push(messageScreen(this, 'Impossible de charger le monde', (e as Error).message));
     } finally {
       this.busy = false;
     }
@@ -298,7 +321,7 @@ export class App implements AppApi {
       this.game = null;
       await this.startPanorama();
       this.showMainMenu();
-      alert('Connexion impossible : ' + (e as Error).message);
+      this.ui.push(messageScreen(this, 'Connexion impossible', (e as Error).message));
     } finally {
       this.busy = false;
     }

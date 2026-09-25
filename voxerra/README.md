@@ -9,6 +9,15 @@ Progression : **Découverte → Ressources → Outils → Construction → Explo
 
 ---
 
+## Jouer sans rien installer
+
+Ouvrez **[`Voxerra.html`](Voxerra.html)** dans un navigateur (double-clic sur le fichier téléchargé) :
+c'est le jeu complet en un seul fichier HTML de 1,3 Mo (code, style, police, worker de génération et mods intégrés).
+Les mondes sont sauvegardés dans le navigateur. Pour le régénérer après une modification : `npm run build:html`.
+
+Si le navigateur refuse les workers ou le verrouillage de la souris (cadre isolé, tablette), le jeu bascule seul :
+génération sur le fil principal et regard à la souris sans verrouillage.
+
 ## Démarrage rapide
 
 Prérequis : **Node.js 20.11 ou plus récent** (testé avec Node 22) et un navigateur récent compatible WebGL 2
@@ -27,6 +36,7 @@ Autres commandes :
 | `npm test` | tests automatisés (Vitest, 42 tests) |
 | `npm run typecheck` | vérification TypeScript stricte |
 | `npm run build` puis `npm run preview` | version de production (dossier `dist/`, déployable sur n'importe quel hébergement statique) |
+| `npm run build:html` | version en un seul fichier : `Voxerra.html` |
 | `npm run server -- --monde serveur --graine 1234 --commandes` | serveur multijoueur dédié (port 25590) |
 | `node scripts/e2e.mjs` | parcours automatisé menu → création → jeu → inventaire (captures dans `screenshots/`) |
 | `node scripts/structures.mjs` / `creatures.mjs` / `dimensions.mjs` / `multiplayer.mjs` | captures de contrôle visuel (le serveur de dév. doit tourner ; `multiplayer.mjs` demande aussi `npm run server`) |

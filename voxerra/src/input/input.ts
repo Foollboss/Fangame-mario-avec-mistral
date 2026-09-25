@@ -146,8 +146,9 @@ export class InputManager {
       this.releasedCodes.add('Mouse' + e.button);
     });
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+    document.addEventListener('pointerlockerror', () => (this.freeLook = true));
     window.addEventListener('mousemove', (e) => {
-      if (document.pointerLockElement === this.canvas) {
+      if (document.pointerLockElement === this.canvas || (this.freeLook && this.gameFocus)) {
         this.mouseDX += e.movementX;
         this.mouseDY += e.movementY;
       }
@@ -165,10 +166,24 @@ export class InputManager {
     return document.pointerLockElement === this.canvas;
   }
 
+  /**
+   * Regard à la souris sans verrouillage du pointeur (cadres isolés, tablettes) :
+   * activé automatiquement quand le verrouillage est refusé.
+   */
+  freeLook = false;
+
   lock(): void {
-    if (!this.locked) {
-      const p = (this.canvas as HTMLCanvasElement).requestPointerLock?.() as unknown as Promise<void> | undefined;
-      if (p && typeof (p as Promise<void>).catch === 'function') p.catch(() => {});
+    if (this.locked) return;
+    const c = this.canvas as HTMLCanvasElement;
+    if (typeof c.requestPointerLock !== 'function') {
+      this.freeLook = true;
+      return;
+    }
+    try {
+      const p = c.requestPointerLock() as unknown as Promise<void> | undefined;
+      if (p && typeof (p as Promise<void>).catch === 'function') p.catch(() => (this.freeLook = true));
+    } catch {
+      this.freeLook = true;
     }
   }
 

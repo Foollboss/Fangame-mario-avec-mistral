@@ -4,3 +4,4 @@ saves/
 *.log
 screenshots/
 .vite/
+dist-single/
