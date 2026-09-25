@@ -54,12 +54,12 @@
      "pos": [
       -4.5,
       0,
-      -6.0
+      -6
      ],
      "color": "#5a4a3a",
      "role": "leg_fl",
      "pivot": [
-      -3.0,
+      -3,
       6,
       -4.5
      ]
@@ -74,12 +74,12 @@
      "pos": [
       1.5,
       0,
-      -6.0
+      -6
      ],
      "color": "#5a4a3a",
      "role": "leg_fr",
      "pivot": [
-      3.0,
+      3,
       6,
       -4.5
      ]
@@ -94,12 +94,12 @@
      "pos": [
       -4.5,
       0,
-      3.0
+      3
      ],
      "color": "#5a4a3a",
      "role": "leg_bl",
      "pivot": [
-      -3.0,
+      -3,
       6,
       4.5
      ]
@@ -114,12 +114,12 @@
      "pos": [
       1.5,
       0,
-      3.0
+      3
      ],
      "color": "#5a4a3a",
      "role": "leg_br",
      "pivot": [
-      3.0,
+      3,
       6,
       4.5
      ]
@@ -132,9 +132,9 @@
       14
      ],
      "pos": [
-      -5.0,
+      -5,
       6,
-      -7.0
+      -7
      ],
      "color": "#eee8dc",
      "color2": "#d8d0c0",
@@ -148,7 +148,7 @@
       6
      ],
      "pos": [
-      -3.0,
+      -3,
       9.6,
       -11.5
      ],
@@ -158,7 +158,7 @@
      "pivot": [
       0,
       9.6,
-      -7.0
+      -7
      ]
     },
     {
@@ -686,12 +686,12 @@
      "pos": [
       -3.5,
       0,
-      -7.0
+      -7
      ],
      "color": "#c8ccd8",
      "role": "leg_fl",
      "pivot": [
-      -2.0,
+      -2,
       12,
       -5.5
      ]
@@ -706,12 +706,12 @@
      "pos": [
       0.5,
       0,
-      -7.0
+      -7
      ],
      "color": "#c8ccd8",
      "role": "leg_fr",
      "pivot": [
-      2.0,
+      2,
       12,
       -5.5
      ]
@@ -726,12 +726,12 @@
      "pos": [
       -3.5,
       0,
-      4.0
+      4
      ],
      "color": "#c8ccd8",
      "role": "leg_bl",
      "pivot": [
-      -2.0,
+      -2,
       12,
       5.5
      ]
@@ -746,12 +746,12 @@
      "pos": [
       0.5,
       0,
-      4.0
+      4
      ],
      "color": "#c8ccd8",
      "role": "leg_br",
      "pivot": [
-      2.0,
+      2,
       12,
       5.5
      ]
@@ -764,9 +764,9 @@
       16
      ],
      "pos": [
-      -4.0,
+      -4,
       12,
-      -8.0
+      -8
      ],
      "color": "#d8dce8",
      "color2": "#b8c0d0",
@@ -790,7 +790,7 @@
      "pivot": [
       0,
       26,
-      -8.0
+      -8
      ]
     },
     {
@@ -1057,11 +1057,185 @@
   "gravity": 0
  },
  {
+  "id": "habitant",
+  "name": "Habitant",
+  "category": "passive",
+  "health": 20,
+  "speed": 2.4,
+  "size": [
+   0.6,
+   1.95
+  ],
+  "persistent": true,
+  "ai": [
+   {
+    "type": "float"
+   },
+   {
+    "type": "panic",
+    "speed": 1.5
+   },
+   {
+    "type": "avoid_player",
+    "radius": 2.5,
+    "speed": 0.9
+   },
+   {
+    "type": "patrol",
+    "radius": 16,
+    "speed": 0.55
+   },
+   {
+    "type": "look_around"
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "body",
+     "size": [
+      8,
+      12,
+      6
+     ],
+     "pos": [
+      -4,
+      12,
+      -3
+     ],
+     "color": "#7a5a3a",
+     "color2": "#6a4a2a",
+     "role": "body"
+    },
+    {
+     "id": "robe",
+     "size": [
+      8.4,
+      8,
+      6.4
+     ],
+     "pos": [
+      -4.2,
+      4,
+      -3.2
+     ],
+     "color": "#7a5a3a",
+     "color2": "#5e4428",
+     "parent": "body"
+    },
+    {
+     "id": "head",
+     "size": [
+      8,
+      10,
+      8
+     ],
+     "pos": [
+      -4,
+      24,
+      -4
+     ],
+     "color": "#c89878",
+     "eyes": "#2a5a2a",
+     "role": "head",
+     "pivot": [
+      0,
+      24,
+      0
+     ]
+    },
+    {
+     "id": "nez",
+     "size": [
+      2,
+      4,
+      2
+     ],
+     "pos": [
+      -1,
+      25,
+      -6
+     ],
+     "color": "#b8886a",
+     "parent": "head"
+    },
+    {
+     "id": "arms",
+     "size": [
+      8,
+      4,
+      4
+     ],
+     "pos": [
+      -4,
+      16,
+      -6
+     ],
+     "color": "#6a4a2a",
+     "role": "arms",
+     "pivot": [
+      0,
+      20,
+      -3
+     ]
+    },
+    {
+     "id": "leg_r",
+     "size": [
+      4,
+      12,
+      4
+     ],
+     "pos": [
+      0,
+      0,
+      -2
+     ],
+     "color": "#4a3a2a",
+     "role": "leg_r",
+     "pivot": [
+      2,
+      12,
+      0
+     ]
+    },
+    {
+     "id": "leg_l",
+     "size": [
+      4,
+      12,
+      4
+     ],
+     "pos": [
+      -4,
+      0,
+      -2
+     ],
+     "color": "#4a3a2a",
+     "role": "leg_l",
+     "pivot": [
+      -2,
+      12,
+      0
+     ]
+    }
+   ]
+  },
+  "loot": [
+   {
+    "item": "pain",
+    "chance": 0.3
+   }
+  ],
+  "spawn": []
+ },
+ {
   "id": "ours_mousse",
   "name": "Ours moussu",
   "category": "neutral",
   "health": 30,
-  "speed": 3.0,
+  "speed": 3,
   "size": [
    1.3,
    1.4
@@ -1101,12 +1275,12 @@
      "pos": [
       -6.5,
       0,
-      -8.0
+      -8
      ],
      "color": "#4a3424",
      "role": "leg_fl",
      "pivot": [
-      -4.0,
+      -4,
       8,
       -5.5
      ]
@@ -1121,12 +1295,12 @@
      "pos": [
       1.5,
       0,
-      -8.0
+      -8
      ],
      "color": "#4a3424",
      "role": "leg_fr",
      "pivot": [
-      4.0,
+      4,
       8,
       -5.5
      ]
@@ -1141,12 +1315,12 @@
      "pos": [
       -6.5,
       0,
-      3.0
+      3
      ],
      "color": "#4a3424",
      "role": "leg_bl",
      "pivot": [
-      -4.0,
+      -4,
       8,
       5.5
      ]
@@ -1161,12 +1335,12 @@
      "pos": [
       1.5,
       0,
-      3.0
+      3
      ],
      "color": "#4a3424",
      "role": "leg_br",
      "pivot": [
-      4.0,
+      4,
       8,
       5.5
      ]
@@ -1179,9 +1353,9 @@
       18
      ],
      "pos": [
-      -7.0,
+      -7,
       8,
-      -9.0
+      -9
      ],
      "color": "#5a4030",
      "color2": "#4a7a30",
@@ -1195,9 +1369,9 @@
       8
      ],
      "pos": [
-      -4.0,
+      -4,
       14,
-      -15.0
+      -15
      ],
      "color": "#6a4a34",
      "eyes": "#101010",
@@ -1205,7 +1379,7 @@
      "pivot": [
       0,
       14,
-      -9.0
+      -9
      ]
     },
     {
@@ -1345,14 +1519,14 @@
      "pos": [
       -2.5,
       0,
-      -5.0
+      -5
      ],
      "color": "#b0c4d8",
      "role": "leg_fl",
      "pivot": [
       -1.5,
       7,
-      -4.0
+      -4
      ]
     },
     {
@@ -1365,14 +1539,14 @@
      "pos": [
       0.5,
       0,
-      -5.0
+      -5
      ],
      "color": "#b0c4d8",
      "role": "leg_fr",
      "pivot": [
       1.5,
       7,
-      -4.0
+      -4
      ]
     },
     {
@@ -1385,14 +1559,14 @@
      "pos": [
       -2.5,
       0,
-      3.0
+      3
      ],
      "color": "#b0c4d8",
      "role": "leg_bl",
      "pivot": [
       -1.5,
       7,
-      4.0
+      4
      ]
     },
     {
@@ -1405,14 +1579,14 @@
      "pos": [
       0.5,
       0,
-      3.0
+      3
      ],
      "color": "#b0c4d8",
      "role": "leg_br",
      "pivot": [
       1.5,
       7,
-      4.0
+      4
      ]
     },
     {
@@ -1423,9 +1597,9 @@
       12
      ],
      "pos": [
-      -3.0,
+      -3,
       7,
-      -6.0
+      -6
      ],
      "color": "#c8d8e8",
      "color2": "#a0b8d0",
@@ -1439,7 +1613,7 @@
       6
      ],
      "pos": [
-      -3.0,
+      -3,
       10,
       -10.5
      ],
@@ -1449,7 +1623,7 @@
      "pivot": [
       0,
       10,
-      -6.0
+      -6
      ]
     },
     {
@@ -1556,7 +1730,7 @@
    {
     "type": "melee",
     "reach": 1.8,
-    "cooldown": 1.0,
+    "cooldown": 1,
     "damage": 3
    },
    {
@@ -2234,7 +2408,7 @@
   "name": "Chauve-furie",
   "category": "hostile",
   "health": 8,
-  "speed": 5.0,
+  "speed": 5,
   "size": [
    0.5,
    0.6
@@ -2552,7 +2726,7 @@
   "name": "Anguillame",
   "category": "hostile",
   "health": 12,
-  "speed": 4.0,
+  "speed": 4,
   "size": [
    0.5,
    0.5
@@ -2918,7 +3092,7 @@
   "name": "Pillard archer",
   "category": "hostile",
   "health": 16,
-  "speed": 3.0,
+  "speed": 3,
   "size": [
    0.6,
    1.9
@@ -3150,10 +3324,10 @@
   "name": "Brasillon",
   "category": "hostile",
   "health": 18,
-  "speed": 3.0,
+  "speed": 3,
   "size": [
    0.6,
-   1.0
+   1
   ],
   "ai": [
    {
@@ -3345,14 +3519,14 @@
     "projectile": "crachat_magma",
     "range": 10,
     "min": 3,
-    "cooldown": 3.0,
+    "cooldown": 3,
     "damage": 3,
     "speed": 14,
     "melee": true
    },
    {
     "type": "melee",
-    "reach": 2.0,
+    "reach": 2,
     "cooldown": 1.2,
     "damage": 6
    },
@@ -3374,12 +3548,12 @@
      "pos": [
       -5.5,
       0,
-      -6.0
+      -6
      ],
      "color": "#2a1a14",
      "role": "leg_fl",
      "pivot": [
-      -4.0,
+      -4,
       3,
       -4.5
      ]
@@ -3394,12 +3568,12 @@
      "pos": [
       2.5,
       0,
-      -6.0
+      -6
      ],
      "color": "#2a1a14",
      "role": "leg_fr",
      "pivot": [
-      4.0,
+      4,
       3,
       -4.5
      ]
@@ -3414,12 +3588,12 @@
      "pos": [
       -5.5,
       0,
-      3.0
+      3
      ],
      "color": "#2a1a14",
      "role": "leg_bl",
      "pivot": [
-      -4.0,
+      -4,
       3,
       4.5
      ]
@@ -3434,12 +3608,12 @@
      "pos": [
       2.5,
       0,
-      3.0
+      3
      ],
      "color": "#2a1a14",
      "role": "leg_br",
      "pivot": [
-      4.0,
+      4,
       3,
       4.5
      ]
@@ -3452,9 +3626,9 @@
       14
      ],
      "pos": [
-      -6.0,
+      -6,
       3,
-      -7.0
+      -7
      ],
      "color": "#1a1210",
      "color2": "#ff5a1a",
@@ -3468,7 +3642,7 @@
       6
      ],
      "pos": [
-      -3.0,
+      -3,
       4,
       -11.5
      ],
@@ -3478,7 +3652,7 @@
      "pivot": [
       0,
       4,
-      -7.0
+      -7
      ]
     },
     {
@@ -3770,7 +3944,7 @@
   "speed": 1.2,
   "size": [
    0.7,
-   2.0
+   2
   ],
   "ai": [
    {
@@ -3786,7 +3960,7 @@
     "projectile": "rayon_cristal",
     "range": 20,
     "min": 4,
-    "cooldown": 2.0,
+    "cooldown": 2,
     "damage": 5,
     "speed": 40
    },
@@ -3898,7 +4072,7 @@
   "name": "Rôdeur du vide",
   "category": "hostile",
   "health": 32,
-  "speed": 4.0,
+  "speed": 4,
   "size": [
    0.6,
    2.6
@@ -3924,7 +4098,7 @@
    {
     "type": "melee",
     "reach": 2.2,
-    "cooldown": 1.0,
+    "cooldown": 1,
     "damage": 7
    },
    {
@@ -4347,7 +4521,7 @@
      {
       "type": "melee",
       "reach": 3.2,
-      "cooldown": 1.0,
+      "cooldown": 1,
       "damage": 10
      }
     ]
@@ -4388,7 +4562,7 @@
   "speed": 2.4,
   "size": [
    2.2,
-   3.0
+   3
   ],
   "ai": [
    {
@@ -4437,14 +4611,14 @@
      "pos": [
       -9.5,
       0,
-      -11.0
+      -11
      ],
      "color": "#2a1814",
      "role": "leg_fl",
      "pivot": [
       -6.5,
       10,
-      -8.0
+      -8
      ]
     },
     {
@@ -4457,14 +4631,14 @@
      "pos": [
       3.5,
       0,
-      -11.0
+      -11
      ],
      "color": "#2a1814",
      "role": "leg_fr",
      "pivot": [
       6.5,
       10,
-      -8.0
+      -8
      ]
     },
     {
@@ -4477,14 +4651,14 @@
      "pos": [
       -9.5,
       0,
-      5.0
+      5
      ],
      "color": "#2a1814",
      "role": "leg_bl",
      "pivot": [
       -6.5,
       10,
-      8.0
+      8
      ]
     },
     {
@@ -4497,14 +4671,14 @@
      "pos": [
       3.5,
       0,
-      5.0
+      5
      ],
      "color": "#2a1814",
      "role": "leg_br",
      "pivot": [
       6.5,
       10,
-      8.0
+      8
      ]
     },
     {
@@ -4515,9 +4689,9 @@
       24
      ],
      "pos": [
-      -10.0,
+      -10,
       10,
-      -12.0
+      -12
      ],
      "color": "#1a1010",
      "color2": "#ff5a1a",
@@ -4531,9 +4705,9 @@
       12
      ],
      "pos": [
-      -6.0,
+      -6,
       20,
-      -21.0
+      -21
      ],
      "color": "#2a1814",
      "eyes": "#ffd040",
@@ -4541,7 +4715,7 @@
      "pivot": [
       0,
       20,
-      -12.0
+      -12
      ]
     },
     {
@@ -4691,7 +4865,7 @@
      },
      {
       "type": "charge",
-      "speed": 3.0,
+      "speed": 3,
       "cooldown": 5,
       "damage": 12
      },
@@ -4742,7 +4916,7 @@
   "name": "Veilleur astral",
   "category": "boss",
   "health": 620,
-  "speed": 3.0,
+  "speed": 3,
   "size": [
    2.4,
    2.4
@@ -4772,7 +4946,7 @@
    },
    {
     "type": "fly_attack",
-    "reach": 3.0,
+    "reach": 3,
     "cooldown": 2.5,
     "damage": 10,
     "orbit": 14
@@ -4985,7 +5159,7 @@
      },
      {
       "type": "fly_attack",
-      "reach": 3.0,
+      "reach": 3,
       "cooldown": 2.2,
       "damage": 11,
       "orbit": 12
@@ -5011,7 +5185,7 @@
       "type": "barrage",
       "projectile": "orbe_vide",
       "count": 6,
-      "spread": 1.0,
+      "spread": 1,
       "cooldown": 4,
       "damage": 7,
       "speed": 18

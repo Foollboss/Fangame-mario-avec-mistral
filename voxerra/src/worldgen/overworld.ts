@@ -223,6 +223,11 @@ export class OverworldGenerator implements DimGenerator {
     return this.classify(cl, x, z);
   }
 
+  /** Structure la plus proche (commande /localiser). */
+  locateStructure(type: string, x: number, z: number): { x: number; z: number } | null {
+    return this.structures.locate(type, x, z);
+  }
+
   /** Point d'apparition : terre ferme près de l'origine. */
   findSpawn(): { x: number; y: number; z: number } {
     for (let r = 0; r < 4000; r += 16) {
@@ -539,7 +544,7 @@ export class OverworldGenerator implements DimGenerator {
           for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) for (let dy = 0; dy <= 1; dy++) if (Math.abs(dx) + Math.abs(dz) + dy < 3) buf.setW(bx + x + dx, top + dy, bz + z + dz, (dx + dz + dy) % 2 ? ids.minerai_lumirite : ids.calcaire);
           continue;
         }
-        if (def.top === 'herbe' && (b === I.taiga || b === I.foret || b === I.foret_ancienne) && rng > 0.9985 && g !== ids.eau) {
+        if (def.top === 'herbe' && (b === I.taiga || b === I.foret || b === I.foret_ancienne) && rng > 0.9985 && (g === ids.herbe || g === ids.humus || g === ids.mousse || g === ids.terre)) {
           // rocher moussu
           for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) for (let dy = 0; dy <= 1; dy++) if (dx * dx + dz * dz + dy * dy < 3) buf.setW(bx + x + dx, top + dy + 1, bz + z + dz, ids.moellon_moussu);
           continue;

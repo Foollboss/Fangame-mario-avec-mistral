@@ -20,11 +20,12 @@ let tables: BlockTables | null = null;
 const gens = new Map<string, DimGenerator>();
 let seed = 0;
 let worldType = 'normal';
+let structures = true;
 
 function gen(dim: string): DimGenerator {
   let g = gens.get(dim);
   if (!g) {
-    g = createGenerator(dim, seed, content!, worldType);
+    g = createGenerator(dim, seed, content!, worldType, structures);
     gens.set(dim, g);
   }
   return g;
@@ -42,6 +43,7 @@ ctx.onmessage = (e: MessageEvent) => {
         tables = content.blocks.tables();
         seed = m.seed >>> 0;
         worldType = m.worldType ?? 'normal';
+        structures = m.structures !== false;
         gens.clear();
         ctx.postMessage({ type: 'ready', id: m.id });
         break;

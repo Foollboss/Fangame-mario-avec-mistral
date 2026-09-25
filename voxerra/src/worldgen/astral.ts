@@ -81,6 +81,11 @@ export class AstralGenerator implements DimGenerator {
     return this.island(x, z).top;
   }
 
+  /** Structure la plus proche (commande /localiser). */
+  locateStructure(type: string, x: number, z: number): { x: number; z: number } | null {
+    return this.structures.locate(type, x, z);
+  }
+
   findSpawn(): { x: number; y: number; z: number } {
     const t = this.island(0, 0).top;
     return { x: 0, y: Math.max(t, 90) + 1, z: 0 };

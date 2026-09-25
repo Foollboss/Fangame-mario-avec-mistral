@@ -170,8 +170,8 @@ export class App implements AppApi {
     (window as unknown as { voxerra: App }).voxerra = this;
   }
 
-  private async initPool(seed: number, worldType = 'normal'): Promise<void> {
-    await this.pool.broadcast({ type: 'init', seed, packs: this.packs, worldType });
+  private async initPool(seed: number, worldType = 'normal', structures = true): Promise<void> {
+    await this.pool.broadcast({ type: 'init', seed, packs: this.packs, worldType, structures });
     this.poolSeed = seed;
   }
 
@@ -233,7 +233,7 @@ export class App implements AppApi {
     try {
       this.panorama?.dispose();
       this.panorama = null;
-      await this.initPool(meta.seed, meta.worldType);
+      await this.initPool(meta.seed, meta.worldType, meta.structures !== false);
       if (!isNew) {
         const fresh = await this.storage.loadMeta(meta.id);
         if (fresh) meta = fresh;

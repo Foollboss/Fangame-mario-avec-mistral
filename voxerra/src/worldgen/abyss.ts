@@ -64,6 +64,11 @@ export class AbyssGenerator implements DimGenerator {
     return LAVA_LEVEL;
   }
 
+  /** Structure la plus proche (commande /localiser). */
+  locateStructure(type: string, x: number, z: number): { x: number; z: number } | null {
+    return this.structures.locate(type, x, z);
+  }
+
   findSpawn(): { x: number; y: number; z: number } {
     return { x: 0, y: 64, z: 0 };
   }

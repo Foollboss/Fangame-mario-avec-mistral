@@ -437,6 +437,7 @@ export class Game {
       }
       this.remote?.syncBlockEntity(r.x, r.y, r.z);
     };
+    if (data.type === 'chest' && (data as ChestData).loot) this.sim.trigger(this.player, 'loot', { table: (data as ChestData).loot });
     const box = blockContainer(this.sim, data, markDirty);
     markDirty();
     if (data.type === 'chest') this.pushGameScreen(new ChestScreen(this.invContext(() => this.host.audio.play('porte_ferme', { x: r.x, y: r.y, z: r.z, vol: 0.5 })), box, 'Coffre').screen());

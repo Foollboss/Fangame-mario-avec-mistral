@@ -93,7 +93,7 @@ export function expandBlockDefs(defs: BlockDef[]): BlockDef[] {
       out.push({
         id: d.id + info.suffix,
         name: `${info.label} ${deName(d.name)}`,
-        tex: d.tex,
+        tex: d.tex ?? d.id,
         shape: info.shape,
         pass: d.pass === 'translucent' ? 'translucent' : d.pass === 'cutout' ? 'cutout' : 'opaque',
         hardness: d.hardness,
@@ -312,6 +312,7 @@ export class BlockRegistry {
       stages: this.stages,
       connectable: this.connectable,
       orient: this.orient,
+      replaceable: this.replaceable,
     };
   }
 }

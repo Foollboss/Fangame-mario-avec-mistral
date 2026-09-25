@@ -38,14 +38,19 @@ export const DIMENSION_INFO: Record<DimensionId, DimensionInfo> = {
   astral: { id: 'astral', name: 'Les Cimes astrales', height: 256, scale: 1, hasSky: true, gravity: 0.62, ceiling: false },
 };
 
-export function createGenerator(dim: string, seed: number, content: Content, worldType = 'normal'): DimGenerator {
+export function createGenerator(dim: string, seed: number, content: Content, worldType = 'normal', structures = true): DimGenerator {
   if (dim === 'surface' && worldType === 'plat') return new FlatGenerator(seed, content);
+  let g: OverworldGenerator | AbyssGenerator | AstralGenerator;
   switch (dim) {
     case 'abime':
-      return new AbyssGenerator(seed, content);
+      g = new AbyssGenerator(seed, content);
+      break;
     case 'astral':
-      return new AstralGenerator(seed, content);
+      g = new AstralGenerator(seed, content);
+      break;
     default:
-      return new OverworldGenerator(seed, content);
+      g = new OverworldGenerator(seed, content);
   }
+  g.structures.enabled = structures;
+  return g;
 }

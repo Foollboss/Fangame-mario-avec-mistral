@@ -27,7 +27,7 @@ export const BASE_PACK: ContentPack = {
   recipes: baseRecipes as RecipeDef[],
   smelting: baseSmelting as SmeltDef[],
   creatures: baseCreatures as unknown as CreatureDef[],
-  loot: baseLoot as Record<string, LootTable>,
+  loot: baseLoot as unknown as Record<string, LootTable>,
   advancements: baseAdvancements as AdvancementDef[],
   effects: baseEffects as EffectDef[],
 };

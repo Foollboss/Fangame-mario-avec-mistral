@@ -267,6 +267,7 @@ const SFX: Record<string, Gen> = {
 /** Voix des créatures : type de voix et hauteur par espèce (données). */
 export const CREATURE_VOICES: Record<string, [string, number]> = {
   pelucheon: ['bleat', 1],
+  habitant: ['hum', 0.9],
   picoreau: ['chirp', 1],
   carapin: ['squeak', 0.7],
   cerf_argent: ['chime', 0.8],
