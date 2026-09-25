@@ -147,6 +147,7 @@ export class Projectile extends Entity {
       const p = this.owner as unknown as { stat: (k: string) => void };
       p.stat('creatures_tuees');
       sim.trigger(this.owner as never, 'kill', { creature: (e as unknown as { type: string }).type });
+      sim.trigger(this.owner as never, 'kill_ranged', { creature: (e as unknown as { type: string }).type });
     }
     this.hitEntities.add(e.id);
     if (this.spec.explode) this.impact(sim);

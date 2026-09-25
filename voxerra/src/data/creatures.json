@@ -1,1 +1,5065 @@
-[]
+[
+ {
+  "id": "pelucheon",
+  "name": "Pelucheon",
+  "category": "passive",
+  "health": 10,
+  "speed": 2.2,
+  "size": [
+   0.9,
+   1.2
+  ],
+  "ai": [
+   {
+    "type": "float"
+   },
+   {
+    "type": "panic",
+    "speed": 1.6
+   },
+   {
+    "type": "follow_food",
+    "items": [
+     "ble",
+     "baies"
+    ],
+    "speed": 1.1
+   },
+   {
+    "type": "eat_grass",
+    "chance": 0.004
+   },
+   {
+    "type": "herd",
+    "radius": 10
+   },
+   {
+    "type": "wander",
+    "speed": 0.7
+   },
+   {
+    "type": "look_around"
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "leg_fl",
+     "size": [
+      3,
+      6,
+      3
+     ],
+     "pos": [
+      -4.5,
+      0,
+      -6.0
+     ],
+     "color": "#5a4a3a",
+     "role": "leg_fl",
+     "pivot": [
+      -3.0,
+      6,
+      -4.5
+     ]
+    },
+    {
+     "id": "leg_fr",
+     "size": [
+      3,
+      6,
+      3
+     ],
+     "pos": [
+      1.5,
+      0,
+      -6.0
+     ],
+     "color": "#5a4a3a",
+     "role": "leg_fr",
+     "pivot": [
+      3.0,
+      6,
+      -4.5
+     ]
+    },
+    {
+     "id": "leg_bl",
+     "size": [
+      3,
+      6,
+      3
+     ],
+     "pos": [
+      -4.5,
+      0,
+      3.0
+     ],
+     "color": "#5a4a3a",
+     "role": "leg_bl",
+     "pivot": [
+      -3.0,
+      6,
+      4.5
+     ]
+    },
+    {
+     "id": "leg_br",
+     "size": [
+      3,
+      6,
+      3
+     ],
+     "pos": [
+      1.5,
+      0,
+      3.0
+     ],
+     "color": "#5a4a3a",
+     "role": "leg_br",
+     "pivot": [
+      3.0,
+      6,
+      4.5
+     ]
+    },
+    {
+     "id": "body",
+     "size": [
+      10,
+      8,
+      14
+     ],
+     "pos": [
+      -5.0,
+      6,
+      -7.0
+     ],
+     "color": "#eee8dc",
+     "color2": "#d8d0c0",
+     "role": "body"
+    },
+    {
+     "id": "head",
+     "size": [
+      6,
+      6,
+      6
+     ],
+     "pos": [
+      -3.0,
+      9.6,
+      -11.5
+     ],
+     "color": "#5a4a3a",
+     "eyes": "#1a1a1a",
+     "role": "head",
+     "pivot": [
+      0,
+      9.6,
+      -7.0
+     ]
+    },
+    {
+     "id": "toupet",
+     "size": [
+      6,
+      3,
+      3
+     ],
+     "pos": [
+      -3,
+      18,
+      -11
+     ],
+     "color": "#f4efe6",
+     "parent": "head"
+    }
+   ]
+  },
+  "loot": [
+   {
+    "item": "toison",
+    "count": [
+     1,
+     2
+    ]
+   },
+   {
+    "item": "viande_crue",
+    "count": [
+     1,
+     2
+    ]
+   }
+  ],
+  "spawn": [
+   {
+    "dimension": "surface",
+    "biomes": [
+     "plaines",
+     "prairie_fleurie",
+     "foret",
+     "foret_bouleaux",
+     "taiga",
+     "montagnes",
+     "toundra",
+     "savane"
+    ],
+    "where": "surface",
+    "time": "day",
+    "light": [
+     9,
+     15
+    ],
+    "weight": 10,
+    "group": [
+     2,
+     4
+    ]
+   }
+  ],
+  "persistent": true,
+  "sounds": {
+   "idle": "bleat"
+  }
+ },
+ {
+  "id": "picoreau",
+  "name": "Picoreau",
+  "category": "passive",
+  "health": 4,
+  "speed": 2.4,
+  "size": [
+   0.4,
+   0.7
+  ],
+  "ai": [
+   {
+    "type": "float"
+   },
+   {
+    "type": "panic",
+    "speed": 1.7
+   },
+   {
+    "type": "follow_food",
+    "items": [
+     "graines",
+     "baies"
+    ],
+    "speed": 1.1
+   },
+   {
+    "type": "wander",
+    "speed": 0.8
+   },
+   {
+    "type": "look_around"
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "leg_l",
+     "size": [
+      1,
+      3,
+      1
+     ],
+     "pos": [
+      -2,
+      0,
+      0
+     ],
+     "color": "#e0b040",
+     "role": "leg_l",
+     "pivot": [
+      -1.5,
+      3,
+      0.5
+     ]
+    },
+    {
+     "id": "leg_r",
+     "size": [
+      1,
+      3,
+      1
+     ],
+     "pos": [
+      1,
+      0,
+      0
+     ],
+     "color": "#e0b040",
+     "role": "leg_r",
+     "pivot": [
+      1.5,
+      3,
+      0.5
+     ]
+    },
+    {
+     "id": "body",
+     "size": [
+      6,
+      6,
+      7
+     ],
+     "pos": [
+      -3,
+      3,
+      -3
+     ],
+     "color": "#c87a3a",
+     "color2": "#e0a050",
+     "role": "body"
+    },
+    {
+     "id": "head",
+     "size": [
+      4,
+      4,
+      4
+     ],
+     "pos": [
+      -2,
+      7,
+      -6
+     ],
+     "color": "#d88a4a",
+     "eyes": "#1a1a1a",
+     "role": "head",
+     "pivot": [
+      0,
+      7,
+      -3
+     ]
+    },
+    {
+     "id": "bec",
+     "size": [
+      2,
+      1,
+      2
+     ],
+     "pos": [
+      -1,
+      8,
+      -8
+     ],
+     "color": "#f0c020",
+     "parent": "head"
+    },
+    {
+     "id": "crete",
+     "size": [
+      1,
+      2,
+      3
+     ],
+     "pos": [
+      -0.5,
+      11,
+      -5
+     ],
+     "color": "#d0302a",
+     "parent": "head"
+    },
+    {
+     "id": "wing_l",
+     "size": [
+      1,
+      4,
+      5
+     ],
+     "pos": [
+      -4,
+      4,
+      -2
+     ],
+     "color": "#a86030",
+     "role": "wing_l",
+     "pivot": [
+      -3,
+      8,
+      0.5
+     ]
+    },
+    {
+     "id": "wing_r",
+     "size": [
+      1,
+      4,
+      5
+     ],
+     "pos": [
+      3,
+      4,
+      -2
+     ],
+     "color": "#a86030",
+     "role": "wing_r",
+     "pivot": [
+      3,
+      8,
+      0.5
+     ]
+    }
+   ]
+  },
+  "loot": [
+   {
+    "item": "plume",
+    "count": [
+     0,
+     2
+    ]
+   },
+   {
+    "item": "volaille_crue"
+   }
+  ],
+  "spawn": [
+   {
+    "dimension": "surface",
+    "biomes": [
+     "plaines",
+     "prairie_fleurie",
+     "foret",
+     "jungle",
+     "savane",
+     "marecage"
+    ],
+    "where": "surface",
+    "time": "day",
+    "light": [
+     9,
+     15
+    ],
+    "weight": 8,
+    "group": [
+     2,
+     5
+    ]
+   }
+  ],
+  "persistent": true
+ },
+ {
+  "id": "carapin",
+  "name": "Carapin",
+  "category": "passive",
+  "health": 8,
+  "speed": 1.4,
+  "size": [
+   0.8,
+   0.5
+  ],
+  "ai": [
+   {
+    "type": "swim_wander",
+    "speed": 0.8
+   },
+   {
+    "type": "panic",
+    "speed": 1.3
+   },
+   {
+    "type": "wander",
+    "speed": 0.6
+   },
+   {
+    "type": "look_around"
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "leg_fl",
+     "size": [
+      2,
+      2,
+      2
+     ],
+     "pos": [
+      -5,
+      0,
+      -4
+     ],
+     "color": "#5a8a6a",
+     "role": "leg_fl"
+    },
+    {
+     "id": "leg_fr",
+     "size": [
+      2,
+      2,
+      2
+     ],
+     "pos": [
+      3,
+      0,
+      -4
+     ],
+     "color": "#5a8a6a",
+     "role": "leg_fr"
+    },
+    {
+     "id": "leg_bl",
+     "size": [
+      2,
+      2,
+      2
+     ],
+     "pos": [
+      -5,
+      0,
+      2
+     ],
+     "color": "#5a8a6a",
+     "role": "leg_bl"
+    },
+    {
+     "id": "leg_br",
+     "size": [
+      2,
+      2,
+      2
+     ],
+     "pos": [
+      3,
+      0,
+      2
+     ],
+     "color": "#5a8a6a",
+     "role": "leg_br"
+    },
+    {
+     "id": "body",
+     "size": [
+      10,
+      5,
+      10
+     ],
+     "pos": [
+      -5,
+      2,
+      -5
+     ],
+     "color": "#3a8a7a",
+     "color2": "#2a6a5a",
+     "role": "body"
+    },
+    {
+     "id": "head",
+     "size": [
+      4,
+      3,
+      4
+     ],
+     "pos": [
+      -2,
+      3,
+      -8
+     ],
+     "color": "#6a9a7a",
+     "eyes": "#101010",
+     "role": "head",
+     "pivot": [
+      0,
+      3,
+      -5
+     ]
+    },
+    {
+     "id": "pince_l",
+     "size": [
+      2,
+      2,
+      3
+     ],
+     "pos": [
+      -6,
+      2,
+      -8
+     ],
+     "color": "#c86a4a",
+     "parent": "body"
+    },
+    {
+     "id": "pince_r",
+     "size": [
+      2,
+      2,
+      3
+     ],
+     "pos": [
+      4,
+      2,
+      -8
+     ],
+     "color": "#c86a4a",
+     "parent": "body"
+    }
+   ]
+  },
+  "movement": "swim",
+  "loot": [
+   {
+    "item": "ecaille",
+    "count": [
+     1,
+     2
+    ]
+   }
+  ],
+  "spawn": [
+   {
+    "dimension": "surface",
+    "biomes": [
+     "plage",
+     "marecage",
+     "riviere",
+     "ocean"
+    ],
+    "where": "surface",
+    "time": "any",
+    "light": [
+     0,
+     15
+    ],
+    "weight": 6,
+    "group": [
+     1,
+     3
+    ]
+   }
+  ],
+  "persistent": true
+ },
+ {
+  "id": "cerf_argent",
+  "name": "Cerf d’argent",
+  "category": "passive",
+  "health": 20,
+  "speed": 4.2,
+  "size": [
+   0.9,
+   1.9
+  ],
+  "ai": [
+   {
+    "type": "float"
+   },
+   {
+    "type": "panic",
+    "speed": 1.6
+   },
+   {
+    "type": "avoid_player",
+    "radius": 10,
+    "speed": 1.5
+   },
+   {
+    "type": "wander",
+    "speed": 0.6
+   },
+   {
+    "type": "look_around"
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "leg_fl",
+     "size": [
+      3,
+      12,
+      3
+     ],
+     "pos": [
+      -3.5,
+      0,
+      -7.0
+     ],
+     "color": "#c8ccd8",
+     "role": "leg_fl",
+     "pivot": [
+      -2.0,
+      12,
+      -5.5
+     ]
+    },
+    {
+     "id": "leg_fr",
+     "size": [
+      3,
+      12,
+      3
+     ],
+     "pos": [
+      0.5,
+      0,
+      -7.0
+     ],
+     "color": "#c8ccd8",
+     "role": "leg_fr",
+     "pivot": [
+      2.0,
+      12,
+      -5.5
+     ]
+    },
+    {
+     "id": "leg_bl",
+     "size": [
+      3,
+      12,
+      3
+     ],
+     "pos": [
+      -3.5,
+      0,
+      4.0
+     ],
+     "color": "#c8ccd8",
+     "role": "leg_bl",
+     "pivot": [
+      -2.0,
+      12,
+      5.5
+     ]
+    },
+    {
+     "id": "leg_br",
+     "size": [
+      3,
+      12,
+      3
+     ],
+     "pos": [
+      0.5,
+      0,
+      4.0
+     ],
+     "color": "#c8ccd8",
+     "role": "leg_br",
+     "pivot": [
+      2.0,
+      12,
+      5.5
+     ]
+    },
+    {
+     "id": "body",
+     "size": [
+      8,
+      10,
+      16
+     ],
+     "pos": [
+      -4.0,
+      12,
+      -8.0
+     ],
+     "color": "#d8dce8",
+     "color2": "#b8c0d0",
+     "role": "body"
+    },
+    {
+     "id": "head",
+     "size": [
+      5,
+      5,
+      5
+     ],
+     "pos": [
+      -2.5,
+      26,
+      -11.75
+     ],
+     "color": "#e0e4ee",
+     "eyes": "#3ad8ff",
+     "role": "head",
+     "pivot": [
+      0,
+      26,
+      -8.0
+     ]
+    },
+    {
+     "id": "bois_l",
+     "size": [
+      1,
+      7,
+      1
+     ],
+     "pos": [
+      -3,
+      33,
+      -15
+     ],
+     "color": "#9ff3ff",
+     "parent": "head",
+     "glow": true
+    },
+    {
+     "id": "bois_r",
+     "size": [
+      1,
+      7,
+      1
+     ],
+     "pos": [
+      2,
+      33,
+      -15
+     ],
+     "color": "#9ff3ff",
+     "parent": "head",
+     "glow": true
+    },
+    {
+     "id": "bois_l2",
+     "size": [
+      3,
+      1,
+      1
+     ],
+     "pos": [
+      -5,
+      37,
+      -15
+     ],
+     "color": "#9ff3ff",
+     "parent": "head",
+     "glow": true
+    },
+    {
+     "id": "bois_r2",
+     "size": [
+      3,
+      1,
+      1
+     ],
+     "pos": [
+      2,
+      37,
+      -15
+     ],
+     "color": "#9ff3ff",
+     "parent": "head",
+     "glow": true
+    }
+   ]
+  },
+  "loot": [
+   {
+    "item": "bois_argent"
+   },
+   {
+    "item": "viande_crue",
+    "count": [
+     1,
+     3
+    ]
+   }
+  ],
+  "spawn": [
+   {
+    "dimension": "surface",
+    "biomes": [
+     "foret_bouleaux",
+     "bosquet_cristal",
+     "taiga_enneigee",
+     "prairie_fleurie"
+    ],
+    "where": "surface",
+    "time": "any",
+    "light": [
+     7,
+     15
+    ],
+    "weight": 0.6,
+    "group": [
+     1,
+     1
+    ]
+   }
+  ],
+  "persistent": true,
+  "sounds": {
+   "idle": "chime"
+  }
+ },
+ {
+  "id": "meduse_astrale",
+  "name": "Méduse astrale",
+  "category": "passive",
+  "health": 12,
+  "speed": 1.4,
+  "size": [
+   0.8,
+   1.2
+  ],
+  "ai": [
+   {
+    "type": "fly_wander",
+    "speed": 0.6,
+    "height": [
+     3,
+     8
+    ]
+   },
+   {
+    "type": "look_around"
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "cloche",
+     "size": [
+      10,
+      6,
+      10
+     ],
+     "pos": [
+      -5,
+      10,
+      -5
+     ],
+     "color": "#8ab8ff",
+     "color2": "#b8d8ff",
+     "role": "pulse",
+     "glow": true
+    },
+    {
+     "id": "t1",
+     "size": [
+      1,
+      9,
+      1
+     ],
+     "pos": [
+      -3,
+      1,
+      -3
+     ],
+     "color": "#aee0ff",
+     "role": "tentacle",
+     "glow": true,
+     "pivot": [
+      -2.5,
+      10,
+      -2.5
+     ]
+    },
+    {
+     "id": "t2",
+     "size": [
+      1,
+      9,
+      1
+     ],
+     "pos": [
+      2,
+      1,
+      -3
+     ],
+     "color": "#aee0ff",
+     "role": "tentacle",
+     "glow": true,
+     "pivot": [
+      2.5,
+      10,
+      -2.5
+     ]
+    },
+    {
+     "id": "t3",
+     "size": [
+      1,
+      9,
+      1
+     ],
+     "pos": [
+      -3,
+      1,
+      2
+     ],
+     "color": "#aee0ff",
+     "role": "tentacle",
+     "glow": true,
+     "pivot": [
+      -2.5,
+      10,
+      2.5
+     ]
+    },
+    {
+     "id": "t4",
+     "size": [
+      1,
+      9,
+      1
+     ],
+     "pos": [
+      2,
+      1,
+      2
+     ],
+     "color": "#aee0ff",
+     "role": "tentacle",
+     "glow": true,
+     "pivot": [
+      2.5,
+      10,
+      2.5
+     ]
+    }
+   ]
+  },
+  "movement": "hover",
+  "loot": [
+   {
+    "item": "gelee_stellaire",
+    "count": [
+     1,
+     2
+    ]
+   }
+  ],
+  "spawn": [
+   {
+    "dimension": "astral",
+    "where": "air",
+    "time": "any",
+    "light": [
+     0,
+     15
+    ],
+    "weight": 8,
+    "group": [
+     1,
+     3
+    ]
+   }
+  ],
+  "persistent": true,
+  "gravity": 0
+ },
+ {
+  "id": "ours_mousse",
+  "name": "Ours moussu",
+  "category": "neutral",
+  "health": 30,
+  "speed": 3.0,
+  "size": [
+   1.3,
+   1.4
+  ],
+  "ai": [
+   {
+    "type": "float"
+   },
+   {
+    "type": "target_attacker",
+    "memory": 12
+   },
+   {
+    "type": "melee",
+    "reach": 2.2,
+    "cooldown": 1.2,
+    "damage": 6
+   },
+   {
+    "type": "wander",
+    "speed": 0.5
+   },
+   {
+    "type": "look_around"
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "leg_fl",
+     "size": [
+      5,
+      8,
+      5
+     ],
+     "pos": [
+      -6.5,
+      0,
+      -8.0
+     ],
+     "color": "#4a3424",
+     "role": "leg_fl",
+     "pivot": [
+      -4.0,
+      8,
+      -5.5
+     ]
+    },
+    {
+     "id": "leg_fr",
+     "size": [
+      5,
+      8,
+      5
+     ],
+     "pos": [
+      1.5,
+      0,
+      -8.0
+     ],
+     "color": "#4a3424",
+     "role": "leg_fr",
+     "pivot": [
+      4.0,
+      8,
+      -5.5
+     ]
+    },
+    {
+     "id": "leg_bl",
+     "size": [
+      5,
+      8,
+      5
+     ],
+     "pos": [
+      -6.5,
+      0,
+      3.0
+     ],
+     "color": "#4a3424",
+     "role": "leg_bl",
+     "pivot": [
+      -4.0,
+      8,
+      5.5
+     ]
+    },
+    {
+     "id": "leg_br",
+     "size": [
+      5,
+      8,
+      5
+     ],
+     "pos": [
+      1.5,
+      0,
+      3.0
+     ],
+     "color": "#4a3424",
+     "role": "leg_br",
+     "pivot": [
+      4.0,
+      8,
+      5.5
+     ]
+    },
+    {
+     "id": "body",
+     "size": [
+      14,
+      12,
+      18
+     ],
+     "pos": [
+      -7.0,
+      8,
+      -9.0
+     ],
+     "color": "#5a4030",
+     "color2": "#4a7a30",
+     "role": "body"
+    },
+    {
+     "id": "head",
+     "size": [
+      8,
+      8,
+      8
+     ],
+     "pos": [
+      -4.0,
+      14,
+      -15.0
+     ],
+     "color": "#6a4a34",
+     "eyes": "#101010",
+     "role": "head",
+     "pivot": [
+      0,
+      14,
+      -9.0
+     ]
+    },
+    {
+     "id": "oreille_l",
+     "size": [
+      2,
+      2,
+      1
+     ],
+     "pos": [
+      -4,
+      33,
+      -14
+     ],
+     "color": "#4a3424",
+     "parent": "head"
+    },
+    {
+     "id": "oreille_r",
+     "size": [
+      2,
+      2,
+      1
+     ],
+     "pos": [
+      2,
+      33,
+      -14
+     ],
+     "color": "#4a3424",
+     "parent": "head"
+    }
+   ]
+  },
+  "damage": 6,
+  "loot": [
+   {
+    "item": "fourrure",
+    "count": [
+     1,
+     3
+    ]
+   },
+   {
+    "item": "viande_crue",
+    "count": [
+     2,
+     3
+    ]
+   },
+   {
+    "item": "mousse",
+    "chance": 0.3
+   }
+  ],
+  "spawn": [
+   {
+    "dimension": "surface",
+    "biomes": [
+     "foret",
+     "foret_ancienne",
+     "taiga",
+     "jungle"
+    ],
+    "where": "surface",
+    "time": "any",
+    "light": [
+     7,
+     15
+    ],
+    "weight": 2,
+    "group": [
+     1,
+     2
+    ]
+   }
+  ],
+  "persistent": true,
+  "knockbackResist": 0.4
+ },
+ {
+  "id": "loup_givre",
+  "name": "Loup de givre",
+  "category": "neutral",
+  "health": 14,
+  "speed": 4.4,
+  "size": [
+   0.7,
+   0.9
+  ],
+  "ai": [
+   {
+    "type": "float"
+   },
+   {
+    "type": "target_attacker",
+    "memory": 15
+   },
+   {
+    "type": "target_group"
+   },
+   {
+    "type": "target_player",
+    "range": 14,
+    "night": true,
+    "chance": 0.3
+   },
+   {
+    "type": "melee",
+    "reach": 1.6,
+    "cooldown": 0.9,
+    "damage": 4,
+    "element": "frost"
+   },
+   {
+    "type": "herd",
+    "radius": 8
+   },
+   {
+    "type": "wander",
+    "speed": 0.7
+   },
+   {
+    "type": "look_around"
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "leg_fl",
+     "size": [
+      2,
+      7,
+      2
+     ],
+     "pos": [
+      -2.5,
+      0,
+      -5.0
+     ],
+     "color": "#b0c4d8",
+     "role": "leg_fl",
+     "pivot": [
+      -1.5,
+      7,
+      -4.0
+     ]
+    },
+    {
+     "id": "leg_fr",
+     "size": [
+      2,
+      7,
+      2
+     ],
+     "pos": [
+      0.5,
+      0,
+      -5.0
+     ],
+     "color": "#b0c4d8",
+     "role": "leg_fr",
+     "pivot": [
+      1.5,
+      7,
+      -4.0
+     ]
+    },
+    {
+     "id": "leg_bl",
+     "size": [
+      2,
+      7,
+      2
+     ],
+     "pos": [
+      -2.5,
+      0,
+      3.0
+     ],
+     "color": "#b0c4d8",
+     "role": "leg_bl",
+     "pivot": [
+      -1.5,
+      7,
+      4.0
+     ]
+    },
+    {
+     "id": "leg_br",
+     "size": [
+      2,
+      7,
+      2
+     ],
+     "pos": [
+      0.5,
+      0,
+      3.0
+     ],
+     "color": "#b0c4d8",
+     "role": "leg_br",
+     "pivot": [
+      1.5,
+      7,
+      4.0
+     ]
+    },
+    {
+     "id": "body",
+     "size": [
+      6,
+      7,
+      12
+     ],
+     "pos": [
+      -3.0,
+      7,
+      -6.0
+     ],
+     "color": "#c8d8e8",
+     "color2": "#a0b8d0",
+     "role": "body"
+    },
+    {
+     "id": "head",
+     "size": [
+      6,
+      6,
+      6
+     ],
+     "pos": [
+      -3.0,
+      10,
+      -10.5
+     ],
+     "color": "#d8e4f0",
+     "eyes": "#40c0ff",
+     "role": "head",
+     "pivot": [
+      0,
+      10,
+      -6.0
+     ]
+    },
+    {
+     "id": "queue",
+     "size": [
+      2,
+      2,
+      7
+     ],
+     "pos": [
+      -1,
+      11,
+      5
+     ],
+     "color": "#b8c8dc",
+     "role": "tail",
+     "pivot": [
+      0,
+      12,
+      6
+     ]
+    },
+    {
+     "id": "museau",
+     "size": [
+      3,
+      3,
+      3
+     ],
+     "pos": [
+      -1.5,
+      11,
+      -14
+     ],
+     "color": "#e8f0f8",
+     "parent": "head"
+    }
+   ]
+  },
+  "damage": 4,
+  "element": "frost",
+  "loot": [
+   {
+    "item": "croc",
+    "count": [
+     0,
+     2
+    ]
+   },
+   {
+    "item": "fourrure",
+    "chance": 0.5
+   }
+  ],
+  "spawn": [
+   {
+    "dimension": "surface",
+    "biomes": [
+     "taiga_enneigee",
+     "toundra",
+     "pics_geles",
+     "taiga"
+    ],
+    "where": "surface",
+    "time": "any",
+    "light": [
+     0,
+     15
+    ],
+    "weight": 4,
+    "group": [
+     2,
+     4
+    ]
+   }
+  ],
+  "persistent": true
+ },
+ {
+  "id": "rodeur",
+  "name": "Rôdeur",
+  "category": "hostile",
+  "health": 20,
+  "speed": 2.6,
+  "size": [
+   0.6,
+   1.9
+  ],
+  "ai": [
+   {
+    "type": "float"
+   },
+   {
+    "type": "seek_shade"
+   },
+   {
+    "type": "target_player",
+    "range": 24
+   },
+   {
+    "type": "target_attacker",
+    "memory": 10
+   },
+   {
+    "type": "melee",
+    "reach": 1.8,
+    "cooldown": 1.0,
+    "damage": 3
+   },
+   {
+    "type": "wander",
+    "speed": 0.6
+   },
+   {
+    "type": "look_around"
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "body",
+     "size": [
+      8,
+      12,
+      4
+     ],
+     "pos": [
+      -4,
+      12,
+      -2
+     ],
+     "color": "#5a6a4a",
+     "color2": "#4a5a3a",
+     "role": "body"
+    },
+    {
+     "id": "head",
+     "size": [
+      8,
+      8,
+      8
+     ],
+     "pos": [
+      -4,
+      24,
+      -4
+     ],
+     "color": "#8aa07a",
+     "eyes": "#ffe040",
+     "role": "head",
+     "pivot": [
+      0,
+      24,
+      0
+     ]
+    },
+    {
+     "id": "arms",
+     "size": [
+      16,
+      4,
+      10
+     ],
+     "pos": [
+      -8,
+      19,
+      -11
+     ],
+     "color": "#7a9068",
+     "role": "arms",
+     "pivot": [
+      0,
+      22,
+      0
+     ]
+    },
+    {
+     "id": "leg_r",
+     "size": [
+      4,
+      12,
+      4
+     ],
+     "pos": [
+      0,
+      0,
+      -2
+     ],
+     "color": "#3a4a30",
+     "color2": null,
+     "role": "leg_r",
+     "pivot": [
+      2,
+      12,
+      0
+     ]
+    },
+    {
+     "id": "leg_l",
+     "size": [
+      4,
+      12,
+      4
+     ],
+     "pos": [
+      -4,
+      0,
+      -2
+     ],
+     "color": "#3a4a30",
+     "color2": null,
+     "role": "leg_l",
+     "pivot": [
+      -2,
+      12,
+      0
+     ]
+    }
+   ]
+  },
+  "damage": 3,
+  "burnsInDaylight": true,
+  "loot": [
+   {
+    "item": "chair_avariee",
+    "count": [
+     0,
+     2
+    ]
+   },
+   {
+    "item": "lingot_fer",
+    "chance": 0.03
+   },
+   {
+    "item": "os_calcine",
+    "chance": 0.1
+   }
+  ],
+  "spawn": [
+   {
+    "dimension": "surface",
+    "where": "surface",
+    "time": "night",
+    "light": [
+     0,
+     7
+    ],
+    "weight": 10,
+    "group": [
+     1,
+     3
+    ]
+   },
+   {
+    "dimension": "surface",
+    "where": "cave",
+    "light": [
+     0,
+     7
+    ],
+    "weight": 8,
+    "group": [
+     1,
+     2
+    ]
+   }
+  ],
+  "sounds": {
+   "idle": "moan"
+  }
+ },
+ {
+  "id": "epineux",
+  "name": "Épineux",
+  "category": "hostile",
+  "health": 16,
+  "speed": 2.2,
+  "size": [
+   0.6,
+   1.6
+  ],
+  "ai": [
+   {
+    "type": "float"
+   },
+   {
+    "type": "target_player",
+    "range": 20
+   },
+   {
+    "type": "target_attacker",
+    "memory": 10
+   },
+   {
+    "type": "ranged",
+    "projectile": "epine",
+    "range": 16,
+    "min": 5,
+    "cooldown": 1.6,
+    "damage": 3,
+    "speed": 24
+   },
+   {
+    "type": "wander",
+    "speed": 0.5
+   },
+   {
+    "type": "look_around"
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "leg_r",
+     "size": [
+      3,
+      8,
+      3
+     ],
+     "pos": [
+      0,
+      0,
+      -1.5
+     ],
+     "color": "#4a3a20",
+     "role": "leg_r",
+     "pivot": [
+      1.5,
+      8,
+      0
+     ]
+    },
+    {
+     "id": "leg_l",
+     "size": [
+      3,
+      8,
+      3
+     ],
+     "pos": [
+      -3,
+      0,
+      -1.5
+     ],
+     "color": "#4a3a20",
+     "role": "leg_l",
+     "pivot": [
+      -1.5,
+      8,
+      0
+     ]
+    },
+    {
+     "id": "body",
+     "size": [
+      6,
+      10,
+      6
+     ],
+     "pos": [
+      -3,
+      8,
+      -3
+     ],
+     "color": "#4a6a2a",
+     "color2": "#3a5a20",
+     "role": "body"
+    },
+    {
+     "id": "head",
+     "size": [
+      8,
+      8,
+      8
+     ],
+     "pos": [
+      -4,
+      18,
+      -4
+     ],
+     "color": "#5a8a3a",
+     "color2": "#3a6a2a",
+     "eyes": "#ff5a2a",
+     "role": "head",
+     "pivot": [
+      0,
+      18,
+      0
+     ]
+    },
+    {
+     "id": "epine1",
+     "size": [
+      1,
+      3,
+      1
+     ],
+     "pos": [
+      -1,
+      26,
+      -1
+     ],
+     "color": "#d8d0a0",
+     "parent": "head"
+    },
+    {
+     "id": "epine2",
+     "size": [
+      1,
+      2,
+      1
+     ],
+     "pos": [
+      3,
+      24,
+      -2
+     ],
+     "color": "#d8d0a0",
+     "parent": "head"
+    },
+    {
+     "id": "epine3",
+     "size": [
+      1,
+      2,
+      1
+     ],
+     "pos": [
+      -5,
+      23,
+      1
+     ],
+     "color": "#d8d0a0",
+     "parent": "head"
+    },
+    {
+     "id": "arm_r",
+     "size": [
+      2,
+      9,
+      2
+     ],
+     "pos": [
+      3,
+      9,
+      -1
+     ],
+     "color": "#3a6a2a",
+     "role": "arm_r",
+     "pivot": [
+      4,
+      17,
+      0
+     ]
+    },
+    {
+     "id": "arm_l",
+     "size": [
+      2,
+      9,
+      2
+     ],
+     "pos": [
+      -5,
+      9,
+      -1
+     ],
+     "color": "#3a6a2a",
+     "role": "arm_l",
+     "pivot": [
+      -4,
+      17,
+      0
+     ]
+    }
+   ]
+  },
+  "damage": 3,
+  "loot": [
+   {
+    "item": "epine",
+    "count": [
+     1,
+     3
+    ]
+   },
+   {
+    "item": "fibre",
+    "count": [
+     0,
+     2
+    ]
+   },
+   {
+    "item": "pousse_chene",
+    "chance": 0.05
+   }
+  ],
+  "spawn": [
+   {
+    "dimension": "surface",
+    "biomes": [
+     "foret",
+     "foret_ancienne",
+     "jungle",
+     "marecage",
+     "foret_bouleaux"
+    ],
+    "where": "surface",
+    "time": "night",
+    "light": [
+     0,
+     7
+    ],
+    "weight": 6,
+    "group": [
+     1,
+     2
+    ]
+   }
+  ]
+ },
+ {
+  "id": "tisseuse",
+  "name": "Tisseuse",
+  "category": "hostile",
+  "health": 16,
+  "speed": 3.4,
+  "size": [
+   1.2,
+   0.8
+  ],
+  "ai": [
+   {
+    "type": "float"
+   },
+   {
+    "type": "ambush",
+    "radius": 6
+   },
+   {
+    "type": "target_player",
+    "range": 16
+   },
+   {
+    "type": "target_attacker",
+    "memory": 10
+   },
+   {
+    "type": "melee",
+    "reach": 1.8,
+    "cooldown": 0.9,
+    "damage": 3,
+    "leap": true,
+    "element": "poison"
+   },
+   {
+    "type": "wander",
+    "speed": 0.6
+   },
+   {
+    "type": "look_around"
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "body",
+     "size": [
+      10,
+      6,
+      12
+     ],
+     "pos": [
+      -5,
+      3,
+      -2
+     ],
+     "color": "#2a2030",
+     "color2": "#3a2a48",
+     "role": "body"
+    },
+    {
+     "id": "head",
+     "size": [
+      6,
+      5,
+      6
+     ],
+     "pos": [
+      -3,
+      3,
+      -7
+     ],
+     "color": "#3a2a48",
+     "eyes": "#ff2a2a",
+     "role": "head",
+     "pivot": [
+      0,
+      5,
+      -2
+     ]
+    },
+    {
+     "id": "leg_fl",
+     "size": [
+      10,
+      1,
+      1
+     ],
+     "pos": [
+      -12,
+      4,
+      -3
+     ],
+     "color": "#1a1420",
+     "role": "leg_fl",
+     "pivot": [
+      -5,
+      4.5,
+      -2.5
+     ]
+    },
+    {
+     "id": "leg_fr",
+     "size": [
+      10,
+      1,
+      1
+     ],
+     "pos": [
+      2,
+      4,
+      -3
+     ],
+     "color": "#1a1420",
+     "role": "leg_fr",
+     "pivot": [
+      5,
+      4.5,
+      -2.5
+     ]
+    },
+    {
+     "id": "leg_bl",
+     "size": [
+      10,
+      1,
+      1
+     ],
+     "pos": [
+      -12,
+      4,
+      4
+     ],
+     "color": "#1a1420",
+     "role": "leg_bl",
+     "pivot": [
+      -5,
+      4.5,
+      4.5
+     ]
+    },
+    {
+     "id": "leg_br",
+     "size": [
+      10,
+      1,
+      1
+     ],
+     "pos": [
+      2,
+      4,
+      4
+     ],
+     "color": "#1a1420",
+     "role": "leg_br",
+     "pivot": [
+      5,
+      4.5,
+      4.5
+     ]
+    },
+    {
+     "id": "leg_ml",
+     "size": [
+      10,
+      1,
+      1
+     ],
+     "pos": [
+      -12,
+      4,
+      1
+     ],
+     "color": "#1a1420",
+     "role": "leg_fr",
+     "pivot": [
+      -5,
+      4.5,
+      1.5
+     ]
+    },
+    {
+     "id": "leg_mr",
+     "size": [
+      10,
+      1,
+      1
+     ],
+     "pos": [
+      2,
+      4,
+      1
+     ],
+     "color": "#1a1420",
+     "role": "leg_fl",
+     "pivot": [
+      5,
+      4.5,
+      1.5
+     ]
+    }
+   ]
+  },
+  "movement": "climb",
+  "damage": 3,
+  "element": "poison",
+  "loot": [
+   {
+    "item": "soie",
+    "count": [
+     0,
+     2
+    ]
+   },
+   {
+    "item": "membrane",
+    "chance": 0.2
+   }
+  ],
+  "spawn": [
+   {
+    "dimension": "surface",
+    "where": "cave",
+    "light": [
+     0,
+     7
+    ],
+    "weight": 8,
+    "group": [
+     1,
+     2
+    ]
+   },
+   {
+    "dimension": "surface",
+    "biomes": [
+     "jungle",
+     "foret_ancienne"
+    ],
+    "where": "surface",
+    "time": "night",
+    "light": [
+     0,
+     7
+    ],
+    "weight": 3,
+    "group": [
+     1,
+     1
+    ]
+   }
+  ]
+ },
+ {
+  "id": "chauve_furie",
+  "name": "Chauve-furie",
+  "category": "hostile",
+  "health": 8,
+  "speed": 5.0,
+  "size": [
+   0.5,
+   0.6
+  ],
+  "ai": [
+   {
+    "type": "target_player",
+    "range": 18
+   },
+   {
+    "type": "target_attacker",
+    "memory": 8
+   },
+   {
+    "type": "fly_attack",
+    "reach": 1.3,
+    "cooldown": 1.4,
+    "damage": 2
+   },
+   {
+    "type": "fly_wander",
+    "speed": 0.8,
+    "height": [
+     2,
+     6
+    ]
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "body",
+     "size": [
+      4,
+      5,
+      4
+     ],
+     "pos": [
+      -2,
+      3,
+      -2
+     ],
+     "color": "#3a2a3a",
+     "color2": "#4a3448",
+     "role": "body"
+    },
+    {
+     "id": "head",
+     "size": [
+      4,
+      4,
+      4
+     ],
+     "pos": [
+      -2,
+      6,
+      -4
+     ],
+     "color": "#4a3448",
+     "eyes": "#ff3a3a",
+     "role": "head",
+     "pivot": [
+      0,
+      6,
+      -1
+     ]
+    },
+    {
+     "id": "oreille_l",
+     "size": [
+      1,
+      2,
+      1
+     ],
+     "pos": [
+      -2,
+      10,
+      -3
+     ],
+     "color": "#3a2a3a",
+     "parent": "head"
+    },
+    {
+     "id": "oreille_r",
+     "size": [
+      1,
+      2,
+      1
+     ],
+     "pos": [
+      1,
+      10,
+      -3
+     ],
+     "color": "#3a2a3a",
+     "parent": "head"
+    },
+    {
+     "id": "wing_l",
+     "size": [
+      8,
+      1,
+      5
+     ],
+     "pos": [
+      -10,
+      6,
+      -2
+     ],
+     "color": "#5a3a5a",
+     "role": "wing_l",
+     "pivot": [
+      -2,
+      6.5,
+      0.5
+     ]
+    },
+    {
+     "id": "wing_r",
+     "size": [
+      8,
+      1,
+      5
+     ],
+     "pos": [
+      2,
+      6,
+      -2
+     ],
+     "color": "#5a3a5a",
+     "role": "wing_r",
+     "pivot": [
+      2,
+      6.5,
+      0.5
+     ]
+    }
+   ]
+  },
+  "movement": "fly",
+  "damage": 2,
+  "loot": [
+   {
+    "item": "membrane",
+    "count": [
+     0,
+     1
+    ]
+   }
+  ],
+  "gravity": 0,
+  "spawn": [
+   {
+    "dimension": "surface",
+    "where": "cave",
+    "light": [
+     0,
+     5
+    ],
+    "weight": 5,
+    "group": [
+     2,
+     4
+    ]
+   },
+   {
+    "dimension": "surface",
+    "where": "air",
+    "time": "night",
+    "light": [
+     0,
+     6
+    ],
+    "weight": 2,
+    "group": [
+     1,
+     3
+    ]
+   }
+  ]
+ },
+ {
+  "id": "vesse_explosive",
+  "name": "Vesse explosive",
+  "category": "hostile",
+  "health": 10,
+  "speed": 2.8,
+  "size": [
+   0.6,
+   0.9
+  ],
+  "ai": [
+   {
+    "type": "float"
+   },
+   {
+    "type": "ambush",
+    "radius": 5,
+    "disguise": true
+   },
+   {
+    "type": "target_player",
+    "range": 14
+   },
+   {
+    "type": "explode",
+    "radius": 3,
+    "damage": 9,
+    "fuse": 1.4,
+    "cloud": "poison"
+   },
+   {
+    "type": "wander",
+    "speed": 0.4
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "pied",
+     "size": [
+      5,
+      6,
+      5
+     ],
+     "pos": [
+      -2.5,
+      0,
+      -2.5
+     ],
+     "color": "#e8dcc6",
+     "color2": "#d8ccb6",
+     "role": "body"
+    },
+    {
+     "id": "head",
+     "size": [
+      10,
+      6,
+      10
+     ],
+     "pos": [
+      -5,
+      6,
+      -5
+     ],
+     "color": "#a8603a",
+     "color2": "#f0e0c0",
+     "eyes": "#1a1a1a",
+     "role": "pulse",
+     "pivot": [
+      0,
+      6,
+      0
+     ]
+    }
+   ]
+  },
+  "damage": 0,
+  "loot": [
+   {
+    "item": "spore_explosive",
+    "count": [
+     1,
+     2
+    ]
+   },
+   {
+    "item": "champignon_rouge",
+    "chance": 0.3
+   }
+  ],
+  "spawn": [
+   {
+    "dimension": "surface",
+    "biomes": [
+     "foret",
+     "foret_ancienne",
+     "foret_fongique",
+     "marecage",
+     "jungle",
+     "taiga"
+    ],
+    "where": "surface",
+    "time": "any",
+    "light": [
+     0,
+     11
+    ],
+    "weight": 4,
+    "group": [
+     1,
+     1
+    ]
+   },
+   {
+    "dimension": "surface",
+    "where": "cave",
+    "light": [
+     0,
+     7
+    ],
+    "weight": 3,
+    "group": [
+     1,
+     1
+    ]
+   }
+  ]
+ },
+ {
+  "id": "anguillame",
+  "name": "Anguillame",
+  "category": "hostile",
+  "health": 12,
+  "speed": 4.0,
+  "size": [
+   0.5,
+   0.5
+  ],
+  "ai": [
+   {
+    "type": "target_player",
+    "range": 14,
+    "inWater": true
+   },
+   {
+    "type": "swim_attack",
+    "reach": 1.4,
+    "cooldown": 1.1,
+    "damage": 3,
+    "element": "shock"
+   },
+   {
+    "type": "swim_wander",
+    "speed": 0.8
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "body",
+     "size": [
+      3,
+      3,
+      10
+     ],
+     "pos": [
+      -1.5,
+      0,
+      -3
+     ],
+     "color": "#1a4a5a",
+     "color2": "#f0e060",
+     "role": "body"
+    },
+    {
+     "id": "head",
+     "size": [
+      4,
+      3,
+      5
+     ],
+     "pos": [
+      -2,
+      0,
+      -8
+     ],
+     "color": "#1a4a5a",
+     "eyes": "#f0f060",
+     "role": "head",
+     "pivot": [
+      0,
+      1.5,
+      -3
+     ]
+    },
+    {
+     "id": "queue",
+     "size": [
+      2,
+      2,
+      8
+     ],
+     "pos": [
+      -1,
+      0.5,
+      7
+     ],
+     "color": "#1a4a5a",
+     "color2": "#f0e060",
+     "role": "tail",
+     "pivot": [
+      0,
+      1.5,
+      7
+     ]
+    }
+   ]
+  },
+  "movement": "swim",
+  "damage": 3,
+  "element": "shock",
+  "gravity": 0,
+  "loot": [
+   {
+    "item": "filet_anguille",
+    "count": [
+     1,
+     2
+    ]
+   }
+  ],
+  "spawn": [
+   {
+    "dimension": "surface",
+    "biomes": [
+     "ocean",
+     "ocean_profond",
+     "marecage",
+     "riviere"
+    ],
+    "where": "water",
+    "time": "any",
+    "light": [
+     0,
+     15
+    ],
+    "weight": 5,
+    "group": [
+     1,
+     2
+    ]
+   }
+  ]
+ },
+ {
+  "id": "pillard",
+  "name": "Pillard",
+  "category": "hostile",
+  "health": 20,
+  "speed": 3.2,
+  "size": [
+   0.6,
+   1.9
+  ],
+  "ai": [
+   {
+    "type": "float"
+   },
+   {
+    "type": "flee_low_hp",
+    "ratio": 0.25,
+    "speed": 1.3
+   },
+   {
+    "type": "target_player",
+    "range": 22
+   },
+   {
+    "type": "target_attacker",
+    "memory": 12
+   },
+   {
+    "type": "target_group"
+   },
+   {
+    "type": "melee",
+    "reach": 1.9,
+    "cooldown": 0.9,
+    "damage": 5
+   },
+   {
+    "type": "patrol",
+    "radius": 14
+   },
+   {
+    "type": "wander",
+    "speed": 0.6
+   },
+   {
+    "type": "look_around"
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "body",
+     "size": [
+      8,
+      12,
+      4
+     ],
+     "pos": [
+      -4,
+      12,
+      -2
+     ],
+     "color": "#6a4a3a",
+     "color2": "#5a3a2a",
+     "role": "body"
+    },
+    {
+     "id": "head",
+     "size": [
+      8,
+      8,
+      8
+     ],
+     "pos": [
+      -4,
+      24,
+      -4
+     ],
+     "color": "#c8a080",
+     "eyes": "#1a1a1a",
+     "role": "head",
+     "pivot": [
+      0,
+      24,
+      0
+     ]
+    },
+    {
+     "id": "arm_r",
+     "size": [
+      4,
+      12,
+      4
+     ],
+     "pos": [
+      4,
+      12,
+      -2
+     ],
+     "color": "#6a4a3a",
+     "role": "arm_r",
+     "pivot": [
+      6,
+      22,
+      0
+     ]
+    },
+    {
+     "id": "arm_l",
+     "size": [
+      4,
+      12,
+      4
+     ],
+     "pos": [
+      -8,
+      12,
+      -2
+     ],
+     "color": "#6a4a3a",
+     "role": "arm_l",
+     "pivot": [
+      -6,
+      22,
+      0
+     ]
+    },
+    {
+     "id": "leg_r",
+     "size": [
+      4,
+      12,
+      4
+     ],
+     "pos": [
+      0,
+      0,
+      -2
+     ],
+     "color": "#3a3a3a",
+     "color2": "#2a2a2a",
+     "role": "leg_r",
+     "pivot": [
+      2,
+      12,
+      0
+     ]
+    },
+    {
+     "id": "leg_l",
+     "size": [
+      4,
+      12,
+      4
+     ],
+     "pos": [
+      -4,
+      0,
+      -2
+     ],
+     "color": "#3a3a3a",
+     "color2": "#2a2a2a",
+     "role": "leg_l",
+     "pivot": [
+      -2,
+      12,
+      0
+     ]
+    },
+    {
+     "id": "capuche",
+     "size": [
+      9,
+      5,
+      9
+     ],
+     "pos": [
+      -4.5,
+      28,
+      -4.5
+     ],
+     "color": "#3a3a3a",
+     "parent": "head"
+    }
+   ]
+  },
+  "damage": 5,
+  "heldItem": "epee_fer",
+  "loot": [
+   {
+    "item": "lingot_fer",
+    "count": [
+     0,
+     2
+    ],
+    "chance": 0.5
+   },
+   {
+    "item": "fleche",
+    "count": [
+     1,
+     4
+    ],
+    "chance": 0.5
+   },
+   {
+    "item": "pain",
+    "chance": 0.4
+   },
+   {
+    "item": "eclat_lumirite",
+    "chance": 0.15
+   }
+  ],
+  "spawn": [
+   {
+    "dimension": "surface",
+    "biomes": [
+     "plaines",
+     "savane",
+     "desert",
+     "taiga",
+     "canyons_ocre"
+    ],
+    "where": "surface",
+    "time": "night",
+    "light": [
+     0,
+     15
+    ],
+    "weight": 2,
+    "group": [
+     2,
+     4
+    ]
+   }
+  ]
+ },
+ {
+  "id": "pillard_archer",
+  "name": "Pillard archer",
+  "category": "hostile",
+  "health": 16,
+  "speed": 3.0,
+  "size": [
+   0.6,
+   1.9
+  ],
+  "ai": [
+   {
+    "type": "float"
+   },
+   {
+    "type": "flee_low_hp",
+    "ratio": 0.3,
+    "speed": 1.3
+   },
+   {
+    "type": "target_player",
+    "range": 24
+   },
+   {
+    "type": "target_attacker",
+    "memory": 12
+   },
+   {
+    "type": "target_group"
+   },
+   {
+    "type": "ranged",
+    "projectile": "fleche",
+    "range": 18,
+    "min": 6,
+    "cooldown": 1.8,
+    "damage": 4,
+    "speed": 38
+   },
+   {
+    "type": "patrol",
+    "radius": 14
+   },
+   {
+    "type": "wander",
+    "speed": 0.6
+   },
+   {
+    "type": "look_around"
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "body",
+     "size": [
+      8,
+      12,
+      4
+     ],
+     "pos": [
+      -4,
+      12,
+      -2
+     ],
+     "color": "#4a5a3a",
+     "color2": "#3a4a2a",
+     "role": "body"
+    },
+    {
+     "id": "head",
+     "size": [
+      8,
+      8,
+      8
+     ],
+     "pos": [
+      -4,
+      24,
+      -4
+     ],
+     "color": "#c8a080",
+     "eyes": "#1a1a1a",
+     "role": "head",
+     "pivot": [
+      0,
+      24,
+      0
+     ]
+    },
+    {
+     "id": "arm_r",
+     "size": [
+      4,
+      12,
+      4
+     ],
+     "pos": [
+      4,
+      12,
+      -2
+     ],
+     "color": "#4a5a3a",
+     "role": "arm_r",
+     "pivot": [
+      6,
+      22,
+      0
+     ]
+    },
+    {
+     "id": "arm_l",
+     "size": [
+      4,
+      12,
+      4
+     ],
+     "pos": [
+      -8,
+      12,
+      -2
+     ],
+     "color": "#4a5a3a",
+     "role": "arm_l",
+     "pivot": [
+      -6,
+      22,
+      0
+     ]
+    },
+    {
+     "id": "leg_r",
+     "size": [
+      4,
+      12,
+      4
+     ],
+     "pos": [
+      0,
+      0,
+      -2
+     ],
+     "color": "#3a3a3a",
+     "color2": "#2a2a2a",
+     "role": "leg_r",
+     "pivot": [
+      2,
+      12,
+      0
+     ]
+    },
+    {
+     "id": "leg_l",
+     "size": [
+      4,
+      12,
+      4
+     ],
+     "pos": [
+      -4,
+      0,
+      -2
+     ],
+     "color": "#3a3a3a",
+     "color2": "#2a2a2a",
+     "role": "leg_l",
+     "pivot": [
+      -2,
+      12,
+      0
+     ]
+    },
+    {
+     "id": "capuche",
+     "size": [
+      9,
+      5,
+      9
+     ],
+     "pos": [
+      -4.5,
+      28,
+      -4.5
+     ],
+     "color": "#2a3a2a",
+     "parent": "head"
+    }
+   ]
+  },
+  "damage": 2,
+  "heldItem": "arc",
+  "loot": [
+   {
+    "item": "fleche",
+    "count": [
+     2,
+     6
+    ]
+   },
+   {
+    "item": "arc",
+    "chance": 0.08
+   },
+   {
+    "item": "plume",
+    "chance": 0.4
+   }
+  ],
+  "spawn": [
+   {
+    "dimension": "surface",
+    "biomes": [
+     "plaines",
+     "savane",
+     "taiga",
+     "foret"
+    ],
+    "where": "surface",
+    "time": "night",
+    "light": [
+     0,
+     15
+    ],
+    "weight": 1.5,
+    "group": [
+     1,
+     3
+    ]
+   }
+  ]
+ },
+ {
+  "id": "brasillon",
+  "name": "Brasillon",
+  "category": "hostile",
+  "health": 18,
+  "speed": 3.0,
+  "size": [
+   0.6,
+   1.0
+  ],
+  "ai": [
+   {
+    "type": "target_player",
+    "range": 26
+   },
+   {
+    "type": "target_attacker",
+    "memory": 10
+   },
+   {
+    "type": "ranged",
+    "projectile": "boule_feu",
+    "range": 22,
+    "min": 7,
+    "cooldown": 2.2,
+    "damage": 5,
+    "speed": 22,
+    "burst": 3
+   },
+   {
+    "type": "fly_wander",
+    "speed": 0.6,
+    "height": [
+     3,
+     10
+    ]
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "coeur",
+     "size": [
+      6,
+      6,
+      6
+     ],
+     "pos": [
+      -3,
+      6,
+      -3
+     ],
+     "color": "#ffb040",
+     "color2": "#ff6a1a",
+     "role": "pulse",
+     "glow": true,
+     "eyes": "#fff8c0"
+    },
+    {
+     "id": "eclat1",
+     "size": [
+      2,
+      6,
+      2
+     ],
+     "pos": [
+      -6,
+      4,
+      -1
+     ],
+     "color": "#ff6a1a",
+     "role": "spin",
+     "glow": true,
+     "pivot": [
+      0,
+      9,
+      0
+     ]
+    },
+    {
+     "id": "eclat2",
+     "size": [
+      2,
+      6,
+      2
+     ],
+     "pos": [
+      4,
+      4,
+      -1
+     ],
+     "color": "#ff6a1a",
+     "role": "spin",
+     "glow": true,
+     "pivot": [
+      0,
+      9,
+      0
+     ]
+    },
+    {
+     "id": "eclat3",
+     "size": [
+      2,
+      6,
+      2
+     ],
+     "pos": [
+      -1,
+      4,
+      -6
+     ],
+     "color": "#ffd060",
+     "role": "spin",
+     "glow": true,
+     "pivot": [
+      0,
+      9,
+      0
+     ]
+    },
+    {
+     "id": "flamme",
+     "size": [
+      4,
+      5,
+      4
+     ],
+     "pos": [
+      -2,
+      12,
+      -2
+     ],
+     "color": "#ffe080",
+     "role": "pulse",
+     "glow": true
+    }
+   ]
+  },
+  "movement": "fly",
+  "fireImmune": true,
+  "gravity": 0,
+  "loot": [
+   {
+    "item": "poudre_braise",
+    "count": [
+     1,
+     2
+    ]
+   },
+   {
+    "item": "braisite",
+    "chance": 0.25
+   }
+  ],
+  "spawn": [
+   {
+    "dimension": "abime",
+    "where": "air",
+    "time": "any",
+    "light": [
+     0,
+     15
+    ],
+    "weight": 6,
+    "group": [
+     1,
+     2
+    ]
+   }
+  ]
+ },
+ {
+  "id": "carapace_lave",
+  "name": "Carapace de lave",
+  "category": "hostile",
+  "health": 28,
+  "speed": 2.2,
+  "size": [
+   1.1,
+   0.7
+  ],
+  "ai": [
+   {
+    "type": "float_lava"
+   },
+   {
+    "type": "target_player",
+    "range": 18
+   },
+   {
+    "type": "target_attacker",
+    "memory": 10
+   },
+   {
+    "type": "ranged",
+    "projectile": "crachat_magma",
+    "range": 10,
+    "min": 3,
+    "cooldown": 3.0,
+    "damage": 3,
+    "speed": 14,
+    "melee": true
+   },
+   {
+    "type": "melee",
+    "reach": 2.0,
+    "cooldown": 1.2,
+    "damage": 6
+   },
+   {
+    "type": "wander",
+    "speed": 0.5
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "leg_fl",
+     "size": [
+      3,
+      3,
+      3
+     ],
+     "pos": [
+      -5.5,
+      0,
+      -6.0
+     ],
+     "color": "#2a1a14",
+     "role": "leg_fl",
+     "pivot": [
+      -4.0,
+      3,
+      -4.5
+     ]
+    },
+    {
+     "id": "leg_fr",
+     "size": [
+      3,
+      3,
+      3
+     ],
+     "pos": [
+      2.5,
+      0,
+      -6.0
+     ],
+     "color": "#2a1a14",
+     "role": "leg_fr",
+     "pivot": [
+      4.0,
+      3,
+      -4.5
+     ]
+    },
+    {
+     "id": "leg_bl",
+     "size": [
+      3,
+      3,
+      3
+     ],
+     "pos": [
+      -5.5,
+      0,
+      3.0
+     ],
+     "color": "#2a1a14",
+     "role": "leg_bl",
+     "pivot": [
+      -4.0,
+      3,
+      4.5
+     ]
+    },
+    {
+     "id": "leg_br",
+     "size": [
+      3,
+      3,
+      3
+     ],
+     "pos": [
+      2.5,
+      0,
+      3.0
+     ],
+     "color": "#2a1a14",
+     "role": "leg_br",
+     "pivot": [
+      4.0,
+      3,
+      4.5
+     ]
+    },
+    {
+     "id": "body",
+     "size": [
+      12,
+      6,
+      14
+     ],
+     "pos": [
+      -6.0,
+      3,
+      -7.0
+     ],
+     "color": "#1a1210",
+     "color2": "#ff5a1a",
+     "role": "body"
+    },
+    {
+     "id": "head",
+     "size": [
+      6,
+      6,
+      6
+     ],
+     "pos": [
+      -3.0,
+      4,
+      -11.5
+     ],
+     "color": "#2a1a14",
+     "eyes": "#ffb040",
+     "role": "head",
+     "pivot": [
+      0,
+      4,
+      -7.0
+     ]
+    },
+    {
+     "id": "pince_l",
+     "size": [
+      3,
+      3,
+      5
+     ],
+     "pos": [
+      -8,
+      3,
+      -12
+     ],
+     "color": "#ff6a2a",
+     "parent": "body"
+    },
+    {
+     "id": "pince_r",
+     "size": [
+      3,
+      3,
+      5
+     ],
+     "pos": [
+      5,
+      3,
+      -12
+     ],
+     "color": "#ff6a2a",
+     "parent": "body"
+    }
+   ]
+  },
+  "fireImmune": true,
+  "damage": 6,
+  "armor": 6,
+  "loot": [
+   {
+    "item": "ecaille_magma",
+    "count": [
+     1,
+     2
+    ]
+   },
+   {
+    "item": "braisite",
+    "chance": 0.3
+   }
+  ],
+  "spawn": [
+   {
+    "dimension": "abime",
+    "where": "lava",
+    "time": "any",
+    "light": [
+     0,
+     15
+    ],
+    "weight": 4,
+    "group": [
+     1,
+     2
+    ]
+   },
+   {
+    "dimension": "abime",
+    "where": "surface",
+    "time": "any",
+    "light": [
+     0,
+     15
+    ],
+    "weight": 3,
+    "group": [
+     1,
+     1
+    ]
+   }
+  ],
+  "knockbackResist": 0.6
+ },
+ {
+  "id": "cendreux",
+  "name": "Cendreux",
+  "category": "hostile",
+  "health": 20,
+  "speed": 3.4,
+  "size": [
+   0.6,
+   1.9
+  ],
+  "ai": [
+   {
+    "type": "float"
+   },
+   {
+    "type": "target_player",
+    "range": 24
+   },
+   {
+    "type": "target_attacker",
+    "memory": 10
+   },
+   {
+    "type": "target_group"
+   },
+   {
+    "type": "melee",
+    "reach": 1.9,
+    "cooldown": 0.9,
+    "damage": 4,
+    "element": "fire"
+   },
+   {
+    "type": "herd",
+    "radius": 8
+   },
+   {
+    "type": "wander",
+    "speed": 0.7
+   },
+   {
+    "type": "look_around"
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "body",
+     "size": [
+      8,
+      12,
+      4
+     ],
+     "pos": [
+      -4,
+      12,
+      -2
+     ],
+     "color": "#5a5250",
+     "color2": "#3a3432",
+     "role": "body"
+    },
+    {
+     "id": "head",
+     "size": [
+      8,
+      8,
+      8
+     ],
+     "pos": [
+      -4,
+      24,
+      -4
+     ],
+     "color": "#7a7270",
+     "eyes": "#ff8a2a",
+     "role": "head",
+     "pivot": [
+      0,
+      24,
+      0
+     ]
+    },
+    {
+     "id": "arm_r",
+     "size": [
+      4,
+      12,
+      4
+     ],
+     "pos": [
+      4,
+      12,
+      -2
+     ],
+     "color": "#5a5250",
+     "role": "arm_r",
+     "pivot": [
+      6,
+      22,
+      0
+     ]
+    },
+    {
+     "id": "arm_l",
+     "size": [
+      4,
+      12,
+      4
+     ],
+     "pos": [
+      -8,
+      12,
+      -2
+     ],
+     "color": "#5a5250",
+     "role": "arm_l",
+     "pivot": [
+      -6,
+      22,
+      0
+     ]
+    },
+    {
+     "id": "leg_r",
+     "size": [
+      4,
+      12,
+      4
+     ],
+     "pos": [
+      0,
+      0,
+      -2
+     ],
+     "color": "#3a3432",
+     "color2": "#2a2422",
+     "role": "leg_r",
+     "pivot": [
+      2,
+      12,
+      0
+     ]
+    },
+    {
+     "id": "leg_l",
+     "size": [
+      4,
+      12,
+      4
+     ],
+     "pos": [
+      -4,
+      0,
+      -2
+     ],
+     "color": "#3a3432",
+     "color2": "#2a2422",
+     "role": "leg_l",
+     "pivot": [
+      -2,
+      12,
+      0
+     ]
+    }
+   ]
+  },
+  "fireImmune": true,
+  "damage": 4,
+  "element": "fire",
+  "loot": [
+   {
+    "item": "os_calcine",
+    "count": [
+     0,
+     2
+    ]
+   },
+   {
+    "item": "soufre",
+    "chance": 0.3
+   }
+  ],
+  "spawn": [
+   {
+    "dimension": "abime",
+    "where": "surface",
+    "time": "any",
+    "light": [
+     0,
+     15
+    ],
+    "weight": 8,
+    "group": [
+     2,
+     4
+    ]
+   }
+  ]
+ },
+ {
+  "id": "sentinelle_cristal",
+  "name": "Sentinelle cristalline",
+  "category": "hostile",
+  "health": 26,
+  "speed": 1.2,
+  "size": [
+   0.7,
+   2.0
+  ],
+  "ai": [
+   {
+    "type": "target_player",
+    "range": 22
+   },
+   {
+    "type": "target_attacker",
+    "memory": 10
+   },
+   {
+    "type": "ranged",
+    "projectile": "rayon_cristal",
+    "range": 20,
+    "min": 4,
+    "cooldown": 2.0,
+    "damage": 5,
+    "speed": 40
+   },
+   {
+    "type": "fly_wander",
+    "speed": 0.3,
+    "height": [
+     1,
+     3
+    ]
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "obelisque",
+     "size": [
+      6,
+      16,
+      6
+     ],
+     "pos": [
+      -3,
+      8,
+      -3
+     ],
+     "color": "#b08aff",
+     "color2": "#e0d0ff",
+     "role": "body",
+     "glow": true,
+     "eyes": "#ffffff"
+    },
+    {
+     "id": "anneau",
+     "size": [
+      12,
+      1,
+      12
+     ],
+     "pos": [
+      -6,
+      14,
+      -6
+     ],
+     "color": "#e0d0ff",
+     "role": "spin",
+     "glow": true,
+     "pivot": [
+      0,
+      14.5,
+      0
+     ]
+    },
+    {
+     "id": "pointe",
+     "size": [
+      4,
+      4,
+      4
+     ],
+     "pos": [
+      -2,
+      24,
+      -2
+     ],
+     "color": "#f0e8ff",
+     "glow": true,
+     "role": "pulse"
+    }
+   ]
+  },
+  "movement": "hover",
+  "gravity": 0,
+  "armor": 8,
+  "loot": [
+   {
+    "item": "eclat_astral",
+    "count": [
+     1,
+     3
+    ]
+   },
+   {
+    "item": "minerai_etherium",
+    "chance": 0.15
+   }
+  ],
+  "spawn": [
+   {
+    "dimension": "astral",
+    "where": "surface",
+    "time": "any",
+    "light": [
+     0,
+     15
+    ],
+    "weight": 5,
+    "group": [
+     1,
+     1
+    ]
+   }
+  ],
+  "knockbackResist": 0.9
+ },
+ {
+  "id": "rodeur_vide",
+  "name": "Rôdeur du vide",
+  "category": "hostile",
+  "health": 32,
+  "speed": 4.0,
+  "size": [
+   0.6,
+   2.6
+  ],
+  "ai": [
+   {
+    "type": "float"
+   },
+   {
+    "type": "teleport",
+    "range": 16,
+    "cooldown": 4
+   },
+   {
+    "type": "target_player",
+    "range": 20,
+    "stare": true
+   },
+   {
+    "type": "target_attacker",
+    "memory": 20
+   },
+   {
+    "type": "melee",
+    "reach": 2.2,
+    "cooldown": 1.0,
+    "damage": 7
+   },
+   {
+    "type": "wander",
+    "speed": 0.5
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "leg_r",
+     "size": [
+      2,
+      18,
+      2
+     ],
+     "pos": [
+      0.5,
+      0,
+      -1
+     ],
+     "color": "#120a1c",
+     "role": "leg_r",
+     "pivot": [
+      1.5,
+      18,
+      0
+     ]
+    },
+    {
+     "id": "leg_l",
+     "size": [
+      2,
+      18,
+      2
+     ],
+     "pos": [
+      -2.5,
+      0,
+      -1
+     ],
+     "color": "#120a1c",
+     "role": "leg_l",
+     "pivot": [
+      -1.5,
+      18,
+      0
+     ]
+    },
+    {
+     "id": "body",
+     "size": [
+      6,
+      12,
+      3
+     ],
+     "pos": [
+      -3,
+      18,
+      -1.5
+     ],
+     "color": "#1a1028",
+     "color2": "#2a1a3a",
+     "role": "body"
+    },
+    {
+     "id": "head",
+     "size": [
+      7,
+      7,
+      7
+     ],
+     "pos": [
+      -3.5,
+      30,
+      -3.5
+     ],
+     "color": "#1a1028",
+     "eyes": "#d08aff",
+     "role": "head",
+     "pivot": [
+      0,
+      30,
+      0
+     ]
+    },
+    {
+     "id": "arm_r",
+     "size": [
+      2,
+      20,
+      2
+     ],
+     "pos": [
+      3,
+      11,
+      -1
+     ],
+     "color": "#120a1c",
+     "role": "arm_r",
+     "pivot": [
+      4,
+      29,
+      0
+     ]
+    },
+    {
+     "id": "arm_l",
+     "size": [
+      2,
+      20,
+      2
+     ],
+     "pos": [
+      -5,
+      11,
+      -1
+     ],
+     "color": "#120a1c",
+     "role": "arm_l",
+     "pivot": [
+      -4,
+      29,
+      0
+     ]
+    }
+   ]
+  },
+  "damage": 7,
+  "loot": [
+   {
+    "item": "essence_vide",
+    "count": [
+     0,
+     2
+    ]
+   }
+  ],
+  "spawn": [
+   {
+    "dimension": "astral",
+    "where": "surface",
+    "time": "any",
+    "light": [
+     0,
+     15
+    ],
+    "weight": 3,
+    "group": [
+     1,
+     1
+    ]
+   }
+  ]
+ },
+ {
+  "id": "gardien_sylvestre",
+  "name": "Gardien sylvestre",
+  "category": "boss",
+  "health": 240,
+  "speed": 2.2,
+  "size": [
+   1.6,
+   4.2
+  ],
+  "ai": [
+   {
+    "type": "target_player",
+    "range": 40
+   },
+   {
+    "type": "target_attacker",
+    "memory": 60
+   },
+   {
+    "type": "slam",
+    "radius": 5,
+    "cooldown": 7,
+    "damage": 7
+   },
+   {
+    "type": "melee",
+    "reach": 3.2,
+    "cooldown": 1.4,
+    "damage": 9
+   },
+   {
+    "type": "look_around"
+   }
+  ],
+  "model": {
+   "scale": 1.6,
+   "parts": [
+    {
+     "id": "body",
+     "size": [
+      8,
+      12,
+      4
+     ],
+     "pos": [
+      -4,
+      12,
+      -2
+     ],
+     "color": "#5a4028",
+     "color2": "#4a7a30",
+     "role": "body"
+    },
+    {
+     "id": "head",
+     "size": [
+      8,
+      8,
+      8
+     ],
+     "pos": [
+      -4,
+      24,
+      -4
+     ],
+     "color": "#6a4a2c",
+     "eyes": "#7aff6a",
+     "role": "head",
+     "pivot": [
+      0,
+      24,
+      0
+     ]
+    },
+    {
+     "id": "arm_r",
+     "size": [
+      4,
+      12,
+      4
+     ],
+     "pos": [
+      4,
+      12,
+      -2
+     ],
+     "color": "#5a4028",
+     "role": "arm_r",
+     "pivot": [
+      6,
+      22,
+      0
+     ]
+    },
+    {
+     "id": "arm_l",
+     "size": [
+      4,
+      12,
+      4
+     ],
+     "pos": [
+      -8,
+      12,
+      -2
+     ],
+     "color": "#5a4028",
+     "role": "arm_l",
+     "pivot": [
+      -6,
+      22,
+      0
+     ]
+    },
+    {
+     "id": "leg_r",
+     "size": [
+      4,
+      12,
+      4
+     ],
+     "pos": [
+      0,
+      0,
+      -2
+     ],
+     "color": "#4a3420",
+     "color2": "#3a2a18",
+     "role": "leg_r",
+     "pivot": [
+      2,
+      12,
+      0
+     ]
+    },
+    {
+     "id": "leg_l",
+     "size": [
+      4,
+      12,
+      4
+     ],
+     "pos": [
+      -4,
+      0,
+      -2
+     ],
+     "color": "#4a3420",
+     "color2": "#3a2a18",
+     "role": "leg_l",
+     "pivot": [
+      -2,
+      12,
+      0
+     ]
+    },
+    {
+     "id": "couronne",
+     "size": [
+      12,
+      6,
+      12
+     ],
+     "pos": [
+      -6,
+      32,
+      -6
+     ],
+     "color": "#3a8a2a",
+     "color2": "#5aaa3a",
+     "parent": "head"
+    },
+    {
+     "id": "mousse",
+     "size": [
+      10,
+      4,
+      6
+     ],
+     "pos": [
+      -5,
+      20,
+      -3
+     ],
+     "color": "#4a8a30",
+     "parent": "body"
+    }
+   ]
+  },
+  "damage": 9,
+  "armor": 6,
+  "knockbackResist": 0.9,
+  "persistent": true,
+  "bossBar": true,
+  "phases": [
+   {
+    "below": 0.6,
+    "message": "Le Gardien sylvestre appelle la forêt à l’aide !",
+    "ai": [
+     {
+      "type": "target_player",
+      "range": 40
+     },
+     {
+      "type": "summon",
+      "creature": "epineux",
+      "count": 2,
+      "cooldown": 14
+     },
+     {
+      "type": "barrage",
+      "projectile": "epine",
+      "count": 7,
+      "spread": 0.5,
+      "cooldown": 5,
+      "damage": 4,
+      "speed": 26
+     },
+     {
+      "type": "slam",
+      "radius": 5,
+      "cooldown": 6,
+      "damage": 7
+     },
+     {
+      "type": "melee",
+      "reach": 3.2,
+      "cooldown": 1.3,
+      "damage": 9
+     }
+    ]
+   },
+   {
+    "below": 0.25,
+    "message": "Le Gardien entre dans une rage sauvage !",
+    "speed": 3.2,
+    "ai": [
+     {
+      "type": "target_player",
+      "range": 40
+     },
+     {
+      "type": "charge",
+      "speed": 2.6,
+      "cooldown": 5,
+      "damage": 10
+     },
+     {
+      "type": "slam",
+      "radius": 6,
+      "cooldown": 4,
+      "damage": 8
+     },
+     {
+      "type": "barrage",
+      "projectile": "epine",
+      "count": 9,
+      "spread": 0.7,
+      "cooldown": 4,
+      "damage": 4,
+      "speed": 28
+     },
+     {
+      "type": "melee",
+      "reach": 3.2,
+      "cooldown": 1.0,
+      "damage": 10
+     }
+    ]
+   }
+  ],
+  "loot": [
+   {
+    "item": "coeur_sylvestre"
+   },
+   {
+    "item": "pousse_prisme",
+    "count": [
+     1,
+     2
+    ]
+   },
+   {
+    "item": "eclat_lumirite",
+    "count": [
+     4,
+     8
+    ]
+   },
+   {
+    "item": "celestine",
+    "count": [
+     1,
+     2
+    ]
+   }
+  ]
+ },
+ {
+  "id": "tyran_braises",
+  "name": "Tyran des braises",
+  "category": "boss",
+  "health": 420,
+  "speed": 2.4,
+  "size": [
+   2.2,
+   3.0
+  ],
+  "ai": [
+   {
+    "type": "target_player",
+    "range": 48
+   },
+   {
+    "type": "target_attacker",
+    "memory": 60
+   },
+   {
+    "type": "barrage",
+    "projectile": "boule_braise",
+    "count": 3,
+    "spread": 0.3,
+    "cooldown": 4,
+    "damage": 7,
+    "speed": 20
+   },
+   {
+    "type": "charge",
+    "speed": 2.4,
+    "cooldown": 8,
+    "damage": 10
+   },
+   {
+    "type": "melee",
+    "reach": 3.5,
+    "cooldown": 1.5,
+    "damage": 11
+   },
+   {
+    "type": "look_around"
+   }
+  ],
+  "model": {
+   "scale": 1.3,
+   "parts": [
+    {
+     "id": "leg_fl",
+     "size": [
+      6,
+      10,
+      6
+     ],
+     "pos": [
+      -9.5,
+      0,
+      -11.0
+     ],
+     "color": "#2a1814",
+     "role": "leg_fl",
+     "pivot": [
+      -6.5,
+      10,
+      -8.0
+     ]
+    },
+    {
+     "id": "leg_fr",
+     "size": [
+      6,
+      10,
+      6
+     ],
+     "pos": [
+      3.5,
+      0,
+      -11.0
+     ],
+     "color": "#2a1814",
+     "role": "leg_fr",
+     "pivot": [
+      6.5,
+      10,
+      -8.0
+     ]
+    },
+    {
+     "id": "leg_bl",
+     "size": [
+      6,
+      10,
+      6
+     ],
+     "pos": [
+      -9.5,
+      0,
+      5.0
+     ],
+     "color": "#2a1814",
+     "role": "leg_bl",
+     "pivot": [
+      -6.5,
+      10,
+      8.0
+     ]
+    },
+    {
+     "id": "leg_br",
+     "size": [
+      6,
+      10,
+      6
+     ],
+     "pos": [
+      3.5,
+      0,
+      5.0
+     ],
+     "color": "#2a1814",
+     "role": "leg_br",
+     "pivot": [
+      6.5,
+      10,
+      8.0
+     ]
+    },
+    {
+     "id": "body",
+     "size": [
+      20,
+      14,
+      24
+     ],
+     "pos": [
+      -10.0,
+      10,
+      -12.0
+     ],
+     "color": "#1a1010",
+     "color2": "#ff5a1a",
+     "role": "body"
+    },
+    {
+     "id": "head",
+     "size": [
+      12,
+      12,
+      12
+     ],
+     "pos": [
+      -6.0,
+      20,
+      -21.0
+     ],
+     "color": "#2a1814",
+     "eyes": "#ffd040",
+     "role": "head",
+     "pivot": [
+      0,
+      20,
+      -12.0
+     ]
+    },
+    {
+     "id": "corne_l",
+     "size": [
+      2,
+      6,
+      2
+     ],
+     "pos": [
+      -6,
+      36,
+      -24
+     ],
+     "color": "#e8d8b0",
+     "parent": "head"
+    },
+    {
+     "id": "corne_r",
+     "size": [
+      2,
+      6,
+      2
+     ],
+     "pos": [
+      4,
+      36,
+      -24
+     ],
+     "color": "#e8d8b0",
+     "parent": "head"
+    },
+    {
+     "id": "queue",
+     "size": [
+      4,
+      4,
+      14
+     ],
+     "pos": [
+      -2,
+      16,
+      11
+     ],
+     "color": "#2a1814",
+     "color2": "#ff5a1a",
+     "role": "tail",
+     "pivot": [
+      0,
+      18,
+      12
+     ]
+    },
+    {
+     "id": "crete",
+     "size": [
+      2,
+      6,
+      18
+     ],
+     "pos": [
+      -1,
+      24,
+      -9
+     ],
+     "color": "#ff7a2a",
+     "glow": true,
+     "parent": "body"
+    }
+   ]
+  },
+  "fireImmune": true,
+  "damage": 11,
+  "armor": 10,
+  "knockbackResist": 1,
+  "persistent": true,
+  "bossBar": true,
+  "phases": [
+   {
+    "below": 0.6,
+    "message": "Le Tyran invoque les flammes de l’Abîme !",
+    "ai": [
+     {
+      "type": "target_player",
+      "range": 48
+     },
+     {
+      "type": "summon",
+      "creature": "brasillon",
+      "count": 2,
+      "cooldown": 16
+     },
+     {
+      "type": "slam",
+      "radius": 6,
+      "cooldown": 6,
+      "damage": 8,
+      "fire": true
+     },
+     {
+      "type": "barrage",
+      "projectile": "boule_braise",
+      "count": 5,
+      "spread": 0.5,
+      "cooldown": 4,
+      "damage": 7,
+      "speed": 22
+     },
+     {
+      "type": "charge",
+      "speed": 2.6,
+      "cooldown": 7,
+      "damage": 11
+     },
+     {
+      "type": "melee",
+      "reach": 3.5,
+      "cooldown": 1.4,
+      "damage": 12
+     }
+    ]
+   },
+   {
+    "below": 0.3,
+    "message": "Le Tyran s’embrase de fureur !",
+    "speed": 3.4,
+    "ai": [
+     {
+      "type": "target_player",
+      "range": 48
+     },
+     {
+      "type": "barrage",
+      "projectile": "boule_braise",
+      "count": 8,
+      "spread": 0.9,
+      "cooldown": 3,
+      "damage": 7,
+      "speed": 24
+     },
+     {
+      "type": "slam",
+      "radius": 7,
+      "cooldown": 4,
+      "damage": 9,
+      "fire": true
+     },
+     {
+      "type": "charge",
+      "speed": 3.0,
+      "cooldown": 5,
+      "damage": 12
+     },
+     {
+      "type": "summon",
+      "creature": "cendreux",
+      "count": 2,
+      "cooldown": 18
+     },
+     {
+      "type": "melee",
+      "reach": 3.5,
+      "cooldown": 1.1,
+      "damage": 13
+     }
+    ]
+   }
+  ],
+  "loot": [
+   {
+    "item": "coeur_braise"
+   },
+   {
+    "item": "braisite",
+    "count": [
+     6,
+     12
+    ]
+   },
+   {
+    "item": "bloc_braisite",
+    "count": [
+     1,
+     2
+    ]
+   },
+   {
+    "item": "poudre_braise",
+    "count": [
+     4,
+     8
+    ]
+   }
+  ]
+ },
+ {
+  "id": "veilleur_astral",
+  "name": "Veilleur astral",
+  "category": "boss",
+  "health": 620,
+  "speed": 3.0,
+  "size": [
+   2.4,
+   2.4
+  ],
+  "ai": [
+   {
+    "type": "target_player",
+    "range": 64
+   },
+   {
+    "type": "target_attacker",
+    "memory": 60
+   },
+   {
+    "type": "shield",
+    "creature": "sentinelle_cristal",
+    "count": 4
+   },
+   {
+    "type": "barrage",
+    "projectile": "rayon_cristal",
+    "count": 3,
+    "spread": 0.25,
+    "cooldown": 3,
+    "damage": 6,
+    "speed": 42
+   },
+   {
+    "type": "fly_attack",
+    "reach": 3.0,
+    "cooldown": 2.5,
+    "damage": 10,
+    "orbit": 14
+   }
+  ],
+  "model": {
+   "scale": 1.4,
+   "parts": [
+    {
+     "id": "oeil",
+     "size": [
+      20,
+      20,
+      20
+     ],
+     "pos": [
+      -10,
+      4,
+      -10
+     ],
+     "color": "#e8e0ff",
+     "color2": "#c8b8f0",
+     "role": "body",
+     "eyes": "#6a2ad8",
+     "glow": true
+    },
+    {
+     "id": "iris",
+     "size": [
+      8,
+      8,
+      1
+     ],
+     "pos": [
+      -4,
+      10,
+      -11
+     ],
+     "color": "#6a2ad8",
+     "color2": "#1a0a2a",
+     "glow": true,
+     "parent": "oeil"
+    },
+    {
+     "id": "fragment1",
+     "size": [
+      4,
+      4,
+      4
+     ],
+     "pos": [
+      -18,
+      12,
+      -2
+     ],
+     "color": "#b08aff",
+     "role": "spin",
+     "glow": true,
+     "pivot": [
+      0,
+      14,
+      0
+     ]
+    },
+    {
+     "id": "fragment2",
+     "size": [
+      4,
+      4,
+      4
+     ],
+     "pos": [
+      14,
+      12,
+      -2
+     ],
+     "color": "#b08aff",
+     "role": "spin",
+     "glow": true,
+     "pivot": [
+      0,
+      14,
+      0
+     ]
+    },
+    {
+     "id": "fragment3",
+     "size": [
+      4,
+      4,
+      4
+     ],
+     "pos": [
+      -2,
+      12,
+      14
+     ],
+     "color": "#d0b8ff",
+     "role": "spin",
+     "glow": true,
+     "pivot": [
+      0,
+      14,
+      0
+     ]
+    },
+    {
+     "id": "t1",
+     "size": [
+      2,
+      14,
+      2
+     ],
+     "pos": [
+      -6,
+      -8,
+      -2
+     ],
+     "color": "#8a6ad8",
+     "role": "tentacle",
+     "glow": true,
+     "pivot": [
+      -5,
+      5,
+      -1
+     ]
+    },
+    {
+     "id": "t2",
+     "size": [
+      2,
+      14,
+      2
+     ],
+     "pos": [
+      4,
+      -8,
+      -2
+     ],
+     "color": "#8a6ad8",
+     "role": "tentacle",
+     "glow": true,
+     "pivot": [
+      5,
+      5,
+      -1
+     ]
+    },
+    {
+     "id": "t3",
+     "size": [
+      2,
+      14,
+      2
+     ],
+     "pos": [
+      -1,
+      -8,
+      4
+     ],
+     "color": "#8a6ad8",
+     "role": "tentacle",
+     "glow": true,
+     "pivot": [
+      0,
+      5,
+      5
+     ]
+    }
+   ]
+  },
+  "movement": "fly",
+  "gravity": 0,
+  "damage": 10,
+  "armor": 10,
+  "knockbackResist": 1,
+  "persistent": true,
+  "bossBar": true,
+  "phases": [
+   {
+    "below": 0.5,
+    "message": "Le Veilleur ouvre des brèches dans le vide !",
+    "ai": [
+     {
+      "type": "target_player",
+      "range": 64
+     },
+     {
+      "type": "teleport",
+      "range": 14,
+      "cooldown": 7
+     },
+     {
+      "type": "barrage",
+      "projectile": "orbe_vide",
+      "count": 4,
+      "spread": 0.8,
+      "cooldown": 5,
+      "damage": 7,
+      "speed": 16
+     },
+     {
+      "type": "barrage",
+      "projectile": "rayon_cristal",
+      "count": 5,
+      "spread": 0.4,
+      "cooldown": 3,
+      "damage": 6,
+      "speed": 44
+     },
+     {
+      "type": "fly_attack",
+      "reach": 3.0,
+      "cooldown": 2.2,
+      "damage": 11,
+      "orbit": 12
+     }
+    ]
+   },
+   {
+    "below": 0.2,
+    "message": "Le Veilleur déchaîne toute sa puissance !",
+    "speed": 4,
+    "ai": [
+     {
+      "type": "target_player",
+      "range": 64
+     },
+     {
+      "type": "summon",
+      "creature": "rodeur_vide",
+      "count": 2,
+      "cooldown": 14
+     },
+     {
+      "type": "barrage",
+      "projectile": "orbe_vide",
+      "count": 6,
+      "spread": 1.0,
+      "cooldown": 4,
+      "damage": 7,
+      "speed": 18
+     },
+     {
+      "type": "barrage",
+      "projectile": "rayon_cristal",
+      "count": 7,
+      "spread": 0.5,
+      "cooldown": 2.5,
+      "damage": 6,
+      "speed": 46
+     },
+     {
+      "type": "fly_attack",
+      "reach": 3.2,
+      "cooldown": 1.6,
+      "damage": 12,
+      "orbit": 10
+     }
+    ]
+   }
+  ],
+  "loot": [
+   {
+    "item": "couronne_stellaire"
+   },
+   {
+    "item": "lingot_etherium",
+    "count": [
+     4,
+     8
+    ]
+   },
+   {
+    "item": "eclat_astral",
+    "count": [
+     6,
+     12
+    ]
+   },
+   {
+    "item": "essence_vide",
+    "count": [
+     2,
+     4
+    ]
+   }
+  ]
+ }
+]

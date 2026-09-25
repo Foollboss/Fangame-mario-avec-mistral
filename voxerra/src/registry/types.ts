@@ -190,6 +190,8 @@ export interface CreatureDef {
   gravity?: number;
   persistent?: boolean;
   bossBar?: boolean;
+  /** Objet tenu (rendu dans la main). */
+  heldItem?: string;
 }
 
 export interface AdvancementDef {

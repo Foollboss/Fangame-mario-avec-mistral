@@ -20,6 +20,8 @@ import type { Entity } from '../entity/entity';
 import { DEFAULT_RULES, type GameRules } from '../save/storage';
 import { checkPortalContact, mapCoords, buildArrivalPortal, buildAstralArrival } from './portals';
 import { tickPlates } from './mechanisms';
+import type { Mob } from '../entity/mob';
+import type { MobSystem } from './mobs';
 
 export const TICK = 0.05;
 
@@ -231,6 +233,10 @@ export class Sim {
   spawnFromGen?: (dim: string, e: { type: string; x: number; y: number; z: number; data?: Record<string, unknown> }) => void;
   /** Invocation d'une créature (commande /invoquer). */
   summon?: (type: string, dim: string, x: number, y: number, z: number) => boolean;
+  /** Crée une créature et la renvoie (capacités de boss, structures). */
+  spawnMob?: (type: string, dim: string, x: number, y: number, z: number) => Mob | null;
+  /** Module des créatures (s'il est installé). */
+  mobs?: MobSystem;
 
   /** Invocation d'un boss (remplacé par le module des créatures). */
   summonBoss: (creature: string, dim: string, x: number, y: number, z: number, by: Player) => boolean = () => false;
