@@ -1,6 +1,6 @@
 {
   "name": "voxerra",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Voxerra — sandbox voxel original (exploration, survie, construction, dimensions).",
   "type": "module",
@@ -27,5 +27,8 @@
     "typescript": "~5.9.3",
     "vite": "^7.3.6",
     "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": ">=20.11"
   }
 }

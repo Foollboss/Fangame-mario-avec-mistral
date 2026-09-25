@@ -631,6 +631,10 @@ export class Game {
         ui.push(advancementsScreen(this.hostApi(), this.sim, p));
       }
       if (input.pressed('debug')) this.showDebug = !this.showDebug;
+      if (input.pressed('players')) {
+        const names = this.remote ? this.remote.players.map((q) => q.name) : [p.name];
+        this.chat.add(`Joueurs connectés (${names.length || 1}) : ${names.join(', ') || p.name}`, '#c0e0ff');
+      }
       if (input.pressed('hideHud')) this.hideHud = !this.hideHud;
       if (input.pressed('screenshot')) this.screenshot();
       if (!input.locked && document.hasFocus() && (input.pressed('attack') || input.pressed('use'))) input.lock();
