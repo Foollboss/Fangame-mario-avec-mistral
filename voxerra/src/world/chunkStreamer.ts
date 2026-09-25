@@ -50,6 +50,8 @@ export class ChunkStreamer {
   private center = { cx: 0, cz: 0 };
   private lastPos = { x: 0, y: 64, z: 0 };
   hooks: StreamerHooks = {};
+  /** Colonnes fournies par un serveur distant (pas de génération locale). */
+  remote = false;
 
   constructor(
     readonly world: World,
@@ -94,7 +96,7 @@ export class ChunkStreamer {
     this.center.cz = cz;
     const r = this.radius;
     // Chargements
-    if (this.pool) {
+    if (this.pool && !this.remote) {
       const cap = this.pool.size * 3;
       let started = 0;
       for (const k of this.desired(cx, cz, r)) {
@@ -179,6 +181,15 @@ export class ChunkStreamer {
     this.hooks.onLoaded?.(c, genEntities, saved);
     // enchaîne immédiatement les chargements suivants (indépendant du nombre d'images/s)
     this.update(this.lastPos.x, this.lastPos.z, 2);
+  }
+
+  /** Colonne reçue du serveur (remplace la version locale éventuelle). */
+  addRemote(c: Chunk): void {
+    if (this.world.getChunk(c.cx, c.cz)) {
+      this.world.removeChunk(c.cx, c.cz);
+      this.sink?.removeColumn(c.cx, c.cz);
+    }
+    this.world.addChunk(c);
   }
 
   /** Ajoute directement une colonne (serveur / tests). */

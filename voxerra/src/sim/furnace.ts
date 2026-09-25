@@ -31,7 +31,8 @@ export function newChest(): ChestData {
 }
 
 export class FurnaceSystem {
-  private active: { dim: string; x: number; y: number; z: number }[] = [];
+  /** Fourneaux actifs lors du dernier passage (réplication). */
+  active: { dim: string; x: number; y: number; z: number }[] = [];
   constructor(private sim: Sim) {}
 
   /** Recense les fourneaux des colonnes chargées (1 fois par seconde). */

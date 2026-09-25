@@ -297,6 +297,17 @@ export function confirmScreen(app: AppApi, title: string, text: string, onYes: (
   return { el };
 }
 
+export function messageScreen(app: AppApi, title: string, text: string): Screen {
+  const el = h(
+    'div',
+    { class: 'screen dim' },
+    h('div', { class: 'title' }, title),
+    h('div', { class: 'subtitle', style: { marginBottom: '24px', maxWidth: '640px', textAlign: 'center' } }, text),
+    button('Retour au menu', () => app.ui.pop()),
+  );
+  return { el };
+}
+
 // ---------------------------------------------------------------------------
 export interface LoadingHandle {
   screen: Screen;
@@ -476,7 +487,7 @@ export function multiplayerScreen(app: AppApi): Screen {
     });
     if (!app.settings.servers.length) list.appendChild(h('div', { class: 'list-empty' }, 'Aucun serveur. Ajoutez-en un.'));
   };
-  const addr = h('input', { class: 'input', placeholder: 'ws://adresse:25590' }) as HTMLInputElement;
+  const addr = h('input', { class: 'input', placeholder: 'adresse:25590 (ex. localhost)' }) as HTMLInputElement;
   const el = h(
     'div',
     { class: 'screen dim', style: { justifyContent: 'flex-start', paddingTop: '20px' } },

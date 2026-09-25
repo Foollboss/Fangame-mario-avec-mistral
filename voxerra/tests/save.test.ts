@@ -62,7 +62,7 @@ describe('sauvegarde complète', () => {
       }
     expect(w2.getBlock(5, y, 5)).toBe(makeCell(content.b('coffre'), 2));
     expect(w2.getBlock(6, y, 5)).toBe(content.b('briques_pierre_escalier') | (3 << 12));
-    const chest = w2.getBlockEntity(5, y, 5) as { slots: ({ id: string; count: number } | null)[] };
+    const chest = w2.getBlockEntity(5, y, 5) as unknown as { slots: ({ id: string; count: number } | null)[] };
     expect(chest.slots[0]).toEqual({ id: 'lingot_or', count: 7 });
     const mob = sim2.entities.list.find((e) => e.kind === 'mob') as Mob;
     expect(mob.type).toBe('ours_mousse');

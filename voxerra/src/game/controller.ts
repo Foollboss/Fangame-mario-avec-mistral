@@ -36,6 +36,8 @@ export interface ControllerHost {
     use(hit: RayHit | null, phase: 'start' | 'finish', held: number): void;
     attack(id: number): void;
     drop(all: boolean): void;
+    fall(dist: number): void;
+    dodge(fx: number, fz: number): void;
   };
 }
 
@@ -135,7 +137,9 @@ export class PlayerController {
           p.exhaust(it.sprint ? 0.2 : 0.05);
         }
         if (p.body.onGround && !wasGround && fall > 0) {
-          applyFall(sim, p, fall);
+          if (this.host.remote) {
+            if (fall > 3 && !p.creative) this.host.remote.fall(fall);
+          } else applyFall(sim, p, fall);
           if (fall > 1.5) this.stepSound(w, 0.6);
           p.body.fallDist = 0;
         }
@@ -225,7 +229,10 @@ export class PlayerController {
       const d = lookDir(p.yaw, 0);
       const fx = d.x * this.intent.forward + Math.cos(p.yaw) * this.intent.strafe;
       const fz = d.z * this.intent.forward - Math.sin(p.yaw) * this.intent.strafe;
-      if (dodge(sim, p, fx, fz)) this.shake = 0.15;
+      if (dodge(sim, p, fx, fz)) {
+        this.shake = 0.15;
+        remote?.dodge(fx, fz);
+      }
     }
     if (input.pressed('perspective')) this.view = (this.view + 1) % 3;
     // Choisir le bloc visé
@@ -378,10 +385,8 @@ export class PlayerController {
   private releaseUse(): void {
     const p = this.p;
     if (!p.using) return;
-    if (p.using.kind === 'bow') {
-      if (this.host.remote) this.host.remote.use(null, 'finish', p.using.time);
-      else finishUse(this.host.sim, p, p.using.time);
-    }
+    if (this.host.remote) this.host.remote.use(null, 'finish', p.using.time);
+    else if (p.using.kind === 'bow') finishUse(this.host.sim, p, p.using.time);
     p.using = null;
     p.blocking = false;
     this.useHeld = 0;

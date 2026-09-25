@@ -128,6 +128,8 @@ export class Game {
     this.scene.add(this.entities.group);
     this.held = new HeldItemRenderer(this.items);
     this.fx = new ParticleFx(this.particles, host.content);
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const game = this;
     this.controller = new PlayerController({
       sim: this.sim,
       player: this.player,
@@ -137,6 +139,9 @@ export class Game {
       playSound: (n, x, y, z, vol) => host.audio.play(n, { x, y, z, vol }),
       onBlockEdited: (x, y, z) => this.streamer.flushAround(x, y, z),
       uiOpen: () => host.ui.open || !!this.travelling,
+      get remote() {
+        return game.remote ?? undefined;
+      },
     });
     this.hud = new Hud(host.icons, host.content);
     this.sim.on((e) => this.onSimEvent(e));
@@ -211,6 +216,54 @@ export class Game {
     if (p.dead) this.showDeath();
   }
 
+  /** Chargement d'une partie multijoueur (état fourni par le serveur). */
+  async loadRemote(loading: LoadingHandle, session: RemoteSession): Promise<void> {
+    this.remote = session;
+    const p = this.player;
+    const w = session.welcome;
+    p.load(w.player);
+    p.id = w.id;
+    p.name = this.host.settings.playerName;
+    p.displayName = p.name;
+    this.sim.difficulty = w.world.difficulty;
+    this.sim.env.time = w.world.time;
+    Object.assign(this.sim.rules, w.world.rules);
+    this.sim.addPlayer(p);
+    this.entities.localPlayerId = p.id;
+    this.enterDimension(p.dim);
+    session.attach(this);
+    const t0 = performance.now();
+    await new Promise<void>((resolve, reject) => {
+      const step = () => {
+        if (this.disposed) return resolve();
+        if (session.closed) return reject(new Error('Connexion interrompue pendant le chargement.'));
+        session.update(0.05);
+        this.streamer.updateMeshes(p.x, p.y, p.z);
+        const pr = this.streamer.progress(Math.floor(p.x / 16), Math.floor(p.z / 16), Math.min(3, this.streamer.radius));
+        loading.set('Réception du terrain…', pr.done, pr.total);
+        loading.map((g, size) => this.drawChunkMap(g, size));
+        if ((pr.done >= pr.total && this.streamer.pendingMeshes < 40) || performance.now() - t0 > 30000) resolve();
+        else setTimeout(step, 50);
+      };
+      step();
+    });
+    this.chat.add(w.motd, '#ffe080');
+    this.chat.add(`Connecté à « ${w.world.name} » — ${session.players.length || 1} joueur(s).`, '#c0c0c0');
+    this.lastHealth = p.health;
+  }
+
+  /** Changement de dimension décidé par le serveur. */
+  remoteDimension(dim: string, x: number, y: number, z: number): void {
+    const p = this.player;
+    p.dim = dim;
+    p.setPos(x, y, z);
+    p.body.vx = p.body.vy = p.body.vz = 0;
+    p.body.fallDist = 0;
+    this.enterDimension(dim);
+    const info = DIMENSION_INFO[dim as DimensionId];
+    this.hud.toast('Nouvelle dimension', info?.name ?? dim, dim === 'abime' ? 'braisite' : dim === 'astral' ? 'eclat_astral' : 'herbe');
+  }
+
   private drawChunkMap(g: CanvasRenderingContext2D, size: number): void {
     const p = this.player;
     const pcx = Math.floor(p.x / 16),
@@ -264,7 +317,8 @@ export class Game {
     this.world = this.sim.world(dim);
     this.world.trackDirty = true;
     this.streamer = new ChunkStreamer(this.world, this.host.pool, this.chunkRenderer, this.remote ? null : this.host.storage, this.remote ? null : this.meta.id);
-    this.streamer.radius = this.host.settings.renderDistance;
+    this.streamer.radius = this.remote ? this.remote.welcome.radius : this.host.settings.renderDistance;
+    this.streamer.remote = !!this.remote;
     if (this.remote) this.remote.attachStreamer(this.streamer);
     this.streamer.hooks = {
       onLoaded: (c, gen, saved) => {
@@ -743,7 +797,7 @@ export class Game {
     for (const [x, y, z] of this.weather.splashes) if (Math.random() < 0.5) this.fx.emit('eclaboussure', x, y, z, 2, 0.1);
     // entités
     this.entities.showLocalPlayer = ctrl.view > 0;
-    const alpha = Math.min(1, this.tickAcc / TICK);
+    const alpha = this.remote ? this.remote.alpha : Math.min(1, this.tickAcc / TICK);
     this.entities.sync(this.sim.entities.list, p.dim, alpha, dt, (x, y, z) => {
       const l = this.world.getLight(x, y, z);
       return { sky: (l >> 4) / 15, block: (l & 15) / 15 };

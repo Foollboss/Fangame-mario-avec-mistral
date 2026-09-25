@@ -17,7 +17,7 @@ import { IdbStorage } from '../save/idbStorage';
 import type { WorldMeta, WorldStorage } from '../save/storage';
 import { Game, createWorkerPool } from '../game/game';
 import type { WorkerPool } from '../engine/workerPool';
-import { mainMenu, loadingScreen } from '../ui/screens/menus';
+import { mainMenu, loadingScreen, messageScreen } from '../ui/screens/menus';
 import { installButtonTexture, setClickSound, h } from '../ui/dom';
 import { loadMods, importModText, removeImportedMod, type ModInfo } from './mods';
 import type { AppApi } from './api';
@@ -170,7 +170,7 @@ export class App implements AppApi {
     (window as unknown as { voxerra: App }).voxerra = this;
   }
 
-  private async initPool(seed: number, worldType = 'normal', structures = true): Promise<void> {
+  async initPool(seed: number, worldType = 'normal', structures = true): Promise<void> {
     await this.pool.broadcast({ type: 'init', seed, packs: this.packs, worldType, structures });
     this.poolSeed = seed;
   }
@@ -201,7 +201,7 @@ export class App implements AppApi {
     document.documentElement.style.setProperty('--ui-scale', String(s.guiScale));
     (document.getElementById('ui') as HTMLElement).style.zoom = String(s.guiScale);
     if (this.game) {
-      this.game.streamer.radius = s.renderDistance;
+      if (!this.game.remote) this.game.streamer.radius = s.renderDistance;
       this.game.camera.fov = s.fov;
       this.game.camera.updateProjectionMatrix();
       this.game.player.name = s.playerName;
@@ -302,6 +302,13 @@ export class App implements AppApi {
     } finally {
       this.busy = false;
     }
+  }
+
+  /** Le serveur a fermé la connexion (ou le réseau est perdu). */
+  async disconnected(reason: string): Promise<void> {
+    if (!this.game?.remote) return;
+    await this.quitToTitle();
+    this.ui.push(messageScreen(this, 'Déconnecté', reason));
   }
 
   async importMod(text: string): Promise<string> {

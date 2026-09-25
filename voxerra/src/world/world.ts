@@ -25,6 +25,8 @@ export class World {
   readonly emission: Uint8Array;
   /** Observateurs de modifications de blocs (sons, réseau, mécanismes…). */
   readonly blockListeners: ((c: BlockChange) => void)[] = [];
+  /** Appelé pour tout changement de bloc, même silencieux (réplication réseau). */
+  readonly changeHooks: ((x: number, y: number, z: number, cell: number) => void)[] = [];
   /** Vrai côté client : les sections modifiées sont remaillées. */
   trackDirty = true;
 
@@ -108,6 +110,7 @@ export class World {
     if ((old & 0xfff) !== (cell & 0xfff)) c.blockEntities.delete((y << 8) | (lz << 4) | lx);
     if (c.lit) this.light.onBlockChanged(x, y, z);
     this.markCellDirty(x, y, z);
+    for (const h of this.changeHooks) h(x, y, z, cell);
     if (!opts.silent) for (const l of this.blockListeners) l({ x, y, z, old, cell });
     return true;
   }
