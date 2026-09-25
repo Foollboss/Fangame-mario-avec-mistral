@@ -1,0 +1,31 @@
+{
+  "name": "voxerra",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Voxerra — sandbox voxel original (exploration, survie, construction, dimensions).",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit -p tsconfig.json && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "server": "tsx server/server.ts",
+    "screenshot": "node scripts/screenshot.mjs"
+  },
+  "dependencies": {
+    "@fontsource/pixelify-sans": "^5.3.0",
+    "three": "^0.186.1",
+    "ws": "^8.21.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.4",
+    "@types/three": "^0.186.0",
+    "@types/ws": "^8.18.1",
+    "playwright": "^1.63.0",
+    "tsx": "^4.23.15",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.6",
+    "vitest": "^3.2.4"
+  }
+}

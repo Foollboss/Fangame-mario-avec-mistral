@@ -1,0 +1,104 @@
+[
+ {
+  "input": "minerai_cuivre",
+  "output": "lingot_cuivre",
+  "count": 1,
+  "time": 8
+ },
+ {
+  "input": "minerai_fer",
+  "output": "lingot_fer",
+  "count": 1,
+  "time": 8
+ },
+ {
+  "input": "minerai_or",
+  "output": "lingot_or",
+  "count": 1,
+  "time": 8
+ },
+ {
+  "input": "minerai_etherium",
+  "output": "lingot_etherium",
+  "count": 1,
+  "time": 14
+ },
+ {
+  "input": "sable",
+  "output": "verre",
+  "count": 1,
+  "time": 8
+ },
+ {
+  "input": "sable_ocre",
+  "output": "verre",
+  "count": 1,
+  "time": 8
+ },
+ {
+  "input": "moellon",
+  "output": "pierre",
+  "count": 1,
+  "time": 8
+ },
+ {
+  "input": "boule_argile",
+  "output": "brique",
+  "count": 1,
+  "time": 8
+ },
+ {
+  "input": "argile",
+  "output": "argile_cuite_ocre",
+  "count": 1,
+  "time": 8
+ },
+ {
+  "input": "viande_crue",
+  "output": "viande_grillee",
+  "count": 1,
+  "time": 6
+ },
+ {
+  "input": "volaille_crue",
+  "output": "volaille_rotie",
+  "count": 1,
+  "time": 6
+ },
+ {
+  "input": "filet_anguille",
+  "output": "filet_grille",
+  "count": 1,
+  "time": 6
+ },
+ {
+  "input": "#log",
+  "output": "charbon",
+  "count": 1,
+  "time": 8
+ },
+ {
+  "input": "cactus",
+  "output": "tissu_vert",
+  "count": 1,
+  "time": 8
+ },
+ {
+  "input": "pierre",
+  "output": "pierre_taillee",
+  "count": 1,
+  "time": 8
+ },
+ {
+  "input": "sable_cendre",
+  "output": "verre_volcanique",
+  "count": 1,
+  "time": 20
+ },
+ {
+  "input": "poussiere_etoile",
+  "output": "verre",
+  "count": 1,
+  "time": 8
+ }
+]

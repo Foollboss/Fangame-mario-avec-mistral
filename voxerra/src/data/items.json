@@ -1,0 +1,2011 @@
+[
+ {
+  "id": "baton",
+  "name": "Bâton",
+  "icon": {
+   "t": "stick",
+   "c": [
+    "#8a5a30"
+   ]
+  },
+  "fuel": 5
+ },
+ {
+  "id": "charbon",
+  "name": "Charbon",
+  "icon": {
+   "t": "lump",
+   "c": [
+    "#2a2a30"
+   ]
+  },
+  "fuel": 80
+ },
+ {
+  "id": "silex",
+  "name": "Silex",
+  "icon": {
+   "t": "shard",
+   "c": [
+    "#5a5a62"
+   ]
+  }
+ },
+ {
+  "id": "lingot_cuivre",
+  "name": "Lingot de cuivre",
+  "icon": {
+   "t": "ingot",
+   "c": [
+    "#d07a44"
+   ]
+  }
+ },
+ {
+  "id": "lingot_fer",
+  "name": "Lingot de fer",
+  "icon": {
+   "t": "ingot",
+   "c": [
+    "#d8dadf"
+   ]
+  }
+ },
+ {
+  "id": "lingot_or",
+  "name": "Lingot d'or",
+  "icon": {
+   "t": "ingot",
+   "c": [
+    "#f0c830"
+   ]
+  }
+ },
+ {
+  "id": "lingot_etherium",
+  "name": "Lingot d'éthérium",
+  "icon": {
+   "t": "ingot",
+   "c": [
+    "#f4ecb0"
+   ]
+  },
+  "rarity": "epic"
+ },
+ {
+  "id": "celestine",
+  "name": "Célestine",
+  "icon": {
+   "t": "gem",
+   "c": [
+    "#8a6af0"
+   ]
+  },
+  "rarity": "rare"
+ },
+ {
+  "id": "eclat_lumirite",
+  "name": "Éclat de lumirite",
+  "icon": {
+   "t": "shard",
+   "c": [
+    "#3ae0ee"
+   ]
+  },
+  "rarity": "uncommon"
+ },
+ {
+  "id": "braisite",
+  "name": "Braisite",
+  "icon": {
+   "t": "gem",
+   "c": [
+    "#ff7a2a"
+   ]
+  },
+  "rarity": "rare"
+ },
+ {
+  "id": "eclat_astral",
+  "name": "Éclat astral",
+  "icon": {
+   "t": "shard",
+   "c": [
+    "#b08aff"
+   ]
+  },
+  "rarity": "rare"
+ },
+ {
+  "id": "poussiere_etoile",
+  "name": "Poussière d'étoile",
+  "icon": {
+   "t": "dust",
+   "c": [
+    "#d8d0f8"
+   ]
+  }
+ },
+ {
+  "id": "poudre_braise",
+  "name": "Poudre de braise",
+  "icon": {
+   "t": "dust",
+   "c": [
+    "#ff9a3a"
+   ]
+  },
+  "fuel": 120
+ },
+ {
+  "id": "soufre",
+  "name": "Soufre",
+  "icon": {
+   "t": "dust",
+   "c": [
+    "#e8d44a"
+   ]
+  }
+ },
+ {
+  "id": "boule_argile",
+  "name": "Boule d'argile",
+  "icon": {
+   "t": "ball",
+   "c": [
+    "#a4abb6"
+   ]
+  }
+ },
+ {
+  "id": "brique",
+  "name": "Brique",
+  "icon": {
+   "t": "brick",
+   "c": [
+    "#b05a3e"
+   ]
+  }
+ },
+ {
+  "id": "boule_neige",
+  "name": "Boule de neige",
+  "icon": {
+   "t": "ball",
+   "c": [
+    "#f4f8ff"
+   ]
+  },
+  "stack": 16,
+  "throwable": {
+   "projectile": "boule_neige",
+   "speed": 28
+  }
+ },
+ {
+  "id": "fibre",
+  "name": "Fibre végétale",
+  "icon": {
+   "t": "string",
+   "c": [
+    "#6aa84a"
+   ]
+  },
+  "tags": [
+   "string"
+  ]
+ },
+ {
+  "id": "soie",
+  "name": "Soie de tisseuse",
+  "icon": {
+   "t": "string",
+   "c": [
+    "#f0f0f4"
+   ]
+  },
+  "tags": [
+   "string"
+  ]
+ },
+ {
+  "id": "toison",
+  "name": "Toison",
+  "icon": {
+   "t": "fleece",
+   "c": [
+    "#eee8dc"
+   ]
+  }
+ },
+ {
+  "id": "fourrure",
+  "name": "Fourrure",
+  "icon": {
+   "t": "fleece",
+   "c": [
+    "#7a5a3a"
+   ]
+  }
+ },
+ {
+  "id": "plume",
+  "name": "Plume",
+  "icon": {
+   "t": "feather",
+   "c": [
+    "#f4f4f4"
+   ]
+  }
+ },
+ {
+  "id": "croc",
+  "name": "Croc de givre",
+  "icon": {
+   "t": "fang",
+   "c": [
+    "#e8f4ff"
+   ]
+  }
+ },
+ {
+  "id": "ecaille",
+  "name": "Écaille",
+  "icon": {
+   "t": "scale",
+   "c": [
+    "#5aa88a"
+   ]
+  }
+ },
+ {
+  "id": "ecaille_magma",
+  "name": "Écaille de magma",
+  "icon": {
+   "t": "scale",
+   "c": [
+    "#e0501a"
+   ]
+  }
+ },
+ {
+  "id": "membrane",
+  "name": "Membrane",
+  "icon": {
+   "t": "membrane",
+   "c": [
+    "#6a4a5a"
+   ]
+  }
+ },
+ {
+  "id": "spore_explosive",
+  "name": "Spore explosive",
+  "icon": {
+   "t": "orb",
+   "c": [
+    "#b8c84a"
+   ]
+  }
+ },
+ {
+  "id": "epine",
+  "name": "Épine",
+  "icon": {
+   "t": "fang",
+   "c": [
+    "#5a8a3a"
+   ]
+  }
+ },
+ {
+  "id": "os_calcine",
+  "name": "Os calciné",
+  "icon": {
+   "t": "bone",
+   "c": [
+    "#c8b8a8"
+   ]
+  }
+ },
+ {
+  "id": "essence_vide",
+  "name": "Essence du vide",
+  "icon": {
+   "t": "orb",
+   "c": [
+    "#3a1a5a"
+   ]
+  },
+  "rarity": "rare"
+ },
+ {
+  "id": "bois_argent",
+  "name": "Bois d'argent",
+  "icon": {
+   "t": "antler",
+   "c": [
+    "#e0e4ec"
+   ]
+  },
+  "rarity": "rare"
+ },
+ {
+  "id": "gelee_stellaire",
+  "name": "Gelée stellaire",
+  "icon": {
+   "t": "jelly",
+   "c": [
+    "#8ab8ff"
+   ]
+  },
+  "food": {
+   "energy": 3,
+   "effects": [
+    {
+     "id": "chute_lente",
+     "duration": 30
+    }
+   ]
+  }
+ },
+ {
+  "id": "coeur_sylvestre",
+  "name": "Cœur sylvestre",
+  "icon": {
+   "t": "heart",
+   "c": [
+    "#5ad84a"
+   ]
+  },
+  "rarity": "epic",
+  "stack": 16
+ },
+ {
+  "id": "coeur_braise",
+  "name": "Cœur de braise",
+  "icon": {
+   "t": "heart",
+   "c": [
+    "#ff6a1a"
+   ]
+  },
+  "rarity": "epic",
+  "stack": 16
+ },
+ {
+  "id": "couronne_stellaire",
+  "name": "Couronne stellaire",
+  "icon": {
+   "t": "crown",
+   "c": [
+    "#f0d060",
+    "#b08aff"
+   ]
+  },
+  "rarity": "legendary",
+  "stack": 1,
+  "desc": "Preuve de votre victoire sur le Veilleur astral."
+ },
+ {
+  "id": "offrande_sylvestre",
+  "name": "Offrande sylvestre",
+  "icon": {
+   "t": "offering",
+   "c": [
+    "#5ad84a",
+    "#f0c828"
+   ]
+  },
+  "rarity": "uncommon",
+  "stack": 16,
+  "desc": "Déposez-la sur un autel sylvestre."
+ },
+ {
+  "id": "offrande_braise",
+  "name": "Offrande des braises",
+  "icon": {
+   "t": "offering",
+   "c": [
+    "#ff6a1a",
+    "#3a1a14"
+   ]
+  },
+  "rarity": "rare",
+  "stack": 16,
+  "desc": "Déposez-la sur l'autel d'une forteresse d'ébène."
+ },
+ {
+  "id": "oeil_neant",
+  "name": "Œil du néant",
+  "icon": {
+   "t": "eye",
+   "c": [
+    "#b08aff",
+    "#1a0a2a"
+   ]
+  },
+  "rarity": "epic",
+  "stack": 16,
+  "desc": "Réveille le Veilleur astral."
+ },
+ {
+  "id": "cle_astrale",
+  "name": "Clé astrale",
+  "icon": {
+   "t": "key",
+   "c": [
+    "#aee0ff",
+    "#6a4ac0"
+   ]
+  },
+  "rarity": "epic",
+  "stack": 1,
+  "desc": "Active un autel astral."
+ },
+ {
+  "id": "etincelle_braise",
+  "name": "Étincelle de braise",
+  "icon": {
+   "t": "spark",
+   "c": [
+    "#d8dadf",
+    "#ff7a2a"
+   ]
+  },
+  "stack": 1,
+  "use": "ignite",
+  "tool": {
+   "type": "shears",
+   "tier": 0,
+   "speed": 1,
+   "durability": 24
+  },
+  "desc": "Allume un cadre de pierres runiques."
+ },
+ {
+  "id": "seau",
+  "name": "Seau",
+  "icon": {
+   "t": "bucket",
+   "c": [
+    "#c8cad0"
+   ]
+  },
+  "stack": 16,
+  "use": "bucket"
+ },
+ {
+  "id": "seau_eau",
+  "name": "Seau d'eau",
+  "icon": {
+   "t": "bucket",
+   "c": [
+    "#c8cad0",
+    "#3a7ae0"
+   ]
+  },
+  "stack": 1,
+  "use": "bucket_place",
+  "useData": {
+   "block": "eau"
+  }
+ },
+ {
+  "id": "seau_lave",
+  "name": "Seau de lave",
+  "icon": {
+   "t": "bucket",
+   "c": [
+    "#c8cad0",
+    "#ff6a1a"
+   ]
+  },
+  "stack": 1,
+  "use": "bucket_place",
+  "useData": {
+   "block": "lave"
+  },
+  "fuel": 600
+ },
+ {
+  "id": "fiole",
+  "name": "Fiole",
+  "icon": {
+   "t": "flask",
+   "c": [
+    "#cfe8ee"
+   ]
+  }
+ },
+ {
+  "id": "elixir_soin",
+  "name": "Élixir de soin",
+  "icon": {
+   "t": "potion",
+   "c": [
+    "#e8406a"
+   ]
+  },
+  "stack": 8,
+  "food": {
+   "energy": 0,
+   "heal": 8,
+   "returns": "fiole"
+  }
+ },
+ {
+  "id": "elixir_feu",
+  "name": "Élixir ignifuge",
+  "icon": {
+   "t": "potion",
+   "c": [
+    "#ff8a2a"
+   ]
+  },
+  "stack": 8,
+  "food": {
+   "energy": 0,
+   "effects": [
+    {
+     "id": "resistance_feu",
+     "duration": 240
+    }
+   ],
+   "returns": "fiole"
+  }
+ },
+ {
+  "id": "elixir_vitesse",
+  "name": "Élixir de célérité",
+  "icon": {
+   "t": "potion",
+   "c": [
+    "#6ae0ff"
+   ]
+  },
+  "stack": 8,
+  "food": {
+   "energy": 0,
+   "effects": [
+    {
+     "id": "vitesse",
+     "duration": 180,
+     "level": 1
+    }
+   ],
+   "returns": "fiole"
+  }
+ },
+ {
+  "id": "elixir_vision",
+  "name": "Élixir de nyctalopie",
+  "icon": {
+   "t": "potion",
+   "c": [
+    "#3a4ae0"
+   ]
+  },
+  "stack": 8,
+  "food": {
+   "energy": 0,
+   "effects": [
+    {
+     "id": "vision_nocturne",
+     "duration": 240
+    }
+   ],
+   "returns": "fiole"
+  }
+ },
+ {
+  "id": "elixir_vitalite",
+  "name": "Élixir de vitalité",
+  "icon": {
+   "t": "potion",
+   "c": [
+    "#5ad84a"
+   ]
+  },
+  "stack": 1,
+  "rarity": "epic",
+  "food": {
+   "energy": 0,
+   "heal": 20,
+   "effects": [
+    {
+     "id": "vitalite",
+     "duration": -1
+    }
+   ],
+   "returns": "fiole"
+  },
+  "desc": "Augmente définitivement la santé maximale (+2 cœurs, 3 fois max)."
+ },
+ {
+  "id": "pierre_rappel",
+  "name": "Pierre de rappel",
+  "icon": {
+   "t": "recall",
+   "c": [
+    "#9ab8e0",
+    "#3ae0ee"
+   ]
+  },
+  "stack": 1,
+  "use": "recall",
+  "desc": "Maintenez clic droit : retour au point de réapparition."
+ },
+ {
+  "id": "bombe_spore",
+  "name": "Bombe à spores",
+  "icon": {
+   "t": "bomb",
+   "c": [
+    "#b8c84a",
+    "#5a6a2a"
+   ]
+  },
+  "stack": 16,
+  "throwable": {
+   "projectile": "bombe_spore",
+   "speed": 22
+  }
+ },
+ {
+  "id": "graines",
+  "name": "Graines",
+  "icon": {
+   "t": "seeds",
+   "c": [
+    "#b8a04a"
+   ]
+  },
+  "use": "plant",
+  "useData": {
+   "block": "ble",
+   "on": "terre_labouree"
+  }
+ },
+ {
+  "id": "ble",
+  "name": "Blé",
+  "icon": {
+   "t": "wheat",
+   "c": [
+    "#e0c04a"
+   ]
+  }
+ },
+ {
+  "id": "baies",
+  "name": "Baies",
+  "icon": {
+   "t": "berries",
+   "c": [
+    "#d0304a"
+   ]
+  },
+  "food": {
+   "energy": 2,
+   "saturation": 1
+  }
+ },
+ {
+  "id": "pomme",
+  "name": "Pomme",
+  "icon": {
+   "t": "apple",
+   "c": [
+    "#d83a2a"
+   ]
+  },
+  "food": {
+   "energy": 4,
+   "saturation": 2
+  }
+ },
+ {
+  "id": "viande_crue",
+  "name": "Viande crue",
+  "icon": {
+   "t": "meat",
+   "c": [
+    "#d86a6a"
+   ]
+  },
+  "food": {
+   "energy": 3,
+   "saturation": 1
+  }
+ },
+ {
+  "id": "viande_grillee",
+  "name": "Viande grillée",
+  "icon": {
+   "t": "meat",
+   "c": [
+    "#9a5a32"
+   ]
+  },
+  "food": {
+   "energy": 8,
+   "saturation": 6
+  }
+ },
+ {
+  "id": "volaille_crue",
+  "name": "Volaille crue",
+  "icon": {
+   "t": "drumstick",
+   "c": [
+    "#f0b0a0"
+   ]
+  },
+  "food": {
+   "energy": 2,
+   "saturation": 1,
+   "effects": [
+    {
+     "id": "poison",
+     "duration": 10,
+     "chance": 0.3
+    }
+   ]
+  }
+ },
+ {
+  "id": "volaille_rotie",
+  "name": "Volaille rôtie",
+  "icon": {
+   "t": "drumstick",
+   "c": [
+    "#c07a3a"
+   ]
+  },
+  "food": {
+   "energy": 6,
+   "saturation": 5
+  }
+ },
+ {
+  "id": "filet_anguille",
+  "name": "Filet d'anguille",
+  "icon": {
+   "t": "fish",
+   "c": [
+    "#8ab0c0"
+   ]
+  },
+  "food": {
+   "energy": 2,
+   "saturation": 1
+  }
+ },
+ {
+  "id": "filet_grille",
+  "name": "Filet grillé",
+  "icon": {
+   "t": "fish",
+   "c": [
+    "#c08a4a"
+   ]
+  },
+  "food": {
+   "energy": 6,
+   "saturation": 5
+  }
+ },
+ {
+  "id": "pain",
+  "name": "Pain",
+  "icon": {
+   "t": "bread",
+   "c": [
+    "#c8903a"
+   ]
+  },
+  "food": {
+   "energy": 5,
+   "saturation": 5
+  }
+ },
+ {
+  "id": "ragout",
+  "name": "Ragoût de champignons",
+  "icon": {
+   "t": "stew",
+   "c": [
+    "#a8744a"
+   ]
+  },
+  "stack": 1,
+  "food": {
+   "energy": 6,
+   "saturation": 6
+  }
+ },
+ {
+  "id": "tarte_baies",
+  "name": "Tarte aux baies",
+  "icon": {
+   "t": "pie",
+   "c": [
+    "#d0304a"
+   ]
+  },
+  "food": {
+   "energy": 8,
+   "saturation": 4
+  }
+ },
+ {
+  "id": "chair_avariee",
+  "name": "Chair avariée",
+  "icon": {
+   "t": "meat",
+   "c": [
+    "#7a8a5a"
+   ]
+  },
+  "food": {
+   "energy": 2,
+   "effects": [
+    {
+     "id": "poison",
+     "duration": 8,
+     "chance": 0.6
+    }
+   ]
+  }
+ },
+ {
+  "id": "fruit_astral",
+  "name": "Fruit astral",
+  "icon": {
+   "t": "fruit",
+   "c": [
+    "#9ad8ff"
+   ]
+  },
+  "food": {
+   "energy": 5,
+   "saturation": 4,
+   "effects": [
+    {
+     "id": "regeneration",
+     "duration": 8
+    }
+   ]
+  }
+ },
+ {
+  "id": "pioche_bois",
+  "name": "Pioche en bois",
+  "icon": {
+   "t": "pickaxe",
+   "c": [
+    "#a67a48"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "pickaxe",
+   "tier": 0,
+   "speed": 2,
+   "durability": 60
+  },
+  "weapon": {
+   "damage": 2.0,
+   "cooldown": 0.85
+  }
+ },
+ {
+  "id": "hache_bois",
+  "name": "Hache en bois",
+  "icon": {
+   "t": "axe",
+   "c": [
+    "#a67a48"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "axe",
+   "tier": 0,
+   "speed": 2,
+   "durability": 60
+  },
+  "weapon": {
+   "damage": 5,
+   "cooldown": 1.1,
+   "knockback": 1.2
+  }
+ },
+ {
+  "id": "pelle_bois",
+  "name": "Pelle en bois",
+  "icon": {
+   "t": "shovel",
+   "c": [
+    "#a67a48"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "shovel",
+   "tier": 0,
+   "speed": 2,
+   "durability": 60
+  },
+  "weapon": {
+   "damage": 1.5,
+   "cooldown": 0.85
+  }
+ },
+ {
+  "id": "epee_bois",
+  "name": "Épée en bois",
+  "icon": {
+   "t": "sword",
+   "c": [
+    "#a67a48"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "sword",
+   "tier": 0,
+   "speed": 1.5,
+   "durability": 60
+  },
+  "weapon": {
+   "damage": 4,
+   "cooldown": 0.6,
+   "sweep": true
+  }
+ },
+ {
+  "id": "houe_bois",
+  "name": "Houe en bois",
+  "icon": {
+   "t": "hoe",
+   "c": [
+    "#a67a48"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "hoe",
+   "tier": 0,
+   "speed": 2,
+   "durability": 60
+  },
+  "weapon": {
+   "damage": 1,
+   "cooldown": 0.5
+  }
+ },
+ {
+  "id": "pioche_pierre",
+  "name": "Pioche en pierre",
+  "icon": {
+   "t": "pickaxe",
+   "c": [
+    "#8a8e97"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "pickaxe",
+   "tier": 1,
+   "speed": 4,
+   "durability": 132
+  },
+  "weapon": {
+   "damage": 2.5,
+   "cooldown": 0.85
+  }
+ },
+ {
+  "id": "hache_pierre",
+  "name": "Hache en pierre",
+  "icon": {
+   "t": "axe",
+   "c": [
+    "#8a8e97"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "axe",
+   "tier": 1,
+   "speed": 4,
+   "durability": 132
+  },
+  "weapon": {
+   "damage": 6,
+   "cooldown": 1.1,
+   "knockback": 1.2
+  }
+ },
+ {
+  "id": "pelle_pierre",
+  "name": "Pelle en pierre",
+  "icon": {
+   "t": "shovel",
+   "c": [
+    "#8a8e97"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "shovel",
+   "tier": 1,
+   "speed": 4,
+   "durability": 132
+  },
+  "weapon": {
+   "damage": 2.0,
+   "cooldown": 0.85
+  }
+ },
+ {
+  "id": "epee_pierre",
+  "name": "Épée en pierre",
+  "icon": {
+   "t": "sword",
+   "c": [
+    "#8a8e97"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "sword",
+   "tier": 1,
+   "speed": 1.5,
+   "durability": 132
+  },
+  "weapon": {
+   "damage": 5,
+   "cooldown": 0.6,
+   "sweep": true
+  }
+ },
+ {
+  "id": "houe_pierre",
+  "name": "Houe en pierre",
+  "icon": {
+   "t": "hoe",
+   "c": [
+    "#8a8e97"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "hoe",
+   "tier": 1,
+   "speed": 4,
+   "durability": 132
+  },
+  "weapon": {
+   "damage": 1,
+   "cooldown": 0.5
+  }
+ },
+ {
+  "id": "pioche_cuivre",
+  "name": "Pioche en cuivre",
+  "icon": {
+   "t": "pickaxe",
+   "c": [
+    "#d07a44"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "pickaxe",
+   "tier": 2,
+   "speed": 5,
+   "durability": 190
+  },
+  "weapon": {
+   "damage": 3.0,
+   "cooldown": 0.85
+  }
+ },
+ {
+  "id": "hache_cuivre",
+  "name": "Hache en cuivre",
+  "icon": {
+   "t": "axe",
+   "c": [
+    "#d07a44"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "axe",
+   "tier": 2,
+   "speed": 5,
+   "durability": 190
+  },
+  "weapon": {
+   "damage": 7,
+   "cooldown": 1.1,
+   "knockback": 1.2
+  }
+ },
+ {
+  "id": "pelle_cuivre",
+  "name": "Pelle en cuivre",
+  "icon": {
+   "t": "shovel",
+   "c": [
+    "#d07a44"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "shovel",
+   "tier": 2,
+   "speed": 5,
+   "durability": 190
+  },
+  "weapon": {
+   "damage": 2.5,
+   "cooldown": 0.85
+  }
+ },
+ {
+  "id": "epee_cuivre",
+  "name": "Épée en cuivre",
+  "icon": {
+   "t": "sword",
+   "c": [
+    "#d07a44"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "sword",
+   "tier": 2,
+   "speed": 1.5,
+   "durability": 190
+  },
+  "weapon": {
+   "damage": 5.5,
+   "cooldown": 0.6,
+   "sweep": true
+  }
+ },
+ {
+  "id": "pioche_fer",
+  "name": "Pioche en fer",
+  "icon": {
+   "t": "pickaxe",
+   "c": [
+    "#e0e2e6"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "pickaxe",
+   "tier": 3,
+   "speed": 6,
+   "durability": 250
+  },
+  "weapon": {
+   "damage": 3.5,
+   "cooldown": 0.85
+  }
+ },
+ {
+  "id": "hache_fer",
+  "name": "Hache en fer",
+  "icon": {
+   "t": "axe",
+   "c": [
+    "#e0e2e6"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "axe",
+   "tier": 3,
+   "speed": 6,
+   "durability": 250
+  },
+  "weapon": {
+   "damage": 8,
+   "cooldown": 1.1,
+   "knockback": 1.2
+  }
+ },
+ {
+  "id": "pelle_fer",
+  "name": "Pelle en fer",
+  "icon": {
+   "t": "shovel",
+   "c": [
+    "#e0e2e6"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "shovel",
+   "tier": 3,
+   "speed": 6,
+   "durability": 250
+  },
+  "weapon": {
+   "damage": 3.0,
+   "cooldown": 0.85
+  }
+ },
+ {
+  "id": "epee_fer",
+  "name": "Épée en fer",
+  "icon": {
+   "t": "sword",
+   "c": [
+    "#e0e2e6"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "sword",
+   "tier": 3,
+   "speed": 1.5,
+   "durability": 250
+  },
+  "weapon": {
+   "damage": 6,
+   "cooldown": 0.6,
+   "sweep": true
+  }
+ },
+ {
+  "id": "houe_fer",
+  "name": "Houe en fer",
+  "icon": {
+   "t": "hoe",
+   "c": [
+    "#e0e2e6"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "hoe",
+   "tier": 3,
+   "speed": 6,
+   "durability": 250
+  },
+  "weapon": {
+   "damage": 1,
+   "cooldown": 0.5
+  }
+ },
+ {
+  "id": "pioche_celestine",
+  "name": "Pioche en célestine",
+  "icon": {
+   "t": "pickaxe",
+   "c": [
+    "#8a6af0"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "pickaxe",
+   "tier": 4,
+   "speed": 8,
+   "durability": 1561
+  },
+  "weapon": {
+   "damage": 4.0,
+   "cooldown": 0.85
+  },
+  "rarity": "rare"
+ },
+ {
+  "id": "hache_celestine",
+  "name": "Hache en célestine",
+  "icon": {
+   "t": "axe",
+   "c": [
+    "#8a6af0"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "axe",
+   "tier": 4,
+   "speed": 8,
+   "durability": 1561
+  },
+  "weapon": {
+   "damage": 9,
+   "cooldown": 1.1,
+   "knockback": 1.2
+  },
+  "rarity": "rare"
+ },
+ {
+  "id": "pelle_celestine",
+  "name": "Pelle en célestine",
+  "icon": {
+   "t": "shovel",
+   "c": [
+    "#8a6af0"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "shovel",
+   "tier": 4,
+   "speed": 8,
+   "durability": 1561
+  },
+  "weapon": {
+   "damage": 3.5,
+   "cooldown": 0.85
+  },
+  "rarity": "rare"
+ },
+ {
+  "id": "epee_celestine",
+  "name": "Épée en célestine",
+  "icon": {
+   "t": "sword",
+   "c": [
+    "#8a6af0"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "sword",
+   "tier": 4,
+   "speed": 1.5,
+   "durability": 1561
+  },
+  "weapon": {
+   "damage": 7,
+   "cooldown": 0.6,
+   "sweep": true
+  },
+  "rarity": "rare"
+ },
+ {
+  "id": "houe_celestine",
+  "name": "Houe en célestine",
+  "icon": {
+   "t": "hoe",
+   "c": [
+    "#8a6af0"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "hoe",
+   "tier": 4,
+   "speed": 8,
+   "durability": 1561
+  },
+  "weapon": {
+   "damage": 1,
+   "cooldown": 0.5
+  },
+  "rarity": "rare"
+ },
+ {
+  "id": "pioche_etherium",
+  "name": "Pioche en éthérium",
+  "icon": {
+   "t": "pickaxe",
+   "c": [
+    "#f4ecb0"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "pickaxe",
+   "tier": 5,
+   "speed": 10,
+   "durability": 2400
+  },
+  "weapon": {
+   "damage": 4.5,
+   "cooldown": 0.85
+  },
+  "rarity": "epic"
+ },
+ {
+  "id": "hache_etherium",
+  "name": "Hache en éthérium",
+  "icon": {
+   "t": "axe",
+   "c": [
+    "#f4ecb0"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "axe",
+   "tier": 5,
+   "speed": 10,
+   "durability": 2400
+  },
+  "weapon": {
+   "damage": 10,
+   "cooldown": 1.1,
+   "knockback": 1.2
+  },
+  "rarity": "epic"
+ },
+ {
+  "id": "pelle_etherium",
+  "name": "Pelle en éthérium",
+  "icon": {
+   "t": "shovel",
+   "c": [
+    "#f4ecb0"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "shovel",
+   "tier": 5,
+   "speed": 10,
+   "durability": 2400
+  },
+  "weapon": {
+   "damage": 4.0,
+   "cooldown": 0.85
+  },
+  "rarity": "epic"
+ },
+ {
+  "id": "epee_etherium",
+  "name": "Épée en éthérium",
+  "icon": {
+   "t": "sword",
+   "c": [
+    "#f4ecb0"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "sword",
+   "tier": 5,
+   "speed": 1.5,
+   "durability": 2400
+  },
+  "weapon": {
+   "damage": 9,
+   "cooldown": 0.6,
+   "sweep": true
+  },
+  "rarity": "epic"
+ },
+ {
+  "id": "cisailles",
+  "name": "Cisailles",
+  "icon": {
+   "t": "shears",
+   "c": [
+    "#d8dadf"
+   ]
+  },
+  "stack": 1,
+  "tool": {
+   "type": "shears",
+   "tier": 3,
+   "speed": 6,
+   "durability": 238
+  }
+ },
+ {
+  "id": "arc",
+  "name": "Arc",
+  "icon": {
+   "t": "bow",
+   "c": [
+    "#8a5a30",
+    "#f0f0f4"
+   ]
+  },
+  "stack": 1,
+  "ranged": {
+   "projectile": "fleche",
+   "ammo": "fleche",
+   "charge": 1.0,
+   "damage": 7,
+   "speed": 48,
+   "cooldown": 0.3
+  },
+  "tool": {
+   "type": "sword",
+   "tier": 0,
+   "speed": 1,
+   "durability": 384
+  }
+ },
+ {
+  "id": "fleche",
+  "name": "Flèche",
+  "icon": {
+   "t": "arrow",
+   "c": [
+    "#8a5a30",
+    "#d8dadf"
+   ]
+  }
+ },
+ {
+  "id": "baton_braise",
+  "name": "Bâton de braise",
+  "icon": {
+   "t": "staff",
+   "c": [
+    "#5a2a1a",
+    "#ff6a1a"
+   ]
+  },
+  "stack": 1,
+  "rarity": "rare",
+  "ranged": {
+   "projectile": "boule_feu",
+   "damage": 6,
+   "speed": 30,
+   "cooldown": 0.9,
+   "durabilityCost": 1
+  },
+  "tool": {
+   "type": "sword",
+   "tier": 0,
+   "speed": 1,
+   "durability": 150
+  },
+  "weapon": {
+   "damage": 3,
+   "cooldown": 0.8,
+   "element": "fire"
+  }
+ },
+ {
+  "id": "baton_givre",
+  "name": "Bâton de givre",
+  "icon": {
+   "t": "staff",
+   "c": [
+    "#3a5a7a",
+    "#aee8ff"
+   ]
+  },
+  "stack": 1,
+  "rarity": "rare",
+  "ranged": {
+   "projectile": "eclat_givre",
+   "damage": 5,
+   "speed": 34,
+   "cooldown": 0.7,
+   "durabilityCost": 1
+  },
+  "tool": {
+   "type": "sword",
+   "tier": 0,
+   "speed": 1,
+   "durability": 150
+  },
+  "weapon": {
+   "damage": 3,
+   "cooldown": 0.8,
+   "element": "frost"
+  }
+ },
+ {
+  "id": "lame_braise",
+  "name": "Lame de braise",
+  "icon": {
+   "t": "sword",
+   "c": [
+    "#ff6a1a"
+   ]
+  },
+  "stack": 1,
+  "rarity": "epic",
+  "tool": {
+   "type": "sword",
+   "tier": 4,
+   "speed": 1.5,
+   "durability": 1800
+  },
+  "weapon": {
+   "damage": 8,
+   "cooldown": 0.6,
+   "element": "fire",
+   "sweep": true
+  }
+ },
+ {
+  "id": "lame_astrale",
+  "name": "Lame astrale",
+  "icon": {
+   "t": "sword",
+   "c": [
+    "#b08aff"
+   ]
+  },
+  "stack": 1,
+  "rarity": "legendary",
+  "tool": {
+   "type": "sword",
+   "tier": 5,
+   "speed": 1.5,
+   "durability": 3000
+  },
+  "weapon": {
+   "damage": 11,
+   "cooldown": 0.55,
+   "element": "shock",
+   "sweep": true
+  }
+ },
+ {
+  "id": "bouclier",
+  "name": "Bouclier",
+  "icon": {
+   "t": "shield",
+   "c": [
+    "#8a5a30",
+    "#b9bcc1"
+   ]
+  },
+  "stack": 1,
+  "shield": {
+   "durability": 336,
+   "block": 0.85
+  }
+ },
+ {
+  "id": "casque_fourrure",
+  "name": "Casque en fourrure",
+  "icon": {
+   "t": "helmet",
+   "c": [
+    "#7a5a3a"
+   ]
+  },
+  "stack": 1,
+  "armor": {
+   "slot": "head",
+   "defense": 1,
+   "durability": 84,
+   "warmth": 2
+  }
+ },
+ {
+  "id": "plastron_fourrure",
+  "name": "Plastron en fourrure",
+  "icon": {
+   "t": "chestplate",
+   "c": [
+    "#7a5a3a"
+   ]
+  },
+  "stack": 1,
+  "armor": {
+   "slot": "chest",
+   "defense": 3,
+   "durability": 95,
+   "warmth": 2
+  }
+ },
+ {
+  "id": "jambieres_fourrure",
+  "name": "Jambières en fourrure",
+  "icon": {
+   "t": "leggings",
+   "c": [
+    "#7a5a3a"
+   ]
+  },
+  "stack": 1,
+  "armor": {
+   "slot": "legs",
+   "defense": 2,
+   "durability": 107,
+   "warmth": 2
+  }
+ },
+ {
+  "id": "bottes_fourrure",
+  "name": "Bottes en fourrure",
+  "icon": {
+   "t": "boots",
+   "c": [
+    "#7a5a3a"
+   ]
+  },
+  "stack": 1,
+  "armor": {
+   "slot": "feet",
+   "defense": 1,
+   "durability": 120,
+   "warmth": 2
+  }
+ },
+ {
+  "id": "casque_fer",
+  "name": "Casque en fer",
+  "icon": {
+   "t": "helmet",
+   "c": [
+    "#d8dadf"
+   ]
+  },
+  "stack": 1,
+  "armor": {
+   "slot": "head",
+   "defense": 2,
+   "durability": 168
+  }
+ },
+ {
+  "id": "plastron_fer",
+  "name": "Plastron en fer",
+  "icon": {
+   "t": "chestplate",
+   "c": [
+    "#d8dadf"
+   ]
+  },
+  "stack": 1,
+  "armor": {
+   "slot": "chest",
+   "defense": 6,
+   "durability": 191
+  }
+ },
+ {
+  "id": "jambieres_fer",
+  "name": "Jambières en fer",
+  "icon": {
+   "t": "leggings",
+   "c": [
+    "#d8dadf"
+   ]
+  },
+  "stack": 1,
+  "armor": {
+   "slot": "legs",
+   "defense": 5,
+   "durability": 215
+  }
+ },
+ {
+  "id": "bottes_fer",
+  "name": "Bottes en fer",
+  "icon": {
+   "t": "boots",
+   "c": [
+    "#d8dadf"
+   ]
+  },
+  "stack": 1,
+  "armor": {
+   "slot": "feet",
+   "defense": 2,
+   "durability": 240
+  }
+ },
+ {
+  "id": "casque_celestine",
+  "name": "Casque en célestine",
+  "icon": {
+   "t": "helmet",
+   "c": [
+    "#8a6af0"
+   ]
+  },
+  "stack": 1,
+  "armor": {
+   "slot": "head",
+   "defense": 3,
+   "durability": 350
+  },
+  "rarity": "rare"
+ },
+ {
+  "id": "plastron_celestine",
+  "name": "Plastron en célestine",
+  "icon": {
+   "t": "chestplate",
+   "c": [
+    "#8a6af0"
+   ]
+  },
+  "stack": 1,
+  "armor": {
+   "slot": "chest",
+   "defense": 8,
+   "durability": 399
+  },
+  "rarity": "rare"
+ },
+ {
+  "id": "jambieres_celestine",
+  "name": "Jambières en célestine",
+  "icon": {
+   "t": "leggings",
+   "c": [
+    "#8a6af0"
+   ]
+  },
+  "stack": 1,
+  "armor": {
+   "slot": "legs",
+   "defense": 6,
+   "durability": 449
+  },
+  "rarity": "rare"
+ },
+ {
+  "id": "bottes_celestine",
+  "name": "Bottes en célestine",
+  "icon": {
+   "t": "boots",
+   "c": [
+    "#8a6af0"
+   ]
+  },
+  "stack": 1,
+  "armor": {
+   "slot": "feet",
+   "defense": 3,
+   "durability": 500
+  },
+  "rarity": "rare"
+ },
+ {
+  "id": "casque_braisite",
+  "name": "Casque en braisite",
+  "icon": {
+   "t": "helmet",
+   "c": [
+    "#ff6a1a"
+   ]
+  },
+  "stack": 1,
+  "armor": {
+   "slot": "head",
+   "defense": 3,
+   "durability": 392,
+   "fireRes": 0.25
+  },
+  "rarity": "rare"
+ },
+ {
+  "id": "plastron_braisite",
+  "name": "Plastron en braisite",
+  "icon": {
+   "t": "chestplate",
+   "c": [
+    "#ff6a1a"
+   ]
+  },
+  "stack": 1,
+  "armor": {
+   "slot": "chest",
+   "defense": 7,
+   "durability": 447,
+   "fireRes": 0.25
+  },
+  "rarity": "rare"
+ },
+ {
+  "id": "jambieres_braisite",
+  "name": "Jambières en braisite",
+  "icon": {
+   "t": "leggings",
+   "c": [
+    "#ff6a1a"
+   ]
+  },
+  "stack": 1,
+  "armor": {
+   "slot": "legs",
+   "defense": 6,
+   "durability": 503,
+   "fireRes": 0.25
+  },
+  "rarity": "rare"
+ },
+ {
+  "id": "bottes_braisite",
+  "name": "Bottes en braisite",
+  "icon": {
+   "t": "boots",
+   "c": [
+    "#ff6a1a"
+   ]
+  },
+  "stack": 1,
+  "armor": {
+   "slot": "feet",
+   "defense": 3,
+   "durability": 560,
+   "fireRes": 0.25
+  },
+  "rarity": "rare"
+ },
+ {
+  "id": "casque_etherium",
+  "name": "Casque en éthérium",
+  "icon": {
+   "t": "helmet",
+   "c": [
+    "#f4ecb0"
+   ]
+  },
+  "stack": 1,
+  "armor": {
+   "slot": "head",
+   "defense": 4,
+   "durability": 560
+  },
+  "rarity": "epic"
+ },
+ {
+  "id": "plastron_etherium",
+  "name": "Plastron en éthérium",
+  "icon": {
+   "t": "chestplate",
+   "c": [
+    "#f4ecb0"
+   ]
+  },
+  "stack": 1,
+  "armor": {
+   "slot": "chest",
+   "defense": 9,
+   "durability": 640
+  },
+  "rarity": "epic"
+ },
+ {
+  "id": "jambieres_etherium",
+  "name": "Jambières en éthérium",
+  "icon": {
+   "t": "leggings",
+   "c": [
+    "#f4ecb0"
+   ]
+  },
+  "stack": 1,
+  "armor": {
+   "slot": "legs",
+   "defense": 7,
+   "durability": 719
+  },
+  "rarity": "epic"
+ },
+ {
+  "id": "bottes_etherium",
+  "name": "Bottes en éthérium",
+  "icon": {
+   "t": "boots",
+   "c": [
+    "#f4ecb0"
+   ]
+  },
+  "stack": 1,
+  "armor": {
+   "slot": "feet",
+   "defense": 4,
+   "durability": 800
+  },
+  "rarity": "epic"
+ }
+]

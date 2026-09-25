@@ -1,0 +1,2015 @@
+[
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "buche_chene"
+  ],
+  "result": {
+   "item": "planches_chene",
+   "count": 4
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "buche_bouleau"
+  ],
+  "result": {
+   "item": "planches_bouleau",
+   "count": 4
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "buche_epicea"
+  ],
+  "result": {
+   "item": "planches_epicea",
+   "count": 4
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "buche_teck"
+  ],
+  "result": {
+   "item": "planches_teck",
+   "count": 4
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "buche_acacia"
+  ],
+  "result": {
+   "item": "planches_acacia",
+   "count": 4
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "buche_saule"
+  ],
+  "result": {
+   "item": "planches_saule",
+   "count": 4
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "buche_prisme"
+  ],
+  "result": {
+   "item": "planches_prisme",
+   "count": 4
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "bois_stellaire"
+  ],
+  "result": {
+   "item": "planches_stellaires",
+   "count": 4
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "P",
+   "P"
+  ],
+  "key": {
+   "P": "#planks"
+  },
+  "result": {
+   "item": "baton",
+   "count": 4
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "PP",
+   "PP"
+  ],
+  "key": {
+   "P": "#planks"
+  },
+  "result": {
+   "item": "atelier",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "C",
+   "S"
+  ],
+  "key": {
+   "C": "charbon",
+   "S": "baton"
+  },
+  "result": {
+   "item": "torche",
+   "count": 4
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "L",
+   "S"
+  ],
+  "key": {
+   "L": "eclat_lumirite",
+   "S": "baton"
+  },
+  "result": {
+   "item": "torche_lumirite",
+   "count": 4
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "PPP",
+   "P P",
+   "PPP"
+  ],
+  "key": {
+   "P": "#planks"
+  },
+  "result": {
+   "item": "coffre",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "CCC",
+   "C C",
+   "CCC"
+  ],
+  "key": {
+   "C": "#cobble"
+  },
+  "result": {
+   "item": "fourneau",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "S S",
+   "SSS",
+   "S S"
+  ],
+  "key": {
+   "S": "baton"
+  },
+  "result": {
+   "item": "echelle",
+   "count": 3
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "PP",
+   "PP",
+   "PP"
+  ],
+  "key": {
+   "P": "#planks"
+  },
+  "result": {
+   "item": "porte_bois",
+   "count": 3
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "II",
+   "II",
+   "II"
+  ],
+  "key": {
+   "I": "lingot_fer"
+  },
+  "result": {
+   "item": "porte_fer",
+   "count": 3
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "GGG",
+   "GGG"
+  ],
+  "key": {
+   "G": "verre"
+  },
+  "result": {
+   "item": "vitre",
+   "count": 16
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "SS",
+   "SS"
+  ],
+  "key": {
+   "S": "pierre"
+  },
+  "result": {
+   "item": "pierre_taillee",
+   "count": 4
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "SS",
+   "SS"
+  ],
+  "key": {
+   "S": "pierre_taillee"
+  },
+  "result": {
+   "item": "briques_pierre",
+   "count": 4
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "briques_pierre",
+   "mousse"
+  ],
+  "result": {
+   "item": "briques_pierre_moussues",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "moellon",
+   "mousse"
+  ],
+  "result": {
+   "item": "moellon_moussu",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "BB",
+   "BB"
+  ],
+  "key": {
+   "B": "brique"
+  },
+  "result": {
+   "item": "briques_argile",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "TT",
+   "TT"
+  ],
+  "key": {
+   "T": "argile_cuite_rouge"
+  },
+  "result": {
+   "item": "tuiles",
+   "count": 4
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "TT",
+   "TT"
+  ],
+  "key": {
+   "T": "roche_profonde"
+  },
+  "result": {
+   "item": "tuiles_ardoise",
+   "count": 4
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "SS",
+   "SS"
+  ],
+  "key": {
+   "S": "sable"
+  },
+  "result": {
+   "item": "gres",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "SS",
+   "SS"
+  ],
+  "key": {
+   "S": "gres"
+  },
+  "result": {
+   "item": "gres_taille",
+   "count": 4
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "BB",
+   "BB"
+  ],
+  "key": {
+   "B": "basalte"
+  },
+  "result": {
+   "item": "basalte_poli",
+   "count": 4
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "BB",
+   "BB"
+  ],
+  "key": {
+   "B": "basalte_poli"
+  },
+  "result": {
+   "item": "briques_basalte",
+   "count": 4
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "BB",
+   "BB"
+  ],
+  "key": {
+   "B": "pierre_astrale"
+  },
+  "result": {
+   "item": "briques_astrales",
+   "count": 4
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "BB",
+   "BB"
+  ],
+  "key": {
+   "B": "boule_neige"
+  },
+  "result": {
+   "item": "neige",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "I",
+   "T",
+   "I"
+  ],
+  "key": {
+   "I": "lingot_fer",
+   "T": "torche"
+  },
+  "result": {
+   "item": "lanterne",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "I",
+   "T",
+   "I"
+  ],
+  "key": {
+   "I": "lingot_fer",
+   "T": "torche_lumirite"
+  },
+  "result": {
+   "item": "lanterne_lumirite",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   " L ",
+   "LGL",
+   " L "
+  ],
+  "key": {
+   "L": "eclat_lumirite",
+   "G": "verre"
+  },
+  "result": {
+   "item": "lampe_eteinte",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "S",
+   "C"
+  ],
+  "key": {
+   "S": "baton",
+   "C": "#cobble"
+  },
+  "result": {
+   "item": "levier",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "SS"
+  ],
+  "key": {
+   "S": "pierre_taillee"
+  },
+  "result": {
+   "item": "plaque_pression",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "TTT",
+   "PPP"
+  ],
+  "key": {
+   "T": "toison",
+   "P": "#planks"
+  },
+  "result": {
+   "item": "couchette",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "toison"
+  ],
+  "result": {
+   "item": "tissu_blanc",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "PPP",
+   "FFF",
+   "PPP"
+  ],
+  "key": {
+   "P": "#planks",
+   "F": "fibre"
+  },
+  "result": {
+   "item": "etagere",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "tissu_blanc",
+   "pavot"
+  ],
+  "result": {
+   "item": "tissu_rouge",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "tissu_blanc",
+   "bleuet"
+  ],
+  "result": {
+   "item": "tissu_bleu",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "tissu_blanc",
+   "pissenlit"
+  ],
+  "result": {
+   "item": "tissu_jaune",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "tissu_blanc",
+   "digitale"
+  ],
+  "result": {
+   "item": "tissu_violet",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "tissu_blanc",
+   "charbon"
+  ],
+  "result": {
+   "item": "tissu_noir",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "tissu_blanc",
+   "lumifleur"
+  ],
+  "result": {
+   "item": "tissu_cyan",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "tissu_blanc",
+   "mousse"
+  ],
+  "result": {
+   "item": "tissu_vert",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "tissu_blanc",
+   "boule_argile"
+  ],
+  "result": {
+   "item": "tissu_gris",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "tissu_blanc",
+   "terre"
+  ],
+  "result": {
+   "item": "tissu_brun",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "tissu_blanc",
+   "clochette_ardente"
+  ],
+  "result": {
+   "item": "tissu_orange",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "tissu_blanc",
+   "marguerite"
+  ],
+  "result": {
+   "item": "tissu_rose",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XXX",
+   "XXX",
+   "XXX"
+  ],
+  "key": {
+   "X": "lingot_cuivre"
+  },
+  "result": {
+   "item": "bloc_cuivre",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "bloc_cuivre"
+  ],
+  "result": {
+   "item": "lingot_cuivre",
+   "count": 9
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XXX",
+   "XXX",
+   "XXX"
+  ],
+  "key": {
+   "X": "lingot_fer"
+  },
+  "result": {
+   "item": "bloc_fer",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "bloc_fer"
+  ],
+  "result": {
+   "item": "lingot_fer",
+   "count": 9
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XXX",
+   "XXX",
+   "XXX"
+  ],
+  "key": {
+   "X": "lingot_or"
+  },
+  "result": {
+   "item": "bloc_or",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "bloc_or"
+  ],
+  "result": {
+   "item": "lingot_or",
+   "count": 9
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XXX",
+   "XXX",
+   "XXX"
+  ],
+  "key": {
+   "X": "celestine"
+  },
+  "result": {
+   "item": "bloc_celestine",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "bloc_celestine"
+  ],
+  "result": {
+   "item": "celestine",
+   "count": 9
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XXX",
+   "XXX",
+   "XXX"
+  ],
+  "key": {
+   "X": "eclat_lumirite"
+  },
+  "result": {
+   "item": "bloc_lumirite",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "bloc_lumirite"
+  ],
+  "result": {
+   "item": "eclat_lumirite",
+   "count": 9
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XXX",
+   "XXX",
+   "XXX"
+  ],
+  "key": {
+   "X": "braisite"
+  },
+  "result": {
+   "item": "bloc_braisite",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "bloc_braisite"
+  ],
+  "result": {
+   "item": "braisite",
+   "count": 9
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XXX",
+   "XXX",
+   "XXX"
+  ],
+  "key": {
+   "X": "lingot_etherium"
+  },
+  "result": {
+   "item": "bloc_etherium",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "bloc_etherium"
+  ],
+  "result": {
+   "item": "lingot_etherium",
+   "count": 9
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "I I",
+   " I "
+  ],
+  "key": {
+   "I": "lingot_fer"
+  },
+  "result": {
+   "item": "seau",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "G G",
+   " G "
+  ],
+  "key": {
+   "G": "verre"
+  },
+  "result": {
+   "item": "fiole",
+   "count": 3
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   " I",
+   "I "
+  ],
+  "key": {
+   "I": "lingot_fer"
+  },
+  "result": {
+   "item": "cisailles",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XXX",
+   " S ",
+   " S "
+  ],
+  "key": {
+   "X": "#planks",
+   "S": "baton"
+  },
+  "result": {
+   "item": "pioche_bois",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XX",
+   "XS",
+   " S"
+  ],
+  "key": {
+   "X": "#planks",
+   "S": "baton"
+  },
+  "result": {
+   "item": "hache_bois",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X",
+   "S",
+   "S"
+  ],
+  "key": {
+   "X": "#planks",
+   "S": "baton"
+  },
+  "result": {
+   "item": "pelle_bois",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X",
+   "X",
+   "S"
+  ],
+  "key": {
+   "X": "#planks",
+   "S": "baton"
+  },
+  "result": {
+   "item": "epee_bois",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XX",
+   " S",
+   " S"
+  ],
+  "key": {
+   "X": "#planks",
+   "S": "baton"
+  },
+  "result": {
+   "item": "houe_bois",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XXX",
+   " S ",
+   " S "
+  ],
+  "key": {
+   "X": "#cobble",
+   "S": "baton"
+  },
+  "result": {
+   "item": "pioche_pierre",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XX",
+   "XS",
+   " S"
+  ],
+  "key": {
+   "X": "#cobble",
+   "S": "baton"
+  },
+  "result": {
+   "item": "hache_pierre",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X",
+   "S",
+   "S"
+  ],
+  "key": {
+   "X": "#cobble",
+   "S": "baton"
+  },
+  "result": {
+   "item": "pelle_pierre",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X",
+   "X",
+   "S"
+  ],
+  "key": {
+   "X": "#cobble",
+   "S": "baton"
+  },
+  "result": {
+   "item": "epee_pierre",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XX",
+   " S",
+   " S"
+  ],
+  "key": {
+   "X": "#cobble",
+   "S": "baton"
+  },
+  "result": {
+   "item": "houe_pierre",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XXX",
+   " S ",
+   " S "
+  ],
+  "key": {
+   "X": "lingot_cuivre",
+   "S": "baton"
+  },
+  "result": {
+   "item": "pioche_cuivre",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XX",
+   "XS",
+   " S"
+  ],
+  "key": {
+   "X": "lingot_cuivre",
+   "S": "baton"
+  },
+  "result": {
+   "item": "hache_cuivre",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X",
+   "S",
+   "S"
+  ],
+  "key": {
+   "X": "lingot_cuivre",
+   "S": "baton"
+  },
+  "result": {
+   "item": "pelle_cuivre",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X",
+   "X",
+   "S"
+  ],
+  "key": {
+   "X": "lingot_cuivre",
+   "S": "baton"
+  },
+  "result": {
+   "item": "epee_cuivre",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XXX",
+   " S ",
+   " S "
+  ],
+  "key": {
+   "X": "lingot_fer",
+   "S": "baton"
+  },
+  "result": {
+   "item": "pioche_fer",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XX",
+   "XS",
+   " S"
+  ],
+  "key": {
+   "X": "lingot_fer",
+   "S": "baton"
+  },
+  "result": {
+   "item": "hache_fer",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X",
+   "S",
+   "S"
+  ],
+  "key": {
+   "X": "lingot_fer",
+   "S": "baton"
+  },
+  "result": {
+   "item": "pelle_fer",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X",
+   "X",
+   "S"
+  ],
+  "key": {
+   "X": "lingot_fer",
+   "S": "baton"
+  },
+  "result": {
+   "item": "epee_fer",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XX",
+   " S",
+   " S"
+  ],
+  "key": {
+   "X": "lingot_fer",
+   "S": "baton"
+  },
+  "result": {
+   "item": "houe_fer",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XXX",
+   " S ",
+   " S "
+  ],
+  "key": {
+   "X": "celestine",
+   "S": "baton"
+  },
+  "result": {
+   "item": "pioche_celestine",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XX",
+   "XS",
+   " S"
+  ],
+  "key": {
+   "X": "celestine",
+   "S": "baton"
+  },
+  "result": {
+   "item": "hache_celestine",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X",
+   "S",
+   "S"
+  ],
+  "key": {
+   "X": "celestine",
+   "S": "baton"
+  },
+  "result": {
+   "item": "pelle_celestine",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X",
+   "X",
+   "S"
+  ],
+  "key": {
+   "X": "celestine",
+   "S": "baton"
+  },
+  "result": {
+   "item": "epee_celestine",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XX",
+   " S",
+   " S"
+  ],
+  "key": {
+   "X": "celestine",
+   "S": "baton"
+  },
+  "result": {
+   "item": "houe_celestine",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XXX",
+   " S ",
+   " S "
+  ],
+  "key": {
+   "X": "lingot_etherium",
+   "S": "baton"
+  },
+  "result": {
+   "item": "pioche_etherium",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XX",
+   "XS",
+   " S"
+  ],
+  "key": {
+   "X": "lingot_etherium",
+   "S": "baton"
+  },
+  "result": {
+   "item": "hache_etherium",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X",
+   "S",
+   "S"
+  ],
+  "key": {
+   "X": "lingot_etherium",
+   "S": "baton"
+  },
+  "result": {
+   "item": "pelle_etherium",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X",
+   "X",
+   "S"
+  ],
+  "key": {
+   "X": "lingot_etherium",
+   "S": "baton"
+  },
+  "result": {
+   "item": "epee_etherium",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   " SF",
+   "S F",
+   " SF"
+  ],
+  "key": {
+   "S": "baton",
+   "F": "#string"
+  },
+  "result": {
+   "item": "arc",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X",
+   "S",
+   "P"
+  ],
+  "key": {
+   "X": "silex",
+   "S": "baton",
+   "P": "plume"
+  },
+  "result": {
+   "item": "fleche",
+   "count": 4
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X",
+   "S",
+   "P"
+  ],
+  "key": {
+   "X": "epine",
+   "S": "baton",
+   "P": "plume"
+  },
+  "result": {
+   "item": "fleche",
+   "count": 4
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "PIP",
+   "PPP",
+   " P "
+  ],
+  "key": {
+   "P": "#planks",
+   "I": "lingot_fer"
+  },
+  "result": {
+   "item": "bouclier",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XXX",
+   "X X"
+  ],
+  "key": {
+   "X": "fourrure"
+  },
+  "result": {
+   "item": "casque_fourrure",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X X",
+   "XXX",
+   "XXX"
+  ],
+  "key": {
+   "X": "fourrure"
+  },
+  "result": {
+   "item": "plastron_fourrure",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XXX",
+   "X X",
+   "X X"
+  ],
+  "key": {
+   "X": "fourrure"
+  },
+  "result": {
+   "item": "jambieres_fourrure",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X X",
+   "X X"
+  ],
+  "key": {
+   "X": "fourrure"
+  },
+  "result": {
+   "item": "bottes_fourrure",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XXX",
+   "X X"
+  ],
+  "key": {
+   "X": "lingot_fer"
+  },
+  "result": {
+   "item": "casque_fer",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X X",
+   "XXX",
+   "XXX"
+  ],
+  "key": {
+   "X": "lingot_fer"
+  },
+  "result": {
+   "item": "plastron_fer",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XXX",
+   "X X",
+   "X X"
+  ],
+  "key": {
+   "X": "lingot_fer"
+  },
+  "result": {
+   "item": "jambieres_fer",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X X",
+   "X X"
+  ],
+  "key": {
+   "X": "lingot_fer"
+  },
+  "result": {
+   "item": "bottes_fer",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XXX",
+   "X X"
+  ],
+  "key": {
+   "X": "celestine"
+  },
+  "result": {
+   "item": "casque_celestine",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X X",
+   "XXX",
+   "XXX"
+  ],
+  "key": {
+   "X": "celestine"
+  },
+  "result": {
+   "item": "plastron_celestine",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XXX",
+   "X X",
+   "X X"
+  ],
+  "key": {
+   "X": "celestine"
+  },
+  "result": {
+   "item": "jambieres_celestine",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X X",
+   "X X"
+  ],
+  "key": {
+   "X": "celestine"
+  },
+  "result": {
+   "item": "bottes_celestine",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XXX",
+   "X X"
+  ],
+  "key": {
+   "X": "ecaille_magma"
+  },
+  "result": {
+   "item": "casque_braisite",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X X",
+   "XXX",
+   "XXX"
+  ],
+  "key": {
+   "X": "ecaille_magma"
+  },
+  "result": {
+   "item": "plastron_braisite",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XXX",
+   "X X",
+   "X X"
+  ],
+  "key": {
+   "X": "ecaille_magma"
+  },
+  "result": {
+   "item": "jambieres_braisite",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X X",
+   "X X"
+  ],
+  "key": {
+   "X": "ecaille_magma"
+  },
+  "result": {
+   "item": "bottes_braisite",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XXX",
+   "X X"
+  ],
+  "key": {
+   "X": "lingot_etherium"
+  },
+  "result": {
+   "item": "casque_etherium",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X X",
+   "XXX",
+   "XXX"
+  ],
+  "key": {
+   "X": "lingot_etherium"
+  },
+  "result": {
+   "item": "plastron_etherium",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XXX",
+   "X X",
+   "X X"
+  ],
+  "key": {
+   "X": "lingot_etherium"
+  },
+  "result": {
+   "item": "jambieres_etherium",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "X X",
+   "X X"
+  ],
+  "key": {
+   "X": "lingot_etherium"
+  },
+  "result": {
+   "item": "bottes_etherium",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "lingot_fer",
+   "silex",
+   "eclat_lumirite"
+  ],
+  "result": {
+   "item": "etincelle_braise",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   " B ",
+   "BLB",
+   " B "
+  ],
+  "key": {
+   "B": "briques_pierre",
+   "L": "eclat_lumirite"
+  },
+  "result": {
+   "item": "pierre_runique",
+   "count": 4
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "III",
+   " C ",
+   "SSS"
+  ],
+  "key": {
+   "I": "lingot_fer",
+   "C": "celestine",
+   "S": "briques_pierre"
+  },
+  "result": {
+   "item": "forge_runique",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   " L ",
+   "CHC",
+   " L "
+  ],
+  "key": {
+   "L": "eclat_lumirite",
+   "C": "celestine",
+   "H": "coeur_braise"
+  },
+  "result": {
+   "item": "cle_astrale",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "CLC",
+   "BBB"
+  ],
+  "key": {
+   "C": "celestine",
+   "L": "eclat_lumirite",
+   "B": "briques_basalte"
+  },
+  "result": {
+   "item": "autel_astral",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "pomme",
+   "lumifleur",
+   "eclat_lumirite",
+   "fibre"
+  ],
+  "result": {
+   "item": "offrande_sylvestre",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "braisite",
+   "poudre_braise",
+   "os_calcine",
+   "soufre"
+  ],
+  "result": {
+   "item": "offrande_braise",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "essence_vide",
+   "essence_vide",
+   "eclat_astral",
+   "eclat_astral",
+   "lingot_etherium"
+  ],
+  "result": {
+   "item": "oeil_neant",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "  B",
+   " P ",
+   "S  "
+  ],
+  "key": {
+   "B": "braisite",
+   "P": "poudre_braise",
+   "S": "baton"
+  },
+  "result": {
+   "item": "baton_braise",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "  C",
+   " L ",
+   "S  "
+  ],
+  "key": {
+   "C": "croc",
+   "L": "eclat_lumirite",
+   "S": "baton"
+  },
+  "result": {
+   "item": "baton_givre",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "B",
+   "B",
+   "S"
+  ],
+  "key": {
+   "B": "braisite",
+   "S": "baton"
+  },
+  "result": {
+   "item": "lame_braise",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "A",
+   "E",
+   "S"
+  ],
+  "key": {
+   "A": "eclat_astral",
+   "E": "lingot_etherium",
+   "S": "baton"
+  },
+  "result": {
+   "item": "lame_astrale",
+   "count": 1
+  },
+  "station": "forge"
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "fiole",
+   "baies",
+   "baies",
+   "pomme"
+  ],
+  "result": {
+   "item": "elixir_soin",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "fiole",
+   "poudre_braise",
+   "ecaille_magma"
+  ],
+  "result": {
+   "item": "elixir_feu",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "fiole",
+   "plume",
+   "baies"
+  ],
+  "result": {
+   "item": "elixir_vitesse",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "fiole",
+   "membrane",
+   "champignon_brun"
+  ],
+  "result": {
+   "item": "elixir_vision",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "fiole",
+   "coeur_sylvestre",
+   "pomme"
+  ],
+  "result": {
+   "item": "elixir_vitalite",
+   "count": 1
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "SLS",
+   "LAL",
+   "SLS"
+  ],
+  "key": {
+   "S": "pierre_taillee",
+   "L": "eclat_lumirite",
+   "A": "bois_argent"
+  },
+  "result": {
+   "item": "pierre_rappel",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "spore_explosive",
+   "fibre",
+   "charbon"
+  ],
+  "result": {
+   "item": "bombe_spore",
+   "count": 2
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "WWW"
+  ],
+  "key": {
+   "W": "ble"
+  },
+  "result": {
+   "item": "pain",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "champignon_brun",
+   "champignon_rouge",
+   "baies"
+  ],
+  "result": {
+   "item": "ragout",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "baies",
+   "baies",
+   "ble",
+   "ble"
+  ],
+  "result": {
+   "item": "tarte_baies",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "ble"
+  ],
+  "result": {
+   "item": "graines",
+   "count": 1
+  }
+ }
+]

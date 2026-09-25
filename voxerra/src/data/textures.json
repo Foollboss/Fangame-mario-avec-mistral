@@ -1,0 +1,1527 @@
+{
+ "pierre": {
+  "p": "stone",
+  "c": [
+   "#5d6169",
+   "#737781",
+   "#8a8e97"
+  ]
+ },
+ "moellon": {
+  "p": "cobble",
+  "c": [
+   "#4b4e55",
+   "#686c74",
+   "#878b93"
+  ]
+ },
+ "moellon_moussu": {
+  "p": "cobble",
+  "c": [
+   "#4b4e55",
+   "#686c74",
+   "#878b93"
+  ],
+  "moss": "#4f7a3a"
+ },
+ "roche_profonde": {
+  "p": "stone",
+  "c": [
+   "#34363d",
+   "#44474f",
+   "#555861"
+  ],
+  "veins": 5
+ },
+ "granit_rose": {
+  "p": "stone",
+  "c": [
+   "#8a5f55",
+   "#a57668",
+   "#c08f7f"
+  ],
+  "spots": "#e8cfc4",
+  "spotCount": 14
+ },
+ "calcaire": {
+  "p": "stone",
+  "c": [
+   "#b8b39f",
+   "#cdc8b2",
+   "#dedac6"
+  ],
+  "veins": 1
+ },
+ "socle": {
+  "p": "noise",
+  "c": [
+   "#15151a",
+   "#2a2a33",
+   "#4a4a55"
+  ],
+  "white": 0.6
+ },
+ "terre": {
+  "p": "noise",
+  "c": [
+   "#5a3b25",
+   "#7a5335",
+   "#94694a"
+  ],
+  "white": 0.45,
+  "levels": 4
+ },
+ "herbe_dessus": {
+  "p": "grass_top"
+ },
+ "herbe_cote": {
+  "p": "grass_side",
+  "base": "terre"
+ },
+ "humus_dessus": {
+  "p": "noise",
+  "c": [
+   "#4b3520",
+   "#654a2c",
+   "#7d5d38"
+  ],
+  "white": 0.5,
+  "levels": 4
+ },
+ "humus_cote": {
+  "p": "grass_side",
+  "base": "terre",
+  "untinted": true,
+  "c": [
+   "#4b3520",
+   "#654a2c",
+   "#7d5d38"
+  ]
+ },
+ "mycelium_dessus": {
+  "p": "noise",
+  "c": [
+   "#5a4a5a",
+   "#6e5a70",
+   "#8a7490"
+  ],
+  "white": 0.5
+ },
+ "sable": {
+  "p": "sand",
+  "c": [
+   "#cdb77c",
+   "#dcc890",
+   "#eadaa6"
+  ]
+ },
+ "sable_ocre": {
+  "p": "sand",
+  "c": [
+   "#a8582c",
+   "#bd6a38",
+   "#cf7f48"
+  ]
+ },
+ "gres": {
+  "p": "sand",
+  "c": [
+   "#c4ab70",
+   "#d4bc82",
+   "#e1cc95"
+  ],
+  "ripples": true
+ },
+ "gres_dessus": {
+  "p": "sand",
+  "c": [
+   "#cbb277",
+   "#d9c287",
+   "#e5d299"
+  ]
+ },
+ "gres_ocre": {
+  "p": "sand",
+  "c": [
+   "#9a4e26",
+   "#b05e32",
+   "#c47040"
+  ],
+  "ripples": true
+ },
+ "gres_taille": {
+  "p": "stonebricks",
+  "c": [
+   "#bea468",
+   "#d0b87c",
+   "#e0ca90"
+  ]
+ },
+ "gravier": {
+  "p": "gravel"
+ },
+ "argile": {
+  "p": "noise",
+  "c": [
+   "#8b929c",
+   "#9ba2ad",
+   "#adb4be"
+  ],
+  "white": 0.2,
+  "levels": 3
+ },
+ "neige": {
+  "p": "noise",
+  "c": [
+   "#dfe8f0",
+   "#eef4fa",
+   "#ffffff"
+  ],
+  "white": 0.3,
+  "levels": 3
+ },
+ "glace": {
+  "p": "liquid",
+  "c": [
+   "#8fb8e8",
+   "#a8cdf2",
+   "#c6e2ff"
+  ],
+  "alpha": 175
+ },
+ "glace_compacte": {
+  "p": "noise",
+  "c": [
+   "#7fa6d6",
+   "#94b8e3",
+   "#aac9ee"
+  ],
+  "white": 0.2
+ },
+ "eau": {
+  "p": "liquid",
+  "c": [
+   "#8a8a8a",
+   "#a6a6a6",
+   "#c4c4c4"
+  ],
+  "alpha": 165
+ },
+ "lave": {
+  "p": "liquid",
+  "c": [
+   "#b8330c",
+   "#e8661a",
+   "#ffb347"
+  ],
+  "alpha": 255
+ },
+ "mousse": {
+  "p": "noise",
+  "c": [
+   "#3f6e2c",
+   "#4f8537",
+   "#63a045"
+  ],
+  "white": 0.4
+ },
+ "boue": {
+  "p": "noise",
+  "c": [
+   "#3b2f25",
+   "#4a3b2e",
+   "#5a493a"
+  ],
+  "white": 0.35
+ },
+ "terre_labouree": {
+  "p": "farmland"
+ },
+ "argile_cuite_ocre": {
+  "p": "terracotta",
+  "c": [
+   "#a4583a",
+   "#b86b45",
+   "#c98256"
+  ]
+ },
+ "argile_cuite_rouge": {
+  "p": "terracotta",
+  "c": [
+   "#8a3a2a",
+   "#a04632",
+   "#b4553e"
+  ],
+  "band": "#c98a5a"
+ },
+ "argile_cuite_blanche": {
+  "p": "terracotta",
+  "c": [
+   "#b8a898",
+   "#c9baa9",
+   "#d8cab9"
+  ]
+ },
+ "argile_cuite_brune": {
+  "p": "terracotta",
+  "c": [
+   "#5e4230",
+   "#6e4e3a",
+   "#7e5a44"
+  ],
+  "band": "#8a6a4a"
+ },
+ "argile_cuite_jaune": {
+  "p": "terracotta",
+  "c": [
+   "#b88a3a",
+   "#c99a48",
+   "#d8aa56"
+  ]
+ },
+ "minerai_houille": {
+  "p": "ore",
+  "base": "pierre",
+  "c": [
+   "#141416",
+   "#26262b",
+   "#3e3e46"
+  ],
+  "count": 6
+ },
+ "minerai_cuivre": {
+  "p": "ore",
+  "base": "pierre",
+  "c": [
+   "#8a4a2a",
+   "#c26d3c",
+   "#eaa070"
+  ]
+ },
+ "minerai_fer": {
+  "p": "ore",
+  "base": "pierre",
+  "c": [
+   "#8a6a55",
+   "#c9a58a",
+   "#ecd2bd"
+  ]
+ },
+ "minerai_or": {
+  "p": "ore",
+  "base": "pierre",
+  "c": [
+   "#9a7a10",
+   "#e8c030",
+   "#fff08a"
+  ],
+  "count": 4
+ },
+ "minerai_lumirite": {
+  "p": "ore",
+  "base": "pierre",
+  "c": [
+   "#137c8a",
+   "#2fd2e0",
+   "#c8fcff"
+  ]
+ },
+ "minerai_celestine": {
+  "p": "ore",
+  "base": "roche_profonde",
+  "c": [
+   "#3a2a8a",
+   "#7b5ae0",
+   "#d2c4ff"
+  ],
+  "count": 4
+ },
+ "minerai_braisite": {
+  "p": "ore",
+  "base": "cendrite",
+  "c": [
+   "#8a2a0a",
+   "#ff6a1a",
+   "#ffd08a"
+  ]
+ },
+ "minerai_etherium": {
+  "p": "ore",
+  "base": "pierre_astrale",
+  "c": [
+   "#8a7a3a",
+   "#f0e08a",
+   "#fffbe8"
+  ],
+  "count": 4
+ },
+ "buche_chene": {
+  "p": "log",
+  "c": [
+   "#3e2a1a",
+   "#553a24",
+   "#6a4a2e"
+  ]
+ },
+ "buche_chene_dessus": {
+  "p": "logtop",
+  "c": [
+   "#9a7a4c",
+   "#b8925e",
+   "#cfa872"
+  ],
+  "bark": "#4a321e"
+ },
+ "planches_chene": {
+  "p": "planks",
+  "c": [
+   "#8a6238",
+   "#a67a48",
+   "#bf915a"
+  ]
+ },
+ "feuilles_chene": {
+  "p": "leaves",
+  "c": [
+   "#565656",
+   "#7a7a7a",
+   "#a0a0a0"
+  ],
+  "holes": 0.2
+ },
+ "pousse_chene": {
+  "p": "sapling",
+  "c": [
+   "#4c8a3a",
+   "#553a24"
+  ]
+ },
+ "buche_bouleau": {
+  "p": "log",
+  "c": [
+   "#cfcac0",
+   "#e2ddd2",
+   "#f2eee6"
+  ],
+  "marks": "#2a2a2a"
+ },
+ "buche_bouleau_dessus": {
+  "p": "logtop",
+  "c": [
+   "#c8b88a",
+   "#dccb9a",
+   "#ecdcaa"
+  ],
+  "bark": "#d8d2c6"
+ },
+ "planches_bouleau": {
+  "p": "planks",
+  "c": [
+   "#b89f6a",
+   "#cdb57e",
+   "#dfca92"
+  ]
+ },
+ "feuilles_bouleau": {
+  "p": "leaves",
+  "c": [
+   "#6a6a6a",
+   "#8e8e8e",
+   "#b4b4b4"
+  ],
+  "holes": 0.2
+ },
+ "pousse_bouleau": {
+  "p": "sapling",
+  "c": [
+   "#6aa84a",
+   "#e2ddd2"
+  ]
+ },
+ "buche_epicea": {
+  "p": "log",
+  "c": [
+   "#2e2014",
+   "#3d2b1a",
+   "#4d3722"
+  ]
+ },
+ "buche_epicea_dessus": {
+  "p": "logtop",
+  "c": [
+   "#7a5a38",
+   "#94704a",
+   "#aa845a"
+  ],
+  "bark": "#3a2818"
+ },
+ "planches_epicea": {
+  "p": "planks",
+  "c": [
+   "#5a3e24",
+   "#6e4d2e",
+   "#825c38"
+  ]
+ },
+ "feuilles_epicea": {
+  "p": "leaves",
+  "c": [
+   "#444444",
+   "#606060",
+   "#808080"
+  ],
+  "holes": 0.1
+ },
+ "pousse_epicea": {
+  "p": "sapling",
+  "c": [
+   "#4c8a3a",
+   "#3d2b1a"
+  ]
+ },
+ "buche_teck": {
+  "p": "log",
+  "c": [
+   "#4a3a1e",
+   "#5e4a28",
+   "#725a32"
+  ],
+  "marks": "#6a7a3a"
+ },
+ "buche_teck_dessus": {
+  "p": "logtop",
+  "c": [
+   "#a8804e",
+   "#c09460",
+   "#d4a872"
+  ],
+  "bark": "#584628"
+ },
+ "planches_teck": {
+  "p": "planks",
+  "c": [
+   "#9a6a44",
+   "#b07d52",
+   "#c49062"
+  ]
+ },
+ "feuilles_teck": {
+  "p": "leaves",
+  "c": [
+   "#4e4e4e",
+   "#727272",
+   "#989898"
+  ],
+  "holes": 0.15
+ },
+ "pousse_teck": {
+  "p": "sapling",
+  "c": [
+   "#4c8a3a",
+   "#5e4a28"
+  ]
+ },
+ "buche_acacia": {
+  "p": "log",
+  "c": [
+   "#5e5850",
+   "#736c62",
+   "#878075"
+  ]
+ },
+ "buche_acacia_dessus": {
+  "p": "logtop",
+  "c": [
+   "#b8643a",
+   "#cc7648",
+   "#dc8a58"
+  ],
+  "bark": "#6a635a"
+ },
+ "planches_acacia": {
+  "p": "planks",
+  "c": [
+   "#a9542a",
+   "#c26634",
+   "#d67a42"
+  ]
+ },
+ "feuilles_acacia": {
+  "p": "leaves",
+  "c": [
+   "#5a5a5a",
+   "#7e7e7e",
+   "#a2a2a2"
+  ],
+  "holes": 0.22
+ },
+ "pousse_acacia": {
+  "p": "sapling",
+  "c": [
+   "#4c8a3a",
+   "#736c62"
+  ]
+ },
+ "buche_saule": {
+  "p": "log",
+  "c": [
+   "#3a3526",
+   "#4c4532",
+   "#5e563e"
+  ]
+ },
+ "buche_saule_dessus": {
+  "p": "logtop",
+  "c": [
+   "#8a8a5a",
+   "#a0a06a",
+   "#b4b47a"
+  ],
+  "bark": "#443e2c"
+ },
+ "planches_saule": {
+  "p": "planks",
+  "c": [
+   "#6e7a4a",
+   "#839058",
+   "#97a566"
+  ]
+ },
+ "feuilles_saule": {
+  "p": "leaves",
+  "c": [
+   "#525252",
+   "#747474",
+   "#969696"
+  ],
+  "holes": 0.25
+ },
+ "pousse_saule": {
+  "p": "sapling",
+  "c": [
+   "#4c8a3a",
+   "#4c4532"
+  ]
+ },
+ "buche_prisme": {
+  "p": "log",
+  "c": [
+   "#6a5a9a",
+   "#8a7ac0",
+   "#b0a2e0"
+  ],
+  "marks": "#e0f8ff"
+ },
+ "buche_prisme_dessus": {
+  "p": "logtop",
+  "c": [
+   "#a89ad8",
+   "#c0b4ee",
+   "#d8ceff"
+  ],
+  "bark": "#7a6aaa"
+ },
+ "planches_prisme": {
+  "p": "planks",
+  "c": [
+   "#8a7ab8",
+   "#a08ece",
+   "#b6a4e2"
+  ]
+ },
+ "feuilles_prisme": {
+  "p": "leaves",
+  "c": [
+   "#4ab8c8",
+   "#7ae0ec",
+   "#c8faff"
+  ],
+  "holes": 0.2
+ },
+ "pousse_prisme": {
+  "p": "sapling",
+  "c": [
+   "#7ae0ec",
+   "#8a7ac0"
+  ]
+ },
+ "herbes_hautes": {
+  "p": "tallgrass"
+ },
+ "fougere": {
+  "p": "fern"
+ },
+ "pavot": {
+  "p": "flower",
+  "c": [
+   "#d8342c",
+   "#2a1a1a",
+   "#3f8a35"
+  ]
+ },
+ "bleuet": {
+  "p": "flower",
+  "c": [
+   "#3a6ad8",
+   "#f0e0a0",
+   "#3f8a35"
+  ]
+ },
+ "pissenlit": {
+  "p": "flower",
+  "c": [
+   "#f0c828",
+   "#e89a10",
+   "#3f8a35"
+  ]
+ },
+ "marguerite": {
+  "p": "flower",
+  "c": [
+   "#f4f4f0",
+   "#f0c020",
+   "#3f8a35"
+  ]
+ },
+ "lumifleur": {
+  "p": "flower",
+  "c": [
+   "#5ae8f0",
+   "#ffffff",
+   "#2f7a6a"
+  ],
+  "shape": "bell"
+ },
+ "digitale": {
+  "p": "flower",
+  "c": [
+   "#b45ad8",
+   "#f0d0ff",
+   "#3f8a35"
+  ],
+  "shape": "tall"
+ },
+ "clochette_ardente": {
+  "p": "flower",
+  "c": [
+   "#ff7a2a",
+   "#ffd08a",
+   "#6a2a1a"
+  ],
+  "shape": "tall"
+ },
+ "fleur_nebuleuse": {
+  "p": "flower",
+  "c": [
+   "#c07aff",
+   "#ffffff",
+   "#5a4a9a"
+  ],
+  "shape": "bell"
+ },
+ "roseau": {
+  "p": "tallgrass",
+  "c": [
+   "#3e6e30",
+   "#5a8e42",
+   "#7aae52"
+  ],
+  "untinted": true,
+  "blades": 5
+ },
+ "buisson_baies": {
+  "p": "leaves",
+  "stages": 2,
+  "c": [
+   "#2e5a2a",
+   "#3e7a36",
+   "#529a44"
+  ],
+  "holes": 0.3,
+  "fruit": "#d0304a",
+  "fruitCount": 5
+ },
+ "buisson_mort": {
+  "p": "tallgrass",
+  "c": [
+   "#6a4a2a",
+   "#8a6a3a",
+   "#a88a5a"
+  ],
+  "untinted": true,
+  "blades": 6
+ },
+ "champignon_brun": {
+  "p": "mushroom",
+  "c": [
+   "#8a6a4a",
+   "#e8dcc6",
+   "#f6efe0"
+  ],
+  "dots": false
+ },
+ "champignon_rouge": {
+  "p": "mushroom",
+  "c": [
+   "#b33a2e",
+   "#e8dcc6",
+   "#f6efe0"
+  ]
+ },
+ "champignon_ardent": {
+  "p": "mushroom",
+  "c": [
+   "#e0501a",
+   "#6a2a1a",
+   "#ffd08a"
+  ]
+ },
+ "ble": {
+  "p": "crop",
+  "stages": 8
+ },
+ "cactus_cote": {
+  "p": "cactus"
+ },
+ "cactus_dessus": {
+  "p": "cactus",
+  "top": true
+ },
+ "lianes": {
+  "p": "vines"
+ },
+ "toile": {
+  "p": "web"
+ },
+ "herbe_seche": {
+  "p": "tallgrass",
+  "c": [
+   "#8a7a4a",
+   "#a8965a",
+   "#c4b06a"
+  ],
+  "untinted": true
+ },
+ "briques_pierre": {
+  "p": "stonebricks"
+ },
+ "briques_pierre_moussues": {
+  "p": "stonebricks",
+  "moss": "#4f7a3a"
+ },
+ "briques_pierre_fissurees": {
+  "p": "stonebricks",
+  "crack": true
+ },
+ "briques_argile": {
+  "p": "bricks"
+ },
+ "pierre_taillee": {
+  "p": "noise",
+  "c": [
+   "#7a7e86",
+   "#868a92",
+   "#92969e"
+  ],
+  "white": 0.1,
+  "levels": 3
+ },
+ "tuiles": {
+  "p": "tiles"
+ },
+ "tuiles_ardoise": {
+  "p": "tiles",
+  "c": [
+   "#2a3040",
+   "#3a4256",
+   "#4a546a"
+  ]
+ },
+ "verre": {
+  "p": "glass"
+ },
+ "porte_bois_haut": {
+  "p": "door",
+  "part": "top",
+  "base": "planches_chene"
+ },
+ "porte_bois_bas": {
+  "p": "door",
+  "part": "bottom",
+  "base": "planches_chene"
+ },
+ "porte_fer_haut": {
+  "p": "door",
+  "part": "top",
+  "base": "bloc_fer",
+  "c": [
+   "#5a5a62",
+   "#c0d8e0"
+  ]
+ },
+ "porte_fer_bas": {
+  "p": "door",
+  "part": "bottom",
+  "base": "bloc_fer",
+  "c": [
+   "#5a5a62",
+   "#c0d8e0"
+  ]
+ },
+ "echelle": {
+  "p": "ladder"
+ },
+ "torche": {
+  "p": "torch"
+ },
+ "torche_lumirite": {
+  "p": "torch",
+  "c": [
+   "#6a5a8a",
+   "#6af0ff"
+  ]
+ },
+ "lanterne": {
+  "p": "lantern"
+ },
+ "lanterne_lumirite": {
+  "p": "lantern",
+  "c": [
+   "#2a3a40",
+   "#8af4ff"
+  ]
+ },
+ "lampe_eteinte": {
+  "p": "lamp"
+ },
+ "lampe_allumee": {
+  "p": "lamp",
+  "on": true
+ },
+ "levier": {
+  "p": "lever"
+ },
+ "coffre_face": {
+  "p": "chest",
+  "face": "front"
+ },
+ "coffre_cote": {
+  "p": "chest",
+  "face": "side"
+ },
+ "coffre_dessus": {
+  "p": "chest",
+  "face": "top"
+ },
+ "atelier_dessus": {
+  "p": "workbench_top"
+ },
+ "atelier_cote": {
+  "p": "workbench_side"
+ },
+ "fourneau_face": {
+  "p": "furnace"
+ },
+ "fourneau_face_allume": {
+  "p": "furnace",
+  "lit": true
+ },
+ "forge_dessus": {
+  "p": "runestone",
+  "c": [
+   "#2a2e3a",
+   "#3a4050",
+   "#4a5266"
+  ],
+  "glow": "#6af0ff"
+ },
+ "forge_cote": {
+  "p": "stonebricks",
+  "c": [
+   "#3a3e48",
+   "#4a505c",
+   "#5a6270"
+  ]
+ },
+ "tissu_blanc": {
+  "p": "cloth",
+  "c": [
+   "#e8e8e4"
+  ]
+ },
+ "tissu_gris": {
+  "p": "cloth",
+  "c": [
+   "#7a7a80"
+  ]
+ },
+ "tissu_noir": {
+  "p": "cloth",
+  "c": [
+   "#26262c"
+  ]
+ },
+ "tissu_rouge": {
+  "p": "cloth",
+  "c": [
+   "#b03030"
+  ]
+ },
+ "tissu_orange": {
+  "p": "cloth",
+  "c": [
+   "#e07a28"
+  ]
+ },
+ "tissu_jaune": {
+  "p": "cloth",
+  "c": [
+   "#e8c83a"
+  ]
+ },
+ "tissu_vert": {
+  "p": "cloth",
+  "c": [
+   "#4a8a36"
+  ]
+ },
+ "tissu_cyan": {
+  "p": "cloth",
+  "c": [
+   "#2a9aa8"
+  ]
+ },
+ "tissu_bleu": {
+  "p": "cloth",
+  "c": [
+   "#3450b0"
+  ]
+ },
+ "tissu_violet": {
+  "p": "cloth",
+  "c": [
+   "#7a3ab0"
+  ]
+ },
+ "tissu_rose": {
+  "p": "cloth",
+  "c": [
+   "#e07aa8"
+  ]
+ },
+ "tissu_brun": {
+  "p": "cloth",
+  "c": [
+   "#6e4a2e"
+  ]
+ },
+ "etagere": {
+  "p": "bookshelf"
+ },
+ "bloc_cuivre": {
+  "p": "metal",
+  "c": [
+   "#8a4a2a",
+   "#c26d3c",
+   "#eaa070"
+  ]
+ },
+ "bloc_fer": {
+  "p": "metal"
+ },
+ "bloc_or": {
+  "p": "metal",
+  "c": [
+   "#a8820e",
+   "#e8c030",
+   "#fff4a0"
+  ]
+ },
+ "bloc_celestine": {
+  "p": "gemblock"
+ },
+ "bloc_lumirite": {
+  "p": "crystal",
+  "c": [
+   "#0e6a78",
+   "#2fd2e0",
+   "#c8fcff"
+  ]
+ },
+ "bloc_braisite": {
+  "p": "gemblock",
+  "c": [
+   "#6a1a0a",
+   "#e0501a",
+   "#ffc08a"
+  ]
+ },
+ "bloc_etherium": {
+  "p": "metal",
+  "c": [
+   "#a8984a",
+   "#e8dc8a",
+   "#fffbe8"
+  ]
+ },
+ "foyer_maudit": {
+  "p": "spawner"
+ },
+ "cendrite": {
+  "p": "stone",
+  "c": [
+   "#4a2424",
+   "#5e2e2c",
+   "#743a36"
+  ],
+  "veins": 4,
+  "spots": "#8a4a3a"
+ },
+ "basalte_cote": {
+  "p": "basalt"
+ },
+ "basalte_dessus": {
+  "p": "basalt",
+  "top": true
+ },
+ "basalte_poli": {
+  "p": "noise",
+  "c": [
+   "#2e2d33",
+   "#3a3940",
+   "#48474f"
+  ],
+  "white": 0.15,
+  "levels": 3
+ },
+ "briques_basalte": {
+  "p": "stonebricks",
+  "c": [
+   "#1f1e24",
+   "#2c2b33",
+   "#3a3942"
+  ]
+ },
+ "sable_cendre": {
+  "p": "sand",
+  "c": [
+   "#3a3230",
+   "#4a403c",
+   "#5c504a"
+  ]
+ },
+ "croute_magma": {
+  "p": "stone",
+  "c": [
+   "#4a1408",
+   "#7a2208",
+   "#a8360e"
+  ],
+  "spots": "#ffb040",
+  "spotCount": 22,
+  "veins": 6
+ },
+ "verre_volcanique": {
+  "p": "noise",
+  "c": [
+   "#0e0a14",
+   "#1a1224",
+   "#2e2040"
+  ],
+  "white": 0.2,
+  "levels": 4
+ },
+ "tige_ardente": {
+  "p": "log",
+  "c": [
+   "#4a1a1a",
+   "#6a2424",
+   "#8a3030"
+  ],
+  "marks": "#ff8a3a"
+ },
+ "tige_ardente_dessus": {
+  "p": "logtop",
+  "c": [
+   "#8a3a2a",
+   "#a8483a",
+   "#c45a48"
+  ],
+  "bark": "#5a2020"
+ },
+ "chapeau_ardent": {
+  "p": "fungus_cap"
+ },
+ "mousse_braise_dessus": {
+  "p": "noise",
+  "c": [
+   "#6a1a14",
+   "#8a2a1a",
+   "#c24a24"
+  ],
+  "white": 0.4
+ },
+ "mousse_braise_cote": {
+  "p": "grass_side",
+  "base": "cendrite",
+  "untinted": true,
+  "c": [
+   "#6a1a14",
+   "#8a2a1a",
+   "#c24a24"
+  ]
+ },
+ "cristal_braise": {
+  "p": "crystal",
+  "cutout": true,
+  "c": [
+   "#8a2a0a",
+   "#ff6a1a",
+   "#ffe0a0"
+  ]
+ },
+ "soufre": {
+  "p": "noise",
+  "c": [
+   "#a8962a",
+   "#d0bc3a",
+   "#f0e060"
+  ],
+  "white": 0.4
+ },
+ "pierre_runique": {
+  "p": "runestone"
+ },
+ "voile_abime": {
+  "p": "portal",
+  "c": [
+   "#3a0a1a",
+   "#b8201a",
+   "#ff9a5a"
+  ],
+  "alpha": 190
+ },
+ "autel_braise_dessus": {
+  "p": "altar",
+  "top": true,
+  "c": [
+   "#3a1a14",
+   "#5a2a20",
+   "#7a3a2a"
+  ],
+  "glow": "#ff6a1a"
+ },
+ "autel_braise_cote": {
+  "p": "altar",
+  "c": [
+   "#3a1a14",
+   "#5a2a20",
+   "#7a3a2a"
+  ],
+  "glow": "#ff6a1a"
+ },
+ "pierre_astrale": {
+  "p": "stone",
+  "c": [
+   "#8a86a8",
+   "#a29ec0",
+   "#bab6d6"
+  ],
+  "spots": "#e8e0ff"
+ },
+ "briques_astrales": {
+  "p": "stonebricks",
+  "c": [
+   "#6a6690",
+   "#827ea8",
+   "#9a96c0"
+  ]
+ },
+ "poussiere_etoile": {
+  "p": "sand",
+  "c": [
+   "#b8b0d8",
+   "#ccc4e8",
+   "#e0daf6"
+  ]
+ },
+ "herbe_stellaire_dessus": {
+  "p": "stars",
+  "c": [
+   "#2a4a6a",
+   "#3a6a8a",
+   "#4a8aaa"
+  ],
+  "star": "#dffaff"
+ },
+ "herbe_stellaire_cote": {
+  "p": "grass_side",
+  "base": "pierre_astrale",
+  "untinted": true,
+  "c": [
+   "#2a4a6a",
+   "#3a6a8a",
+   "#4a8aaa"
+  ]
+ },
+ "bois_stellaire": {
+  "p": "log",
+  "c": [
+   "#2a2a4a",
+   "#3a3a60",
+   "#4a4a78"
+  ],
+  "marks": "#9ad8ff"
+ },
+ "bois_stellaire_dessus": {
+  "p": "logtop",
+  "c": [
+   "#5a5a8a",
+   "#6e6ea0",
+   "#8282b8"
+  ],
+  "bark": "#2a2a4a"
+ },
+ "planches_stellaires": {
+  "p": "planks",
+  "c": [
+   "#3e3e6a",
+   "#4e4e80",
+   "#5e5e96"
+  ]
+ },
+ "feuilles_stellaires": {
+  "p": "leaves",
+  "c": [
+   "#4a6ad8",
+   "#7a9aff",
+   "#c0d8ff"
+  ],
+  "holes": 0.15
+ },
+ "cristal_astral": {
+  "p": "crystal",
+  "cutout": true,
+  "c": [
+   "#6a4ac0",
+   "#b08aff",
+   "#f0e0ff"
+  ]
+ },
+ "voile_astral": {
+  "p": "portal",
+  "c": [
+   "#0a1a3a",
+   "#2a6ad8",
+   "#aee0ff"
+  ],
+  "alpha": 200
+ },
+ "autel_astral_dessus": {
+  "p": "altar",
+  "top": true
+ },
+ "autel_astral_cote": {
+  "p": "altar"
+ },
+ "autel_sylvestre_dessus": {
+  "p": "altar",
+  "top": true,
+  "c": [
+   "#2a3a24",
+   "#3a5030",
+   "#4a6a3c"
+  ],
+  "glow": "#7aff6a"
+ },
+ "autel_sylvestre_cote": {
+  "p": "altar",
+  "c": [
+   "#2a3a24",
+   "#3a5030",
+   "#4a6a3c"
+  ],
+  "glow": "#7aff6a"
+ },
+ "autel_veilleur_dessus": {
+  "p": "altar",
+  "top": true,
+  "c": [
+   "#2a2040",
+   "#3a2e5a",
+   "#4a3c74"
+  ],
+  "glow": "#d08aff"
+ },
+ "autel_veilleur_cote": {
+  "p": "altar",
+  "c": [
+   "#2a2040",
+   "#3a2e5a",
+   "#4a3c74"
+  ],
+  "glow": "#d08aff"
+ },
+ "vide_astral": {
+  "p": "stars",
+  "c": [
+   "#05040c",
+   "#0a0818",
+   "#120e24"
+  ],
+  "count": 4
+ },
+ "chapeau_rouge": {
+  "p": "fungus_cap",
+  "c": [
+   "#8a1a16",
+   "#c0302a",
+   "#e04a3a"
+  ]
+ },
+ "chapeau_brun": {
+  "p": "noise",
+  "c": [
+   "#6a4a30",
+   "#8a6a48",
+   "#a08060"
+  ],
+  "white": 0.35
+ },
+ "pied_champignon": {
+  "p": "noise",
+  "c": [
+   "#c8bca8",
+   "#dcd2c0",
+   "#ece4d6"
+  ],
+  "white": 0.25,
+  "levels": 3
+ },
+ "pied_champignon_dessus": {
+  "p": "logtop",
+  "c": [
+   "#d8ccb8",
+   "#e6dccc",
+   "#f0e8dc"
+  ],
+  "bark": "#c0b4a0"
+ },
+ "fx_fumee": {
+  "p": "fx",
+  "kind": "smoke",
+  "c": [
+   "#d0d0d0",
+   "#8a8a8a"
+  ]
+ },
+ "fx_flamme": {
+  "p": "fx",
+  "kind": "flame",
+  "c": [
+   "#ff8a2a",
+   "#ffe070"
+  ]
+ },
+ "fx_etincelle": {
+  "p": "fx",
+  "kind": "spark",
+  "c": [
+   "#fff8d0",
+   "#ffd060"
+  ]
+ },
+ "fx_bulle": {
+  "p": "fx",
+  "kind": "bubble",
+  "c": [
+   "#cfefff"
+  ]
+ },
+ "fx_coeur": {
+  "p": "fx",
+  "kind": "heart",
+  "c": [
+   "#ff4a6a"
+  ]
+ },
+ "fx_etoile": {
+  "p": "fx",
+  "kind": "star",
+  "c": [
+   "#ffffff",
+   "#fff0a0"
+  ]
+ },
+ "fx_goutte": {
+  "p": "fx",
+  "kind": "drop",
+  "c": [
+   "#a8c8ff",
+   "#6a8ae0"
+  ]
+ },
+ "fx_flocon": {
+  "p": "fx",
+  "kind": "flake",
+  "c": [
+   "#ffffff"
+  ]
+ },
+ "fx_poussiere": {
+  "p": "fx",
+  "kind": "dust",
+  "c": [
+   "#ffffff",
+   "#bbbbbb"
+  ]
+ },
+ "fx_portail": {
+  "p": "fx",
+  "kind": "dust",
+  "c": [
+   "#e3a8ff",
+   "#8a2bb0"
+  ]
+ },
+ "fx_spore": {
+  "p": "fx",
+  "kind": "dust",
+  "c": [
+   "#e0f070",
+   "#8aa030"
+  ]
+ },
+ "fx_cendre": {
+  "p": "fx",
+  "kind": "dust",
+  "c": [
+   "#9a8a86",
+   "#4a3e3a"
+  ]
+ },
+ "fx_braise": {
+  "p": "fx",
+  "kind": "dust",
+  "c": [
+   "#ffd070",
+   "#ff5a1a"
+  ]
+ },
+ "fx_givre": {
+  "p": "fx",
+  "kind": "star",
+  "c": [
+   "#dff8ff",
+   "#9ad8ff"
+  ]
+ },
+ "fx_poison": {
+  "p": "fx",
+  "kind": "dust",
+  "c": [
+   "#a8e060",
+   "#4a8a2a"
+  ]
+ }
+}

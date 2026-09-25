@@ -1,0 +1,2505 @@
+[
+ {
+  "id": "socle",
+  "name": "Socle primordial",
+  "tex": "socle",
+  "hardness": -1,
+  "sound": "stone",
+  "color": "#2a2a33"
+ },
+ {
+  "id": "pierre",
+  "name": "Pierre",
+  "hardness": 1.5,
+  "drops": "moellon",
+  "color": "#737781",
+  "tags": [
+   "stone"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone",
+  "variants": [
+   "slab"
+  ]
+ },
+ {
+  "id": "moellon",
+  "name": "Moellon",
+  "hardness": 2,
+  "color": "#686c74",
+  "tags": [
+   "stone",
+   "cobble",
+   "cobble"
+  ],
+  "variants": [
+   "slab",
+   "stairs",
+   "wall"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "moellon_moussu",
+  "name": "Moellon moussu",
+  "hardness": 2,
+  "color": "#5f7a55",
+  "variants": [
+   "wall"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "roche_profonde",
+  "name": "Roche des profondeurs",
+  "hardness": 3,
+  "color": "#44474f",
+  "tags": [
+   "stone"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "granit_rose",
+  "name": "Granit rose",
+  "hardness": 1.5,
+  "color": "#a57668",
+  "tags": [
+   "stone"
+  ],
+  "variants": [
+   "slab",
+   "stairs"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "calcaire",
+  "name": "Calcaire",
+  "hardness": 1.2,
+  "color": "#cdc8b2",
+  "tags": [
+   "stone"
+  ],
+  "variants": [
+   "slab",
+   "stairs"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "terre",
+  "name": "Terre",
+  "hardness": 0.5,
+  "tool": "shovel",
+  "sound": "dirt",
+  "color": "#7a5335",
+  "tags": [
+   "soil"
+  ]
+ },
+ {
+  "id": "herbe",
+  "name": "Bloc d'herbe",
+  "tex": {
+   "top": "herbe_dessus",
+   "bottom": "terre",
+   "side": "herbe_cote"
+  },
+  "hardness": 0.6,
+  "tool": "shovel",
+  "sound": "grass",
+  "drops": "terre",
+  "tint": "grass",
+  "color": "#5d9b3a",
+  "tags": [
+   "soil",
+   "grass"
+  ],
+  "tick": {
+   "type": "spread",
+   "into": "terre"
+  }
+ },
+ {
+  "id": "humus",
+  "name": "Humus forestier",
+  "tex": {
+   "top": "humus_dessus",
+   "bottom": "terre",
+   "side": "humus_cote"
+  },
+  "hardness": 0.6,
+  "tool": "shovel",
+  "sound": "dirt",
+  "drops": "terre",
+  "color": "#654a2c",
+  "tags": [
+   "soil"
+  ]
+ },
+ {
+  "id": "mycelium",
+  "name": "Tapis fongique",
+  "tex": {
+   "top": "mycelium_dessus",
+   "bottom": "terre",
+   "side": "terre"
+  },
+  "hardness": 0.6,
+  "tool": "shovel",
+  "sound": "dirt",
+  "drops": "terre",
+  "color": "#6e5a70",
+  "tags": [
+   "soil"
+  ]
+ },
+ {
+  "id": "terre_labouree",
+  "name": "Terre labourée",
+  "shape": "farmland",
+  "tex": {
+   "top": "terre_labouree",
+   "bottom": "terre",
+   "side": "terre"
+  },
+  "hardness": 0.6,
+  "tool": "shovel",
+  "sound": "dirt",
+  "drops": "terre",
+  "color": "#5a3b25",
+  "tags": [
+   "farmland"
+  ]
+ },
+ {
+  "id": "sable",
+  "name": "Sable",
+  "hardness": 0.5,
+  "tool": "shovel",
+  "sound": "sand",
+  "color": "#dcc890",
+  "tags": [
+   "sand"
+  ],
+  "gravity": true
+ },
+ {
+  "id": "sable_ocre",
+  "name": "Sable ocre",
+  "hardness": 0.5,
+  "tool": "shovel",
+  "sound": "sand",
+  "color": "#bd6a38",
+  "tags": [
+   "sand"
+  ],
+  "gravity": true
+ },
+ {
+  "id": "gres",
+  "name": "Grès",
+  "tex": {
+   "top": "gres_dessus",
+   "bottom": "gres_dessus",
+   "side": "gres"
+  },
+  "hardness": 0.8,
+  "color": "#d4bc82",
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "gres_ocre",
+  "name": "Grès ocre",
+  "hardness": 0.8,
+  "color": "#b05e32",
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "gres_taille",
+  "name": "Grès taillé",
+  "hardness": 0.8,
+  "color": "#d0b87c",
+  "variants": [
+   "slab",
+   "stairs"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "gravier",
+  "name": "Gravier",
+  "hardness": 0.6,
+  "tool": "shovel",
+  "sound": "gravel",
+  "color": "#7e7a75",
+  "gravity": true,
+  "drops": [
+   {
+    "item": "silex",
+    "chance": 0.12
+   },
+   {
+    "item": "gravier",
+    "chance": 0.88
+   }
+  ]
+ },
+ {
+  "id": "argile",
+  "name": "Argile",
+  "hardness": 0.6,
+  "tool": "shovel",
+  "sound": "dirt",
+  "color": "#9ba2ad",
+  "drops": [
+   {
+    "item": "boule_argile",
+    "count": 4
+   }
+  ]
+ },
+ {
+  "id": "neige",
+  "name": "Neige",
+  "hardness": 0.2,
+  "tool": "shovel",
+  "sound": "snow",
+  "color": "#eef4fa",
+  "drops": [
+   {
+    "item": "boule_neige",
+    "count": 4
+   }
+  ]
+ },
+ {
+  "id": "neige_poudreuse",
+  "name": "Neige poudreuse",
+  "tex": "neige",
+  "shape": "carpet",
+  "hardness": 0.1,
+  "tool": "shovel",
+  "sound": "snow",
+  "color": "#eef4fa",
+  "replaceable": true,
+  "drops": [
+   {
+    "item": "boule_neige",
+    "count": 1
+   }
+  ]
+ },
+ {
+  "id": "glace",
+  "name": "Glace",
+  "hardness": 0.5,
+  "tool": "pickaxe",
+  "sound": "glass",
+  "color": "#a8cdf2",
+  "friction": 0.98,
+  "drops": "none",
+  "lightOpacity": 2,
+  "pass": "translucent"
+ },
+ {
+  "id": "glace_compacte",
+  "name": "Glace compacte",
+  "hardness": 0.5,
+  "tool": "pickaxe",
+  "sound": "glass",
+  "color": "#94b8e3",
+  "friction": 0.98
+ },
+ {
+  "id": "eau",
+  "name": "Eau",
+  "shape": "liquid",
+  "liquid": "water",
+  "tint": "water",
+  "anim": "water",
+  "hardness": -1,
+  "sound": "water",
+  "drops": "none",
+  "item": false,
+  "color": "#3f76e4"
+ },
+ {
+  "id": "lave",
+  "name": "Lave",
+  "shape": "liquid",
+  "liquid": "lava",
+  "anim": "lava",
+  "light": 15,
+  "hardness": -1,
+  "sound": "lava",
+  "drops": "none",
+  "item": false,
+  "damage": 4,
+  "color": "#e8661a",
+  "pass": "opaque"
+ },
+ {
+  "id": "mousse",
+  "name": "Bloc de mousse",
+  "hardness": 0.3,
+  "tool": "hoe",
+  "sound": "grass",
+  "color": "#4f8537"
+ },
+ {
+  "id": "boue",
+  "name": "Boue",
+  "hardness": 0.5,
+  "tool": "shovel",
+  "sound": "dirt",
+  "color": "#4a3b2e",
+  "slow": 0.35
+ },
+ {
+  "id": "argile_cuite_ocre",
+  "name": "Argile cuite ocre",
+  "hardness": 1.25,
+  "color": "#b86b45",
+  "tags": [
+   "terracotta"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "argile_cuite_rouge",
+  "name": "Argile cuite rouge",
+  "hardness": 1.25,
+  "color": "#a04632",
+  "tags": [
+   "terracotta"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "argile_cuite_blanche",
+  "name": "Argile cuite blanche",
+  "hardness": 1.25,
+  "color": "#c9baa9",
+  "tags": [
+   "terracotta"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "argile_cuite_brune",
+  "name": "Argile cuite brune",
+  "hardness": 1.25,
+  "color": "#6e4e3a",
+  "tags": [
+   "terracotta"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "argile_cuite_jaune",
+  "name": "Argile cuite jaune",
+  "hardness": 1.25,
+  "color": "#c99a48",
+  "tags": [
+   "terracotta"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "minerai_houille",
+  "name": "Minerai de houille",
+  "hardness": 3,
+  "level": 0,
+  "color": "#26262b",
+  "drops": [
+   {
+    "item": "charbon"
+   }
+  ],
+  "tags": [
+   "ore"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "minerai_cuivre",
+  "name": "Minerai de cuivre",
+  "hardness": 3,
+  "level": 1,
+  "color": "#c26d3c",
+  "tags": [
+   "ore"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "minerai_fer",
+  "name": "Minerai de fer",
+  "hardness": 3,
+  "level": 1,
+  "color": "#c9a58a",
+  "tags": [
+   "ore"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "minerai_or",
+  "name": "Minerai d'or",
+  "hardness": 3,
+  "level": 3,
+  "color": "#e8c030",
+  "tags": [
+   "ore"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "minerai_lumirite",
+  "name": "Minerai de lumirite",
+  "hardness": 3,
+  "level": 2,
+  "light": 5,
+  "color": "#2fd2e0",
+  "drops": [
+   {
+    "item": "eclat_lumirite",
+    "count": [
+     2,
+     4
+    ]
+   }
+  ],
+  "tags": [
+   "ore"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "minerai_celestine",
+  "name": "Minerai de célestine",
+  "hardness": 4.5,
+  "level": 3,
+  "color": "#7b5ae0",
+  "drops": [
+   {
+    "item": "celestine"
+   }
+  ],
+  "tags": [
+   "ore"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "minerai_braisite",
+  "name": "Minerai de braisite",
+  "hardness": 3,
+  "level": 3,
+  "light": 4,
+  "color": "#ff6a1a",
+  "drops": [
+   {
+    "item": "braisite",
+    "count": [
+     1,
+     2
+    ]
+   }
+  ],
+  "tags": [
+   "ore"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "minerai_etherium",
+  "name": "Minerai d'éthérium",
+  "hardness": 5,
+  "level": 4,
+  "light": 3,
+  "color": "#f0e08a",
+  "tags": [
+   "ore"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "buche_chene",
+  "name": "Bûche de chêne",
+  "tex": {
+   "top": "buche_chene_dessus",
+   "bottom": "buche_chene_dessus",
+   "side": "buche_chene"
+  },
+  "hardness": 2,
+  "tool": "axe",
+  "sound": "wood",
+  "color": "#6a4a2e",
+  "tags": [
+   "log"
+  ],
+  "flammable": true
+ },
+ {
+  "id": "planches_chene",
+  "name": "Planches de chêne",
+  "hardness": 2,
+  "tool": "axe",
+  "sound": "wood",
+  "color": "#a67a48",
+  "tags": [
+   "planks"
+  ],
+  "variants": [
+   "slab",
+   "stairs",
+   "fence"
+  ],
+  "flammable": true
+ },
+ {
+  "id": "feuilles_chene",
+  "name": "Feuilles de chêne",
+  "hardness": 0.2,
+  "tool": "shears",
+  "sound": "plant",
+  "tint": "foliage",
+  "anim": "sway",
+  "drops": [
+   {
+    "item": "pousse_chene",
+    "chance": 0.06
+   },
+   {
+    "item": "baton",
+    "chance": 0.03
+   },
+   {
+    "item": "pomme",
+    "chance": 0.03
+   }
+  ],
+  "color": "#4a7a30",
+  "tags": [
+   "leaves"
+  ],
+  "cullSelf": false,
+  "replaceable": false,
+  "flammable": true,
+  "pass": "cutout"
+ },
+ {
+  "id": "pousse_chene",
+  "name": "Pousse de chêne",
+  "shape": "cross",
+  "hardness": 0,
+  "sound": "plant",
+  "color": "#4c8a3a",
+  "tags": [
+   "sapling",
+   "plant"
+  ],
+  "tick": {
+   "type": "sapling",
+   "tree": "chene"
+  },
+  "placeOn": [
+   "soil",
+   "grass"
+  ]
+ },
+ {
+  "id": "buche_bouleau",
+  "name": "Bûche de bouleau",
+  "tex": {
+   "top": "buche_bouleau_dessus",
+   "bottom": "buche_bouleau_dessus",
+   "side": "buche_bouleau"
+  },
+  "hardness": 2,
+  "tool": "axe",
+  "sound": "wood",
+  "color": "#6a4a2e",
+  "tags": [
+   "log"
+  ],
+  "flammable": true
+ },
+ {
+  "id": "planches_bouleau",
+  "name": "Planches de bouleau",
+  "hardness": 2,
+  "tool": "axe",
+  "sound": "wood",
+  "color": "#a67a48",
+  "tags": [
+   "planks"
+  ],
+  "variants": [
+   "slab",
+   "stairs",
+   "fence"
+  ],
+  "flammable": true
+ },
+ {
+  "id": "feuilles_bouleau",
+  "name": "Feuilles de bouleau",
+  "hardness": 0.2,
+  "tool": "shears",
+  "sound": "plant",
+  "tint": "foliage",
+  "anim": "sway",
+  "drops": [
+   {
+    "item": "pousse_bouleau",
+    "chance": 0.06
+   },
+   {
+    "item": "baton",
+    "chance": 0.03
+   }
+  ],
+  "color": "#4a7a30",
+  "tags": [
+   "leaves"
+  ],
+  "cullSelf": false,
+  "replaceable": false,
+  "flammable": true,
+  "pass": "cutout"
+ },
+ {
+  "id": "pousse_bouleau",
+  "name": "Pousse de bouleau",
+  "shape": "cross",
+  "hardness": 0,
+  "sound": "plant",
+  "color": "#4c8a3a",
+  "tags": [
+   "sapling",
+   "plant"
+  ],
+  "tick": {
+   "type": "sapling",
+   "tree": "bouleau"
+  },
+  "placeOn": [
+   "soil",
+   "grass"
+  ]
+ },
+ {
+  "id": "buche_epicea",
+  "name": "Bûche de épicéa",
+  "tex": {
+   "top": "buche_epicea_dessus",
+   "bottom": "buche_epicea_dessus",
+   "side": "buche_epicea"
+  },
+  "hardness": 2,
+  "tool": "axe",
+  "sound": "wood",
+  "color": "#6a4a2e",
+  "tags": [
+   "log"
+  ],
+  "flammable": true
+ },
+ {
+  "id": "planches_epicea",
+  "name": "Planches de épicéa",
+  "hardness": 2,
+  "tool": "axe",
+  "sound": "wood",
+  "color": "#a67a48",
+  "tags": [
+   "planks"
+  ],
+  "variants": [
+   "slab",
+   "stairs",
+   "fence"
+  ],
+  "flammable": true
+ },
+ {
+  "id": "feuilles_epicea",
+  "name": "Feuilles de épicéa",
+  "hardness": 0.2,
+  "tool": "shears",
+  "sound": "plant",
+  "tint": "foliage",
+  "anim": "sway",
+  "drops": [
+   {
+    "item": "pousse_epicea",
+    "chance": 0.06
+   },
+   {
+    "item": "baton",
+    "chance": 0.03
+   }
+  ],
+  "color": "#4a7a30",
+  "tags": [
+   "leaves"
+  ],
+  "cullSelf": false,
+  "replaceable": false,
+  "flammable": true,
+  "pass": "cutout"
+ },
+ {
+  "id": "pousse_epicea",
+  "name": "Pousse de épicéa",
+  "shape": "cross",
+  "hardness": 0,
+  "sound": "plant",
+  "color": "#4c8a3a",
+  "tags": [
+   "sapling",
+   "plant"
+  ],
+  "tick": {
+   "type": "sapling",
+   "tree": "epicea"
+  },
+  "placeOn": [
+   "soil",
+   "grass"
+  ]
+ },
+ {
+  "id": "buche_teck",
+  "name": "Bûche de teck",
+  "tex": {
+   "top": "buche_teck_dessus",
+   "bottom": "buche_teck_dessus",
+   "side": "buche_teck"
+  },
+  "hardness": 2,
+  "tool": "axe",
+  "sound": "wood",
+  "color": "#6a4a2e",
+  "tags": [
+   "log"
+  ],
+  "flammable": true
+ },
+ {
+  "id": "planches_teck",
+  "name": "Planches de teck",
+  "hardness": 2,
+  "tool": "axe",
+  "sound": "wood",
+  "color": "#a67a48",
+  "tags": [
+   "planks"
+  ],
+  "variants": [
+   "slab",
+   "stairs",
+   "fence"
+  ],
+  "flammable": true
+ },
+ {
+  "id": "feuilles_teck",
+  "name": "Feuilles de teck",
+  "hardness": 0.2,
+  "tool": "shears",
+  "sound": "plant",
+  "tint": "foliage",
+  "anim": "sway",
+  "drops": [
+   {
+    "item": "pousse_teck",
+    "chance": 0.06
+   },
+   {
+    "item": "baton",
+    "chance": 0.03
+   }
+  ],
+  "color": "#4a7a30",
+  "tags": [
+   "leaves"
+  ],
+  "cullSelf": false,
+  "replaceable": false,
+  "flammable": true,
+  "pass": "cutout"
+ },
+ {
+  "id": "pousse_teck",
+  "name": "Pousse de teck",
+  "shape": "cross",
+  "hardness": 0,
+  "sound": "plant",
+  "color": "#4c8a3a",
+  "tags": [
+   "sapling",
+   "plant"
+  ],
+  "tick": {
+   "type": "sapling",
+   "tree": "teck"
+  },
+  "placeOn": [
+   "soil",
+   "grass"
+  ]
+ },
+ {
+  "id": "buche_acacia",
+  "name": "Bûche de acacia",
+  "tex": {
+   "top": "buche_acacia_dessus",
+   "bottom": "buche_acacia_dessus",
+   "side": "buche_acacia"
+  },
+  "hardness": 2,
+  "tool": "axe",
+  "sound": "wood",
+  "color": "#6a4a2e",
+  "tags": [
+   "log"
+  ],
+  "flammable": true
+ },
+ {
+  "id": "planches_acacia",
+  "name": "Planches de acacia",
+  "hardness": 2,
+  "tool": "axe",
+  "sound": "wood",
+  "color": "#a67a48",
+  "tags": [
+   "planks"
+  ],
+  "variants": [
+   "slab",
+   "stairs",
+   "fence"
+  ],
+  "flammable": true
+ },
+ {
+  "id": "feuilles_acacia",
+  "name": "Feuilles de acacia",
+  "hardness": 0.2,
+  "tool": "shears",
+  "sound": "plant",
+  "tint": "foliage",
+  "anim": "sway",
+  "drops": [
+   {
+    "item": "pousse_acacia",
+    "chance": 0.06
+   },
+   {
+    "item": "baton",
+    "chance": 0.03
+   }
+  ],
+  "color": "#4a7a30",
+  "tags": [
+   "leaves"
+  ],
+  "cullSelf": false,
+  "replaceable": false,
+  "flammable": true,
+  "pass": "cutout"
+ },
+ {
+  "id": "pousse_acacia",
+  "name": "Pousse de acacia",
+  "shape": "cross",
+  "hardness": 0,
+  "sound": "plant",
+  "color": "#4c8a3a",
+  "tags": [
+   "sapling",
+   "plant"
+  ],
+  "tick": {
+   "type": "sapling",
+   "tree": "acacia"
+  },
+  "placeOn": [
+   "soil",
+   "grass"
+  ]
+ },
+ {
+  "id": "buche_saule",
+  "name": "Bûche de saule",
+  "tex": {
+   "top": "buche_saule_dessus",
+   "bottom": "buche_saule_dessus",
+   "side": "buche_saule"
+  },
+  "hardness": 2,
+  "tool": "axe",
+  "sound": "wood",
+  "color": "#6a4a2e",
+  "tags": [
+   "log"
+  ],
+  "flammable": true
+ },
+ {
+  "id": "planches_saule",
+  "name": "Planches de saule",
+  "hardness": 2,
+  "tool": "axe",
+  "sound": "wood",
+  "color": "#a67a48",
+  "tags": [
+   "planks"
+  ],
+  "variants": [
+   "slab",
+   "stairs",
+   "fence"
+  ],
+  "flammable": true
+ },
+ {
+  "id": "feuilles_saule",
+  "name": "Feuilles de saule",
+  "hardness": 0.2,
+  "tool": "shears",
+  "sound": "plant",
+  "tint": "foliage",
+  "anim": "sway",
+  "drops": [
+   {
+    "item": "pousse_saule",
+    "chance": 0.06
+   },
+   {
+    "item": "baton",
+    "chance": 0.03
+   }
+  ],
+  "color": "#4a7a30",
+  "tags": [
+   "leaves"
+  ],
+  "cullSelf": false,
+  "replaceable": false,
+  "flammable": true,
+  "pass": "cutout"
+ },
+ {
+  "id": "pousse_saule",
+  "name": "Pousse de saule",
+  "shape": "cross",
+  "hardness": 0,
+  "sound": "plant",
+  "color": "#4c8a3a",
+  "tags": [
+   "sapling",
+   "plant"
+  ],
+  "tick": {
+   "type": "sapling",
+   "tree": "saule"
+  },
+  "placeOn": [
+   "soil",
+   "grass"
+  ]
+ },
+ {
+  "id": "buche_prisme",
+  "name": "Bûche prismatique",
+  "tex": {
+   "top": "buche_prisme_dessus",
+   "bottom": "buche_prisme_dessus",
+   "side": "buche_prisme"
+  },
+  "hardness": 2,
+  "tool": "axe",
+  "sound": "wood",
+  "color": "#6a4a2e",
+  "tags": [
+   "log"
+  ],
+  "flammable": true
+ },
+ {
+  "id": "planches_prisme",
+  "name": "Planches prismatiques",
+  "hardness": 2,
+  "tool": "axe",
+  "sound": "wood",
+  "color": "#a67a48",
+  "tags": [
+   "planks"
+  ],
+  "variants": [
+   "slab",
+   "stairs",
+   "fence"
+  ],
+  "flammable": true
+ },
+ {
+  "id": "feuilles_prisme",
+  "name": "Feuilles prismatiques",
+  "hardness": 0.2,
+  "tool": "shears",
+  "sound": "plant",
+  "anim": "sway",
+  "drops": [
+   {
+    "item": "pousse_prisme",
+    "chance": 0.06
+   },
+   {
+    "item": "baton",
+    "chance": 0.03
+   },
+   {
+    "item": "eclat_lumirite",
+    "chance": 0.1
+   }
+  ],
+  "color": "#4a7a30",
+  "tags": [
+   "leaves"
+  ],
+  "cullSelf": false,
+  "replaceable": false,
+  "flammable": true,
+  "light": 10,
+  "pass": "cutout"
+ },
+ {
+  "id": "pousse_prisme",
+  "name": "Pousse prismatique",
+  "shape": "cross",
+  "hardness": 0,
+  "sound": "plant",
+  "color": "#4c8a3a",
+  "tags": [
+   "sapling",
+   "plant"
+  ],
+  "tick": {
+   "type": "sapling",
+   "tree": "prisme"
+  },
+  "placeOn": [
+   "soil",
+   "grass"
+  ]
+ },
+ {
+  "id": "herbes_hautes",
+  "name": "Herbes hautes",
+  "shape": "cross",
+  "tint": "grass",
+  "anim": "sway",
+  "hardness": 0,
+  "sound": "plant",
+  "replaceable": true,
+  "drops": [
+   {
+    "item": "graines",
+    "chance": 0.12
+   },
+   {
+    "item": "fibre",
+    "chance": 0.25
+   }
+  ],
+  "color": "#5d9b3a",
+  "tags": [
+   "plant"
+  ],
+  "placeOn": [
+   "soil",
+   "grass"
+  ]
+ },
+ {
+  "id": "fougere",
+  "name": "Fougère",
+  "shape": "cross",
+  "tint": "grass",
+  "anim": "sway",
+  "hardness": 0,
+  "sound": "plant",
+  "replaceable": true,
+  "drops": [
+   {
+    "item": "fibre",
+    "chance": 0.4
+   }
+  ],
+  "color": "#4d8b3a",
+  "tags": [
+   "plant"
+  ],
+  "placeOn": [
+   "soil",
+   "grass"
+  ]
+ },
+ {
+  "id": "herbe_seche",
+  "name": "Herbe sèche",
+  "shape": "cross",
+  "anim": "sway",
+  "hardness": 0,
+  "sound": "plant",
+  "replaceable": true,
+  "drops": [
+   {
+    "item": "fibre",
+    "chance": 0.4
+   }
+  ],
+  "color": "#a8965a",
+  "tags": [
+   "plant"
+  ]
+ },
+ {
+  "id": "pavot",
+  "name": "Pavot",
+  "shape": "cross",
+  "anim": "sway",
+  "hardness": 0,
+  "sound": "plant",
+  "color": "#d8342c",
+  "tags": [
+   "plant",
+   "flower"
+  ]
+ },
+ {
+  "id": "bleuet",
+  "name": "Bleuet",
+  "shape": "cross",
+  "anim": "sway",
+  "hardness": 0,
+  "sound": "plant",
+  "color": "#3a6ad8",
+  "tags": [
+   "plant",
+   "flower"
+  ]
+ },
+ {
+  "id": "pissenlit",
+  "name": "Pissenlit",
+  "shape": "cross",
+  "anim": "sway",
+  "hardness": 0,
+  "sound": "plant",
+  "color": "#f0c828",
+  "tags": [
+   "plant",
+   "flower"
+  ]
+ },
+ {
+  "id": "marguerite",
+  "name": "Marguerite",
+  "shape": "cross",
+  "anim": "sway",
+  "hardness": 0,
+  "sound": "plant",
+  "color": "#f4f4f0",
+  "tags": [
+   "plant",
+   "flower"
+  ]
+ },
+ {
+  "id": "digitale",
+  "name": "Digitale",
+  "shape": "cross",
+  "anim": "sway",
+  "hardness": 0,
+  "sound": "plant",
+  "color": "#b45ad8",
+  "tags": [
+   "plant",
+   "flower"
+  ]
+ },
+ {
+  "id": "lumifleur",
+  "name": "Lumifleur",
+  "shape": "cross",
+  "anim": "sway",
+  "hardness": 0,
+  "sound": "plant",
+  "color": "#5ae8f0",
+  "tags": [
+   "plant",
+   "flower"
+  ],
+  "light": 9
+ },
+ {
+  "id": "clochette_ardente",
+  "name": "Clochette ardente",
+  "shape": "cross",
+  "anim": "sway",
+  "hardness": 0,
+  "sound": "plant",
+  "color": "#ff7a2a",
+  "tags": [
+   "plant",
+   "flower"
+  ],
+  "light": 7
+ },
+ {
+  "id": "fleur_nebuleuse",
+  "name": "Fleur nébuleuse",
+  "shape": "cross",
+  "anim": "sway",
+  "hardness": 0,
+  "sound": "plant",
+  "color": "#c07aff",
+  "tags": [
+   "plant",
+   "flower"
+  ],
+  "light": 8
+ },
+ {
+  "id": "roseau",
+  "name": "Roseau",
+  "shape": "cross",
+  "anim": "sway",
+  "hardness": 0,
+  "sound": "plant",
+  "color": "#5a8e42",
+  "tags": [
+   "plant"
+  ],
+  "tick": {
+   "type": "grow_up",
+   "max": 3
+  }
+ },
+ {
+  "id": "buisson_baies",
+  "name": "Buisson à baies",
+  "shape": "cross",
+  "stages": 2,
+  "hardness": 0.2,
+  "sound": "plant",
+  "color": "#3e7a36",
+  "interact": "harvest",
+  "tick": {
+   "type": "ripen"
+  },
+  "drops": [
+   {
+    "item": "buisson_baies"
+   }
+  ],
+  "tags": [
+   "plant"
+  ],
+  "data": {
+   "harvest": "baies",
+   "count": [
+    2,
+    3
+   ]
+  }
+ },
+ {
+  "id": "buisson_mort",
+  "name": "Buisson mort",
+  "shape": "cross",
+  "hardness": 0,
+  "sound": "plant",
+  "replaceable": true,
+  "drops": [
+   {
+    "item": "baton",
+    "count": [
+     0,
+     2
+    ]
+   }
+  ],
+  "color": "#8a6a3a",
+  "tags": [
+   "plant"
+  ]
+ },
+ {
+  "id": "champignon_brun",
+  "name": "Champignon brun",
+  "shape": "cross",
+  "hardness": 0,
+  "sound": "plant",
+  "color": "#8a6a4a",
+  "tags": [
+   "plant",
+   "mushroom"
+  ]
+ },
+ {
+  "id": "champignon_rouge",
+  "name": "Champignon rouge",
+  "shape": "cross",
+  "hardness": 0,
+  "sound": "plant",
+  "color": "#b33a2e",
+  "tags": [
+   "plant",
+   "mushroom"
+  ]
+ },
+ {
+  "id": "chapeau_rouge",
+  "name": "Chapeau de champignon rouge",
+  "hardness": 0.3,
+  "tool": "axe",
+  "sound": "cloth",
+  "color": "#c0302a",
+  "drops": [
+   {
+    "item": "champignon_rouge",
+    "count": [
+     0,
+     2
+    ]
+   }
+  ]
+ },
+ {
+  "id": "chapeau_brun",
+  "name": "Chapeau de champignon brun",
+  "hardness": 0.3,
+  "tool": "axe",
+  "sound": "cloth",
+  "color": "#8a6a48",
+  "drops": [
+   {
+    "item": "champignon_brun",
+    "count": [
+     0,
+     2
+    ]
+   }
+  ]
+ },
+ {
+  "id": "pied_champignon",
+  "name": "Pied de champignon",
+  "tex": {
+   "top": "pied_champignon_dessus",
+   "bottom": "pied_champignon_dessus",
+   "side": "pied_champignon"
+  },
+  "hardness": 0.3,
+  "tool": "axe",
+  "sound": "wood",
+  "color": "#dcd2c0",
+  "tags": [
+   "log"
+  ]
+ },
+ {
+  "id": "ble",
+  "name": "Blé",
+  "shape": "crop",
+  "stages": 8,
+  "hardness": 0,
+  "sound": "plant",
+  "item": false,
+  "color": "#d6b44a",
+  "tick": {
+   "type": "crop"
+  },
+  "drops": [
+   {
+    "item": "ble",
+    "minStage": 7
+   },
+   {
+    "item": "graines",
+    "count": [
+     1,
+     3
+    ],
+    "minStage": 7
+   },
+   {
+    "item": "graines",
+    "maxStage": 6
+   }
+  ],
+  "tags": [
+   "crop"
+  ]
+ },
+ {
+  "id": "cactus",
+  "name": "Cactus",
+  "shape": "cactus",
+  "tex": {
+   "top": "cactus_dessus",
+   "bottom": "cactus_dessus",
+   "side": "cactus_cote"
+  },
+  "hardness": 0.4,
+  "sound": "cloth",
+  "damage": 1,
+  "color": "#3e8a38",
+  "tick": {
+   "type": "grow_up",
+   "max": 3
+  },
+  "placeOn": [
+   "sand"
+  ]
+ },
+ {
+  "id": "lianes",
+  "name": "Lianes",
+  "shape": "ladder",
+  "tint": "foliage",
+  "hardness": 0.2,
+  "tool": "shears",
+  "sound": "plant",
+  "climbable": true,
+  "replaceable": true,
+  "drops": "none",
+  "color": "#4a7a30"
+ },
+ {
+  "id": "toile",
+  "name": "Toile de tisseuse",
+  "shape": "cross",
+  "hardness": 1,
+  "tool": "sword",
+  "sound": "cloth",
+  "slow": 0.85,
+  "drops": [
+   {
+    "item": "soie"
+   }
+  ],
+  "color": "#e8e8ec"
+ },
+ {
+  "id": "briques_pierre",
+  "name": "Briques de pierre",
+  "hardness": 1.5,
+  "color": "#767a83",
+  "variants": [
+   "slab",
+   "stairs",
+   "wall"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "briques_pierre_moussues",
+  "name": "Briques de pierre moussues",
+  "hardness": 1.5,
+  "color": "#6a7a60",
+  "variants": [
+   "slab",
+   "stairs"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "briques_pierre_fissurees",
+  "name": "Briques de pierre fissurées",
+  "hardness": 1.5,
+  "color": "#707480",
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "briques_argile",
+  "name": "Briques d'argile",
+  "hardness": 2,
+  "color": "#a54c36",
+  "variants": [
+   "slab",
+   "stairs",
+   "wall"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "pierre_taillee",
+  "name": "Pierre taillée",
+  "hardness": 2,
+  "color": "#868a92",
+  "variants": [
+   "slab",
+   "stairs"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "tuiles",
+  "name": "Tuiles de toit",
+  "hardness": 1.5,
+  "color": "#8e3a2c",
+  "variants": [
+   "slab",
+   "stairs"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "tuiles_ardoise",
+  "name": "Tuiles d'ardoise",
+  "hardness": 1.5,
+  "color": "#3a4256",
+  "variants": [
+   "slab",
+   "stairs"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "verre",
+  "name": "Verre",
+  "hardness": 0.3,
+  "sound": "glass",
+  "color": "#cfe8ee",
+  "drops": "none",
+  "tags": [
+   "glass"
+  ],
+  "pass": "translucent"
+ },
+ {
+  "id": "vitre",
+  "name": "Vitre",
+  "shape": "pane",
+  "tex": "verre",
+  "hardness": 0.3,
+  "sound": "glass",
+  "color": "#cfe8ee",
+  "drops": "none",
+  "pass": "translucent"
+ },
+ {
+  "id": "porte_bois",
+  "name": "Porte en bois",
+  "shape": "door",
+  "tex": {
+   "top": "porte_bois_haut",
+   "bottom": "porte_bois_bas",
+   "side": "planches_chene"
+  },
+  "hardness": 3,
+  "tool": "axe",
+  "sound": "wood",
+  "interact": "door",
+  "color": "#a67a48",
+  "pass": "cutout"
+ },
+ {
+  "id": "porte_fer",
+  "name": "Porte en fer",
+  "shape": "door",
+  "tex": {
+   "top": "porte_fer_haut",
+   "bottom": "porte_fer_bas",
+   "side": "bloc_fer"
+  },
+  "hardness": 5,
+  "tool": "pickaxe",
+  "sound": "metal",
+  "color": "#b9bcc1",
+  "data": {
+   "powered": true
+  },
+  "pass": "cutout"
+ },
+ {
+  "id": "echelle",
+  "name": "Échelle",
+  "shape": "ladder",
+  "hardness": 0.4,
+  "tool": "axe",
+  "sound": "wood",
+  "climbable": true,
+  "color": "#8a6238"
+ },
+ {
+  "id": "torche",
+  "name": "Torche",
+  "shape": "torch",
+  "light": 14,
+  "hardness": 0,
+  "sound": "wood",
+  "color": "#ffcf4a"
+ },
+ {
+  "id": "torche_lumirite",
+  "name": "Torche de lumirite",
+  "shape": "torch",
+  "light": 15,
+  "hardness": 0,
+  "sound": "wood",
+  "color": "#6af0ff"
+ },
+ {
+  "id": "lanterne",
+  "name": "Lanterne",
+  "shape": "lantern",
+  "light": 15,
+  "hardness": 1,
+  "tool": "pickaxe",
+  "sound": "metal",
+  "color": "#ffd27a"
+ },
+ {
+  "id": "lanterne_lumirite",
+  "name": "Lanterne de lumirite",
+  "shape": "lantern",
+  "light": 15,
+  "hardness": 1,
+  "tool": "pickaxe",
+  "sound": "metal",
+  "color": "#8af4ff"
+ },
+ {
+  "id": "lampe_eteinte",
+  "name": "Lampe à lumirite",
+  "hardness": 0.5,
+  "sound": "glass",
+  "color": "#3b5157",
+  "tags": [
+   "lamp"
+  ],
+  "data": {
+   "on": "lampe_allumee"
+  }
+ },
+ {
+  "id": "lampe_allumee",
+  "name": "Lampe à lumirite (allumée)",
+  "light": 15,
+  "hardness": 0.5,
+  "sound": "glass",
+  "color": "#9ff3ff",
+  "drops": "lampe_eteinte",
+  "item": false,
+  "tags": [
+   "lamp"
+  ],
+  "data": {
+   "off": "lampe_eteinte"
+  }
+ },
+ {
+  "id": "levier",
+  "name": "Levier",
+  "shape": "lever",
+  "hardness": 0.5,
+  "sound": "wood",
+  "interact": "lever",
+  "color": "#7a5230"
+ },
+ {
+  "id": "plaque_pression",
+  "name": "Plaque de pression",
+  "shape": "plate",
+  "tex": "pierre_taillee",
+  "hardness": 0.5,
+  "tool": "pickaxe",
+  "sound": "stone",
+  "color": "#868a92"
+ },
+ {
+  "id": "coffre",
+  "name": "Coffre",
+  "shape": "chest",
+  "tex": {
+   "front": "coffre_face",
+   "side": "coffre_cote",
+   "top": "coffre_dessus"
+  },
+  "orient": true,
+  "hardness": 2.5,
+  "tool": "axe",
+  "sound": "wood",
+  "interact": "chest",
+  "color": "#a67a48"
+ },
+ {
+  "id": "atelier",
+  "name": "Atelier",
+  "tex": {
+   "top": "atelier_dessus",
+   "bottom": "planches_chene",
+   "side": "atelier_cote"
+  },
+  "hardness": 2.5,
+  "tool": "axe",
+  "sound": "wood",
+  "interact": "craft",
+  "color": "#a67a48"
+ },
+ {
+  "id": "fourneau",
+  "name": "Fourneau",
+  "tex": {
+   "front": "fourneau_face",
+   "side": "moellon",
+   "top": "pierre_taillee"
+  },
+  "orient": true,
+  "hardness": 3.5,
+  "tool": "pickaxe",
+  "sound": "stone",
+  "interact": "furnace",
+  "color": "#686c74"
+ },
+ {
+  "id": "fourneau_allume",
+  "name": "Fourneau (allumé)",
+  "tex": {
+   "front": "fourneau_face_allume",
+   "side": "moellon",
+   "top": "pierre_taillee"
+  },
+  "orient": true,
+  "light": 13,
+  "hardness": 3.5,
+  "tool": "pickaxe",
+  "sound": "stone",
+  "interact": "furnace",
+  "drops": "fourneau",
+  "item": false,
+  "color": "#686c74"
+ },
+ {
+  "id": "forge_runique",
+  "name": "Forge runique",
+  "tex": {
+   "top": "forge_dessus",
+   "bottom": "forge_cote",
+   "side": "forge_cote"
+  },
+  "light": 6,
+  "hardness": 5,
+  "tool": "pickaxe",
+  "level": 2,
+  "sound": "metal",
+  "interact": "craft_forge",
+  "color": "#4a5266"
+ },
+ {
+  "id": "couchette",
+  "name": "Couchette",
+  "shape": "slab",
+  "tex": {
+   "top": "tissu_rouge",
+   "bottom": "planches_chene",
+   "side": "planches_chene"
+  },
+  "hardness": 0.5,
+  "tool": "axe",
+  "sound": "cloth",
+  "interact": "bed",
+  "color": "#b03030"
+ },
+ {
+  "id": "etagere",
+  "name": "Étagère à grimoires",
+  "tex": {
+   "top": "planches_chene",
+   "bottom": "planches_chene",
+   "side": "etagere"
+  },
+  "hardness": 1.5,
+  "tool": "axe",
+  "sound": "wood",
+  "color": "#8a5a40"
+ },
+ {
+  "id": "tissu_blanc",
+  "name": "Tissu blanc",
+  "hardness": 0.8,
+  "tool": "shears",
+  "sound": "cloth",
+  "color": "#cccccc",
+  "tags": [
+   "cloth"
+  ]
+ },
+ {
+  "id": "tissu_gris",
+  "name": "Tissu gris",
+  "hardness": 0.8,
+  "tool": "shears",
+  "sound": "cloth",
+  "color": "#cccccc",
+  "tags": [
+   "cloth"
+  ]
+ },
+ {
+  "id": "tissu_noir",
+  "name": "Tissu noir",
+  "hardness": 0.8,
+  "tool": "shears",
+  "sound": "cloth",
+  "color": "#cccccc",
+  "tags": [
+   "cloth"
+  ]
+ },
+ {
+  "id": "tissu_rouge",
+  "name": "Tissu rouge",
+  "hardness": 0.8,
+  "tool": "shears",
+  "sound": "cloth",
+  "color": "#cccccc",
+  "tags": [
+   "cloth"
+  ]
+ },
+ {
+  "id": "tissu_orange",
+  "name": "Tissu orange",
+  "hardness": 0.8,
+  "tool": "shears",
+  "sound": "cloth",
+  "color": "#cccccc",
+  "tags": [
+   "cloth"
+  ]
+ },
+ {
+  "id": "tissu_jaune",
+  "name": "Tissu jaune",
+  "hardness": 0.8,
+  "tool": "shears",
+  "sound": "cloth",
+  "color": "#cccccc",
+  "tags": [
+   "cloth"
+  ]
+ },
+ {
+  "id": "tissu_vert",
+  "name": "Tissu vert",
+  "hardness": 0.8,
+  "tool": "shears",
+  "sound": "cloth",
+  "color": "#cccccc",
+  "tags": [
+   "cloth"
+  ]
+ },
+ {
+  "id": "tissu_cyan",
+  "name": "Tissu cyan",
+  "hardness": 0.8,
+  "tool": "shears",
+  "sound": "cloth",
+  "color": "#cccccc",
+  "tags": [
+   "cloth"
+  ]
+ },
+ {
+  "id": "tissu_bleu",
+  "name": "Tissu bleu",
+  "hardness": 0.8,
+  "tool": "shears",
+  "sound": "cloth",
+  "color": "#cccccc",
+  "tags": [
+   "cloth"
+  ]
+ },
+ {
+  "id": "tissu_violet",
+  "name": "Tissu violet",
+  "hardness": 0.8,
+  "tool": "shears",
+  "sound": "cloth",
+  "color": "#cccccc",
+  "tags": [
+   "cloth"
+  ]
+ },
+ {
+  "id": "tissu_rose",
+  "name": "Tissu rose",
+  "hardness": 0.8,
+  "tool": "shears",
+  "sound": "cloth",
+  "color": "#cccccc",
+  "tags": [
+   "cloth"
+  ]
+ },
+ {
+  "id": "tissu_brun",
+  "name": "Tissu brun",
+  "hardness": 0.8,
+  "tool": "shears",
+  "sound": "cloth",
+  "color": "#cccccc",
+  "tags": [
+   "cloth"
+  ]
+ },
+ {
+  "id": "bloc_cuivre",
+  "name": "Bloc de cuivre",
+  "hardness": 5,
+  "tool": "pickaxe",
+  "level": 1,
+  "sound": "metal",
+  "color": "#c26d3c"
+ },
+ {
+  "id": "bloc_fer",
+  "name": "Bloc de fer",
+  "hardness": 5,
+  "tool": "pickaxe",
+  "level": 1,
+  "sound": "metal",
+  "color": "#b9bcc1"
+ },
+ {
+  "id": "bloc_or",
+  "name": "Bloc d'or",
+  "hardness": 5,
+  "tool": "pickaxe",
+  "level": 3,
+  "sound": "metal",
+  "color": "#e8c030"
+ },
+ {
+  "id": "bloc_celestine",
+  "name": "Bloc de célestine",
+  "hardness": 5,
+  "tool": "pickaxe",
+  "level": 3,
+  "sound": "metal",
+  "color": "#6a4fc0"
+ },
+ {
+  "id": "bloc_lumirite",
+  "name": "Bloc de lumirite",
+  "hardness": 5,
+  "tool": "pickaxe",
+  "level": 2,
+  "sound": "metal",
+  "color": "#2fd2e0",
+  "light": 15
+ },
+ {
+  "id": "bloc_braisite",
+  "name": "Bloc de braisite",
+  "hardness": 5,
+  "tool": "pickaxe",
+  "level": 3,
+  "sound": "metal",
+  "color": "#e0501a",
+  "light": 8
+ },
+ {
+  "id": "bloc_etherium",
+  "name": "Bloc d'éthérium",
+  "hardness": 5,
+  "tool": "pickaxe",
+  "level": 4,
+  "sound": "metal",
+  "color": "#e8dc8a",
+  "light": 6
+ },
+ {
+  "id": "foyer_maudit",
+  "name": "Foyer maudit",
+  "hardness": 5,
+  "tool": "pickaxe",
+  "sound": "metal",
+  "light": 3,
+  "drops": "none",
+  "color": "#5c2a7a",
+  "tick": {
+   "type": "spawner"
+  },
+  "cullSelf": false,
+  "pass": "cutout"
+ },
+ {
+  "id": "cendrite",
+  "name": "Cendrite",
+  "hardness": 0.6,
+  "color": "#5e2e2c",
+  "tags": [
+   "stone",
+   "cobble"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "basalte",
+  "name": "Basalte",
+  "tex": {
+   "top": "basalte_dessus",
+   "bottom": "basalte_dessus",
+   "side": "basalte_cote"
+  },
+  "hardness": 1.25,
+  "color": "#3d3c42",
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "basalte_poli",
+  "name": "Basalte poli",
+  "hardness": 1.25,
+  "color": "#3a3940",
+  "variants": [
+   "slab",
+   "stairs"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "briques_basalte",
+  "name": "Briques de basalte",
+  "hardness": 2,
+  "color": "#2c2b33",
+  "variants": [
+   "slab",
+   "stairs",
+   "wall"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "sable_cendre",
+  "name": "Sable cendré",
+  "hardness": 0.5,
+  "tool": "shovel",
+  "sound": "sand",
+  "slow": 0.4,
+  "color": "#4a403c"
+ },
+ {
+  "id": "croute_magma",
+  "name": "Croûte de magma",
+  "hardness": 0.5,
+  "light": 3,
+  "damage": 1,
+  "color": "#7a2208",
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "verre_volcanique",
+  "name": "Verre volcanique",
+  "hardness": 25,
+  "level": 4,
+  "color": "#1a1224",
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "tige_ardente",
+  "name": "Tige ardente",
+  "tex": {
+   "top": "tige_ardente_dessus",
+   "bottom": "tige_ardente_dessus",
+   "side": "tige_ardente"
+  },
+  "hardness": 2,
+  "tool": "axe",
+  "sound": "wood",
+  "color": "#6a2424",
+  "tags": [
+   "log"
+  ]
+ },
+ {
+  "id": "chapeau_ardent",
+  "name": "Chapeau ardent",
+  "light": 12,
+  "hardness": 1,
+  "tool": "hoe",
+  "sound": "grass",
+  "color": "#b5302a",
+  "drops": [
+   {
+    "item": "champignon_ardent",
+    "chance": 0.2
+   },
+   {
+    "item": "chapeau_ardent",
+    "chance": 0.8
+   }
+  ]
+ },
+ {
+  "id": "champignon_ardent",
+  "name": "Champignon ardent",
+  "shape": "cross",
+  "light": 8,
+  "hardness": 0,
+  "sound": "plant",
+  "color": "#e0501a",
+  "tags": [
+   "plant",
+   "mushroom"
+  ]
+ },
+ {
+  "id": "mousse_braise",
+  "name": "Mousse de braise",
+  "tex": {
+   "top": "mousse_braise_dessus",
+   "bottom": "cendrite",
+   "side": "mousse_braise_cote"
+  },
+  "hardness": 0.6,
+  "sound": "grass",
+  "drops": "cendrite",
+  "color": "#8a2a1a",
+  "tool": "pickaxe"
+ },
+ {
+  "id": "cristal_braise",
+  "name": "Cristal de braise",
+  "shape": "cross",
+  "light": 14,
+  "hardness": 1,
+  "tool": "pickaxe",
+  "sound": "crystal",
+  "color": "#ff6a1a",
+  "drops": [
+   {
+    "item": "braisite",
+    "chance": 0.5
+   },
+   {
+    "item": "poudre_braise",
+    "count": [
+     1,
+     2
+    ]
+   }
+  ]
+ },
+ {
+  "id": "soufre",
+  "name": "Bloc de soufre",
+  "hardness": 0.8,
+  "tool": "pickaxe",
+  "sound": "stone",
+  "color": "#d0bc3a",
+  "drops": [
+   {
+    "item": "soufre",
+    "count": [
+     2,
+     4
+    ]
+   }
+  ]
+ },
+ {
+  "id": "pierre_runique",
+  "name": "Pierre runique",
+  "hardness": 10,
+  "level": 3,
+  "tool": "pickaxe",
+  "sound": "stone",
+  "light": 2,
+  "color": "#2c2539",
+  "tags": [
+   "portal_frame"
+  ]
+ },
+ {
+  "id": "voile_abime",
+  "name": "Voile de l'Abîme",
+  "shape": "portal",
+  "anim": "portal",
+  "light": 11,
+  "hardness": -1,
+  "solid": false,
+  "drops": "none",
+  "item": false,
+  "color": "#b8201a",
+  "tags": [
+   "portal"
+  ],
+  "data": {
+   "portal": "abime"
+  },
+  "pass": "translucent"
+ },
+ {
+  "id": "autel_braise",
+  "name": "Autel des braises",
+  "tex": {
+   "top": "autel_braise_dessus",
+   "bottom": "briques_basalte",
+   "side": "autel_braise_cote"
+  },
+  "hardness": -1,
+  "light": 10,
+  "interact": "summon",
+  "color": "#7a3a2a",
+  "data": {
+   "offering": "offrande_braise",
+   "creature": "tyran_braises"
+  }
+ },
+ {
+  "id": "pierre_astrale",
+  "name": "Pierre astrale",
+  "hardness": 1.5,
+  "color": "#a29ec0",
+  "tags": [
+   "stone",
+   "cobble"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "briques_astrales",
+  "name": "Briques astrales",
+  "hardness": 2,
+  "color": "#827ea8",
+  "variants": [
+   "slab",
+   "stairs",
+   "wall"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "poussiere_etoile",
+  "name": "Poussière d'étoile",
+  "hardness": 0.5,
+  "tool": "shovel",
+  "sound": "sand",
+  "color": "#ccc4e8",
+  "drops": [
+   {
+    "item": "poussiere_etoile"
+   }
+  ]
+ },
+ {
+  "id": "herbe_stellaire",
+  "name": "Herbe stellaire",
+  "tex": {
+   "top": "herbe_stellaire_dessus",
+   "bottom": "pierre_astrale",
+   "side": "herbe_stellaire_cote"
+  },
+  "light": 4,
+  "hardness": 0.6,
+  "tool": "shovel",
+  "sound": "grass",
+  "drops": "pierre_astrale",
+  "color": "#3a6a8a",
+  "tags": [
+   "soil"
+  ]
+ },
+ {
+  "id": "bois_stellaire",
+  "name": "Bois stellaire",
+  "tex": {
+   "top": "bois_stellaire_dessus",
+   "bottom": "bois_stellaire_dessus",
+   "side": "bois_stellaire"
+  },
+  "hardness": 2,
+  "tool": "axe",
+  "sound": "wood",
+  "color": "#3a3a60",
+  "tags": [
+   "log"
+  ]
+ },
+ {
+  "id": "planches_stellaires",
+  "name": "Planches stellaires",
+  "hardness": 2,
+  "tool": "axe",
+  "sound": "wood",
+  "color": "#4e4e80",
+  "tags": [
+   "planks"
+  ],
+  "variants": [
+   "slab",
+   "stairs",
+   "fence"
+  ]
+ },
+ {
+  "id": "feuilles_stellaires",
+  "name": "Feuilles stellaires",
+  "light": 6,
+  "hardness": 0.2,
+  "tool": "shears",
+  "sound": "plant",
+  "anim": "sway",
+  "cullSelf": false,
+  "color": "#7a9aff",
+  "tags": [
+   "leaves"
+  ],
+  "drops": [
+   {
+    "item": "fruit_astral",
+    "chance": 0.05
+   }
+  ],
+  "pass": "cutout"
+ },
+ {
+  "id": "cristal_astral",
+  "name": "Cristal astral",
+  "shape": "cross",
+  "light": 12,
+  "hardness": 1,
+  "tool": "pickaxe",
+  "sound": "crystal",
+  "color": "#b08aff",
+  "drops": [
+   {
+    "item": "eclat_astral",
+    "count": [
+     1,
+     2
+    ]
+   }
+  ]
+ },
+ {
+  "id": "voile_astral",
+  "name": "Voile astral",
+  "shape": "portal",
+  "anim": "portal",
+  "light": 12,
+  "hardness": -1,
+  "solid": false,
+  "drops": "none",
+  "item": false,
+  "color": "#2a6ad8",
+  "tags": [
+   "portal"
+  ],
+  "data": {
+   "portal": "astral"
+  },
+  "pass": "translucent"
+ },
+ {
+  "id": "autel_astral",
+  "name": "Autel astral",
+  "tex": {
+   "top": "autel_astral_dessus",
+   "bottom": "pierre_taillee",
+   "side": "autel_astral_cote"
+  },
+  "hardness": 8,
+  "level": 3,
+  "tool": "pickaxe",
+  "light": 7,
+  "interact": "altar_astral",
+  "color": "#46587a"
+ },
+ {
+  "id": "autel_sylvestre",
+  "name": "Autel sylvestre",
+  "tex": {
+   "top": "autel_sylvestre_dessus",
+   "bottom": "briques_pierre_moussues",
+   "side": "autel_sylvestre_cote"
+  },
+  "hardness": -1,
+  "light": 8,
+  "interact": "summon",
+  "color": "#3a5030",
+  "data": {
+   "offering": "offrande_sylvestre",
+   "creature": "gardien_sylvestre"
+  }
+ },
+ {
+  "id": "autel_veilleur",
+  "name": "Autel du Veilleur",
+  "tex": {
+   "top": "autel_veilleur_dessus",
+   "bottom": "briques_astrales",
+   "side": "autel_veilleur_cote"
+  },
+  "hardness": -1,
+  "light": 10,
+  "interact": "summon",
+  "color": "#3a2e5a",
+  "data": {
+   "offering": "oeil_neant",
+   "creature": "veilleur_astral"
+  }
+ }
+]

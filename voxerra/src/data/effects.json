@@ -1,0 +1,17 @@
+[
+ {"id":"poison","name":"Poison","color":"#6a9a2a","bad":true},
+ {"id":"brulure","name":"Brûlure","color":"#ff6a1a","bad":true},
+ {"id":"gel","name":"Gel","color":"#aee8ff","bad":true},
+ {"id":"electrise","name":"Électrisé","color":"#f0e060","bad":true},
+ {"id":"lenteur","name":"Lenteur","color":"#5a6a8a","bad":true},
+ {"id":"faiblesse","name":"Faiblesse","color":"#6a5a5a","bad":true},
+ {"id":"frissons","name":"Frissons","color":"#9ad8ff","bad":true},
+ {"id":"fievre","name":"Coup de chaleur","color":"#e0802a","bad":true},
+ {"id":"regeneration","name":"Régénération","color":"#e8406a"},
+ {"id":"vitesse","name":"Célérité","color":"#6ae0ff"},
+ {"id":"resistance_feu","name":"Ignifugé","color":"#ff8a2a"},
+ {"id":"vision_nocturne","name":"Nyctalopie","color":"#3a4ae0"},
+ {"id":"chute_lente","name":"Chute lente","color":"#dfe8ff"},
+ {"id":"rassasie","name":"Rassasié","color":"#d8a04a"},
+ {"id":"vitalite","name":"Vitalité","color":"#5ad84a"}
+]

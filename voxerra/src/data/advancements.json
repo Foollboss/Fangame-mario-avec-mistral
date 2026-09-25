@@ -1,0 +1,419 @@
+[
+ {
+  "id": "premiers_pas",
+  "title": "Premiers pas",
+  "desc": "Arriver dans le monde de Voxerra",
+  "icon": "herbe",
+  "trigger": {
+   "type": "tick"
+  }
+ },
+ {
+  "id": "bois",
+  "title": "Question de bois",
+  "desc": "Récolter une bûche",
+  "icon": "buche_chene",
+  "trigger": {
+   "type": "obtain",
+   "tag": "log"
+  },
+  "parent": "premiers_pas"
+ },
+ {
+  "id": "atelier",
+  "title": "L’atelier du bricoleur",
+  "desc": "Fabriquer un atelier",
+  "icon": "atelier",
+  "trigger": {
+   "type": "craft",
+   "item": "atelier"
+  },
+  "parent": "bois"
+ },
+ {
+  "id": "pioche_bois",
+  "title": "Au travail !",
+  "desc": "Fabriquer une pioche en bois",
+  "icon": "pioche_bois",
+  "trigger": {
+   "type": "craft",
+   "item": "pioche_bois"
+  },
+  "parent": "atelier"
+ },
+ {
+  "id": "pierre",
+  "title": "L’âge de pierre",
+  "desc": "Obtenir du moellon",
+  "icon": "moellon",
+  "trigger": {
+   "type": "obtain",
+   "item": "moellon"
+  },
+  "parent": "pioche_bois"
+ },
+ {
+  "id": "fourneau",
+  "title": "Il fait chaud ici",
+  "desc": "Fabriquer un fourneau",
+  "icon": "fourneau",
+  "trigger": {
+   "type": "craft",
+   "item": "fourneau"
+  },
+  "parent": "pierre"
+ },
+ {
+  "id": "cuivre",
+  "title": "Reflets cuivrés",
+  "desc": "Obtenir un lingot de cuivre",
+  "icon": "lingot_cuivre",
+  "trigger": {
+   "type": "obtain",
+   "item": "lingot_cuivre"
+  },
+  "parent": "fourneau"
+ },
+ {
+  "id": "fer",
+  "title": "Métallurgie",
+  "desc": "Obtenir un lingot de fer",
+  "icon": "lingot_fer",
+  "trigger": {
+   "type": "obtain",
+   "item": "lingot_fer"
+  },
+  "parent": "cuivre"
+ },
+ {
+  "id": "armure_fer",
+  "title": "Armé jusqu’aux dents",
+  "desc": "Fabriquer une pièce d’armure en fer",
+  "icon": "plastron_fer",
+  "trigger": {
+   "type": "craft",
+   "items": [
+    "casque_fer",
+    "plastron_fer",
+    "jambieres_fer",
+    "bottes_fer"
+   ]
+  },
+  "parent": "fer"
+ },
+ {
+  "id": "lumirite",
+  "title": "Lueur des profondeurs",
+  "desc": "Extraire un éclat de lumirite",
+  "icon": "eclat_lumirite",
+  "trigger": {
+   "type": "obtain",
+   "item": "eclat_lumirite"
+  },
+  "parent": "fer"
+ },
+ {
+  "id": "celestine",
+  "title": "Pierre des cieux",
+  "desc": "Trouver de la célestine dans les profondeurs",
+  "icon": "celestine",
+  "trigger": {
+   "type": "obtain",
+   "item": "celestine"
+  },
+  "parent": "fer"
+ },
+ {
+  "id": "forge",
+  "title": "Forgeron runique",
+  "desc": "Fabriquer une forge runique",
+  "icon": "forge_runique",
+  "trigger": {
+   "type": "craft",
+   "item": "forge_runique"
+  },
+  "parent": "celestine"
+ },
+ {
+  "id": "pierre_runique",
+  "title": "Pierres de passage",
+  "desc": "Fabriquer des pierres runiques",
+  "icon": "pierre_runique",
+  "trigger": {
+   "type": "craft",
+   "item": "pierre_runique"
+  },
+  "parent": "lumirite"
+ },
+ {
+  "id": "portail",
+  "title": "Une porte s’ouvre",
+  "desc": "Allumer un portail de pierres runiques",
+  "icon": "etincelle_braise",
+  "trigger": {
+   "type": "portal_lit"
+  },
+  "parent": "pierre_runique"
+ },
+ {
+  "id": "abime",
+  "title": "Vers l’Abîme",
+  "desc": "Entrer dans l’Abîme cendré",
+  "icon": "cendrite",
+  "trigger": {
+   "type": "dimension",
+   "dim": "abime"
+  },
+  "parent": "portail"
+ },
+ {
+  "id": "braisite",
+  "title": "Braise vive",
+  "desc": "Obtenir de la braisite",
+  "icon": "braisite",
+  "trigger": {
+   "type": "obtain",
+   "item": "braisite"
+  },
+  "parent": "abime"
+ },
+ {
+  "id": "forteresse",
+  "title": "Offrande brûlante",
+  "desc": "Fabriquer une offrande des braises",
+  "icon": "offrande_braise",
+  "trigger": {
+   "type": "craft",
+   "item": "offrande_braise"
+  },
+  "parent": "braisite"
+ },
+ {
+  "id": "tyran",
+  "title": "Le Tyran est tombé",
+  "desc": "Vaincre le Tyran des braises",
+  "icon": "coeur_braise",
+  "trigger": {
+   "type": "kill",
+   "creature": "tyran_braises"
+  },
+  "parent": "forteresse",
+  "goal": true
+ },
+ {
+  "id": "cle_astrale",
+  "title": "La clé des étoiles",
+  "desc": "Forger une clé astrale",
+  "icon": "cle_astrale",
+  "trigger": {
+   "type": "craft",
+   "item": "cle_astrale"
+  },
+  "parent": "tyran"
+ },
+ {
+  "id": "astral",
+  "title": "Au-delà des nuages",
+  "desc": "Entrer dans les Cimes astrales",
+  "icon": "pierre_astrale",
+  "trigger": {
+   "type": "dimension",
+   "dim": "astral"
+  },
+  "parent": "cle_astrale"
+ },
+ {
+  "id": "etherium",
+  "title": "Métal des étoiles",
+  "desc": "Obtenir un lingot d’éthérium",
+  "icon": "lingot_etherium",
+  "trigger": {
+   "type": "obtain",
+   "item": "lingot_etherium"
+  },
+  "parent": "astral"
+ },
+ {
+  "id": "oeil",
+  "title": "Regard du néant",
+  "desc": "Fabriquer un œil du néant",
+  "icon": "oeil_neant",
+  "trigger": {
+   "type": "craft",
+   "item": "oeil_neant"
+  },
+  "parent": "etherium"
+ },
+ {
+  "id": "veilleur",
+  "title": "Le Veilleur s’éteint",
+  "desc": "Vaincre le Veilleur astral",
+  "icon": "couronne_stellaire",
+  "trigger": {
+   "type": "kill",
+   "creature": "veilleur_astral"
+  },
+  "parent": "oeil",
+  "goal": true
+ },
+ {
+  "id": "couronne",
+  "title": "Souverain des Cimes",
+  "desc": "Porter la couronne stellaire dans son inventaire",
+  "icon": "couronne_stellaire",
+  "trigger": {
+   "type": "obtain",
+   "item": "couronne_stellaire"
+  },
+  "parent": "veilleur",
+  "goal": true
+ },
+ {
+  "id": "chasseur",
+  "title": "Chasseur",
+  "desc": "Vaincre une créature hostile",
+  "icon": "epee_pierre",
+  "trigger": {
+   "type": "kill",
+   "category": "hostile"
+  },
+  "parent": "premiers_pas"
+ },
+ {
+  "id": "archer",
+  "title": "Œil de lynx",
+  "desc": "Vaincre une créature avec un projectile",
+  "icon": "arc",
+  "trigger": {
+   "type": "kill_ranged"
+  },
+  "parent": "chasseur"
+ },
+ {
+  "id": "gardien",
+  "title": "Cœur de la forêt",
+  "desc": "Vaincre le Gardien sylvestre",
+  "icon": "coeur_sylvestre",
+  "trigger": {
+   "type": "kill",
+   "creature": "gardien_sylvestre"
+  },
+  "parent": "chasseur",
+  "goal": true
+ },
+ {
+  "id": "vitalite",
+  "title": "Force vitale",
+  "desc": "Boire un élixir de vitalité",
+  "icon": "elixir_vitalite",
+  "trigger": {
+   "type": "eat",
+   "item": "elixir_vitalite"
+  },
+  "parent": "gardien"
+ },
+ {
+  "id": "cordon_bleu",
+  "title": "Cordon bleu",
+  "desc": "Manger un plat cuisiné",
+  "icon": "viande_grillee",
+  "trigger": {
+   "type": "eat",
+   "items": [
+    "viande_grillee",
+    "volaille_rotie",
+    "filet_grille",
+    "pain",
+    "ragout",
+    "tarte_baies"
+   ]
+  },
+  "parent": "premiers_pas"
+ },
+ {
+  "id": "main_verte",
+  "title": "Main verte",
+  "desc": "Récolter du blé",
+  "icon": "ble",
+  "trigger": {
+   "type": "obtain",
+   "item": "ble"
+  },
+  "parent": "cordon_bleu"
+ },
+ {
+  "id": "explorateur",
+  "title": "Globe-trotteur",
+  "desc": "Visiter 8 biomes différents",
+  "icon": "feuilles_chene",
+  "trigger": {
+   "type": "biomes",
+   "count": 8
+  },
+  "parent": "premiers_pas"
+ },
+ {
+  "id": "grand_voyageur",
+  "title": "Grand voyageur",
+  "desc": "Visiter 16 biomes différents",
+  "icon": "bleuet",
+  "trigger": {
+   "type": "biomes",
+   "count": 16
+  },
+  "parent": "explorateur"
+ },
+ {
+  "id": "speleologue",
+  "title": "Spéléologue",
+  "desc": "Descendre sous l’altitude 12",
+  "icon": "roche_profonde",
+  "trigger": {
+   "type": "depth",
+   "below": 12
+  },
+  "parent": "pierre"
+ },
+ {
+  "id": "sommet",
+  "title": "Toit du monde",
+  "desc": "Atteindre l’altitude 170",
+  "icon": "neige",
+  "trigger": {
+   "type": "height",
+   "above": 170
+  },
+  "parent": "explorateur"
+ },
+ {
+  "id": "tresor",
+  "title": "Chasseur de trésors",
+  "desc": "Piller le coffre d’une structure",
+  "icon": "coffre",
+  "trigger": {
+   "type": "loot"
+  },
+  "parent": "explorateur"
+ },
+ {
+  "id": "reves",
+  "title": "Doux rêves",
+  "desc": "Dormir dans une couchette",
+  "icon": "couchette",
+  "trigger": {
+   "type": "sleep"
+  },
+  "parent": "premiers_pas"
+ },
+ {
+  "id": "cristal",
+  "title": "Éclat de prisme",
+  "desc": "Découvrir un bosquet de cristal",
+  "icon": "feuilles_prisme",
+  "trigger": {
+   "type": "biome",
+   "biome": "bosquet_cristal"
+  },
+  "parent": "explorateur"
+ }
+]
