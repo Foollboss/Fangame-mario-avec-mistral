@@ -4,6 +4,7 @@
  * les imports de l'utilisateur (conservés dans le navigateur).
  */
 import type { ContentPack } from '../registry/types';
+import { t, tr } from '../i18n/i18n';
 
 export interface ModInfo {
   id: string;
@@ -15,14 +16,14 @@ export interface ModInfo {
 const KEY = 'voxerra.mods.v1';
 
 export function validatePack(p: unknown): string | null {
-  if (!p || typeof p !== 'object') return 'Le fichier doit contenir un objet JSON.';
+  if (!p || typeof p !== 'object') return t('Le fichier doit contenir un objet JSON.');
   const o = p as Record<string, unknown>;
-  if (typeof o.id !== 'string' || !/^[a-z0-9_-]{2,40}$/.test(o.id)) return 'Identifiant « id » manquant ou invalide (a-z, 0-9, _ et -).';
+  if (typeof o.id !== 'string' || !/^[a-z0-9_-]{2,40}$/.test(o.id)) return t('Identifiant « id » manquant ou invalide (a-z, 0-9, _ et -).');
   for (const k of ['blocks', 'items', 'recipes', 'smelting', 'creatures', 'advancements', 'biomes', 'structures', 'effects'])
-    if (o[k] !== undefined && !Array.isArray(o[k])) return `« ${k} » doit être une liste.`;
-  for (const k of ['textures', 'loot', 'lang']) if (o[k] !== undefined && (typeof o[k] !== 'object' || Array.isArray(o[k]))) return `« ${k} » doit être un objet.`;
-  for (const b of (o.blocks as { id?: unknown; name?: unknown }[]) ?? []) if (typeof b.id !== 'string' || typeof b.name !== 'string') return 'Chaque bloc doit avoir un id et un nom.';
-  for (const i of (o.items as { id?: unknown; name?: unknown }[]) ?? []) if (typeof i.id !== 'string' || typeof i.name !== 'string') return 'Chaque objet doit avoir un id et un nom.';
+    if (o[k] !== undefined && !Array.isArray(o[k])) return t('« {k} » doit être une liste.', { k });
+  for (const k of ['textures', 'loot', 'lang']) if (o[k] !== undefined && (typeof o[k] !== 'object' || Array.isArray(o[k]))) return t('« {k} » doit être un objet.', { k });
+  for (const b of (o.blocks as { id?: unknown; name?: unknown }[]) ?? []) if (typeof b.id !== 'string' || typeof b.name !== 'string') return t('Chaque bloc doit avoir un id et un nom.');
+  for (const i of (o.items as { id?: unknown; name?: unknown }[]) ?? []) if (typeof i.id !== 'string' || typeof i.name !== 'string') return t('Chaque objet doit avoir un id et un nom.');
   return null;
 }
 
@@ -31,16 +32,16 @@ export function summarize(p: ContentPack): string {
   const n = (k: keyof ContentPack, label: string) => {
     const v = p[k];
     const c = Array.isArray(v) ? v.length : v && typeof v === 'object' ? Object.keys(v).length : 0;
-    if (c) parts.push(`${c} ${label}`);
+    if (c) parts.push(`${c} ${t(label)}`);
   };
-  n('blocks', 'blocs');
-  n('items', 'objets');
-  n('recipes', 'recettes');
-  n('creatures', 'créatures');
-  n('textures', 'textures');
-  n('biomes', 'biomes');
-  n('advancements', 'progrès');
-  return parts.join(', ') || 'pack vide';
+  n('blocks', tr('blocs'));
+  n('items', tr('objets'));
+  n('recipes', tr('recettes'));
+  n('creatures', tr('créatures'));
+  n('textures', tr('textures'));
+  n('biomes', tr('biomes'));
+  n('advancements', tr('progrès'));
+  return parts.join(', ') || t('pack vide');
 }
 
 function readImported(): ContentPack[] {

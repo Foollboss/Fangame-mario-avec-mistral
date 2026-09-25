@@ -28,6 +28,8 @@ import { ChunkRenderer } from '../render/chunkRenderer';
 import { SkyRenderer } from '../render/sky';
 import { createGenerator } from '../worldgen/generator';
 import { BIOMES } from '../worldgen/biomes';
+import { setLang, getLang, t, type Lang } from '../i18n/i18n';
+import { localizeContent } from '../i18n/content';
 import { connectToServer } from '../net/connect';
 
 export const VERSION = '1.0.0';
@@ -122,6 +124,7 @@ export class App implements AppApi {
   private busy = false;
 
   async boot(): Promise<void> {
+    setLang(this.settings.language);
     THREE.ColorManagement.enabled = false;
     const canvas = document.getElementById('game') as HTMLCanvasElement;
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false });
@@ -134,11 +137,11 @@ export class App implements AppApi {
       this.audio.unlock();
       this.audio.play('clic', { vol: 0.5 });
     });
-    const boot = h('div', { class: 'screen', style: { background: '#1b1b22' } }, h('div', { class: 'title' }, 'Voxerra'), h('div', { class: 'subtitle' }, 'Chargement du contenu…'));
+    const boot = h('div', { class: 'screen', style: { background: '#1b1b22' } }, h('div', { class: 'title' }, 'Voxerra'), h('div', { class: 'subtitle' }, t('Chargement du contenu…')));
     this.ui.push({ el: boot, onEscape: () => {} });
     // Écran tactile sans souris : le jeu demande clavier et souris (ou une manette)
     if (typeof matchMedia === 'function' && !matchMedia('(any-pointer: fine)').matches) {
-      const note = h('div', { class: 'touch-note' }, 'Voxerra se joue au clavier et à la souris, ou avec une manette.');
+      const note = h('div', { class: 'touch-note' }, t('Voxerra se joue au clavier et à la souris, ou avec une manette.'));
       note.addEventListener('click', () => note.remove());
       document.body.appendChild(note);
     }
@@ -149,6 +152,7 @@ export class App implements AppApi {
     const merged = mergePacks([BASE_PACK, ...packs]);
     applyBiomeOverrides(merged.biomes);
     this.content = new Content(merged);
+    localizeContent(this.content, getLang());
     this.atlas = buildAtlas(this.content);
     this.icons = new IconFactory(this.content, this.atlas.lib);
     this.storage = await IdbStorage.create();
@@ -252,7 +256,7 @@ export class App implements AppApi {
     this.audio.unlock();
     const loading = loadingScreen();
     this.ui.set(loading.screen);
-    loading.set('Préparation du monde…', 0, 1);
+    loading.set(t('Préparation du monde…'), 0, 1);
     try {
       this.panorama?.dispose();
       this.panorama = null;
@@ -275,7 +279,7 @@ export class App implements AppApi {
       this.ui.hudLayer.innerHTML = '';
       await this.startPanorama();
       this.showMainMenu();
-      this.ui.push(messageScreen(this, 'Impossible de charger le monde', (e as Error).message));
+      this.ui.push(messageScreen(this, t('Impossible de charger le monde'), t((e as Error).message)));
     } finally {
       this.busy = false;
     }
@@ -286,7 +290,7 @@ export class App implements AppApi {
     this.busy = true;
     const loading = loadingScreen();
     this.ui.set(loading.screen);
-    loading.set('Sauvegarde du monde…', 1, 2);
+    loading.set(t('Sauvegarde du monde…'), 1, 2);
     this.expectUnlock = true;
     this.input.unlock();
     try {
@@ -306,7 +310,7 @@ export class App implements AppApi {
     this.busy = true;
     const loading = loadingScreen();
     this.ui.set(loading.screen);
-    loading.set(`Connexion à ${address}…`, 0, 1);
+    loading.set(t('Connexion à {address}…', { address }), 0, 1);
     try {
       this.panorama?.dispose();
       this.panorama = null;
@@ -321,25 +325,32 @@ export class App implements AppApi {
       this.game = null;
       await this.startPanorama();
       this.showMainMenu();
-      this.ui.push(messageScreen(this, 'Connexion impossible', (e as Error).message));
+      this.ui.push(messageScreen(this, t('Connexion impossible'), t((e as Error).message)));
     } finally {
       this.busy = false;
     }
+  }
+
+  setLanguage(lang: Lang): void {
+    this.settings.language = lang;
+    this.saveSettings();
+    setLang(lang);
+    localizeContent(this.content, lang);
   }
 
   /** Le serveur a fermé la connexion (ou le réseau est perdu). */
   async disconnected(reason: string): Promise<void> {
     if (!this.game?.remote) return;
     await this.quitToTitle();
-    this.ui.push(messageScreen(this, 'Déconnecté', reason));
+    this.ui.push(messageScreen(this, t('Déconnecté'), t(reason)));
   }
 
   async importMod(text: string): Promise<string> {
     const r = importModText(text);
-    if (typeof r === 'string') return 'Erreur : ' + r;
+    if (typeof r === 'string') return t('Erreur : {msg}', { msg: r });
     this.mods = this.mods.filter((m) => m.id !== r.info.id);
     this.mods.push(r.info);
-    return `Mod « ${r.info.name} » importé (${r.info.summary}). Rechargez la page pour l’activer.`;
+    return t('Mod « {name} » importé ({summary}). Rechargez la page pour l’activer.', { name: r.info.name, summary: r.info.summary });
   }
 
   removeMod(id: string): void {

@@ -4,6 +4,7 @@ import type { IconFactory } from '../render/icons';
 import type { Player } from '../entity/player';
 import type { Content } from '../registry/content';
 import { RARITY_COLORS } from '../render/icons';
+import { t } from '../i18n/i18n';
 
 const ICONS: Record<string, string[]> = {
   heart: ['.oo.oo...', 'orrorro..', 'orwrrrro.', 'orrrrrro.', '.orrrrro.', '..orrro..', '...oro...', '....o....', '.........'],
@@ -92,7 +93,7 @@ export class Hud {
     this.armor = h('div', { class: 'bar-icons' });
     this.air = h('div', { class: 'bar-icons right' });
     this.tempMarker = h('div');
-    this.temp = h('div', { class: 'temp-gauge', title: 'Température corporelle' }, this.tempMarker);
+    this.temp = h('div', { class: 'temp-gauge', title: t('Température corporelle') }, this.tempMarker);
     this.itemName = h('div', { class: 'item-name' });
     this.effects = h('div', { class: 'effects' });
     this.bossName = h('div');
@@ -139,14 +140,14 @@ export class Hud {
 
   toast(title: string, text: string, icon?: string): void {
     const img = icon ? h('img', { src: this.icons.icon(icon) }) : null;
-    const t = h('div', { class: 'toast' }, img, h('div', { class: 't1' }, title), h('div', { class: 't2' }, text));
-    this.toasts.appendChild(t);
-    setTimeout(() => t.remove(), 5000);
+    const el = h('div', { class: 'toast' }, img, h('div', { class: 't1' }, title), h('div', { class: 't2' }, text));
+    this.toasts.appendChild(el);
+    setTimeout(() => el.remove(), 5000);
     while (this.toasts.children.length > 4) this.toasts.firstChild?.remove();
   }
 
   setSaving(on: boolean): void {
-    this.saving.textContent = on ? 'Sauvegarde du monde…' : '';
+    this.saving.textContent = on ? t('Sauvegarde du monde…') : '';
   }
 
   showItemName(id: string | null): void {
@@ -234,7 +235,7 @@ export class Hud {
     // Débogage
     this.debug.style.display = s.debug ? 'block' : 'none';
     if (s.debug) this.debug.innerHTML = s.debug.split('\n').map((l) => `<span>${escapeHtml(l)}</span>`).join('\n');
-    this.fpsEl.textContent = s.fps !== null && !s.debug ? `${s.fps} IPS` : '';
+    this.fpsEl.textContent = s.fps !== null && !s.debug ? t('{fps} IPS', { fps: s.fps }) : '';
     // Vignette
     this.vignette.className = 'vignette' + (s.vignette ? ' ' + s.vignette : '');
     this.vignette.style.opacity = String(s.vignette ? s.vignetteAmount : 0);

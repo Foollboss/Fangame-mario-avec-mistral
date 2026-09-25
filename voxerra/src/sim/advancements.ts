@@ -3,6 +3,7 @@ import type { Sim, SimModule } from './sim';
 import type { Player } from '../entity/player';
 import type { AdvancementDef } from '../registry/types';
 import { BIOMES } from '../worldgen/biomes';
+import { tr } from '../i18n/i18n';
 
 export class AdvancementTracker implements SimModule {
   readonly done: Set<string>;
@@ -60,8 +61,8 @@ export class AdvancementTracker implements SimModule {
     if (this.done.has(def.id)) return;
     this.done.add(def.id);
     this.sim.meta.advancements = [...this.done];
-    this.sim.emit({ t: 'toast', title: def.goal ? 'Défi relevé !' : 'Progrès accompli !', text: def.title, icon: def.icon, to: p.id });
-    this.sim.emit({ t: 'msg', text: `${p.name} a obtenu le progrès [${def.title}]`, color: def.goal ? '#d08aff' : '#80ff80' });
+    this.sim.emit({ t: 'toast', title: def.goal ? tr('Défi relevé !') : tr('Progrès accompli !'), text: def.title, icon: def.icon, to: p.id });
+    this.sim.emit({ t: 'msg', text: tr('{name} a obtenu le progrès [{adv}]'), args: { name: p.name, adv: def.title }, color: def.goal ? '#d08aff' : '#80ff80' });
   }
 
   tick(sim: Sim): void {

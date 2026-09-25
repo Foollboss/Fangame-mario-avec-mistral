@@ -62,7 +62,7 @@ function keepRoom(b: Builder): void {
 const fortress: StructureType = {
   id: 'forteresse',
   name: 'Forteresse de basalte',
-  aliases: ['fortress'],
+  aliases: ['fortress', 'fortaleza'],
   dim: 'abime',
   region: 14,
   salt: 201,
@@ -139,7 +139,7 @@ const fortress: StructureType = {
 const ashRuins: StructureType = {
   id: 'ruines_cendrees',
   name: 'Ruines cendrées',
-  aliases: ['avant_poste'],
+  aliases: ['avant_poste', 'ashen_ruins', 'ruinas_cenicientas'],
   dim: 'abime',
   region: 8,
   salt: 202,
@@ -175,7 +175,7 @@ const ashRuins: StructureType = {
 const citadel: StructureType = {
   id: 'citadelle',
   name: 'Citadelle astrale',
-  aliases: ['citadel'],
+  aliases: ['citadel', 'ciudadela'],
   dim: 'astral',
   region: 14,
   salt: 301,
@@ -262,7 +262,7 @@ const citadel: StructureType = {
 const spire: StructureType = {
   id: 'fleche',
   name: 'Flèche de cristal',
-  aliases: ['fleche_cristal'],
+  aliases: ['fleche_cristal', 'spire', 'aguja'],
   dim: 'astral',
   region: 7,
   salt: 302,

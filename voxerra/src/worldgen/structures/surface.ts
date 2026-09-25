@@ -225,7 +225,7 @@ function well(b: Builder, st: Style): void {
 const village: StructureType = {
   id: 'village',
   name: 'Hameau',
-  aliases: ['hameau'],
+  aliases: ['hameau', 'hamlet', 'aldea'],
   dim: 'surface',
   region: 22,
   salt: 101,
@@ -334,7 +334,7 @@ const village: StructureType = {
 const ruins: StructureType = {
   id: 'ruines',
   name: 'Ruines',
-  aliases: ['ruine'],
+  aliases: ['ruine', 'ruins', 'ruinas'],
   dim: 'surface',
   region: 9,
   salt: 102,
@@ -383,7 +383,7 @@ const ruins: StructureType = {
 const tower: StructureType = {
   id: 'tour',
   name: 'Tour de guet',
-  aliases: ['tour_de_guet'],
+  aliases: ['tour_de_guet', 'watchtower', 'tower', 'torre'],
   dim: 'surface',
   region: 16,
   salt: 103,
@@ -454,7 +454,7 @@ const tower: StructureType = {
 const temple: StructureType = {
   id: 'temple',
   name: 'Temple des sables',
-  aliases: ['temple_sables'],
+  aliases: ['temple_sables', 'templo'],
   dim: 'surface',
   region: 20,
   salt: 104,
@@ -550,7 +550,7 @@ const temple: StructureType = {
 const portalRuin: StructureType = {
   id: 'portail',
   name: 'Ruine de portail',
-  aliases: ['ruine_portail', 'portail_ruine'],
+  aliases: ['ruine_portail', 'portail_ruine', 'portal'],
   dim: 'surface',
   region: 14,
   salt: 105,
@@ -593,7 +593,7 @@ const portalRuin: StructureType = {
 const sanctuary: StructureType = {
   id: 'sanctuaire',
   name: 'Sanctuaire moussu',
-  aliases: ['sanctuaire_moussu'],
+  aliases: ['sanctuaire_moussu', 'sanctuary', 'santuario'],
   dim: 'surface',
   region: 24,
   salt: 106,
@@ -647,6 +647,7 @@ const sanctuary: StructureType = {
 const observatory: StructureType = {
   id: 'observatoire',
   name: 'Observatoire',
+  aliases: ['observatory', 'observatorio'],
   dim: 'surface',
   region: 22,
   salt: 107,
@@ -715,6 +716,7 @@ const observatory: StructureType = {
 const crypt: StructureType = {
   id: 'crypte',
   name: 'Crypte oubliée',
+  aliases: ['crypt', 'cripta'],
   dim: 'surface',
   region: 40,
   salt: 108,
@@ -801,6 +803,7 @@ const crypt: StructureType = {
 const mine: StructureType = {
   id: 'mine',
   name: 'Mine abandonnée',
+  aliases: ['mina'],
   dim: 'surface',
   region: 12,
   salt: 109,
@@ -885,7 +888,7 @@ const mine: StructureType = {
 const dungeon: StructureType = {
   id: 'donjon',
   name: 'Donjon',
-  aliases: ['cachot'],
+  aliases: ['cachot', 'dungeon', 'mazmorra'],
   dim: 'surface',
   region: 5,
   salt: 110,

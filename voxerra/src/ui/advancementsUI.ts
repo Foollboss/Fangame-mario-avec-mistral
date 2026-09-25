@@ -5,6 +5,7 @@ import type { AppApi } from '../app/api';
 import type { Sim } from '../sim/sim';
 import type { Player } from '../entity/player';
 import type { AdvancementDef } from '../registry/types';
+import { t } from '../i18n/i18n';
 
 export function advancementsScreen(app: AppApi, sim: Sim, _p: Player): Screen {
   const tracker = (sim as unknown as { advancements?: { done: Set<string> } }).advancements;
@@ -68,7 +69,7 @@ export function advancementsScreen(app: AppApi, sim: Sim, _p: Player): Screen {
     g.lineTo(bx, by);
     g.stroke();
   }
-  const info = h('div', { class: 'subtitle', style: { minHeight: '44px', textAlign: 'center' } }, 'Survolez une étape pour voir sa description.');
+  const info = h('div', { class: 'subtitle', style: { minHeight: '44px', textAlign: 'center' } }, t('Survolez une étape pour voir sa description.'));
   for (const d of defs) {
     const p = pos.get(d.id)!;
     const node = h('div', { class: 'adv-node' + (done.has(d.id) ? ' done' : '') + (d.goal ? ' goal' : ''), style: { left: `${PAD + p.x * SX}px`, top: `${PAD + p.y * SY}px` } }, h('img', { src: app.icons.icon(d.icon) }));
@@ -95,10 +96,10 @@ export function advancementsScreen(app: AppApi, sim: Sim, _p: Player): Screen {
   const el = h(
     'div',
     { class: 'screen dim' },
-    h('div', { class: 'title' }, `Progrès (${count}/${defs.length})`),
+    h('div', { class: 'title' }, t('Progrès ({n}/{total})', { n: count, total: defs.length })),
     view,
     info,
-    button('Terminé', () => app.ui.pop()),
+    button(t('Terminé'), () => app.ui.pop()),
   );
   return { el, pauses: true, closeOnInventoryKey: false, onKey: (e) => {
     if (e.code === 'KeyL') {

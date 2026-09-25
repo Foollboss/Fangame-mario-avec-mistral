@@ -1,7 +1,9 @@
 # Voxerra
 
 Bac à sable voxel original (exploration, survie, construction, combat, trois dimensions), jouable dans le navigateur,
-avec un serveur multijoueur autoritaire.
+avec un serveur multijoueur autoritaire. Disponible en français, anglais et espagnol.
+
+Par @Fullboss971.
 
 Le projet se trouve dans le dossier [`voxerra/`](voxerra/) : voir [`voxerra/README.md`](voxerra/README.md) pour
 l'installation, les commandes, l'architecture, les contrôles et les limites connues.

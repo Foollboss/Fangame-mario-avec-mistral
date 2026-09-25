@@ -1,4 +1,5 @@
 /** Logo « VOXERRA » en blocs de pierre pixelisés, dessiné sur canvas. */
+import { tr } from '../i18n/i18n';
 const GLYPHS: Record<string, string[]> = {
   V: ['X...X', 'X...X', 'X...X', 'X...X', '.X.X.', '.X.X.', '..X..'],
   O: ['.XXX.', 'X...X', 'X...X', 'X...X', 'X...X', 'X...X', '.XXX.'],
@@ -65,22 +66,22 @@ export function drawLogo(text = 'VOXERRA', cell = 11): HTMLCanvasElement {
 }
 
 export const SPLASHES = [
-  'Cent pour cent procédural !',
-  'Aucune texture copiée !',
-  'Attention aux vesses explosives !',
-  'La lumirite brille dans le noir.',
-  'Ne réveillez pas le Veilleur !',
-  'Des cubes à perte de vue !',
-  'Aussi en multijoueur !',
-  'Minez, construisez, survivez !',
-  "L'Abîme vous attend…",
-  'Fait avec des voxels frais !',
-  'Plus de 160 blocs !',
-  'Gravité réduite dans les Cimes !',
-  'Les pelucheons adorent le blé.',
-  'Sauvegarde anti-coupure !',
-  'Avez-vous vu un cerf d’argent ?',
-  'Greedy meshing inside!',
-  'Les nuages sont en blocs !',
-  'Écrit en TypeScript !',
+  tr('Cent pour cent procédural !'),
+  tr('Aucune texture copiée !'),
+  tr('Attention aux vesses explosives !'),
+  tr('La lumirite brille dans le noir.'),
+  tr('Ne réveillez pas le Veilleur !'),
+  tr('Des cubes à perte de vue !'),
+  tr('Aussi en multijoueur !'),
+  tr('Minez, construisez, survivez !'),
+  tr("L'Abîme vous attend…"),
+  tr('Fait avec des voxels frais !'),
+  tr('Plus de 160 blocs !'),
+  tr('Gravité réduite dans les Cimes !'),
+  tr('Les pelucheons adorent le blé.'),
+  tr('Sauvegarde anti-coupure !'),
+  tr('Avez-vous vu un cerf d’argent ?'),
+  tr('Greedy meshing inside!'),
+  tr('Les nuages sont en blocs !'),
+  tr('Écrit en TypeScript !'),
 ];

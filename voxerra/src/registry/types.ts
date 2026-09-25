@@ -225,7 +225,8 @@ export interface ContentPack {
   effects?: EffectDef[];
   biomes?: BiomeDefLike[];
   structures?: StructureTemplateDef[];
-  lang?: Record<string, string>;
+  /** Traductions par langue : { en: { id: "Nom" }, es: { … } } (clés « id.desc », « id.title » acceptées). */
+  lang?: Record<string, Record<string, string>>;
 }
 
 /** Biomes : voir worldgen/biomes.ts pour la sémantique. */

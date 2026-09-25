@@ -3,6 +3,7 @@ import { LivingEntity, type DamageSource } from './living';
 import { PlayerInventory } from '../inventory/inventory';
 import type { ItemRegistry } from '../registry/items';
 import type { GameMode } from '../save/storage';
+import { t } from '../i18n/i18n';
 
 export interface SpawnPoint {
   dim: string;
@@ -202,39 +203,40 @@ export class Player extends LivingEntity {
 
 export function deathText(name: string, src: DamageSource): string {
   const by = (src.attacker as unknown as { displayName?: string })?.displayName;
+  const T = (k: string) => t(k, { name, by: by ?? '' });
   switch (src.type) {
     case 'melee':
-      return by ? `${name} a été terrassé par ${by}` : `${name} a été tué`;
+      return by ? T('{name} a été terrassé par {by}') : T('{name} a été tué');
     case 'projectile':
-      return by ? `${name} a été abattu par ${by}` : `${name} a été transpercé`;
+      return by ? T('{name} a été abattu par {by}') : T('{name} a été transpercé');
     case 'fall':
-      return `${name} est tombé de trop haut`;
+      return T('{name} est tombé de trop haut');
     case 'lava':
-      return `${name} a voulu nager dans la lave`;
+      return T('{name} a voulu nager dans la lave');
     case 'fire':
-      return `${name} s'est consumé`;
+      return T('{name} s\'est consumé');
     case 'drown':
-      return `${name} s'est noyé`;
+      return T('{name} s\'est noyé');
     case 'starve':
-      return `${name} est mort d'épuisement`;
+      return T('{name} est mort d\'épuisement');
     case 'void':
-      return `${name} est tombé dans le vide`;
+      return T('{name} est tombé dans le vide');
     case 'contact':
-      return `${name} s'est piqué à mort`;
+      return T('{name} s\'est piqué à mort');
     case 'poison':
-      return `${name} a succombé au poison`;
+      return T('{name} a succombé au poison');
     case 'explosion':
-      return by ? `${name} a été soufflé par ${by}` : `${name} a explosé`;
+      return by ? T('{name} a été soufflé par {by}') : T('{name} a explosé');
     case 'suffocate':
-      return `${name} a suffoqué dans un mur`;
+      return T('{name} a suffoqué dans un mur');
     case 'freeze':
-      return `${name} est mort de froid`;
+      return T('{name} est mort de froid');
     case 'heat':
-      return `${name} a succombé à la chaleur`;
+      return T('{name} a succombé à la chaleur');
     case 'shock':
-      return `${name} a été foudroyé`;
+      return T('{name} a été foudroyé');
     default:
-      return `${name} est mort`;
+      return T('{name} est mort');
   }
 }
 

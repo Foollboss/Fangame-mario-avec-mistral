@@ -224,7 +224,7 @@ export class OverworldGenerator implements DimGenerator {
   }
 
   /** Structure la plus proche (commande /localiser). */
-  locateStructure(type: string, x: number, z: number): { x: number; z: number } | null {
+  locateStructure(type: string, x: number, z: number): { x: number; z: number; name?: string } | null {
     return this.structures.locate(type, x, z);
   }
 

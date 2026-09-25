@@ -1,7 +1,10 @@
 /** Paramètres utilisateur (localStorage, lecture/écriture protégées). */
 import { DEFAULT_BINDINGS, type Action } from '../input/input';
+import { detectLang, type Lang } from '../i18n/i18n';
 
 export interface Settings {
+  /** Langue de l'interface (détectée au premier lancement). */
+  language: Lang;
   playerName: string;
   renderDistance: number;
   fov: number;
@@ -23,6 +26,7 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
+  language: 'fr',
   playerName: 'Aventurier',
   renderDistance: 8,
   fov: 75,
@@ -48,13 +52,14 @@ const KEY = 'voxerra.settings.v1';
 export function loadSettings(): Settings {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return structuredClone(DEFAULT_SETTINGS);
+    if (!raw) return { ...structuredClone(DEFAULT_SETTINGS), language: detectLang() };
     const s = JSON.parse(raw) as Partial<Settings>;
-    const merged = { ...structuredClone(DEFAULT_SETTINGS), ...s };
+    const merged = { ...structuredClone(DEFAULT_SETTINGS), language: detectLang(), ...s };
+    if (!['fr', 'en', 'es'].includes(merged.language)) merged.language = 'fr';
     merged.bindings = { ...structuredClone(DEFAULT_BINDINGS), ...(s.bindings ?? {}) };
     return merged;
   } catch {
-    return structuredClone(DEFAULT_SETTINGS);
+    return { ...structuredClone(DEFAULT_SETTINGS), language: detectLang() };
   }
 }
 

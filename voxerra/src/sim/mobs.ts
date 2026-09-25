@@ -15,6 +15,7 @@ import { Grave } from '../entity/grave';
 import { BIOMES } from '../worldgen/biomes';
 import { LIQ_WATER, LIQ_LAVA, Shape } from '../registry/blocks';
 import type { ItemStack } from '../inventory/inventory';
+import { tr } from '../i18n/i18n';
 
 type SpawnRule = NonNullable<CreatureDef['spawn']>[number];
 type Group = 'hostile' | 'passive' | 'water' | 'air';
@@ -60,12 +61,12 @@ export class MobSystem implements SimModule {
     if (!def) return false;
     for (const b of this.bosses) {
       if (!b.dead && !b.removed && b.dim === dim && b.distTo(x, y, z) < 96) {
-        sim.emit({ t: 'msg', text: `${b.displayName} est déjà éveillé !`, color: '#ff9a5a', to: by.id });
+        sim.emit({ t: 'msg', text: tr('{name} est déjà éveillé !'), args: { name: b.displayName }, color: '#ff9a5a', to: by.id });
         return false;
       }
     }
     if (sim.difficulty === 0) {
-      sim.emit({ t: 'msg', text: 'Les gardiens dorment en mode paisible.', color: '#ffd080', to: by.id });
+      sim.emit({ t: 'msg', text: tr('Les gardiens dorment en mode paisible.'), color: '#ffd080', to: by.id });
       return false;
     }
     const m = this.create(type, dim, x, y, z);
@@ -73,7 +74,7 @@ export class MobSystem implements SimModule {
     m.persistent = true;
     m.target = by;
     m.invuln = 2;
-    sim.emit({ t: 'msg', text: `${def.name} s’éveille !`, color: '#ff7a4a' });
+    sim.emit({ t: 'msg', text: tr('{name} s’éveille !'), args: { name: def.name }, color: '#ff7a4a' });
     sim.emit({ t: 'sound', id: 'boss_apparait', x, y, z, vol: 1 });
     sim.emit({ t: 'shake', amount: 1 });
     sim.emit({ t: 'particles', kind: 'portail', x, y: y + 1, z, n: 60, spread: 2.5 });
@@ -126,7 +127,7 @@ export class MobSystem implements SimModule {
     if (m.def.category === 'boss') {
       this.bossBar(m, true);
       this.bosses.delete(m);
-      sim.emit({ t: 'msg', text: `${m.displayName} a été vaincu !`, color: '#ffd24a' });
+      sim.emit({ t: 'msg', text: tr('{name} a été vaincu !'), args: { name: m.displayName }, color: '#ffd24a' });
       sim.emit({ t: 'sound', id: 'boss_vaincu', x: m.x, y: m.y, z: m.z, vol: 1 });
       sim.emit({ t: 'particles', kind: 'etoile', x: m.x, y: m.y + 1.5, z: m.z, n: 50, spread: 3 });
       for (const p of sim.players) {

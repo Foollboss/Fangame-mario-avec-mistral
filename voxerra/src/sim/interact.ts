@@ -16,6 +16,7 @@ import { lookDir } from '../engine/math';
 import { tryIgnitePortal } from './portals';
 import type { ItemInfo } from '../registry/items';
 import { toggleLever, updatePowerAround } from './mechanisms';
+import { tr } from '../i18n/i18n';
 
 export const REACH = 5;
 export const CREATIVE_REACH = 7;
@@ -271,14 +272,14 @@ export function interactBlock(sim: Sim, p: Player, hit: RayHit): InteractResult 
       if (sim.env.isNight && p.dim === 'surface') {
         const hostile = sim.entities.near(p.dim, x, y, z, 10, (e) => e.kind === 'mob' && (e as unknown as { hostile: boolean }).hostile);
         if (hostile.length > 0) {
-          sim.emit({ t: 'msg', text: 'Impossible de dormir : des créatures rôdent à proximité.', color: '#ff8080', to: p.id });
+          sim.emit({ t: 'msg', text: tr('Impossible de dormir : des créatures rôdent à proximité.'), color: '#ff8080', to: p.id });
           return { done: true };
         }
         sim.env.skipNight();
         p.stat('nuits_dormies');
         sim.trigger(p, 'sleep');
-        sim.emit({ t: 'msg', text: 'Vous avez dormi jusqu’au matin. Point de réapparition défini.', color: '#ffe080', to: p.id });
-      } else sim.emit({ t: 'msg', text: 'Point de réapparition défini.', color: '#ffe080', to: p.id });
+        sim.emit({ t: 'msg', text: tr('Vous avez dormi jusqu’au matin. Point de réapparition défini.'), color: '#ffe080', to: p.id });
+      } else sim.emit({ t: 'msg', text: tr('Point de réapparition défini.'), color: '#ffe080', to: p.id });
       return { done: true };
     }
     case 'altar_astral': {
@@ -286,12 +287,12 @@ export function interactBlock(sim: Sim, p: Player, hit: RayHit): InteractResult 
       if (held?.id === 'cle_astrale' || (meta & 1) === 1) {
         if ((meta & 1) === 0) {
           w.setBlock(x, y, z, makeCell(id, 1));
-          sim.emit({ t: 'msg', text: 'L’autel astral s’éveille…', color: '#b08aff', to: p.id });
+          sim.emit({ t: 'msg', text: tr('L’autel astral s’éveille…'), color: '#b08aff', to: p.id });
         }
         sim.requestTravel(p, p.dim === 'astral' ? 'surface' : 'astral', { x, y, z });
         return { done: true };
       }
-      sim.emit({ t: 'msg', text: 'L’autel semble attendre une clé astrale.', color: '#b08aff', to: p.id });
+      sim.emit({ t: 'msg', text: tr('L’autel semble attendre une clé astrale.'), color: '#b08aff', to: p.id });
       return { done: true };
     }
     case 'summon': {
@@ -303,7 +304,7 @@ export function interactBlock(sim: Sim, p: Player, hit: RayHit): InteractResult 
         }
       } else {
         const name = sim.content.items.name(d.offering);
-        sim.emit({ t: 'msg', text: `L’autel réclame : ${name}.`, color: '#ffd080', to: p.id });
+        sim.emit({ t: 'msg', text: tr('L’autel réclame : {item}.'), args: { item: name }, color: '#ffd080', to: p.id });
       }
       return { done: true };
     }
@@ -440,7 +441,7 @@ export function finishUse(sim: Sim, p: Player, held: number): void {
     const charge = Math.min(1, held / (it.ranged.charge ?? 1));
     if (charge < 0.15) return;
     if (!p.creative && p.inventory.count(it.ranged.ammo) <= 0) {
-      sim.emit({ t: 'msg', text: 'Plus de flèches !', color: '#ff8080', to: p.id });
+      sim.emit({ t: 'msg', text: tr('Plus de flèches !'), color: '#ff8080', to: p.id });
       return;
     }
     if (!p.creative) p.inventory.remove(it.ranged.ammo, 1);
@@ -476,7 +477,7 @@ export function eat(sim: Sim, p: Player, it: ItemInfo): void {
         p.vitality++;
         p.updateMaxHealth();
         p.heal(4);
-        sim.emit({ t: 'msg', text: `Vitalité accrue ! (${p.vitality}/3)`, color: '#5ad84a', to: p.id });
+        sim.emit({ t: 'msg', text: tr('Vitalité accrue ! ({n}/3)'), args: { n: p.vitality }, color: '#5ad84a', to: p.id });
       }
       continue;
     }

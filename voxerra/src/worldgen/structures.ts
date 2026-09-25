@@ -78,7 +78,7 @@ export class StructureManager {
   }
 
   /** Structure la plus proche de (x, z), recherche en anneaux de régions. */
-  locate(name: string, x: number, z: number, maxBlocks = 12000): { x: number; z: number; y: number } | null {
+  locate(name: string, x: number, z: number, maxBlocks = 12000): { x: number; z: number; y: number; name: string } | null {
     const t = this.find(name);
     if (!t) return null;
     const size = t.region * CS;
@@ -101,7 +101,7 @@ export class StructureManager {
           }
         }
     }
-    return best ? { x: best.x, y: best.y, z: best.z } : null;
+    return best ? { x: best.x, y: best.y, z: best.z, name: t.name } : null;
   }
 
   /** Identifiants disponibles dans cette dimension. */

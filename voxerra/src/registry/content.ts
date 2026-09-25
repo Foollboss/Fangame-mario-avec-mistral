@@ -34,7 +34,7 @@ export const BASE_PACK: ContentPack = {
 
 /** Fusionne plusieurs packs : les listes sont concaténées, les entrées de même id sont remplacées. */
 export function mergePacks(packs: ContentPack[]): ContentPack {
-  const out: Required<Omit<ContentPack, 'id' | 'name' | 'lang'>> & { id: string; name: string; lang: Record<string, string> } = {
+  const out: Required<Omit<ContentPack, 'id' | 'name' | 'lang'>> & { id: string; name: string; lang: Record<string, Record<string, string>> } = {
     id: packs.map((p) => p.id).join('+'),
     name: packs.map((p) => p.name ?? p.id).join(' + '),
     blocks: [],
@@ -69,7 +69,7 @@ export function mergePacks(packs: ContentPack[]): ContentPack {
     upsert(out.effects, p.effects);
     upsert(out.biomes as BiomeDefLike[], p.biomes);
     upsert(out.structures as StructureTemplateDef[], p.structures);
-    Object.assign(out.lang, p.lang ?? {});
+    for (const [l, names] of Object.entries(p.lang ?? {})) if (names && typeof names === 'object') out.lang[l] = { ...(out.lang[l] ?? {}), ...names };
   }
   return out;
 }

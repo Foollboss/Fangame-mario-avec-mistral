@@ -715,7 +715,7 @@
  },
  {
   "id": "buche_epicea",
-  "name": "Bûche de épicéa",
+  "name": "Bûche d'épicéa",
   "tex": {
    "top": "buche_epicea_dessus",
    "bottom": "buche_epicea_dessus",
@@ -732,7 +732,7 @@
  },
  {
   "id": "planches_epicea",
-  "name": "Planches de épicéa",
+  "name": "Planches d'épicéa",
   "hardness": 2,
   "tool": "axe",
   "sound": "wood",
@@ -749,7 +749,7 @@
  },
  {
   "id": "feuilles_epicea",
-  "name": "Feuilles de épicéa",
+  "name": "Feuilles d'épicéa",
   "hardness": 0.2,
   "tool": "shears",
   "sound": "plant",
@@ -776,7 +776,7 @@
  },
  {
   "id": "pousse_epicea",
-  "name": "Pousse de épicéa",
+  "name": "Pousse d'épicéa",
   "shape": "cross",
   "hardness": 0,
   "sound": "plant",
@@ -877,7 +877,7 @@
  },
  {
   "id": "buche_acacia",
-  "name": "Bûche de acacia",
+  "name": "Bûche d'acacia",
   "tex": {
    "top": "buche_acacia_dessus",
    "bottom": "buche_acacia_dessus",
@@ -894,7 +894,7 @@
  },
  {
   "id": "planches_acacia",
-  "name": "Planches de acacia",
+  "name": "Planches d'acacia",
   "hardness": 2,
   "tool": "axe",
   "sound": "wood",
@@ -911,7 +911,7 @@
  },
  {
   "id": "feuilles_acacia",
-  "name": "Feuilles de acacia",
+  "name": "Feuilles d'acacia",
   "hardness": 0.2,
   "tool": "shears",
   "sound": "plant",
@@ -938,7 +938,7 @@
  },
  {
   "id": "pousse_acacia",
-  "name": "Pousse de acacia",
+  "name": "Pousse d'acacia",
   "shape": "cross",
   "hardness": 0,
   "sound": "plant",

@@ -15,6 +15,7 @@ import type { Player } from '../entity/player';
 import { fillSlot } from './hud';
 import type { Station, Recipe } from '../crafting/recipes';
 import type { FurnaceData } from '../sim/furnace';
+import { t, tr } from '../i18n/i18n';
 
 export interface InvContext {
   content: Content;
@@ -110,14 +111,14 @@ abstract class ContainerScreen {
     const it = this.ctx.content.items.get(s.id);
     this.tipEl.appendChild(h('div', { style: { color: RARITY_COLORS[it?.rarity ?? 'common'] } }, it?.name ?? s.id));
     if (it?.desc) this.tipEl.appendChild(h('div', { class: 'desc' }, it.desc));
-    if (it?.weapon) this.tipEl.appendChild(h('div', { class: 'stat' }, `${it.weapon.damage} dégâts · recharge ${it.weapon.cooldown} s${it.weapon.element ? ' · ' + ({ fire: 'feu', frost: 'givre', poison: 'poison', shock: 'foudre' } as const)[it.weapon.element] : ''}`));
-    if (it?.ranged) this.tipEl.appendChild(h('div', { class: 'stat' }, `Projectile : ${it.ranged.damage} dégâts`));
-    if (it?.armor) this.tipEl.appendChild(h('div', { class: 'stat' }, `+${it.armor.defense} armure${it.armor.warmth ? ' · chaud' : ''}${it.armor.fireRes ? ' · ignifuge' : ''}`));
-    if (it?.tool && it.tool.type !== 'sword') this.tipEl.appendChild(h('div', { class: 'stat' }, `Outil niveau ${it.tool.tier} · vitesse ${it.tool.speed}`));
-    if (it?.food && it.food.energy) this.tipEl.appendChild(h('div', { class: 'stat' }, `Nourriture : +${it.food.energy} énergie`));
+    if (it?.weapon) this.tipEl.appendChild(h('div', { class: 'stat' }, t('{d} dégâts · recharge {c} s', { d: it.weapon.damage, c: it.weapon.cooldown }) + (it.weapon.element ? ' · ' + t(({ fire: tr('feu'), frost: tr('givre'), poison: tr('poison'), shock: tr('foudre') } as Record<string, string>)[it.weapon.element]) : '')));
+    if (it?.ranged) this.tipEl.appendChild(h('div', { class: 'stat' }, t('Projectile : {d} dégâts', { d: it.ranged.damage })));
+    if (it?.armor) this.tipEl.appendChild(h('div', { class: 'stat' }, t('+{d} armure', { d: it.armor.defense }) + (it.armor.warmth ? ' · ' + t('chaud') : '') + (it.armor.fireRes ? ' · ' + t('ignifuge') : '')));
+    if (it?.tool && it.tool.type !== 'sword') this.tipEl.appendChild(h('div', { class: 'stat' }, t('Outil niveau {tier} · vitesse {speed}', { tier: it.tool.tier, speed: it.tool.speed })));
+    if (it?.food && it.food.energy) this.tipEl.appendChild(h('div', { class: 'stat' }, t('Nourriture : +{e} énergie', { e: it.food.energy })));
     const dur = it?.tool?.durability ?? it?.armor?.durability ?? it?.shield?.durability;
-    if (dur) this.tipEl.appendChild(h('div', { class: 'desc' }, `Durabilité : ${dur - (s.dmg ?? 0)} / ${dur}`));
-    if (it?.fuel || this.ctx.content.items.fuelTime(s.id)) this.tipEl.appendChild(h('div', { class: 'desc' }, `Combustible (${this.ctx.content.items.fuelTime(s.id)} s)`));
+    if (dur) this.tipEl.appendChild(h('div', { class: 'desc' }, t('Durabilité : {n} / {max}', { n: dur - (s.dmg ?? 0), max: dur })));
+    if (it?.fuel || this.ctx.content.items.fuelTime(s.id)) this.tipEl.appendChild(h('div', { class: 'desc' }, t('Combustible ({s} s)', { s: this.ctx.content.items.fuelTime(s.id) })));
   }
 
   private onDown(e: MouseEvent, el: HTMLElement): void {
@@ -329,11 +330,11 @@ class CraftingScreen extends ContainerScreen {
 
   /** Livre de recettes : liste filtrable, remplissage automatique. */
   protected recipeBook(): HTMLElement {
-    this.bookSearch = h('input', { placeholder: 'Rechercher une recette…' }) as HTMLInputElement;
+    this.bookSearch = h('input', { placeholder: t('Rechercher une recette…') }) as HTMLInputElement;
     this.bookSearch.addEventListener('input', () => this.renderBook());
     this.bookSearch.addEventListener('keydown', (e) => e.stopPropagation());
     this.bookList = h('div', { class: 'rb-list' });
-    const el = h('div', { class: 'panel recipe-book' }, h('div', { class: 'ptitle' }, 'Livre de recettes'), this.bookSearch, this.bookList);
+    const el = h('div', { class: 'panel recipe-book' }, h('div', { class: 'ptitle' }, t('Livre de recettes')), this.bookSearch, this.bookList);
     this.renderBook();
     return el;
   }
@@ -385,8 +386,9 @@ class CraftingScreen extends ContainerScreen {
 
   private recipeText(r: Recipe): string {
     const n = this.ctx.content.items;
-    const parts = [...this.ctx.content.recipes.ingredientCounts(r)].map(([spec, c]) => `${c}× ${spec.startsWith('#') ? `(${({ planks: 'planches', cobble: 'moellon', string: 'fil', log: 'bûche' } as Record<string, string>)[spec.slice(1)] ?? spec.slice(1)})` : n.name(spec)}`);
-    return `${n.name(r.result.item)} ×${r.result.count ?? 1}${r.station === 'forge' ? ' (forge)' : ''}\n` + parts.join(', ');
+    const tags: Record<string, string> = { planks: t('planches'), cobble: t('moellon'), string: t('fil'), log: t('bûche') };
+    const parts = [...this.ctx.content.recipes.ingredientCounts(r)].map(([spec, c]) => `${c}× ${spec.startsWith('#') ? `(${tags[spec.slice(1)] ?? spec.slice(1)})` : n.name(spec)}`);
+    return `${n.name(r.result.item)} ×${r.result.count ?? 1}${r.station === 'forge' ? ' (' + t('forge') + ')' : ''}\n` + parts.join(', ');
   }
 
   /** Remplit la grille à partir de l'inventaire. */
@@ -498,7 +500,7 @@ export class PlayerInventoryScreen extends CraftingScreen {
       h(
         'div',
         { class: 'inv-layout' },
-        h('div', { class: 'inv-top' }, armorEl, playerFigure(), h('div', { style: { display: 'flex', flexDirection: 'column', gap: '4px' } }, h('div', { class: 'ptitle' }, 'Fabrication'), this.craftBlock(), h('div', { style: { marginTop: '10px' } }, h('div', { class: 'ptitle' }, 'Main secondaire'), off))),
+        h('div', { class: 'inv-top' }, armorEl, playerFigure(), h('div', { style: { display: 'flex', flexDirection: 'column', gap: '4px' } }, h('div', { class: 'ptitle' }, t('Fabrication')), this.craftBlock(), h('div', { style: { marginTop: '10px' } }, h('div', { class: 'ptitle' }, t('Main secondaire')), off))),
         grid,
       ),
     );
@@ -538,9 +540,9 @@ export class WorkbenchScreen extends CraftingScreen {
       h(
         'div',
         { class: 'inv-layout' },
-        h('div', { class: 'ptitle' }, forge ? 'Forge runique' : 'Atelier'),
+        h('div', { class: 'ptitle' }, forge ? t('Forge runique') : t('Atelier')),
         h('div', { style: { display: 'flex', justifyContent: 'center', margin: '4px 0 10px' } }, this.craftBlock()),
-        h('div', { class: 'ptitle' }, 'Inventaire'),
+        h('div', { class: 'ptitle' }, t('Inventaire')),
         this.playerGrid(toGrid),
       ),
     );
@@ -555,7 +557,7 @@ export class ChestScreen extends ContainerScreen {
     super(ctx);
     const grid = h('div', { class: 'slots', style: { gridTemplateColumns: 'repeat(9, 42px)' } });
     for (let i = 0; i < chest.size; i++) grid.appendChild(this.slot({ c: chest, i, shiftTo: () => [{ c: this.inv, order: this.hotbarOrder }, { c: this.inv, order: this.mainOrder }] }));
-    this.panel.appendChild(h('div', { class: 'inv-layout' }, h('div', { class: 'ptitle' }, title), grid, h('div', { class: 'ptitle' }, 'Inventaire'), this.playerGrid(() => [{ c: chest }])));
+    this.panel.appendChild(h('div', { class: 'inv-layout' }, h('div', { class: 'ptitle' }, title), grid, h('div', { class: 'ptitle' }, t('Inventaire')), this.playerGrid(() => [{ c: chest }])));
     this.refresh();
   }
 }
@@ -596,7 +598,7 @@ export class FurnaceScreen extends ContainerScreen {
       h(
         'div',
         { class: 'inv-layout' },
-        h('div', { class: 'ptitle' }, 'Fourneau'),
+        h('div', { class: 'ptitle' }, t('Fourneau')),
         h(
           'div',
           { style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', margin: '6px 0 12px' } },
@@ -604,7 +606,7 @@ export class FurnaceScreen extends ContainerScreen {
           h('div', { class: 'arrow' }, this.arrow),
           output,
         ),
-        h('div', { class: 'ptitle' }, 'Inventaire'),
+        h('div', { class: 'ptitle' }, t('Inventaire')),
         h('div', {}, main, bar),
       ),
     );
@@ -626,20 +628,20 @@ export class FurnaceScreen extends ContainerScreen {
 }
 
 const CREATIVE_TABS: { id: string; name: string; test: (c: Content, id: string) => boolean }[] = [
-  { id: 'construction', name: 'Construction', test: (c, id) => {
+  { id: 'construction', name: tr('Construction'), test: (c, id) => {
     const it = c.items.get(id)!;
     return it.isBlock && !it.tagSet.has('plant') && !it.tagSet.has('sapling') && !it.tagSet.has('ore') && !it.tagSet.has('leaves') && !it.tagSet.has('log');
   } },
-  { id: 'nature', name: 'Nature', test: (c, id) => {
+  { id: 'nature', name: tr('Nature'), test: (c, id) => {
     const it = c.items.get(id)!;
     return it.isBlock && (it.tagSet.has('plant') || it.tagSet.has('sapling') || it.tagSet.has('ore') || it.tagSet.has('leaves') || it.tagSet.has('log') || it.tagSet.has('soil') || it.tagSet.has('sand') || it.tagSet.has('stone'));
   } },
-  { id: 'outils', name: 'Outils et combat', test: (c, id) => {
+  { id: 'outils', name: tr('Outils et combat'), test: (c, id) => {
     const it = c.items.get(id)!;
     return !!(it.tool || it.weapon || it.armor || it.ranged || it.shield) || id === 'fleche';
   } },
-  { id: 'nourriture', name: 'Nourriture', test: (c, id) => !!c.items.get(id)!.food },
-  { id: 'divers', name: 'Matériaux et divers', test: (c, id) => {
+  { id: 'nourriture', name: tr('Nourriture'), test: (c, id) => !!c.items.get(id)!.food },
+  { id: 'divers', name: tr('Matériaux et divers'), test: (c, id) => {
     const it = c.items.get(id)!;
     return !it.isBlock && !it.tool && !it.weapon && !it.armor && !it.food && !it.ranged && !it.shield;
   } },
@@ -656,13 +658,13 @@ export class CreativeScreen extends ContainerScreen {
     super(ctx);
     this.palette = new Container(0, ctx.content.items);
     this.gridEl = h('div', { class: 'creative-grid' });
-    this.search = h('input', { class: 'input', placeholder: 'Rechercher…', style: { width: '100%', height: '30px', fontSize: '16px', marginBottom: '6px' } }) as HTMLInputElement;
+    this.search = h('input', { class: 'input', placeholder: t('Rechercher…'), style: { width: '100%', height: '30px', fontSize: '16px', marginBottom: '6px' } }) as HTMLInputElement;
     this.search.addEventListener('input', () => this.renderGrid());
     this.search.addEventListener('keydown', (e) => e.stopPropagation());
     this.tabsEl = h('div', { class: 'creative-tabs' });
     const bar = h('div', { class: 'slots', style: { gridTemplateColumns: 'repeat(9, 42px)', marginTop: '8px' } });
     for (let i = 0; i < 9; i++) bar.appendChild(this.slot({ c: this.inv, i, shiftTo: () => [] }));
-    const trash = h('div', { class: 'slot', title: 'Détruire l’objet tenu' }, h('div', { style: { position: 'absolute', inset: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '22px' } }, '✕'));
+    const trash = h('div', { class: 'slot', title: t('Détruire l’objet tenu') }, h('div', { style: { position: 'absolute', inset: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '22px' } }, '✕'));
     trash.addEventListener('mousedown', (e) => {
       e.stopPropagation();
       this.inv.cursor = null;
@@ -676,11 +678,11 @@ export class CreativeScreen extends ContainerScreen {
 
   private renderTabs(): void {
     clear(this.tabsEl);
-    for (const t of [...CREATIVE_TABS, { id: 'tout', name: 'Tout', test: () => true }]) {
-      const b = h('div', { class: 'ctab' + (t.id === this.tab ? ' on' : '') }, t.name);
+    for (const tab of [...CREATIVE_TABS, { id: 'tout', name: tr('Tout'), test: () => true }]) {
+      const b = h('div', { class: 'ctab' + (tab.id === this.tab ? ' on' : '') }, t(tab.name));
       b.addEventListener('mousedown', (e) => {
         e.stopPropagation();
-        this.tab = t.id;
+        this.tab = tab.id;
         this.renderTabs();
         this.renderGrid();
       });

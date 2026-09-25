@@ -44,6 +44,7 @@ import type { LivingEntity } from '../entity/living';
 import { installGameModules } from './modules';
 import { advancementsScreen } from '../ui/advancementsUI';
 import type { RemoteSession } from '../net/client';
+import { t, WEATHER_LABEL } from '../i18n/i18n';
 
 export function createWorkerPool(forceLocal = false): WorkerPool {
   const n = Math.max(2, Math.min(4, (navigator.hardwareConcurrency || 4) - 1));
@@ -179,7 +180,7 @@ export class Game {
     this.entities.localPlayerId = p.id;
     this.enterDimension(p.dim);
     if (this.isNew || !meta.spawn) {
-      loading.set('Recherche d’un point d’apparition…', 0, 1);
+      loading.set(t('Recherche d’un point d’apparition…'), 0, 1);
       const gen = createGenerator('surface', meta.seed, this.content);
       const sp = gen.findSpawn();
       meta.spawn = { x: sp.x + 0.5, y: sp.y, z: sp.z + 0.5 };
@@ -195,7 +196,7 @@ export class Game {
         this.streamer.update(p.x, p.z, 16);
         this.streamer.updateMeshes(p.x, p.y, p.z);
         const pr = this.streamer.progress(Math.floor(p.x / 16), Math.floor(p.z / 16), r);
-        const label = this.isNew ? 'Génération du terrain…' : 'Chargement du monde…';
+        const label = this.isNew ? t('Génération du terrain…') : t('Chargement du monde…');
         loading.set(label, pr.done, pr.total);
         loading.map((g, size) => this.drawChunkMap(g, size));
         const meshed = this.streamer.pendingMeshes < 40 || performance.now() - t0 > 25000;
@@ -212,16 +213,16 @@ export class Game {
         meta.spawn = { x: p.x, y: gy + 1, z: p.z };
       }
       if (meta.bonusChest) this.placeBonusChest();
-      this.chat.add(`Bienvenue dans « ${meta.name} » !`, '#ffe080');
-      this.chat.add('Astuce : appuyez sur E pour l’inventaire et le livre de recettes. /aide pour les commandes.', '#c0c0c0');
+      this.chat.add(t('Bienvenue dans « {name} » !', { name: meta.name }), '#ffe080');
+      this.chat.add(t('Astuce : appuyez sur E pour l’inventaire et le livre de recettes. /aide pour les commandes.'), '#c0c0c0');
       await this.save();
     } else {
       // sécurité : ne pas réapparaître dans un bloc
       const w = this.world;
-      const t = w.content.blocks;
+      const bt = w.content.blocks;
       let guard = 0;
-      while (guard++ < 200 && (t.solid[w.getId(Math.floor(p.x), Math.floor(p.y), Math.floor(p.z))] || t.solid[w.getId(Math.floor(p.x), Math.floor(p.y + 1), Math.floor(p.z))])) p.setPos(p.x, p.y + 1, p.z);
-      this.chat.add(`Bon retour dans « ${meta.name} ».`, '#ffe080');
+      while (guard++ < 200 && (bt.solid[w.getId(Math.floor(p.x), Math.floor(p.y), Math.floor(p.z))] || bt.solid[w.getId(Math.floor(p.x), Math.floor(p.y + 1), Math.floor(p.z))])) p.setPos(p.x, p.y + 1, p.z);
+      this.chat.add(t('Bon retour dans « {name} ».', { name: meta.name }), '#ffe080');
     }
     this.lastHealth = p.health;
     if (p.dead) this.showDeath();
@@ -247,19 +248,19 @@ export class Game {
     await new Promise<void>((resolve, reject) => {
       const step = () => {
         if (this.disposed) return resolve();
-        if (session.closed) return reject(new Error('Connexion interrompue pendant le chargement.'));
+        if (session.closed) return reject(new Error(t('Connexion interrompue pendant le chargement.')));
         session.update(0.05);
         this.streamer.updateMeshes(p.x, p.y, p.z);
         const pr = this.streamer.progress(Math.floor(p.x / 16), Math.floor(p.z / 16), Math.min(3, this.streamer.radius));
-        loading.set('Réception du terrain…', pr.done, pr.total);
+        loading.set(t('Réception du terrain…'), pr.done, pr.total);
         loading.map((g, size) => this.drawChunkMap(g, size));
         if ((pr.done >= pr.total && this.streamer.pendingMeshes < 40) || performance.now() - t0 > 30000) resolve();
         else setTimeout(step, 50);
       };
       step();
     });
-    this.chat.add(w.motd, '#ffe080');
-    this.chat.add(`Connecté à « ${w.world.name} » — ${session.players.length || 1} joueur(s).`, '#c0c0c0');
+    this.chat.add(t(w.motd), '#ffe080');
+    this.chat.add(t('Connecté à « {name} » — {n} joueur(s).', { name: w.world.name, n: session.players.length || 1 }), '#c0c0c0');
     this.lastHealth = p.health;
   }
 
@@ -272,7 +273,7 @@ export class Game {
     p.body.fallDist = 0;
     this.enterDimension(dim);
     const info = DIMENSION_INFO[dim as DimensionId];
-    this.hud.toast('Nouvelle dimension', info?.name ?? dim, dim === 'abime' ? 'braisite' : dim === 'astral' ? 'eclat_astral' : 'herbe');
+    this.hud.toast(t('Nouvelle dimension'), info?.name ?? dim, dim === 'abime' ? 'braisite' : dim === 'astral' ? 'eclat_astral' : 'herbe');
   }
 
   private drawChunkMap(g: CanvasRenderingContext2D, size: number): void {
@@ -375,11 +376,11 @@ export class Game {
         break;
       }
       case 'msg':
-        if (e.to === undefined || e.to === p.id) this.chat.add(e.text, e.color);
+        if (e.to === undefined || e.to === p.id) this.chat.add(t(e.text, e.args), e.color);
         break;
       case 'toast':
         if (e.to === undefined || e.to === p.id) {
-          this.hud.toast(e.title, e.text, e.icon);
+          this.hud.toast(t(e.title, e.args), t(e.text, e.args), e.icon);
           a.play('niveau');
         }
         break;
@@ -424,7 +425,7 @@ export class Game {
     if (this.travelling) return;
     this.travelling = { dim, x, y, z, mode, t: 0 };
     this.host.audio.play('portail_allume');
-    this.chat.add(`Voyage vers ${DIMENSION_INFO[dim as DimensionId]?.name ?? dim}…`, '#d8a8ff');
+    this.chat.add(t('Voyage vers {dim}…', { dim: DIMENSION_INFO[dim as DimensionId]?.name ?? dim }), '#d8a8ff');
     this.save().then(() => {
       if (this.disposed || !this.travelling) return;
       const p = this.player;
@@ -454,7 +455,7 @@ export class Game {
     this.meta.dimension = tr.dim;
     for (let dx = -2; dx <= 2; dx++) for (let dz = -2; dz <= 2; dz++) this.streamer.flushAround(Math.floor(pos.x) + dx * 3, Math.floor(pos.y), Math.floor(pos.z) + dz * 3);
     const info = DIMENSION_INFO[tr.dim as DimensionId];
-    this.hud.toast('Nouvelle dimension', info?.name ?? tr.dim, tr.dim === 'abime' ? 'braisite' : tr.dim === 'astral' ? 'eclat_astral' : 'herbe');
+    this.hud.toast(t('Nouvelle dimension'), info?.name ?? tr.dim, tr.dim === 'abime' ? 'braisite' : tr.dim === 'astral' ? 'eclat_astral' : 'herbe');
   }
 
   // ------------------------------------------------------------------ interface
@@ -505,7 +506,7 @@ export class Game {
     if (data.type === 'chest' && (data as ChestData).loot) this.sim.trigger(this.player, 'loot', { table: (data as ChestData).loot });
     const box = blockContainer(this.sim, data, markDirty);
     markDirty();
-    if (data.type === 'chest') this.pushGameScreen(new ChestScreen(this.invContext(() => this.host.audio.play('porte_ferme', { x: r.x, y: r.y, z: r.z, vol: 0.5 })), box, 'Coffre').screen());
+    if (data.type === 'chest') this.pushGameScreen(new ChestScreen(this.invContext(() => this.host.audio.play('porte_ferme', { x: r.x, y: r.y, z: r.z, vol: 0.5 })), box, t('Coffre')).screen());
     else this.pushGameScreen(new FurnaceScreen(this.invContext(), data as FurnaceData, box).screen());
   }
 
@@ -560,7 +561,7 @@ export class Game {
         text,
       );
       for (const l of r.out) if (l) this.chat.add(l, r.ok ? '#e0e0e0' : '#ff8080');
-    } else this.chat.add(`<${this.player.name}> ${text}`);
+    } else this.chat.add(t('<{name}> {msg}', { name: this.player.name, msg: text }));
   }
 
   private showDeath(): void {
@@ -577,7 +578,7 @@ export class Game {
         g.dim = p.dim;
         g.setPos(p.x, Math.max(1, p.y), p.z);
         this.sim.entities.add(g);
-        this.chat.add(`Vos objets reposent dans une tombe en ${Math.floor(p.x)} ${Math.floor(p.y)} ${Math.floor(p.z)}.`, '#ffb0b0');
+        this.chat.add(t('Vos objets reposent dans une tombe en {x} {y} {z}.', { x: Math.floor(p.x), y: Math.floor(p.y), z: Math.floor(p.z) }), '#ffb0b0');
       }
     }
     p.lastDeath = { dim: p.dim, x: p.x, y: p.y, z: p.z };
@@ -644,7 +645,7 @@ export class Game {
       if (input.pressed('debug')) this.showDebug = !this.showDebug;
       if (input.pressed('players')) {
         const names = this.remote ? this.remote.players.map((q) => q.name) : [p.name];
-        this.chat.add(`Joueurs connectés (${names.length || 1}) : ${names.join(', ') || p.name}`, '#c0e0ff');
+        this.chat.add(t('Joueurs connectés ({n}) : {names}', { n: names.length || 1, names: names.join(', ') || p.name }), '#c0e0ff');
       }
       if (input.pressed('hideHud')) this.hideHud = !this.hideHud;
       if (input.pressed('screenshot')) this.screenshot();
@@ -903,26 +904,26 @@ export class Game {
       bz = Math.floor(p.z);
     const b = BIOMES[w.biomeAt(bx, bz)];
     const l = w.getLight(bx, by + 1, bz);
-    const facing = ['sud (+Z)', 'ouest (−X)', 'nord (−Z)', 'est (+X)'][lookFacing(p.yaw)];
+    const facing = [t('sud (+Z)'), t('ouest (−X)'), t('nord (−Z)'), t('est (+X)')][lookFacing(p.yaw)];
     const st = this.chunkRenderer.stats;
-    const t = this.controller.target;
-    const tb = t ? this.content.blocks.get(t.cell & 0xfff) : null;
+    const tg = this.controller.target;
+    const tb = tg ? this.content.blocks.get(tg.cell & 0xfff) : null;
     const env = this.sim.env;
     const hh = Math.floor(((env.dayTime / 1000 + 6) % 24));
     const mm = Math.floor(((env.dayTime % 1000) / 1000) * 60);
     return [
-      `Voxerra ${this.host.version} — ${this.fps} IPS`,
+      t('Voxerra {v} — {fps} IPS', { v: this.host.version, fps: this.fps }),
       `XYZ : ${p.x.toFixed(2)} / ${p.y.toFixed(2)} / ${p.z.toFixed(2)}`,
-      `Bloc : ${bx} ${by} ${bz}  Colonne : ${bx >> 4} ${bz >> 4}  [${bx & 15} ${bz & 15}]`,
-      `Orientation : ${facing}  (lacet ${((p.yaw * 180) / Math.PI).toFixed(1)}°, tangage ${((p.pitch * 180) / Math.PI).toFixed(1)}°)`,
-      `Dimension : ${DIMENSION_INFO[p.dim as DimensionId]?.name ?? p.dim}  Biome : ${b?.name ?? '?'}`,
-      `Lumière : ciel ${l >> 4}, bloc ${l & 15}  Température : ${p.bodyTemp.toFixed(2)} (ambiante ${p.ambientTemp.toFixed(2)})`,
-      `Jour ${env.day + 1}, ${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}  Météo : ${env.weather}`,
-      `Colonnes : ${w.chunks.size} chargées, ${this.streamer.loadingCount} en cours, ${this.streamer.pendingMeshes} maillages en attente`,
-      `Sections : ${st.visible}/${st.sections} visibles, ${(st.triangles / 1000).toFixed(0)}k triangles, ${this.renderer().info.render.calls} appels`,
-      `Entités : ${this.sim.entities.list.filter((e) => e.dim === p.dim).length}  Particules : ${this.particles.live}`,
-      `Graine : ${this.meta.seedText}`,
-      tb ? `Visé : ${tb.name} (${t!.x} ${t!.y} ${t!.z}) méta ${t!.cell >>> 12}` : '',
+      t('Bloc : {x} {y} {z}  Colonne : {cx} {cz}  [{lx} {lz}]', { x: bx, y: by, z: bz, cx: bx >> 4, cz: bz >> 4, lx: bx & 15, lz: bz & 15 }),
+      t('Orientation : {f}  (lacet {yaw}°, tangage {pitch}°)', { f: facing, yaw: ((p.yaw * 180) / Math.PI).toFixed(1), pitch: ((p.pitch * 180) / Math.PI).toFixed(1) }),
+      t('Dimension : {dim}  Biome : {biome}', { dim: DIMENSION_INFO[p.dim as DimensionId]?.name ?? p.dim, biome: b?.name ?? '?' }),
+      t('Lumière : ciel {sky}, bloc {block}  Température : {temp} (ambiante {amb})', { sky: l >> 4, block: l & 15, temp: p.bodyTemp.toFixed(2), amb: p.ambientTemp.toFixed(2) }),
+      t('Jour {d}, {time}  Météo : {w}', { d: env.day + 1, time: `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`, w: t(WEATHER_LABEL[env.weather] ?? env.weather) }),
+      t('Colonnes : {n} chargées, {l} en cours, {m} maillages en attente', { n: w.chunks.size, l: this.streamer.loadingCount, m: this.streamer.pendingMeshes }),
+      t('Sections : {v}/{s} visibles, {k}k triangles, {c} appels', { v: st.visible, s: st.sections, k: (st.triangles / 1000).toFixed(0), c: this.renderer().info.render.calls }),
+      t('Entités : {e}  Particules : {p}', { e: this.sim.entities.list.filter((e) => e.dim === p.dim).length, p: this.particles.live }),
+      t('Graine : {seed}', { seed: this.meta.seedText }),
+      tb ? t('Visé : {name} ({x} {y} {z}) méta {m}', { name: tb.name, x: tg!.x, y: tg!.y, z: tg!.z, m: tg!.cell >>> 12 }) : '',
     ].join('\n');
   }
 
@@ -934,7 +935,7 @@ export class Game {
     const url = this.host.renderer.domElement.toDataURL('image/png');
     const a = h('a', { href: url, download: `voxerra-${Date.now()}.png` });
     a.click();
-    this.chat.add('Capture d’écran enregistrée.', '#a0ffa0');
+    this.chat.add(t('Capture d’écran enregistrée.'), '#a0ffa0');
   }
 
   private captureThumbnail(): void {
@@ -978,7 +979,7 @@ export class Game {
         commit();
       } catch (e) {
         console.error('Échec de la sauvegarde', e);
-        this.chat.add('⚠ Échec de la sauvegarde (espace de stockage ?)', '#ff6060');
+        this.chat.add(t('⚠ Échec de la sauvegarde (espace de stockage ?)'), '#ff6060');
       }
       setTimeout(() => this.hud.setSaving(false), 600);
     };

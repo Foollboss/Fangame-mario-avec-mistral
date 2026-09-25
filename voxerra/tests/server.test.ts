@@ -69,7 +69,7 @@ describe('serveur multijoueur', () => {
     // discussion
     srv.handle(cb, JSON.stringify({ t: 'chat', text: 'salut' }));
     srv.flush();
-    expect(a.got.some((m) => m.t === 'ev' && m.e.t === 'msg' && m.e.text === '<Brune> salut')).toBe(true);
+    expect(a.got.some((m) => m.t === 'ev' && m.e.t === 'msg' && m.e.text === '<{name}> {msg}' && m.e.args?.name === 'Brune' && m.e.args?.msg === 'salut')).toBe(true);
     // un message invalide est ignoré
     srv.handle(ca, '{pas du json');
     srv.handle(ca, JSON.stringify({ t: 'dig', x: x + 500, y, z }));

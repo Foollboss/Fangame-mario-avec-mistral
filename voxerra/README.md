@@ -12,11 +12,24 @@ Progression : **Découverte → Ressources → Outils → Construction → Explo
 ## Jouer sans rien installer
 
 Ouvrez **[`Voxerra.html`](Voxerra.html)** dans un navigateur (double-clic sur le fichier téléchargé) :
-c'est le jeu complet en un seul fichier HTML de 1,3 Mo (code, style, police, worker de génération et mods intégrés).
+c'est le jeu complet en un seul fichier HTML de 1,4 Mo (code, style, police, worker de génération et mods intégrés).
 Les mondes sont sauvegardés dans le navigateur. Pour le régénérer après une modification : `npm run build:html`.
 
 Si le navigateur refuse les workers ou le verrouillage de la souris (cadre isolé, tablette), le jeu bascule seul :
 génération sur le fil principal et regard à la souris sans verrouillage.
+
+## Langues
+
+Le jeu est entièrement traduit en **français**, **anglais** et **espagnol** : menus, HUD, inventaires, messages,
+commandes (avec leurs noms anglais et espagnols : `/give`, `/dar`, `/locate`, `/localizar`…), messages de mort et
+noms de tout le contenu (blocs, objets, créatures, biomes, progrès, structures, dimensions). Au premier lancement,
+la langue du navigateur est choisie ; on la change avec le bouton 🌐 du menu principal ou dans **Options → Langue**,
+sans recharger la page.
+
+- Textes de l'interface : `src/i18n/en.json` et `src/i18n/es.json` (le texte français sert de clé).
+- Noms du contenu : `src/i18n/names.en.json` et `names.es.json` (par identifiant).
+- Mods : champ `lang` du pack, par exemple `"lang": { "en": { "mon_bloc": "My Block" }, "es": { … } }`.
+- `node scripts/i18n-keys.mjs` liste les textes à traduire ; un test échoue si une traduction manque.
 
 ## Démarrage rapide
 
@@ -33,7 +46,7 @@ Autres commandes :
 
 | Commande | Rôle |
 |---|---|
-| `npm test` | tests automatisés (Vitest, 42 tests) |
+| `npm test` | tests automatisés (Vitest, 45 tests) |
 | `npm run typecheck` | vérification TypeScript stricte |
 | `npm run build` puis `npm run preview` | version de production (dossier `dist/`, déployable sur n'importe quel hébergement statique) |
 | `npm run build:html` | version en un seul fichier : `Voxerra.html` |
@@ -291,7 +304,7 @@ Aucune image ni aucun son n'est fourni : tout est produit au lancement.
 
 ## Tests
 
-`npm test` exécute 42 tests :
+`npm test` exécute 45 tests :
 
 | Fichier | Couverture |
 |---|---|
@@ -304,6 +317,7 @@ Aucune image ni aucun son n'est fourni : tout est produit au lancement.
 | `structures.test.ts` | chaque structure localisable, blocs connus, coffres, déterminisme entre colonnes, désactivation |
 | `server.test.ts` | accueil, colonnes, réplication des blocs, discussion, inventaire, reconnexion, refus |
 | `mods.test.ts` | mod d'exemple complet, validation des packs |
+| `i18n.test.ts` | chaque texte et chaque nom traduit en anglais et en espagnol, changement de langue à chaud |
 | `content.test.ts` | textures, butins, modèles et autels cohérents |
 
 ---

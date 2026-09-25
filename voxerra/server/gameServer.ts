@@ -27,6 +27,7 @@ import { lookDir } from '../src/engine/math';
 import { REACH, CREATIVE_REACH } from '../src/sim/interact';
 import { PROTOCOL_VERSION, chunkToWire, eventTarget, type ClientMsg, type ServerMsg, type EntSnap, type SelfSnap } from '../src/net/protocol';
 import type { FileStorage } from './fileStorage';
+import { tr } from '../src/i18n/i18n';
 
 /** Transport minimal (WebSocket réel ou faux pour les tests). */
 export interface Conn {
@@ -118,7 +119,7 @@ export class GameServer {
     if (p) {
       this.storage.savePlayer(this.meta.id, c.name, p.serialize());
       this.sim.removePlayer(p);
-      this.broadcastMsg(`${c.name} a quitté la partie.`, '#ffe080');
+      this.broadcastMsg(tr('{name} a quitté la partie.'), '#ffe080', { name: c.name });
       this.log(`[serveur] ${c.name} déconnecté`);
       this.sendPlayerList();
     }
@@ -144,8 +145,8 @@ export class GameServer {
     }
   }
 
-  private broadcastMsg(text: string, color?: string): void {
-    for (const c of this.clients) if (c.player) this.send(c, { t: 'ev', e: { t: 'msg', text, color } });
+  private broadcastMsg(text: string, color?: string, args?: Record<string, string | number>): void {
+    for (const c of this.clients) if (c.player) this.send(c, { t: 'ev', e: { t: 'msg', text, color, args } });
   }
 
   private sendPlayerList(): void {
@@ -320,7 +321,7 @@ export class GameServer {
       motd: this.motd,
     });
     this.sendEnv(c);
-    this.broadcastMsg(`${name} a rejoint la partie.`, '#ffe080');
+    this.broadcastMsg(tr('{name} a rejoint la partie.'), '#ffe080', { name });
     this.log(`[serveur] ${name} connecté (${this.clients.filter((o) => o.player).length} joueur(s))`);
     this.sendPlayerList();
   }
@@ -353,7 +354,7 @@ export class GameServer {
     if (!text.trim()) return;
     if (text.startsWith('/')) {
       if (!this.meta.allowCommands && !c.player?.creative) {
-        this.send(c, { t: 'ev', e: { t: 'msg', text: 'Les commandes sont désactivées sur ce serveur.', color: '#ff8080', to: p.id } });
+        this.send(c, { t: 'ev', e: { t: 'msg', text: tr('Les commandes sont désactivées sur ce serveur.'), color: '#ff8080', to: p.id } });
         return;
       }
       this.log(`[serveur] ${c.name} : ${text}`);
@@ -375,7 +376,7 @@ export class GameServer {
       }
     } else {
       this.log(`<${c.name}> ${text}`);
-      this.broadcastMsg(`<${c.name}> ${text}`);
+      this.broadcastMsg(tr('<{name}> {msg}'), undefined, { name: c.name, msg: text });
     }
   }
 
@@ -617,7 +618,7 @@ export class GameServer {
             g.dim = p.dim;
             g.setPos(p.x, Math.max(1, p.y), p.z);
             this.sim.entities.add(g);
-            this.send(c, { t: 'ev', e: { t: 'msg', text: `Vos objets reposent dans une tombe en ${Math.floor(p.x)} ${Math.floor(p.y)} ${Math.floor(p.z)}.`, color: '#ffb0b0', to: p.id } });
+            this.send(c, { t: 'ev', e: { t: 'msg', text: tr('Vos objets reposent dans une tombe en {x} {y} {z}.'), args: { x: Math.floor(p.x), y: Math.floor(p.y), z: Math.floor(p.z) }, color: '#ffb0b0', to: p.id } });
           }
         }
         this.broadcastMsg(p.deathMessage, '#ff8080');

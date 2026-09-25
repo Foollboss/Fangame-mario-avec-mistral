@@ -10,6 +10,7 @@ import type { LivingEntity } from '../living';
 import type { Player } from '../player';
 import { Projectile } from '../projectile';
 import { lookDir } from '../../engine/math';
+import { tr } from '../../i18n/i18n';
 
 export interface Goal {
   targeting?: boolean;
@@ -819,7 +820,7 @@ function summon(p: P): Goal {
     }
     if (n) {
       sim.emit({ t: 'particles', kind: 'portail', x: m.x, y: m.y + 2, z: m.z, n: 30, spread: 2 });
-      sim.emit({ t: 'msg', text: `${m.def.name} invoque des renforts !`, color: '#ffb080' });
+      sim.emit({ t: 'msg', text: tr('{name} invoque des renforts !'), args: { name: m.def.name }, color: '#ffb080' });
     }
     return n > 0;
   });
@@ -861,7 +862,7 @@ function shield(p: P): Goal {
           if (mob) mob.data.guardOf = m.id;
         }
         m.shielded = true;
-        sim.emit({ t: 'msg', text: 'Des cristaux protègent le Veilleur : détruisez-les !', color: '#d0b8ff' });
+        sim.emit({ t: 'msg', text: tr('Des cristaux protègent le Veilleur : détruisez-les !'), color: '#d0b8ff' });
       }
       check -= dt;
       if (check > 0) return;
@@ -869,7 +870,7 @@ function shield(p: P): Goal {
       const alive = sim.entities.count(m.dim, (e) => e.kind === 'mob' && (e as Mob).data.guardOf === m.id && !(e as Mob).dead);
       if (m.shielded && alive === 0) {
         m.shielded = false;
-        sim.emit({ t: 'msg', text: 'Le bouclier du Veilleur se brise !', color: '#ffe080' });
+        sim.emit({ t: 'msg', text: tr('Le bouclier du Veilleur se brise !'), color: '#ffe080' });
         sim.emit({ t: 'sound', id: 'casse_glass', x: m.x, y: m.y, z: m.z, vol: 1 });
       }
     },

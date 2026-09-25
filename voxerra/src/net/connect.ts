@@ -6,6 +6,7 @@ import type { WorldMeta } from '../save/storage';
 import { DEFAULT_RULES } from '../save/storage';
 import { RemoteSession } from './client';
 import { DEFAULT_PORT } from './protocol';
+import { t } from '../i18n/i18n';
 
 /** « hote », « hote:port » ou « ws(s)://… » → URL WebSocket. */
 export function normalizeAddress(address: string): string {
@@ -18,10 +19,10 @@ export function normalizeAddress(address: string): string {
 
 export async function connectToServer(app: App, address: string, name: string, loading: LoadingHandle): Promise<Game> {
   const url = normalizeAddress(address);
-  loading.set(`Connexion à ${url}…`, 0, 1);
+  loading.set(t('Connexion à {address}…', { address: url }), 0, 1);
   const session = await RemoteSession.connect(url, name);
   const w = session.welcome;
-  loading.set('Préparation…', 0, 1);
+  loading.set(t('Préparation…'), 0, 1);
   await app.initPool(w.world.seed, w.world.worldType, w.world.structures);
   const meta: WorldMeta = {
     id: 'distant:' + url,

@@ -14,7 +14,7 @@ export interface DimGenerator {
   biomeAt(x: number, z: number): number;
   findSpawn(): { x: number; y: number; z: number };
   /** Structure la plus proche (commande /localiser). */
-  locateStructure?(type: string, x: number, z: number): { x: number; z: number } | null;
+  locateStructure?(type: string, x: number, z: number): { x: number; z: number; name?: string } | null;
 }
 
 export const DIMENSIONS = ['surface', 'abime', 'astral'] as const;

@@ -5,6 +5,7 @@
 import { Entity } from './entity';
 import type { ItemStack } from '../inventory/inventory';
 import type { Sim } from '../sim/sim';
+import { t, tr } from '../i18n/i18n';
 
 export class Grave extends Entity {
   readonly kind = 'grave';
@@ -15,7 +16,7 @@ export class Grave extends Entity {
     super(0.45, 1, 0.5);
     this.owner = owner;
     this.items = items;
-    this.displayName = `Tombe de ${owner}`;
+    this.displayName = t('Tombe de {name}', { name: owner });
   }
 
   tick(sim: Sim, dt: number): void {
@@ -38,7 +39,7 @@ export class Grave extends Entity {
       this.items = kept;
       if (got > 0) {
         sim.emit({ t: 'sound', id: 'ramassage', x: this.x, y: this.y, z: this.z });
-        sim.emit({ t: 'msg', text: kept.length ? 'Vous récupérez une partie de vos objets (inventaire plein).' : 'Vous avez récupéré vos objets.', color: '#a8ffa8', to: p.id });
+        sim.emit({ t: 'msg', text: kept.length ? tr('Vous récupérez une partie de vos objets (inventaire plein).') : tr('Vous avez récupéré vos objets.'), color: '#a8ffa8', to: p.id });
       }
       if (this.items.length === 0) this.removed = true;
     }

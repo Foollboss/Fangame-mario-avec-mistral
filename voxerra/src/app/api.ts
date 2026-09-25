@@ -7,6 +7,7 @@ import type { IconFactory } from '../render/icons';
 import type { AudioEngine } from '../audio/audio';
 import type { Game } from '../game/game';
 import type { ModInfo } from './mods';
+import type { Lang } from '../i18n/i18n';
 
 export interface AppApi {
   readonly version: string;
@@ -26,4 +27,6 @@ export interface AppApi {
   showMainMenu(): void;
   importMod(text: string): Promise<string>;
   removeMod(id: string): void;
+  /** Change la langue de l'interface et du contenu. */
+  setLanguage(lang: Lang): void;
 }

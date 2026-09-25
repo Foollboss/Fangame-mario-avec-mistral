@@ -11,6 +11,7 @@ import { Entity } from '../entity/entity';
 import { Chunk } from '../world/chunk';
 import { decodeChunk } from '../save/serializer';
 import { makeCell } from '../registry/blocks';
+import { t } from '../i18n/i18n';
 import { wireToChunk, PROTOCOL_VERSION, type ClientMsg, type ServerMsg, type EntSnap, type WelcomeMsg } from './protocol';
 
 /** Entité distante (créature, joueur, objet, projectile, tombe) rendue localement. */
@@ -91,7 +92,7 @@ export class RemoteSession {
   players: { id: number; name: string }[] = [];
   closed = false;
   onClose: ((reason: string) => void) | null = null;
-  private closeReason = 'Connexion perdue.';
+  private closeReason = t('Connexion perdue.');
 
   constructor(
     readonly ws: WebSocket,
@@ -121,23 +122,23 @@ export class RemoteSession {
       try {
         ws = new WebSocket(url);
       } catch (e) {
-        reject(new Error(`Adresse invalide : ${url}`));
+        reject(new Error(t('Adresse invalide : {url}', { url })));
         void e;
         return;
       }
       const early: ServerMsg[] = [];
       const timer = setTimeout(() => {
         ws.close();
-        reject(new Error('Le serveur ne répond pas.'));
+        reject(new Error(t('Le serveur ne répond pas.')));
       }, timeoutMs);
       ws.onopen = () => ws.send(JSON.stringify({ t: 'hello', name, version: PROTOCOL_VERSION } satisfies ClientMsg));
       ws.onerror = () => {
         clearTimeout(timer);
-        reject(new Error(`Serveur injoignable (${url}).`));
+        reject(new Error(t('Serveur injoignable ({url}).', { url })));
       };
       ws.onclose = () => {
         clearTimeout(timer);
-        reject(new Error('Connexion refusée par le serveur.'));
+        reject(new Error(t('Connexion refusée par le serveur.')));
       };
       ws.onmessage = (ev) => {
         const m = JSON.parse(String(ev.data)) as ServerMsg;

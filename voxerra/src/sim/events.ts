@@ -3,8 +3,9 @@ export type SimEvent =
   | { t: 'sound'; id: string; x: number; y: number; z: number; vol?: number; pitch?: number }
   | { t: 'particles'; kind: string; x: number; y: number; z: number; n?: number; spread?: number; layer?: number; color?: [number, number, number] }
   | { t: 'blockBreakFx'; x: number; y: number; z: number; cell: number }
-  | { t: 'msg'; text: string; color?: string; to?: number }
-  | { t: 'toast'; title: string; text: string; icon?: string; to?: number }
+  /** `text` est un texte français servant de clé de traduction ; `args` remplit ses {x}. */
+  | { t: 'msg'; text: string; color?: string; to?: number; args?: Record<string, string | number> }
+  | { t: 'toast'; title: string; text: string; icon?: string; to?: number; args?: Record<string, string | number> }
   | { t: 'advancement'; id: string; to: number }
   | { t: 'hurt'; id: number; amount: number }
   | { t: 'death'; id: number; message: string }

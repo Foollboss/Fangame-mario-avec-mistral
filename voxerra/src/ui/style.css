@@ -245,3 +245,7 @@ canvas#game { position: fixed; inset: 0; width: 100vw; height: 100vh; display: b
   font: inherit;
   text-align: center;
 }
+
+/* Signature de l'auteur au-dessus du numéro de version */
+.corner.left { display: flex; flex-direction: column; gap: 2px; }
+.corner .author { color: #ffe080; }
