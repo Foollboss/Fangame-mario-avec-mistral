@@ -276,6 +276,7 @@ export function interactBlock(sim: Sim, p: Player, hit: RayHit): InteractResult 
         }
         sim.env.skipNight();
         p.stat('nuits_dormies');
+        sim.trigger(p, 'sleep');
         sim.emit({ t: 'msg', text: 'Vous avez dormi jusqu’au matin. Point de réapparition défini.', color: '#ffe080', to: p.id });
       } else sim.emit({ t: 'msg', text: 'Point de réapparition défini.', color: '#ffe080', to: p.id });
       return { done: true };
