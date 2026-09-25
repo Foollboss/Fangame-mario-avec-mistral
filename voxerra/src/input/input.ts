@@ -114,6 +114,16 @@ export class InputManager {
   doubleTapForward = false;
   lastTapJump = 0;
   doubleTapJump = false;
+  /** Contrôles tactiles : actions virtuelles, joystick et regard au doigt. */
+  touchEnabled = false;
+  private virtualDown = new Set<Action>();
+  private virtualPressed = new Set<Action>();
+  private virtualReleased = new Set<Action>();
+  private virtualReleaseNext = new Set<Action>();
+  private padMoveX = 0;
+  private padMoveY = 0;
+  touchMoveX = 0;
+  touchMoveY = 0;
 
   constructor(private canvas: HTMLElement) {
     window.addEventListener('keydown', (e) => {
@@ -156,10 +166,14 @@ export class InputManager {
     window.addEventListener(
       'wheel',
       (e) => {
-        if (this.gameFocus) this.wheel += Math.sign(e.deltaY);
+        // pas de zoom de la page (Ctrl+molette, pincement du pavé tactile) ni de défilement en jeu
+        if (e.ctrlKey || this.gameFocus) e.preventDefault();
+        if (this.gameFocus && !e.ctrlKey) this.wheel += Math.sign(e.deltaY);
       },
-      { passive: true },
+      { passive: false },
     );
+    // Safari : geste de pincement
+    window.addEventListener('gesturestart', (e) => e.preventDefault());
   }
 
   get locked(): boolean {
@@ -172,8 +186,40 @@ export class InputManager {
    */
   freeLook = false;
 
+  /** Action virtuelle maintenue (bouton tactile). */
+  setVirtual(a: Action, down: boolean): void {
+    if (down) {
+      if (this.virtualDown.has(a)) return;
+      this.virtualDown.add(a);
+      this.virtualPressed.add(a);
+      if (a === 'jump') {
+        const now = performance.now();
+        this.doubleTapJump = now - this.lastTapJump < 300;
+        this.lastTapJump = now;
+      }
+    } else if (this.virtualDown.delete(a)) this.virtualReleased.add(a);
+  }
+
+  /** Appui bref (enfoncé une image puis relâché). */
+  tapVirtual(a: Action): void {
+    this.setVirtual(a, true);
+    this.virtualReleaseNext.add(a);
+  }
+
+  /** Regard au doigt (en pixels d'écran). */
+  touchLook(dx: number, dy: number): void {
+    this.mouseDX += dx * 1.6;
+    this.mouseDY += dy * 1.6;
+  }
+
+  releaseVirtual(): void {
+    for (const a of this.virtualDown) this.virtualReleased.add(a);
+    this.virtualDown.clear();
+    this.touchMoveX = this.touchMoveY = 0;
+  }
+
   lock(): void {
-    if (this.locked) return;
+    if (this.locked || this.touchEnabled) return;
     const c = this.canvas as HTMLCanvasElement;
     if (typeof c.requestPointerLock !== 'function') {
       this.freeLook = true;
@@ -193,17 +239,17 @@ export class InputManager {
 
   isDown(a: Action): boolean {
     for (const c of this.bindings[a]) if (this.down.has(c)) return true;
-    return this.padDown.has(a);
+    return this.padDown.has(a) || this.virtualDown.has(a);
   }
 
   pressed(a: Action): boolean {
     for (const c of this.bindings[a]) if (this.pressedCodes.has(c)) return true;
-    return this.padPressed.has(a);
+    return this.padPressed.has(a) || this.virtualPressed.has(a);
   }
 
   released(a: Action): boolean {
     for (const c of this.bindings[a]) if (this.releasedCodes.has(c)) return true;
-    return false;
+    return this.virtualReleased.has(a);
   }
 
   codePressed(code: string): boolean {
@@ -215,14 +261,20 @@ export class InputManager {
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
     const gp = [...pads].find((p) => p && p.connected);
     this.padPressed.clear();
+    const combine = () => {
+      this.moveX = Math.max(-1, Math.min(1, this.padMoveX + this.touchMoveX));
+      this.moveY = Math.max(-1, Math.min(1, this.padMoveY + this.touchMoveY));
+    };
     if (!gp) {
-      this.moveX = this.moveY = this.lookX = this.lookY = 0;
+      this.padMoveX = this.padMoveY = this.lookX = this.lookY = 0;
       this.padDown.clear();
+      combine();
       return;
     }
     const dz = (v: number) => (Math.abs(v) < 0.15 ? 0 : v);
-    this.moveX = dz(gp.axes[0] ?? 0);
-    this.moveY = dz(gp.axes[1] ?? 0);
+    this.padMoveX = dz(gp.axes[0] ?? 0);
+    this.padMoveY = dz(gp.axes[1] ?? 0);
+    combine();
     this.lookX = dz(gp.axes[2] ?? 0);
     this.lookY = dz(gp.axes[3] ?? 0);
     const now = new Set<Action>();
@@ -230,7 +282,7 @@ export class InputManager {
     for (const a of now) if (!this.padPrev.has(a)) this.padPressed.add(a);
     this.padPrev = now;
     this.padDown = now;
-    if (now.size > 0 || this.moveX || this.moveY || this.lookX || this.lookY) this.gamepadActive = true;
+    if (now.size > 0 || this.padMoveX || this.padMoveY || this.lookX || this.lookY) this.gamepadActive = true;
   }
 
   /** Fin d'image : réinitialise les évènements ponctuels. */
@@ -242,6 +294,10 @@ export class InputManager {
     this.wheel = 0;
     this.doubleTapForward = false;
     this.doubleTapJump = false;
+    this.virtualPressed.clear();
+    this.virtualReleased.clear();
+    for (const a of this.virtualReleaseNext) this.setVirtual(a, false);
+    this.virtualReleaseNext.clear();
   }
 
   releaseAll(): void {

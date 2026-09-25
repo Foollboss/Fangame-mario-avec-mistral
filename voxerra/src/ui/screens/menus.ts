@@ -363,15 +363,26 @@ export function loadingScreen(): LoadingHandle {
 }
 
 // ---------------------------------------------------------------------------
+/** Interrupteur des contrôles tactiles (joystick), partagé par Options et Commandes. */
+function touchToggle(app: AppApi): HTMLButtonElement {
+  return cycle(t('Contrôles tactiles'), YES_NO(true, false, false), app.settings.touchControls, (v) => {
+    app.settings.touchControls = v;
+    app.saveSettings();
+    app.applySettings();
+  });
+}
+
 export function optionsScreen(app: AppApi, inGame: boolean): Screen {
   const s = app.settings;
   const save = () => {
     app.saveSettings();
     app.applySettings();
   };
+  let touchBtn = touchToggle(app);
   const grid = h(
     'div',
     { class: 'options-grid' },
+    touchBtn,
     slider({ label: (v) => t('Champ de vision : {v}°', { v }), min: 50, max: 110, step: 1, value: s.fov, onChange: (v) => ((s.fov = v), save()) }),
     slider({ label: (v) => t('Distance d’affichage : {v} tronçons', { v }), min: 3, max: 16, step: 1, value: s.renderDistance, onChange: (v) => ((s.renderDistance = v), save()) }),
     slider({ label: (v) => t('Sensibilité : {v} %', { v: Math.round(v * 100) }), min: 0.2, max: 3, step: 0.05, value: s.sensitivity, onChange: (v) => ((s.sensitivity = v), save()) }),
@@ -404,7 +415,11 @@ export function optionsScreen(app: AppApi, inGame: boolean): Screen {
     h('div', { class: 'row', style: { alignItems: 'center', marginBottom: '10px' } }, h('div', { class: 'label' }, t('Pseudo :')), nameIn),
     grid,
     h('div', { style: { height: '16px' } }),
-    h('div', { class: 'row' }, button(t('Commandes…'), () => app.ui.push(controlsScreen(app)), 'half'), button(t('Terminé'), () => app.ui.pop(), 'half')),
+    h('div', { class: 'row' }, button(t('Commandes…'), () => app.ui.push(controlsScreen(app, () => {
+      const nb = touchToggle(app);
+      touchBtn.replaceWith(nb);
+      touchBtn = nb;
+    })), 'half'), button(t('Terminé'), () => app.ui.pop(), 'half')),
   );
   void inGame;
   return { el, pauses: inGame };
@@ -441,7 +456,7 @@ function keyName(code: string): string {
   return map[code] ?? code;
 }
 
-export function controlsScreen(app: AppApi): Screen {
+export function controlsScreen(app: AppApi, onClose?: () => void): Screen {
   const list = h('div', { class: 'keybind-list' });
   let waiting: Action | null = null;
   const render = () => {
@@ -475,6 +490,8 @@ export function controlsScreen(app: AppApi): Screen {
     'div',
     { class: 'screen dim' },
     h('div', { class: 'title' }, t('Commandes')),
+    touchToggle(app),
+    h('div', { class: 'hint', style: { margin: '4px 0 12px', maxWidth: '620px', textAlign: 'center' } }, t('Joystick à gauche pour se déplacer (poussé à fond vers l’avant : courir), boutons à droite, glissez sur l’écran pour regarder, touchez pour utiliser / poser, appui long pour casser.')),
     h('div', { class: 'hint', style: { marginBottom: '8px' } }, t('Cliquez sur une touche puis appuyez sur la nouvelle. Manette compatible (Xbox/PlayStation standard).')),
     list,
     h('div', { style: { height: '12px' } }),
@@ -497,7 +514,10 @@ export function controlsScreen(app: AppApi): Screen {
         return capture(e.code);
       }
     },
-    onClose: () => window.removeEventListener('mousedown', mouse, true),
+    onClose: () => {
+      window.removeEventListener('mousedown', mouse, true);
+      onClose?.();
+    },
   };
 }
 

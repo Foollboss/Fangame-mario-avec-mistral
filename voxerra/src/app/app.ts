@@ -30,6 +30,7 @@ import { createGenerator } from '../worldgen/generator';
 import { BIOMES } from '../worldgen/biomes';
 import { setLang, getLang, t, type Lang } from '../i18n/i18n';
 import { localizeContent } from '../i18n/content';
+import { TouchControls } from '../ui/touch';
 import { connectToServer } from '../net/connect';
 
 export const VERSION = '1.0.0';
@@ -114,6 +115,7 @@ export class App implements AppApi {
   atlas!: BlockAtlas;
   icons!: IconFactory;
   pool!: WorkerPool;
+  touch: TouchControls | null = null;
   game: Game | null = null;
   mods: ModInfo[] = [];
   private packs: ContentPack[] = [];
@@ -139,12 +141,12 @@ export class App implements AppApi {
     });
     const boot = h('div', { class: 'screen', style: { background: '#1b1b22' } }, h('div', { class: 'title' }, 'Voxerra'), h('div', { class: 'subtitle' }, t('Chargement du contenu…')));
     this.ui.push({ el: boot, onEscape: () => {} });
-    // Écran tactile sans souris : le jeu demande clavier et souris (ou une manette)
-    if (typeof matchMedia === 'function' && !matchMedia('(any-pointer: fine)').matches) {
-      const note = h('div', { class: 'touch-note' }, t('Voxerra se joue au clavier et à la souris, ou avec une manette.'));
-      note.addEventListener('click', () => note.remove());
-      document.body.appendChild(note);
-    }
+    // Contrôles tactiles (joystick, boutons), activables dans les options
+    this.touch = new TouchControls(this.input, {
+      playing: () => !!this.game && !this.ui.open && !this.game.player.dead && !this.busy,
+      selectSlot: (i) => this.game?.controller.selectSlot(i),
+    });
+    document.body.appendChild(this.touch.el);
     // Contenu + mods
     const { packs, infos } = await loadMods();
     this.packs = packs;
@@ -214,6 +216,7 @@ export class App implements AppApi {
     this.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2) * s.pixelRatio);
     this.renderer.setSize(innerWidth, innerHeight);
     this.input.bindings = s.bindings;
+    this.touch?.setEnabled(s.touchControls);
     this.input.sensitivity = s.sensitivity;
     this.input.invertY = s.invertY;
     this.audio.volumes = { master: s.masterVolume, music: s.musicVolume, sfx: s.sfxVolume };
@@ -374,6 +377,7 @@ export class App implements AppApi {
     } catch (e) {
       console.error(e);
     }
+    this.touch?.update();
     this.input.endFrame();
     requestAnimationFrame(this.loop);
   };

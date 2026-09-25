@@ -52,7 +52,7 @@ Autres commandes :
 | `npm run build:html` | version en un seul fichier : `Voxerra.html` |
 | `npm run server -- --monde serveur --graine 1234 --commandes` | serveur multijoueur dédié (port 25590) |
 | `node scripts/e2e.mjs` | parcours automatisé menu → création → jeu → inventaire (captures dans `screenshots/`) |
-| `node scripts/structures.mjs` / `creatures.mjs` / `dimensions.mjs` / `multiplayer.mjs` | captures de contrôle visuel (le serveur de dév. doit tourner ; `multiplayer.mjs` demande aussi `npm run server`) |
+| `node scripts/structures.mjs` / `creatures.mjs` / `dimensions.mjs` / `multiplayer.mjs` / `tactile.mjs` | captures de contrôle visuel (le serveur de dév. doit tourner ; `multiplayer.mjs` demande aussi `npm run server`) |
 
 ### Jouer à plusieurs
 
@@ -184,7 +184,7 @@ voxerra/
 | Casser / attaquer | clic gauche | RT |
 | Utiliser / poser / manger / tirer / bloquer | clic droit | LT |
 | Choisir le bloc visé | clic molette | — |
-| Barre rapide | `1`–`9`, molette | LB / RB |
+| Barre rapide | `1`–`9`, molette (change de case, sans agrandir la barre) | LB / RB |
 | Inventaire (et livre de recettes) | `E` | Y |
 | Jeter l'objet (tout : `Ctrl+Q`) | `Q` | X |
 | Esquive | `C` | croix : bas |
@@ -197,6 +197,28 @@ voxerra/
 | Pause | `Échap` | Start |
 
 Toutes les touches se réaffectent dans **Options → Commandes**.
+
+### Écran tactile (téléphone, tablette)
+
+Les contrôles tactiles s'activent tout seuls sur un appareil sans souris, et se règlent avec l'interrupteur
+**Contrôles tactiles** (premier bouton de **Options** et tout en haut de **Options → Commandes**).
+
+| Action | Geste |
+|---|---|
+| Se déplacer | joystick en bas à gauche |
+| Sprinter | pousser le joystick à fond vers l'avant (le bouton devient jaune) |
+| Regarder | glisser le doigt n'importe où ailleurs sur l'écran |
+| Utiliser / poser / manger | toucher brièvement l'écran, ou maintenir ✋ |
+| Casser / attaquer | appui long sur l'écran, ou maintenir ⚔ |
+| Sauter / nager | ⇧ (maintenir pour nager ou monter) |
+| S'accroupir | ⇩ (interrupteur) |
+| Barre rapide | toucher une case |
+| Inventaire, discussion, jeter, vue, pause | boutons 🎒 💬 ⤓ 👁 ⏸ en haut à droite |
+| Fermer l'inventaire, un coffre, la discussion… | bouton ✕ en haut à droite |
+
+Les menus défilent quand l'écran est trop petit ; le zoom du navigateur (pincement, `Ctrl` + molette) est bloqué
+en jeu.
+
 Inventaire : clic gauche (prendre, poser, échanger), clic droit (moitié / un seul), glisser (répartir),
 Maj + clic (transfert rapide), double-clic (regrouper), touches `1`–`9` (échange avec la barre rapide).
 
@@ -333,6 +355,6 @@ Aucune image ni aucun son n'est fourni : tout est produit au lancement.
 - **Mécanismes** : leviers, plaques, lampes et portes de fer ; pas de circuits logiques complexes.
 - **Liquides** : écoulement simplifié (sources et nappes, pas de courants).
 - **Habitants** : présents dans les hameaux mais sans commerce.
-- **Plateformes** : pas de commandes tactiles (clavier/souris ou manette requis) ; la capacité de sauvegarde dépend
-  du quota IndexedDB du navigateur.
+- **Plateformes** : sur écran tactile, pas de glisser-déposer dans l'inventaire (toucher une case prend ou pose la
+  pile) ; la capacité de sauvegarde dépend du quota IndexedDB du navigateur.
 - **Performances** : prévues pour un GPU grand public ; la distance de vue se règle dans les options.
