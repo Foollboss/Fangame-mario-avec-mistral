@@ -245,10 +245,12 @@ export class Mob extends LivingEntity {
       if (mv === 'fly' || mv === 'hover' || (mv === 'swim' && b.inWater)) {
         const dy = wy - this.y;
         const dd = Math.hypot(dx, dy, dz) || 1;
-        tvy = (dy / dd) * sp;
+        // ralentit en arrivant : pas d'allers-retours autour du point visé
+        const fs = sp * Math.min(1, dd / 1.2);
+        tvy = (dy / dd) * fs;
         if (dist > 0.15 || Math.abs(dy) > 0.2) {
-          tvx = (dx / dd) * sp;
-          tvz = (dz / dd) * sp;
+          tvx = (dx / dd) * fs;
+          tvz = (dz / dd) * fs;
         }
       }
       if (dist < 0.2 && (d.direct || !this.path || this.pathIdx >= (this.path?.length ?? 0)) && !(mv === 'fly' || mv === 'hover')) this.dest = null;

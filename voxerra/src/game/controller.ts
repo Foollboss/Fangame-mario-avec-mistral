@@ -11,7 +11,7 @@ import type { Settings } from '../app/settings';
 import { stepMovement, newIntent, PLAYER_MOVE, type MoveParams } from '../entity/movement';
 import { raycastBlocks, rayBox, type RayHit } from '../physics/raycast';
 import { lookDir } from '../engine/math';
-import { breakTime, digBlock, placeBlock, interactBlock, useItem, finishUse, useDuration, attackEntity, dropHeld, dodge, isInteractive, REACH, CREATIVE_REACH, type InteractResult } from '../sim/interact';
+import { breakTime, heldInfo, digBlock, placeBlock, interactBlock, useItem, finishUse, useDuration, attackEntity, dropHeld, dodge, isInteractive, REACH, CREATIVE_REACH, type InteractResult } from '../sim/interact';
 import { applyFall } from '../sim/survival';
 import type { LivingEntity } from '../entity/living';
 import { selectionBox } from '../world/shapes';
@@ -174,12 +174,17 @@ export class PlayerController {
         if (e === p || (e.kind !== 'mob' && e.kind !== 'player')) continue;
         const le = e as LivingEntity;
         if (le.dead) continue;
-        const r = rayBox(eye.x, eye.y, eye.z, d.x, d.y, d.z, e.x - e.body.hw - 0.1, e.y - 0.05, e.z - e.body.hw - 0.1, e.x + e.body.hw + 0.1, e.y + e.body.h + 0.1, e.z + e.body.hw + 0.1);
+        // les petites créatures (chauves-souris…) ont une zone de visée un peu élargie
+        const pad = Math.max(0.1, 0.4 - e.body.hw),
+          padY = Math.max(0.1, (0.9 - e.body.h) / 2);
+        const r = rayBox(eye.x, eye.y, eye.z, d.x, d.y, d.z, e.x - e.body.hw - pad, e.y - padY, e.z - e.body.hw - pad, e.x + e.body.hw + pad, e.y + e.body.h + padY, e.z + e.body.hw + pad);
         if (r && r[0] < best && r[0] <= reach - 1.5) {
           best = r[0];
           this.targetEntity = le;
         }
       }
+      // écran tactile : aide à la visée, la créature la plus proche du réticule dans un cône de ~12°
+      if (!this.targetEntity && this.host.input.touchEnabled) this.targetEntity = this.aimAssist(sim, eye, d, reach - 1.5, this.target?.dist ?? Infinity);
       if (this.targetEntity) this.target = null;
     }
     this.swing = Math.max(0, this.swing - dt * 3.5);
@@ -208,6 +213,26 @@ export class PlayerController {
     if (!id) return;
     const snd = w.content.blocks.get(id).sound;
     this.host.playSound('pas_' + snd, p.x, p.y, p.z, vol);
+  }
+
+  private aimAssist(sim: Sim, eye: { x: number; y: number; z: number }, d: { x: number; y: number; z: number }, reach: number, blockDist: number): LivingEntity | null {
+    const p = this.p;
+    let best: LivingEntity | null = null,
+      bestCos = Math.cos(0.21);
+    for (const e of sim.entities.near(p.dim, p.x, p.y, p.z, reach + 2)) {
+      if (e === p || e.kind !== 'mob' || (e as LivingEntity).dead) continue;
+      const cx = e.x - eye.x,
+        cy = e.y + e.body.h / 2 - eye.y,
+        cz = e.z - eye.z;
+      const len = Math.hypot(cx, cy, cz);
+      if (len < 0.01 || len - e.body.hw > reach || len > blockDist + 0.5) continue;
+      const cos = (cx * d.x + cy * d.y + cz * d.z) / len;
+      if (cos > bestCos) {
+        bestCos = cos;
+        best = e as LivingEntity;
+      }
+    }
+    return best;
   }
 
   private handleActions(dt: number): void {
@@ -259,7 +284,9 @@ export class PlayerController {
     this.attackRepeat -= dt;
     if (input.isDown('attack') && !p.using) {
       if (this.targetEntity) {
-        if (input.pressed('attack')) {
+        // appui = attaque ; maintenu = nouvelle attaque dès que le coup est rechargé
+        if (input.pressed('attack') || (p.attackCooldown <= 0 && this.attackRepeat <= 0)) {
+          this.attackRepeat = heldInfo(sim, p)?.weapon?.cooldown ?? 0.4;
           if (remote) remote.attack(this.targetEntity.id);
           else attackEntity(sim, p, this.targetEntity);
           this.swing = 1;

@@ -27,7 +27,7 @@ export function lookFacing(yaw: number): number {
   return [2, 1, 0, 3][k];
 }
 
-function heldInfo(sim: Sim, p: Player): ItemInfo | undefined {
+export function heldInfo(sim: Sim, p: Player): ItemInfo | undefined {
   const h = p.inventory.held;
   return h ? sim.content.items.get(h.id) : undefined;
 }

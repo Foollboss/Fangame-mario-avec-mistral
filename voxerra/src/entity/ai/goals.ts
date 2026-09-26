@@ -627,31 +627,67 @@ function explode(p: P): Goal {
   };
 }
 
+/**
+ * Attaque en vol : la créature tourne autour de sa cible, pique, frappe puis
+ * (si `recover` > 0) reste un moment à portée en voletant lentement, ce qui
+ * laisse le temps de la frapper. Touchée, elle est aussi étourdie un instant.
+ */
 function flyAttack(p: P): Goal {
   const reach = num(p, 'reach', 1.4),
     cooldown = num(p, 'cooldown', 1.5),
     damage = num(p, 'damage', 2),
-    orbit = num(p, 'orbit', 4);
+    orbit = num(p, 'orbit', 4),
+    height = num(p, 'height', orbit > 6 ? 7 : 3),
+    turn = num(p, 'turn', orbit > 6 ? 0.5 : 1.3),
+    diveSpeed = num(p, 'dive_speed', 1.5),
+    recover = num(p, 'recover', 0);
   let ang = Math.random() * 6;
-  let diving = false;
+  let state: 'orbit' | 'dive' | 'recover' = 'orbit';
+  let timer = 0;
+  let lastHurt = 0;
+  const startRecover = (m: Mob, time: number) => {
+    state = 'recover';
+    timer = time;
+    ang = Math.atan2(m.z - m.target!.z, m.x - m.target!.x);
+  };
   return {
     canStart: (m) => !!m.target,
     tick(m, sim, dt) {
       const t = m.target!;
       m.lookAt(t.x, t.y + t.eye, t.z);
-      if (!diving) {
-        ang += dt * (orbit > 6 ? 0.5 : 1.3);
-        m.moveDirect(t.x + Math.cos(ang) * orbit, t.y + 3 + (orbit > 6 ? 4 : 0), t.z + Math.sin(ang) * orbit, 1);
-        if (m.attackTimer <= 0 && m.canSee(sim, t)) diving = true;
-      } else {
-        m.moveDirect(t.x, t.y + t.body.h * 0.6, t.z, 1.5);
+      timer -= dt;
+      if (recover > 0 && m.hurtTime > lastHurt) startRecover(m, recover * 0.6);
+      lastHurt = m.hurtTime;
+      if (state === 'orbit') {
+        ang += dt * turn;
+        m.moveDirect(t.x + Math.cos(ang) * orbit, t.y + height, t.z + Math.sin(ang) * orbit, 1);
+        if (m.attackTimer <= 0 && m.canSee(sim, t)) {
+          state = 'dive';
+          timer = 3;
+        }
+      } else if (state === 'dive') {
+        m.moveDirect(t.x, t.y + t.body.h * 0.6, t.z, diveSpeed);
         if (dist(m, { x: t.x, y: t.y + t.body.h * 0.5, z: t.z }) < reach + m.body.hw + 0.5) {
           attack(m, sim, t, damage, m.def.element);
           m.attackTimer = cooldown;
-          diving = false;
-          m.body.vy = 5;
+          if (recover > 0) {
+            m.body.vy = 2;
+            startRecover(m, recover);
+          } else {
+            m.body.vy = 5;
+            state = 'orbit';
+          }
+        } else if (timer <= 0) {
+          // cible inaccessible : on reprend de la hauteur
+          m.attackTimer = cooldown * 0.5;
+          state = 'orbit';
         }
-        if (m.attackTimer <= -3) diving = false;
+      } else {
+        // vol plané lent à hauteur des yeux, à deux blocs de la cible
+        ang += dt * 0.4;
+        const bob = Math.sin(m.age * 5) * 0.25;
+        m.moveDirect(t.x + Math.cos(ang) * 2, t.y + t.eye + 0.2 + bob, t.z + Math.sin(ang) * 2, 0.3);
+        if (timer <= 0) state = 'orbit';
       }
     },
   };

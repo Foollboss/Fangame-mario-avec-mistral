@@ -281,6 +281,8 @@ export function createWorld(app: AppApi, base: WorldMeta | null): Screen {
 
 function editWorld(app: AppApi, meta: WorldMeta, refresh: () => void): Screen {
   const nameIn = h('input', { class: 'input', value: meta.name, maxlength: 40 }) as HTMLInputElement;
+  let commands = meta.allowCommands;
+  const cmdBtn = meta.gameMode === 'hardcore' ? null : cycle(t('Autoriser les commandes'), YES_NO(true, false, false), commands, (v) => (commands = v));
   const el = h(
     'div',
     { class: 'screen dim' },
@@ -289,11 +291,14 @@ function editWorld(app: AppApi, meta: WorldMeta, refresh: () => void): Screen {
     nameIn,
     h('div', { class: 'hint' }, t('Graine : {seed}', { seed: meta.seedText })),
     h('div', { class: 'hint' }, t('Créé le {date} — temps de jeu : {min} min', { date: fmtDate(meta.created), min: Math.round((meta.playTime ?? 0) / 60) })),
-    h('div', { style: { height: '20px' } }),
+    h('div', { style: { height: '12px' } }),
+    cmdBtn,
+    h('div', { style: { height: '12px' } }),
     button(t('Enregistrer'), async () => {
       const m = await app.storage.loadMeta(meta.id);
       if (m) {
         m.name = nameIn.value.trim() || m.name;
+        m.allowCommands = commands;
         await app.storage.saveBatch(m, []);
       }
       app.ui.pop();

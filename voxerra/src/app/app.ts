@@ -145,6 +145,13 @@ export class App implements AppApi {
     this.touch = new TouchControls(this.input, {
       playing: () => !!this.game && !this.ui.open && !this.game.player.dead && !this.busy,
       selectSlot: (i) => this.game?.controller.selectSlot(i),
+      openChat: (initial) => this.game?.openChat(initial),
+      aimingAtFoe: () => {
+        const e = this.game?.controller.targetEntity as { kind: string; type?: string } | null | undefined;
+        if (!e || e.kind !== 'mob' || !e.type) return false;
+        const cat = this.game!.sim.content.creatures.get(e.type)?.category;
+        return cat === 'hostile' || cat === 'boss' || cat === 'neutral';
+      },
     });
     document.body.appendChild(this.touch.el);
     // Contenu + mods

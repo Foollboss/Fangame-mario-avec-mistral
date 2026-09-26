@@ -113,7 +113,8 @@ export class UIManager {
   private handleKey(e: KeyboardEvent): void {
     const top = this.top;
     if (!top) return;
-    if ((e.target as HTMLElement)?.tagName === 'INPUT' && e.code !== 'Escape' && e.code !== 'Enter') return;
+    // dans un champ de saisie, seules Échap, Entrée (y compris celle des claviers de téléphone) et Tab sont interceptées
+    if ((e.target as HTMLElement)?.tagName === 'INPUT' && e.code !== 'Escape' && e.code !== 'Enter' && e.key !== 'Enter' && e.code !== 'NumpadEnter' && e.code !== 'Tab') return;
     if (top.onKey && top.onKey(e) === true) {
       e.preventDefault();
       e.stopPropagation();

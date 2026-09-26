@@ -2,7 +2,7 @@
 import type { Sim } from './sim';
 import type { Player } from '../entity/player';
 import type { GameMode } from '../save/storage';
-import { t, tr, WEATHER_LABEL } from '../i18n/i18n';
+import { t, tr, WEATHER_LABEL, type Lang } from '../i18n/i18n';
 
 export interface CommandHost {
   sim: Sim;
@@ -10,6 +10,8 @@ export interface CommandHost {
   locate?(type: string, dim: string, x: number, z: number): { x: number; z: number; name?: string } | null;
   travel?(p: Player, dim: string): void;
   summon?(type: string, dim: string, x: number, y: number, z: number): boolean;
+  /** Partie solo : le refus indique comment autoriser les commandes. */
+  solo?: boolean;
 }
 
 const HELP = [
@@ -35,7 +37,11 @@ export function runCommand(host: CommandHost, p: Player, line: string): { ok: bo
   const cmd = (parts.shift() ?? '').toLowerCase();
   const out: string[] = [];
   const allowed = sim.meta.allowCommands || p.creative;
-  if (!['aide', 'help', 'graine', 'seed'].includes(cmd) && !allowed) return { ok: false, out: [t('Les commandes ne sont pas autorisées dans ce monde.')] };
+  if (!['aide', 'help', 'ayuda', 'graine', 'seed', 'semilla'].includes(cmd) && !allowed) {
+    const out = [t('Les commandes ne sont pas autorisées dans ce monde.')];
+    if (host.solo) out.push(t('Pour les activer : écran titre → Solo → Modifier → Autoriser les commandes.'));
+    return { ok: false, out };
+  }
   const num = (s: string | undefined, rel: number) => {
     if (s === undefined) return NaN;
     if (s.startsWith('~')) return rel + (s.length > 1 ? Number(s.slice(1)) : 0);
@@ -170,5 +176,66 @@ export function runCommand(host: CommandHost, p: Player, line: string): { ok: bo
     }
     default:
       return { ok: false, out: [t('Commande inconnue : /{cmd}. Tapez /aide.', { cmd })] };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Complétion (suggestions à toucher sous la saisie, touche Tab)
+
+/** Noms des commandes dans chaque langue, dans le même ordre (le français fait foi). */
+const CMD_NAMES: Record<Lang, string[]> = {
+  fr: ['aide', 'donner', 'tp', 'temps', 'meteo', 'mode', 'effet', 'invoquer', 'localiser', 'dimension', 'soigner', 'tuer', 'graine', 'regle'],
+  en: ['help', 'give', 'tp', 'time', 'weather', 'gamemode', 'effect', 'summon', 'locate', 'dimension', 'heal', 'kill', 'seed', 'gamerule'],
+  es: ['ayuda', 'dar', 'tp', 'tiempo', 'clima', 'modo', 'efecto', 'invocar', 'localizar', 'dimension', 'curar', 'matar', 'semilla', 'regla'],
+};
+const ALIASES: Record<string, string> = { dim: 'dimension', gamemode: 'mode' };
+for (const lang of Object.keys(CMD_NAMES) as Lang[]) CMD_NAMES[lang].forEach((n, i) => (ALIASES[n] = CMD_NAMES.fr[i]));
+
+const ARG_WORDS: Record<string, Record<Lang, string[]>> = {
+  temps: { fr: ['jour', 'midi', 'nuit', 'minuit'], en: ['day', 'noon', 'night', 'midnight'], es: ['dia', 'mediodia', 'noche', 'medianoche'] },
+  meteo: { fr: ['clair', 'pluie', 'orage'], en: ['clear', 'rain', 'thunder'], es: ['despejado', 'lluvia', 'tormenta'] },
+  mode: { fr: ['survie', 'creatif', 'spectateur'], en: ['survival', 'creative', 'spectator'], es: ['supervivencia', 'creativo', 'espectador'] },
+};
+const STRUCTURES = ['village', 'ruines', 'tour', 'temple', 'portail', 'sanctuaire', 'observatoire', 'crypte', 'mine', 'donjon', 'forteresse', 'citadelle', 'fleche'];
+const MAX_SUGGESTIONS = 30;
+
+/**
+ * Suggestions pour la ligne en cours de saisie : chaque suggestion est la
+ * ligne complétée (le dernier mot remplacé, suivi d'une espace).
+ */
+export function completeCommand(sim: Sim, line: string, lang: Lang): string[] {
+  if (!line.startsWith('/')) return [];
+  const words = line.slice(1).split(' ');
+  const last = words.pop()!.toLowerCase();
+  const head = '/' + words.map((w) => w + ' ').join('');
+  const pick = (list: string[]) => {
+    const starts = list.filter((x) => x.toLowerCase().startsWith(last));
+    const inside = last.length >= 2 ? list.filter((x) => !x.toLowerCase().startsWith(last) && x.toLowerCase().includes(last)) : [];
+    return [...starts, ...inside].filter((x) => x.toLowerCase() !== last).slice(0, MAX_SUGGESTIONS).map((x) => head + x + ' ');
+  };
+  if (words.length === 0) return pick(CMD_NAMES[lang]);
+  const cmd = ALIASES[words[0].toLowerCase()];
+  const arg = words.length; // 1 = premier argument
+  switch (cmd) {
+    case 'temps':
+    case 'meteo':
+    case 'mode':
+      return arg === 1 ? pick(ARG_WORDS[cmd][lang]) : [];
+    case 'dimension':
+      return arg === 1 ? pick(['surface', 'abime', 'astral']) : [];
+    case 'localiser':
+      return arg === 1 ? pick(STRUCTURES) : [];
+    case 'invoquer':
+      return arg === 1 ? pick([...sim.content.creatures.keys()]) : [];
+    case 'effet':
+      return arg === 1 ? pick([...sim.content.effects.keys()]) : arg === 2 ? pick(['30', '60', '300']) : [];
+    case 'donner':
+      return arg === 1 ? pick(sim.content.items.list.map((x) => x.id)) : arg === 2 ? pick(['1', '16', '64']) : [];
+    case 'regle':
+      return arg === 1 ? pick(Object.keys(sim.rules)) : arg === 2 ? pick(lang === 'en' ? ['yes', 'no'] : lang === 'es' ? ['si', 'no'] : ['oui', 'non']) : [];
+    case 'tp':
+      return arg === 1 && !last ? [head + '~ ~ ~ '] : [];
+    default:
+      return [];
   }
 }

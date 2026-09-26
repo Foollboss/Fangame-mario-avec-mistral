@@ -36,7 +36,7 @@ import type { AudioEngine, Mood } from '../audio/audio';
 import { PlayerInventoryScreen, WorkbenchScreen, ChestScreen, FurnaceScreen, CreativeScreen, type InvContext } from '../ui/inventoryUI';
 import { blockContainer, type FurnaceData, type ChestData } from '../sim/furnace';
 import { throwStack, lookFacing } from '../sim/interact';
-import { runCommand } from '../sim/commands';
+import { runCommand, completeCommand } from '../sim/commands';
 import { Grave } from '../entity/grave';
 import { deathScreen, pauseScreen, statsScreen, lanInfoScreen, type LoadingHandle } from '../ui/screens/menus';
 import { h } from '../ui/dom';
@@ -44,7 +44,7 @@ import type { LivingEntity } from '../entity/living';
 import { installGameModules } from './modules';
 import { advancementsScreen } from '../ui/advancementsUI';
 import type { RemoteSession } from '../net/client';
-import { t, WEATHER_LABEL } from '../i18n/i18n';
+import { t, getLang, WEATHER_LABEL } from '../i18n/i18n';
 
 export function createWorkerPool(forceLocal = false): WorkerPool {
   const n = Math.max(2, Math.min(4, (navigator.hardwareConcurrency || 4) - 1));
@@ -533,15 +533,18 @@ export class Game {
     return (this.host as unknown as { api: import('../app/api').AppApi }).api;
   }
 
-  private openChat(initial: string): void {
+  /** Ouvre la saisie ; appelé depuis un geste tactile, le clavier du téléphone s'ouvre aussitôt. */
+  openChat(initial: string): void {
     this.host.input.unlock();
     const scr = chatInput(
       this.chat,
       initial,
       (text) => this.sendChat(text),
       () => this.host.ui.pop(),
+      (line) => completeCommand(this.sim, line, getLang()),
     );
     this.host.ui.push(scr);
+    scr.focus();
   }
 
   sendChat(text: string): void {
@@ -556,6 +559,7 @@ export class Game {
           sim: this.sim,
           locate: (type, dim, x, z) => this.generatorFor(dim).locateStructure?.(type, x, z) ?? null,
           summon: (type, dim, x, y, z) => this.sim.summon?.(type, dim, x, y, z) ?? false,
+          solo: true,
         },
         this.player,
         text,

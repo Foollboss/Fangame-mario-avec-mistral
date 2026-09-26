@@ -209,11 +209,12 @@ Les contrôles tactiles s'activent tout seuls sur un appareil sans souris, et se
 | Sprinter | pousser le joystick à fond vers l'avant (le bouton devient jaune) |
 | Regarder | glisser le doigt n'importe où ailleurs sur l'écran |
 | Utiliser / poser / manger | toucher brièvement l'écran, ou maintenir ✋ |
-| Casser / attaquer | appui long sur l'écran, ou maintenir ⚔ |
+| Frapper une créature hostile | toucher brièvement l'écran en la visant (aide à la visée : pas besoin d'être pile dessus) |
+| Casser / attaquer | appui long sur l'écran, ou maintenir ⚔ (maintenu, les coups s'enchaînent dès que l'arme est rechargée) |
 | Sauter / nager | ⇧ (maintenir pour nager ou monter) |
 | S'accroupir | ⇩ (interrupteur) |
 | Barre rapide | toucher une case |
-| Inventaire, discussion, jeter, vue, pause | boutons 🎒 💬 ⤓ 👁 ⏸ en haut à droite |
+| Inventaire, discussion, commande, jeter, vue, pause | boutons 🎒 💬 / ⤓ 👁 ⏸ en haut à droite (le clavier du téléphone s'ouvre directement) |
 | Fermer l'inventaire, un coffre, la discussion… | bouton ✕ en haut à droite |
 
 Les menus défilent quand l'écran est trop petit ; le zoom du navigateur (pincement, `Ctrl` + molette) est bloqué
@@ -224,7 +225,10 @@ Maj + clic (transfert rapide), double-clic (regrouper), touches `1`–`9` (écha
 
 Commandes (si autorisées) : `/aide`, `/donner`, `/tp`, `/temps`, `/meteo`, `/mode`, `/effet`, `/soigner`, `/tuer`,
 `/invoquer`, `/localiser <village|ruines|tour|temple|portail|sanctuaire|observatoire|crypte|mine|donjon|forteresse|citadelle|fleche>`,
-`/dimension <surface|abime|astral>`, `/graine`, `/regle` (alias anglais acceptés).
+`/dimension <surface|abime|astral>`, `/graine`, `/regle` (alias anglais et espagnols acceptés).
+Pendant la saisie, des suggestions à toucher (ou `Tab`) complètent la commande et ses arguments (heures, météo, modes,
+objets, créatures, structures…) ; le bouton ➤ ou la touche Entrée du clavier du téléphone envoie. Pour un monde créé
+sans commandes : **Solo → Modifier → Autoriser les commandes**.
 
 ---
 
@@ -326,7 +330,7 @@ Aucune image ni aucun son n'est fourni : tout est produit au lancement.
 
 ## Tests
 
-`npm test` exécute 45 tests :
+`npm test` exécute 49 tests :
 
 | Fichier | Couverture |
 |---|---|
@@ -335,7 +339,8 @@ Aucune image ni aucun son n'est fourni : tout est produit au lancement.
 | `save.test.ts` | aller-retour complet (monde modifié, coffre, créature, joueur), colonne corrompue, suppression |
 | `inventory.test.ts` | piles, clics, répartition, transfert rapide, sérialisation |
 | `crafting.test.ts` | recettes façonnées (miroir, décalage), sans forme, stations, cuisson |
-| `mobs.test.ts` | poursuite et dégâts, fuite, butin, apparitions nocturnes, mode paisible, phases de boss, sauvegarde |
+| `mobs.test.ts` | poursuite et dégâts, chauve-furie à portée de coup, fuite, butin, apparitions nocturnes, mode paisible, phases de boss, sauvegarde |
+| `commands.test.ts` | suggestions de commandes dans les 3 langues, chaque suggestion reconnue, message de refus |
 | `structures.test.ts` | chaque structure localisable, blocs connus, coffres, déterminisme entre colonnes, désactivation |
 | `server.test.ts` | accueil, colonnes, réplication des blocs, discussion, inventaire, reconnexion, refus |
 | `mods.test.ts` | mod d'exemple complet, validation des packs |

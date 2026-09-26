@@ -48,6 +48,26 @@ describe('créatures', () => {
     expect(items.length).toBeGreaterThan(0);
   });
 
+  it('une chauve-furie reste souvent à portée de coup et ralentit après avoir frappé', () => {
+    const { sim, p } = setup(18000);
+    sim.rules.mobSpawning = false;
+    const bat = sim.spawnMob!('chauve_furie', 'surface', 6.5, 14, 0.5)!;
+    let inReach = 0,
+      maxSpeed = 0;
+    const N = 400;
+    for (let i = 0; i < N; i++) {
+      sim.tick();
+      // portée d'attaque du joueur : 3,5 blocs depuis les yeux
+      const d = Math.hypot(bat.x - p.x, bat.y + bat.body.h / 2 - (p.y + p.eye), bat.z - p.z) - bat.body.hw;
+      if (i > 60 && d < 3.5) inReach++;
+      maxSpeed = Math.max(maxSpeed, Math.hypot(bat.body.vx, bat.body.vz));
+    }
+    expect(bat.target).toBe(p);
+    expect(p.health).toBeLessThan(20);
+    expect(inReach / (N - 60)).toBeGreaterThan(0.8);
+    expect(maxSpeed).toBeLessThan(5);
+  });
+
   it('les hostiles apparaissent la nuit, pas les jours en mode paisible', () => {
     const { sim } = setup(18000);
     run(sim, 20 * 30);

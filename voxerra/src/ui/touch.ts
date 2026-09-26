@@ -1,7 +1,7 @@
 /**
  * Contrôles tactiles : joystick de déplacement (à gauche, sprint en bout de
  * course), regard en glissant le doigt sur l'écran, appui bref = utiliser /
- * poser, appui long = casser / attaquer, boutons (saut, accroupi, attaque,
+ * poser (ou frapper la créature hostile visée), appui long = casser / attaquer, boutons (saut, accroupi, attaque,
  * utilisation, inventaire, discussion, lâcher, vue, pause) et sélection de
  * l'emplacement en touchant la barre rapide.
  */
@@ -13,6 +13,10 @@ export interface TouchHost {
   /** Le joueur est en jeu, sans écran ouvert. */
   playing(): boolean;
   selectSlot(i: number): void;
+  /** Le réticule vise une créature hostile (un appui bref l'attaque au lieu d'utiliser). */
+  aimingAtFoe(): boolean;
+  /** Ouvre la discussion (préremplie) pendant le geste, pour que le clavier du téléphone s'ouvre. */
+  openChat(initial: string): void;
 }
 
 interface LookTouch {
@@ -66,6 +70,22 @@ export class TouchControls {
       b.addEventListener('touchcancel', end, { passive: false });
       return b;
     };
+    // discussion / commande : ouvertes au relâchement du doigt (geste reconnu par le navigateur → clavier affiché)
+    const chatBtn = (label: string, title: string, initial: string) => {
+      const b = h('div', { class: 'touch-btn small', title, 'aria-label': title, role: 'button' }, label);
+      b.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        b.classList.add('on');
+      }, { passive: false });
+      b.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        b.classList.remove('on');
+        if (this.visible) this.host.openChat(initial);
+      }, { passive: false });
+      b.addEventListener('touchcancel', () => b.classList.remove('on'));
+      return b;
+    };
     this.sneakBtn = h('div', { class: 'touch-btn sneak', title: t('S’accroupir'), 'aria-label': t('S’accroupir'), role: 'button' }, '⇩');
     this.sneakBtn.addEventListener('touchstart', (e) => {
       e.preventDefault();
@@ -86,7 +106,8 @@ export class TouchControls {
       'div',
       { class: 'touch-top' },
       btn('small', '🎒', t('Inventaire'), 'inventory', 'tap'),
-      btn('small', '💬', t('Discussion'), 'chat', 'tap'),
+      chatBtn('💬', t('Discussion'), ''),
+      chatBtn('/', t('Commande'), '/'),
       btn('small', '⤓', t('Lâcher l’objet'), 'drop', 'tap'),
       btn('small', '👁', t('Changer de vue'), 'perspective', 'tap'),
       btn('small', '⏸', t('Menu du jeu'), 'pause', 'tap'),
@@ -147,7 +168,7 @@ export class TouchControls {
           const l = this.look;
           this.look = null;
           if (l.holding) this.input.setVirtual('attack', false);
-          else if (l.moved < TAP_MOVE && performance.now() - l.t0 < LONG_PRESS) this.input.tapVirtual('use');
+          else if (l.moved < TAP_MOVE && performance.now() - l.t0 < LONG_PRESS) this.input.tapVirtual(this.host.aimingAtFoe() ? 'attack' : 'use');
         }
       }
     };

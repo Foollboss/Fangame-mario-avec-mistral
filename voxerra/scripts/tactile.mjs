@@ -100,6 +100,8 @@ async function newWorld(page) {
 
   // inventaire (bouton 🎒) puis fermeture avec ✕
   const tapEl = async (sel, id) => {
+    // le rendu logiciel du navigateur de test est lent : on attend le retour des contrôles
+    await page.waitForFunction(() => window.voxerra.touch.visible && !window.voxerra.ui.open, null, { timeout: 5000 }).catch(() => {});
     const b = await page.locator(sel).boundingBox();
     await touch('touchStart', [[b.x + b.width / 2, b.y + b.height / 2, id]]);
     await touch('touchEnd', []);
@@ -124,6 +126,71 @@ async function newWorld(page) {
   await page.waitForTimeout(400);
   const back = await page.waitForFunction(() => !window.voxerra.ui.open && window.voxerra.touch.visible, null, { timeout: 5000 }).then(() => true, () => false);
   check(back, '✕ ferme l’inventaire et les contrôles reviennent');
+
+  // Chauve-furie : appui bref en visant approximativement (aide à la visée) → coups
+  await page.evaluate(() => {
+    const g = window.voxerra.game,
+      p = g.player;
+    p.inventory.set(p.inventory.selected, { id: 'epee_fer', count: 1 });
+    window.__bat = g.sim.spawnMob('chauve_furie', p.dim, p.x + 4, p.y + 2.5, p.z);
+    p.health = p.maxHealth;
+  });
+  const bat0 = await page.evaluate(() => window.__bat.health);
+  let taps = 0;
+  for (let i = 0; i < 20; i++) {
+    const alive = await page.evaluate(() => {
+      const b = window.__bat,
+        p = window.voxerra.game.player;
+      if (b.dead || b.removed) return false;
+      const dx = b.x - p.x,
+        dy = b.y + b.body.h / 2 - (p.y + p.eye),
+        dz = b.z - p.z;
+      // visée volontairement décalée d'environ 5°
+      p.yaw = Math.atan2(-dx, -dz) + 0.09;
+      p.pitch = Math.atan2(dy, Math.hypot(dx, dz));
+      p.health = p.maxHealth;
+      return true;
+    });
+    if (!alive) break;
+    await touch('touchStart', [[600, 120, 20 + i]]);
+    await page.waitForTimeout(60);
+    await touch('touchEnd', []);
+    taps++;
+    await page.waitForTimeout(450);
+  }
+  const bat1 = await page.evaluate(() => ({ h: window.__bat.health, dead: window.__bat.dead || window.__bat.removed }));
+  check(bat1.dead || bat1.h < bat0, `appuis brefs sur la chauve-furie : ${bat1.dead ? 'vaincue' : `santé ${bat0} → ${bat1.h.toFixed(1)}`} en ${taps} appuis`);
+  await page.evaluate(() => window.__bat && !window.__bat.removed && window.__bat.damage(999, { type: 'kill' }));
+
+  // commandes : refus expliqué, puis bouton « / », suggestions et bouton d'envoi
+  await tapEl('.touch-btn[aria-label="Commande"]', 40);
+  await page.waitForFunction(() => document.activeElement?.classList.contains('chat-input'), null, { timeout: 5000 }).catch(() => {});
+  check(await page.evaluate(() => document.activeElement?.classList.contains('chat-input') && document.activeElement.value === '/'), 'le bouton « / » ouvre la saisie avec le focus (clavier du téléphone)');
+  await page.screenshot({ path: `${outDir}/telephone-commande.png` });
+  await page.locator('.chat-chip', { hasText: /^\/temps$/ }).tap();
+  await page.locator('.chat-chip', { hasText: /^nuit$/ }).tap();
+  check((await page.locator('.chat-input').inputValue()) === '/temps nuit ', 'les suggestions complètent « /temps nuit »');
+  await page.locator('.chat-send').tap();
+  await page.waitForTimeout(400);
+  const refus = await page.evaluate(() => document.querySelector('.chat').textContent);
+  check(refus.includes('Autoriser les commandes'), 'sans autorisation : le message explique comment activer les commandes');
+  await page.evaluate(() => (window.voxerra.game.sim.meta.allowCommands = true));
+  await tapEl('.touch-btn[aria-label="Commande"]', 41);
+  await page.waitForTimeout(300);
+  await page.locator('.chat-chip', { hasText: /^\/temps$/ }).tap();
+  await page.locator('.chat-chip', { hasText: /^nuit$/ }).tap();
+  await page.screenshot({ path: `${outDir}/telephone-suggestions.png` });
+  await page.locator('.chat-send').tap();
+  await page.waitForTimeout(400);
+  const tod = await page.evaluate(() => window.voxerra.game.sim.env.time % 24000);
+  check(tod >= 13000 && tod < 14000 && !(await page.evaluate(() => window.voxerra.ui.open)), `« /temps nuit » exécutée avec le bouton d'envoi (heure ${tod})`);
+  // touche Entrée du clavier
+  await tapEl('.touch-btn[aria-label="Commande"]', 42);
+  await page.waitForTimeout(300);
+  await page.keyboard.type('meteo pluie');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(400);
+  check(await page.evaluate(() => window.voxerra.game.sim.env.weather === 'pluie'), '« /meteo pluie » exécutée avec la touche Entrée');
 
   // pause → options → commandes
   const pause = page.locator('.touch-btn[aria-label="Menu du jeu"]');
