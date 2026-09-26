@@ -34,6 +34,14 @@ export const DEFAULT_SETTINGS = {
   gravityScale: 1,
 };
 
+export function hasSavedSettings() {
+  try {
+    return !!localStorage.getItem(KEY);
+  } catch (e) {
+    return false;
+  }
+}
+
 export function loadSettings() {
   let s = {};
   try {

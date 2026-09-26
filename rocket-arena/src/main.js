@@ -3,25 +3,42 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 
 import { PHYS, TEAM_COLORS, BOT_NAMES, BODIES } from './config.js';
 import { Match } from './sim/match.js';
 import { ARENA } from './sim/arena.js';
 import { Bot } from './ai/bot.js';
-import { buildArena, buildSky, THEMES } from './render/arenaView.js';
+import { buildArena, buildSky, buildEnvScene, THEMES } from './render/arenaView.js';
 import { makeBallTextures, makeShadowTexture } from './render/textures.js';
 import { CarView } from './render/carModel.js';
 import { Effects } from './render/particles.js';
 import { CameraRig, horizontalToVerticalFov, keepInsideArena } from './render/camera.js';
 import { Input, keyLabel } from './input/input.js';
+import { TouchControls, isTouchDevice } from './input/touch.js';
 import { Sound } from './audio/audio.js';
 import { Hud } from './ui/hud.js';
 import { Menus } from './ui/menus.js';
-import { loadSettings, saveSettings, QUALITY } from './ui/settings.js';
+import { loadSettings, saveSettings, hasSavedSettings, QUALITY } from './ui/settings.js';
 
 const DT = PHYS.dt;
+// Light colour grading and vignette applied after tone mapping.
+const GRADE_SHADER = {
+  uniforms: { tDiffuse: { value: null }, vignette: { value: 0.5 }, saturation: { value: 1.1 } },
+  vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float vignette; uniform float saturation; varying vec2 vUv;
+    void main() {
+      vec4 c = texture2D(tDiffuse, vUv);
+      float l = dot(c.rgb, vec3(0.2126, 0.7152, 0.0722));
+      c.rgb = mix(vec3(l), c.rgb, saturation);
+      c.rgb = mix(c.rgb, c.rgb * c.rgb * (3.0 - 2.0 * c.rgb), 0.18);
+      vec2 d = vUv - 0.5;
+      c.rgb *= 1.0 - dot(d, d) * vignette;
+      gl_FragColor = c;
+    }`,
+};
 const QUICK_CHAT = ['Je l\'ai !', 'Joli tir !', 'Quel arrêt !', 'Merci !', 'Calculé.', 'Oups…', 'Défends !', 'Bien joué !'];
+const BALL_TRAIL = new THREE.Color(0.75, 0.9, 1.3);
 const ACCENT_POOL = [0x1b1d22, 0xe8e8e8, 0xd62828, 0xf7c948, 0x2ec27e, 0x8a4dff, 0x00c2d1, 0x444a57];
 const tmpV = new THREE.Vector3();
 const tmpV2 = new THREE.Vector3();
@@ -38,6 +55,12 @@ function shuffled(a) {
 class App {
   constructor() {
     this.settings = loadSettings();
+    const params = new URLSearchParams(window.location.search);
+    this.isApp = params.get('app') === 'android';
+    this.isTouch = this.isApp || params.has('touch') || isTouchDevice();
+    document.body.classList.toggle('touch', this.isTouch);
+    // Phones get lighter graphics until the player picks something else.
+    if (this.isTouch && !hasSavedSettings()) this.settings.quality = 'medium';
     this.canvas = document.getElementById('game');
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -45,9 +68,8 @@ class App {
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.scene = new THREE.Scene();
 
-    const pmrem = new THREE.PMREMGenerator(this.renderer);
-    this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    this.scene.environmentIntensity = 0.35;
+    this.pmrem = new THREE.PMREMGenerator(this.renderer);
+    this.scene.environmentIntensity = 0.8;
 
     this.cameras = [new THREE.PerspectiveCamera(80, 1, 0.1, 3000), new THREE.PerspectiveCamera(80, 1, 0.1, 3000)];
     this.cameras[0].layers.enable(3);
@@ -56,6 +78,10 @@ class App {
 
     this.effects = new Effects(this.scene);
     this.input = new Input(this.settings);
+    if (this.isTouch) {
+      this.touch = new TouchControls(this.input);
+      this.input.touch = this.touch;
+    }
     this.sound = new Sound(this.settings);
     this.hud = new Hud(document.getElementById('hud'));
     this.menus = new Menus(document.getElementById('ui'), this);
@@ -178,18 +204,25 @@ class App {
     group.add(sun, sun.target);
     this.scene.add(group);
     this.scene.fog = new THREE.Fog(theme.fog, 220, 1100);
+    // Reflections come from a miniature version of this arena's sky, lights and stands.
+    if (this.envTarget) this.envTarget.dispose();
+    this.envTarget = this.pmrem.fromScene(buildEnvScene(theme), 0.02, 0.1, 1500);
+    this.scene.environment = this.envTarget.texture;
     this.renderer.shadowMap.enabled = q.shadows;
     this.renderer.toneMappingExposure = theme.exposure;
     this.world = { group, updatePads: arena.updatePads };
 
     this.composer = null;
     if (q.bloom) {
-      const composer = new EffectComposer(this.renderer);
+      // Multisampled target: the composer path keeps its anti-aliasing.
+      const rt = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: q.msaa || 4 });
+      const composer = new EffectComposer(this.renderer, rt);
       this.renderPass = new RenderPass(this.scene, this.cameras[0]);
       composer.addPass(this.renderPass);
-      this.bloom = new UnrealBloomPass(new THREE.Vector2(512, 512), 0.6, 0.4, 1.0);
+      this.bloom = new UnrealBloomPass(new THREE.Vector2(512, 512), 0.48, 0.4, 1.05);
       composer.addPass(this.bloom);
       composer.addPass(new OutputPass());
+      composer.addPass(new ShaderPass(GRADE_SHADER));
       this.composer = composer;
     }
     this.scene.traverse((o) => { if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { m.needsUpdate = true; }); });
@@ -252,7 +285,14 @@ class App {
     this.menus.stack = [];
     this.hud.root.classList.remove('hidden');
     this.hud.setup(this.match, this.locals, this.viewports());
-    if (!s.tutorialSeen || cfg.freeplay) {
+    if (this.isTouch) {
+      if (!s.tutorialSeen || cfg.freeplay) {
+        this.hud.showHint('Joystick à gauche : rouler et diriger (en l\'air : pivoter) · <b>SAUT</b> deux fois = flip · <b>BOOST</b> · <b>DÉRAPE</b> = dérapage / air roll', 9);
+        s.tutorialSeen = true;
+        this.saveSettings();
+      }
+      this.enterFullscreen();
+    } else if (!s.tutorialSeen || cfg.freeplay) {
       const k = (a) => `<span class="key">${keyLabel(s.keys[a][0])}</span>`;
       this.hud.showHint(`${k('throttle')}${k('reverse')} rouler · ${k('left')}${k('right')} tourner · ${k('jump')} sauter (2× = flip) · ${k('boost')} boost · ${k('ballCam')} caméra · ${k('pause')} pause${cfg.freeplay ? ` · ${k('resetBall')} balle · ${k('shootBall')} tir` : ''}`, 12);
       s.tutorialSeen = true;
@@ -261,6 +301,21 @@ class App {
     this.sound.init();
     this.sound.stopMusic();
     document.body.style.cursor = 'none';
+  }
+
+  // Mobile browsers: go full screen and lock landscape (the Android app already is).
+  enterFullscreen() {
+    if (this.isApp) return;
+    try {
+      const el = document.documentElement;
+      if (!document.fullscreenElement && el.requestFullscreen) {
+        el.requestFullscreen().then(() => {
+          if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {});
+        }).catch(() => {});
+      }
+    } catch (e) {
+      // Not allowed here: the player can still rotate the phone.
+    }
   }
 
   createCarViews(match) {
@@ -284,6 +339,7 @@ class App {
 
   clearMatch() {
     this.match = null;
+    if (this.touch) this.touch.show(false);
     this.carViews.forEach((v) => { this.scene.remove(v.group); v.dispose(); });
     this.carViews = [];
     this.bots = [];
@@ -324,6 +380,7 @@ class App {
   pause() {
     if (this.mode !== 'match' || this.match.state === 'ended') return;
     this.paused = true;
+    if (this.touch) this.touch.show(false);
     this.menus.stack = [];
     this.menus.show('pause', false);
     this.sound.silenceEngines();
@@ -639,6 +696,7 @@ class App {
         quat: new THREE.Quaternion().slerpQuaternions(car.prevQuat, car.quat, alpha),
         boosting: car.boosting, demolished: car.demolished, steer: car.steerVis, spin: car.wheelSpin, supersonic: car.supersonic,
         vel: car.vel, onGround: car.onGround, groundNormal: car.groundNormal,
+        braking: car.onGround && (car.controls.handbrake || car.controls.throttle * car.vel.dot(car.forward(tmpV)) < -0.5),
       });
     }
     const b = m.ball;
@@ -685,6 +743,12 @@ class App {
     this.ballMesh.visible = !bs.hidden && !this.garage;
     this.ballMesh.position.copy(bs.pos);
     this.ballMesh.quaternion.copy(bs.quat);
+    // Fast balls leave a short streak.
+    const ballSpeed = m.state === 'replay' ? 0 : m.ball.vel.length();
+    if (running && this.ballMesh.visible && ballSpeed > 19 && !this.garage) {
+      const k = Math.min(1, (ballSpeed - 19) / 15);
+      this.effects.trail(bs.pos, BALL_TRAIL.clone().multiplyScalar(0.35 + k * 0.5), 1.1);
+    }
     const h = bs.pos.y - PHYS.ballRadius;
     this.ballShadow.visible = this.ballMesh.visible && Math.abs(bs.pos.x) < ARENA.W - 2 && Math.abs(bs.pos.z) < ARENA.L + ARENA.GD;
     this.ballShadow.position.set(bs.pos.x, 0.03, bs.pos.z);
@@ -747,6 +811,10 @@ class App {
     // HUD.
     if (this.mode === 'match' && m) {
       const scoreboard = this.locals.some((l, i) => this.input.held('scoreboard', i, this.splitscreen));
+      if (this.touch) {
+        this.touch.show(!this.paused && !this.menus.isOpen() && m.state !== 'ended', m.opts.freeplay);
+        this.touch.setBallCam(this.rigs[0].ballCam);
+      }
       this.hud.update(dt, m, this.locals, {
         ballCam: this.rigs.map((rg) => rg.ballCam), showFps: this.settings.showFps, fps: this.fps, scoreboard: scoreboard && !this.paused,
       });

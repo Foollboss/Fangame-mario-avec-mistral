@@ -206,8 +206,9 @@ export class Menus {
       <h2>Entraînement libre</h2>
       <div class="opt"><label>Arène</label>${seg('theme', themes, s.theme)}</div>
       <div class="opt"><label>Boost illimité</label>${seg('freeUnlimited', [[true, 'Oui'], [false, 'Non']], this.freeUnlimited !== false)}</div>
-      <p class="hint">Touche <span class="key">${keyLabel(s.keys.resetBall[0])}</span> : replacer la balle devant toi ·
-      <span class="key">${keyLabel(s.keys.shootBall[0])}</span> : la balle est lancée vers toi (parfait pour s'entraîner aux aériennes).</p>
+      ${this.app.isTouch ? '<p class="hint">Bouton <b>BALLE</b> : replacer la balle devant toi · <b>TIR</b> : la balle est lancée vers toi (parfait pour les aériennes).</p>'
+    : `<p class="hint">Touche <span class="key">${keyLabel(s.keys.resetBall[0])}</span> : replacer la balle devant toi ·
+      <span class="key">${keyLabel(s.keys.shootBall[0])}</span> : la balle est lancée vers toi (parfait pour s'entraîner aux aériennes).</p>`}
       <div class="btn-row"><button class="btn" data-action="back">Retour</button><button class="btn primary" data-action="startFree">C'est parti</button></div>
     </div></div>`;
   }
@@ -273,6 +274,12 @@ export class Menus {
     ].map(([l, k]) => `<tr><td>${l}</td><td><span class="key">${k}</span></td></tr>`).join('');
     return `<div class="menu center dim"><div class="col">
       <h2>Commandes</h2>
+      ${this.app.isTouch ? `<h3>Écran tactile</h3>
+      <p class="hint">• Pose le pouce n'importe où sur la <b>moitié gauche</b> : le joystick apparaît. Haut = accélérer, bas = freiner / reculer,
+      gauche/droite = tourner. En l'air, il fait pivoter la voiture.<br>
+      • <b>SAUT</b> (bleu) : appuie deux fois en tenant le joystick pour un flip. <b>BOOST</b> (orange) : maintiens pour foncer.<br>
+      • <b>DÉRAPE</b> : dérapage au sol, air roll en l'air. <b>CAM</b> : caméra balle / voiture. <b>II</b> : pause.<br>
+      • Une manette Bluetooth fonctionne aussi.</p>` : ''}
       <p class="hint">Clique sur une touche puis appuie sur la nouvelle touche (ou un bouton de souris) pour la réassigner.</p>
       <h3>Clavier / souris</h3>
       <table class="keys-table">${rows}</table>

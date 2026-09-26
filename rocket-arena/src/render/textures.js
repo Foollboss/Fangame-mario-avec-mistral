@@ -227,20 +227,108 @@ export function makeBallTextures() {
 }
 
 export function makeCrowdTexture() {
-  const [c, ctx] = canvas(512, 256);
-  ctx.fillStyle = '#15161c';
-  ctx.fillRect(0, 0, 512, 256);
-  const colors = ['#2f7bff', '#ff8a1f', '#e8e8e8', '#444a57', '#8fb4ff', '#ffc27a', '#b03030', '#2f2f36'];
-  for (let y = 4; y < 256; y += 9) {
-    for (let x = (y / 9) % 2 ? 3 : 7; x < 512; x += 8) {
-      if (Math.random() < 0.15) continue;
-      ctx.fillStyle = colors[(Math.random() * colors.length) | 0];
-      ctx.fillRect(x, y, 5, 6);
-      ctx.fillStyle = 'rgba(230,200,170,0.8)';
-      ctx.fillRect(x + 1, y - 3, 3, 3);
+  // Rows of seats with fans; one texture tile = 8 rows, repeated along the stands.
+  const [c, ctx] = canvas(1024, 512);
+  const rowH = 64;
+  const shirts = ['#2f7bff', '#ff8a1f', '#f2f2f2', '#3a4152', '#7fa8ff', '#ffb56b', '#c23b3b', '#26282f', '#f5d547', '#2ea86b'];
+  const skins = ['#f1c9a5', '#d9a47a', '#a8744f', '#6f4a33', '#e8b894'];
+  for (let r = 0; r < 8; r++) {
+    const y0 = r * rowH;
+    const g = ctx.createLinearGradient(0, y0, 0, y0 + rowH);
+    g.addColorStop(0, '#2a2e38');
+    g.addColorStop(0.7, '#1a1d24');
+    g.addColorStop(1, '#0e1014');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, y0, 1024, rowH);
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    ctx.fillRect(0, y0 + rowH - 6, 1024, 2);
+    for (let x = 6 + (r % 2) * 14; x < 1024; x += 28) {
+      if (Math.random() < 0.12) {
+        ctx.fillStyle = '#3b3f4a';
+        ctx.fillRect(x, y0 + 30, 20, 26);
+        continue;
+      }
+      const jump = Math.random() < 0.15 ? -8 : 0;
+      ctx.fillStyle = shirts[(Math.random() * shirts.length) | 0];
+      ctx.beginPath();
+      ctx.moveTo(x, y0 + 58 + jump);
+      ctx.quadraticCurveTo(x + 11, y0 + 18 + jump, x + 22, y0 + 58 + jump);
+      ctx.fill();
+      ctx.fillStyle = skins[(Math.random() * skins.length) | 0];
+      ctx.beginPath();
+      ctx.arc(x + 11, y0 + 20 + jump, 7, 0, Math.PI * 2);
+      ctx.fill();
+      if (Math.random() < 0.2) {
+        ctx.strokeStyle = ctx.fillStyle;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(x + 4, y0 + 34 + jump);
+        ctx.lineTo(x - 2, y0 + 12 + jump);
+        ctx.moveTo(x + 18, y0 + 34 + jump);
+        ctx.lineTo(x + 24, y0 + 12 + jump);
+        ctx.stroke();
+      }
     }
   }
-  return tex(c, true);
+  const t = tex(c, true);
+  t.anisotropy = 16;
+  return t;
+}
+
+// Tileable bumpy normal map that gives the pitch a grass relief under grazing light.
+export function makeGrassNormalTexture() {
+  const n = 256;
+  const h = new Float32Array(n * n);
+  for (let i = 0; i < h.length; i++) h[i] = Math.random();
+  // Two box blurs with wrap-around make soft tufts.
+  const blur = (src) => {
+    const out = new Float32Array(n * n);
+    for (let y = 0; y < n; y++) {
+      for (let x = 0; x < n; x++) {
+        let s = 0;
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) s += src[((y + dy + n) % n) * n + ((x + dx + n) % n)];
+        out[y * n + x] = s / 9;
+      }
+    }
+    return out;
+  };
+  const hb = blur(blur(h));
+  const [c, ctx] = canvas(n, n);
+  const img = ctx.createImageData(n, n);
+  for (let y = 0; y < n; y++) {
+    for (let x = 0; x < n; x++) {
+      const hx = hb[y * n + ((x + 1) % n)] - hb[y * n + ((x - 1 + n) % n)];
+      const hy = hb[((y + 1) % n) * n + x] - hb[((y - 1 + n) % n) * n + x];
+      const nx = -hx * 6;
+      const ny = -hy * 6;
+      const l = Math.hypot(nx, ny, 1);
+      const i = (y * n + x) * 4;
+      img.data[i] = (nx / l * 0.5 + 0.5) * 255;
+      img.data[i + 1] = (ny / l * 0.5 + 0.5) * 255;
+      img.data[i + 2] = (1 / l * 0.5 + 0.5) * 255;
+      img.data[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.anisotropy = 8;
+  return t;
+}
+
+// Soft elongated shadow used under cars.
+export function makeCarShadowTexture() {
+  const [c, ctx] = canvas(128, 64);
+  ctx.save();
+  ctx.scale(1, 0.5);
+  const g = ctx.createRadialGradient(64, 64, 4, 64, 64, 62);
+  g.addColorStop(0, 'rgba(0,0,0,0.85)');
+  g.addColorStop(0.55, 'rgba(0,0,0,0.5)');
+  g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 128, 128);
+  ctx.restore();
+  return new THREE.CanvasTexture(c);
 }
 
 export function makeGlowTexture() {

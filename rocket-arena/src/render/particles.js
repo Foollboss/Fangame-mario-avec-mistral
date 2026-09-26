@@ -189,8 +189,8 @@ export class Effects {
     }
   }
 
-  trail(p, color) {
-    this.add.emit({ x: p.x, y: p.y, z: p.z, life: 0.45, size: 0.28, size1: 0.05, color, color1: color, alpha: 0.7 });
+  trail(p, color, size = 0.28) {
+    this.add.emit({ x: p.x, y: p.y, z: p.z, life: 0.45, size, size1: size * 0.18, color, color1: color, alpha: 0.7 });
   }
 
   sparks(p, strength, color = FIRE) {
@@ -206,9 +206,9 @@ export class Effects {
 
   padPickup(p, big) {
     const c = new THREE.Color(1.8, 1.2, 0.3);
-    for (let i = 0; i < (big ? 40 : 12); i++) {
+    for (let i = 0; i < (big ? 28 : 10); i++) {
       this.add.emit({
-        x: p.x + rnd(1), y: 0.3, z: p.z + rnd(1), vx: rnd(1), vy: 3 + Math.random() * (big ? 6 : 3), vz: rnd(1), life: 0.6, size: big ? 0.7 : 0.45,
+        x: p.x + rnd(1), y: 0.3, z: p.z + rnd(1), vx: rnd(1), vy: 3 + Math.random() * (big ? 6 : 3), vz: rnd(1), life: 0.55, size: big ? 0.32 : 0.22,
         size1: 0.05, color: c, drag: 1,
       });
     }

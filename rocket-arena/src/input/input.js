@@ -64,6 +64,12 @@ export class Input {
     this.padPrev = new Map();
     this.padPressed = new Map();
     this.lastDevice = 'keyboard';
+    this.virtualQueue = new Set();
+    this.frameVirtual = new Set();
+    this.touch = null;
+    this.lastTouchTime = -1e9;
+    // Browsers fire fake mouse events after a tap: remember touches so they are ignored.
+    window.addEventListener('touchstart', () => { this.lastTouchTime = performance.now(); this.lastDevice = 'touch'; }, { passive: true, capture: true });
 
     const prevent = new Set(['Space', 'Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'AltLeft']);
     window.addEventListener('keydown', (e) => {
@@ -91,7 +97,8 @@ export class Input {
         cb(code);
         return;
       }
-      if (e.target && e.target.closest && e.target.closest('.menu, .overlay-panel, button, input, select')) return;
+      if (e.target && e.target.closest && e.target.closest('.menu, .overlay-panel, button, input, select, #touch')) return;
+      if (performance.now() - this.lastTouchTime < 1500) return;
       if (!this.down.has(code)) this.pressedQueue.add(code);
       this.down.add(code);
       this.lastDevice = 'keyboard';
@@ -113,9 +120,16 @@ export class Input {
   }
 
   // Must be called once per frame, before reading controls.
+  // Edge press coming from an on-screen button.
+  virtualPress(action) {
+    this.virtualQueue.add(action);
+  }
+
   poll() {
     this.frameKeys = this.pressedQueue;
     this.pressedQueue = new Set();
+    this.frameVirtual = this.virtualQueue;
+    this.virtualQueue = new Set();
     const pads = navigator.getGamepads ? [...navigator.getGamepads()].filter((p) => p && p.connected) : [];
     this.pads = pads;
     this.padPressed.clear();
@@ -143,6 +157,7 @@ export class Input {
   // Menu / UI edge presses for the player (keyboard for player 0, pads for everyone).
   pressed(action, player = 0, splitscreen = false) {
     if (this.usesKeyboard(player) && this.keys(action).some((k) => this.frameKeys && this.frameKeys.has(k))) return true;
+    if (player === 0 && this.frameVirtual.has(action)) return true;
     const btn = { jump: PAD.A, ballCam: PAD.Y, pause: PAD.START, scoreboard: PAD.BACK, resetBall: PAD.UP, shootBall: PAD.DOWN }[action];
     if (btn === undefined) return false;
     for (const p of this.padFor(player, splitscreen)) {
@@ -215,6 +230,15 @@ export class Input {
       jump = jump || b(PAD.A) > 0.5;
       boost = boost || b(PAD.B) > 0.5 || b(PAD.RB) > 0.5;
       handbrake = handbrake || b(PAD.X) > 0.5;
+    }
+    if (player === 0 && this.touch && this.touch.visible) {
+      const t = this.touch.state();
+      if (Math.abs(t.y) > Math.abs(throttle)) throttle = t.y;
+      if (Math.abs(t.x) > Math.abs(steer)) steer = t.x;
+      if (Math.abs(t.y) > Math.abs(pitch)) pitch = t.y;
+      jump = jump || t.jump || this.frameVirtual.has('jump');
+      boost = boost || t.boost;
+      handbrake = handbrake || t.handbrake;
     }
     out.throttle = Math.max(-1, Math.min(1, throttle));
     out.steer = Math.max(-1, Math.min(1, steer));
