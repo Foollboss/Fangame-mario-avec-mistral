@@ -86,13 +86,17 @@ async function newWorld(page) {
     await touch('touchStart', [[sprintBox.x + sprintBox.width / 2, sprintBox.y + sprintBox.height / 2, id]]);
     await touch('touchEnd', []);
   };
-  const halfForward = async (id) => {
+  const halfForward = async (id, amount = 0.25) => {
     await touch('touchStart', [[cx, cy, id]]);
-    await touch('touchMove', [[cx, cy - joy.height * 0.25, id]]);
+    await touch('touchMove', [[cx, cy - joy.height * amount, id]]);
     const sprinting = await page.waitForFunction(() => window.voxerra.game.player.sprinting, null, { timeout: 1500 }).then(() => true, () => false);
     await touch('touchEnd', []);
     return sprinting;
   };
+  await toCenter();
+  // joystick poussé à fond vers l'avant : on marche, on ne court pas tout seul
+  const fullNoSprint = await halfForward(29, 0.6);
+  check(!fullNoSprint, `joystick à fond sans bouton : pas de course automatique (${fullNoSprint})`);
   await toCenter();
   const walkOnly = await halfForward(30);
   await tapSprint(31);
@@ -249,6 +253,27 @@ async function newWorld(page) {
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('voxerra.settings.v1')).touchControls);
   check(saved === false, 'réglage sauvegardé');
   console.log('téléphone', errors.length ? errors.join(' | ') : 'sans erreur');
+  await ctx.close();
+}
+
+// --- application Android : contrôles tactiles toujours actifs ----------------
+{
+  const ctx = await browser.newContext({
+    viewport: { width: 900, height: 420 },
+    hasTouch: false, // le navigateur signale une souris (pointeur précis) : seul le marqueur de l'appli compte
+    locale: 'fr-FR',
+    userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0 Mobile Safari/537.36 VoxerraApp/Android',
+  });
+  const page = await ctx.newPage();
+  await page.addInitScript(() => {
+    if (!sessionStorage.getItem('pose')) {
+      localStorage.setItem('voxerra.settings.v1', JSON.stringify({ touchControls: false, language: 'fr' }));
+      sessionStorage.setItem('pose', '1');
+    }
+  });
+  await newWorld(page);
+  const on = await page.evaluate(() => ({ setting: window.voxerra.settings.touchControls, visible: window.voxerra.touch.visible, fine: matchMedia('(any-pointer: fine)').matches }));
+  check(on.setting && on.visible, `appli Android : contrôles tactiles actifs malgré un ancien réglage à NON (pointeur précis signalé : ${on.fine})`);
   await ctx.close();
 }
 

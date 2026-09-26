@@ -5,7 +5,8 @@ assets au moment de la construction). Le jeu est servi en `https://appassets.and
 les sauvegardes (IndexedDB) et les workers fonctionnent comme dans un navigateur.
 
 - Android 7 (API 24) ou plus récent, WebView (Chrome) à jour, OpenGL ES 3 (WebGL 2).
-- Paysage, plein écran, écran maintenu allumé ; contrôles tactiles (joystick) activés automatiquement.
+- Paysage, plein écran, écran maintenu allumé ; contrôles tactiles (joystick) toujours activés au lancement
+  (l'appli ajoute `VoxerraApp/Android` à l'agent utilisateur, que le jeu reconnaît).
 - Bouton Retour : Échap du jeu (menu pause, fermer un écran) ; depuis l'écran titre, met l'appli en arrière-plan.
 - Le monde est sauvegardé quand l'appli passe en arrière-plan ; « Quitter le jeu » ferme l'appli.
 - Le clavier du téléphone réduit la zone de jeu : la saisie de la discussion reste visible.

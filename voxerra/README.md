@@ -234,13 +234,14 @@ Toutes les touches se réaffectent dans **Options → Commandes**.
 
 ### Écran tactile (téléphone, tablette)
 
-Les contrôles tactiles s'activent tout seuls sur un appareil sans souris, et se règlent avec l'interrupteur
-**Contrôles tactiles** (premier bouton de **Options** et tout en haut de **Options → Commandes**).
+Les contrôles tactiles s'activent tout seuls sur téléphone, tablette ou écran tactile sans souris (et toujours dans
+l'appli Android), et se règlent avec l'interrupteur **Contrôles tactiles** (premier bouton de **Options** et tout en
+haut de **Options → Commandes**).
 
 | Action | Geste |
 |---|---|
 | Se déplacer | joystick en bas à gauche |
-| Sprinter | bouton 🏃 à droite du joystick : un appui pour courir, un autre pour marcher (ou pousser le joystick à fond vers l'avant) |
+| Sprinter | bouton 🏃 à droite du joystick : un appui pour courir, un autre pour marcher (le joystick seul ne fait jamais courir) |
 | Regarder | glisser le doigt n'importe où ailleurs sur l'écran |
 | Utiliser / poser / manger | toucher brièvement l'écran, ou maintenir ✋ |
 | Frapper une créature hostile | toucher brièvement l'écran en la visant (aide à la visée : pas besoin d'être pile dessus) |

@@ -1,6 +1,6 @@
 /**
- * Contrôles tactiles : joystick de déplacement (à gauche, sprint en bout de
- * course ou avec le bouton de course à côté), regard en glissant le doigt sur l'écran, appui bref = utiliser /
+ * Contrôles tactiles : joystick de déplacement (à gauche ; on court avec le
+ * bouton 🏃 à côté, jamais automatiquement), regard en glissant le doigt sur l'écran, appui bref = utiliser /
  * poser (ou frapper la créature hostile visée), appui long = casser / attaquer, boutons (saut, accroupi, attaque,
  * utilisation, inventaire, discussion, lâcher, vue, pause) et sélection de
  * l'emplacement en touchant la barre rapide.
@@ -44,8 +44,6 @@ export class TouchControls {
   private sprintBtn: HTMLElement;
   /** Course activée par le bouton (reste active jusqu'au prochain appui). */
   private sprintOn = false;
-  /** Course par le joystick poussé à fond vers l'avant. */
-  private joySprint = false;
   private buttonTouches = new Map<number, Action>();
 
   constructor(
@@ -174,10 +172,7 @@ export class TouchControls {
         if (this.joy && tt.identifier === this.joy.id) {
           this.joy = null;
           this.joyKnob.style.transform = '';
-          this.joyKnob.classList.remove('sprint');
           this.input.touchMoveX = this.input.touchMoveY = 0;
-          this.joySprint = false;
-          this.syncSprint();
         } else if (this.look && tt.identifier === this.look.id) {
           const l = this.look;
           this.look = null;
@@ -207,14 +202,11 @@ export class TouchControls {
     const mag = Math.hypot(nx, ny);
     this.input.touchMoveX = mag < 0.12 ? 0 : nx;
     this.input.touchMoveY = mag < 0.12 ? 0 : ny;
-    // sprint en poussant le joystick au bout, vers l'avant
-    this.joySprint = mag > 0.92 && ny < -0.6;
-    this.joyKnob.classList.toggle('sprint', this.joySprint || this.sprintOn);
-    this.syncSprint();
   }
 
   private syncSprint(): void {
-    this.input.setVirtual('sprint', this.sprintOn || this.joySprint);
+    this.input.setVirtual('sprint', this.sprintOn);
+    this.joyKnob.classList.toggle('sprint', this.sprintOn);
   }
 
   private hotbarSlotAt(x: number, y: number): number {
@@ -240,7 +232,6 @@ export class TouchControls {
     this.look = null;
     this.sneakOn = false;
     this.sneakBtn.classList.remove('on');
-    this.joySprint = false;
     this.joyKnob.style.transform = '';
     this.input.releaseVirtual();
   }

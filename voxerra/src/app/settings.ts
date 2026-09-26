@@ -60,16 +60,34 @@ export function loadSettings(): Settings {
     const merged = { ...structuredClone(DEFAULT_SETTINGS), language: detectLang(), touchControls: detectTouch(), ...s };
     if (!['fr', 'en', 'es'].includes(merged.language)) merged.language = 'fr';
     merged.bindings = { ...structuredClone(DEFAULT_BINDINGS), ...(s.bindings ?? {}) };
+    // application Android : contrôles tactiles toujours actifs au lancement
+    if (isAndroidApp()) merged.touchControls = true;
     return merged;
   } catch {
     return { ...structuredClone(DEFAULT_SETTINGS), language: detectLang(), touchControls: detectTouch() };
   }
 }
 
-/** Appareil tactile sans souris : contrôles tactiles activés par défaut. */
+/** Application Android (WebView) : MainActivity ajoute ce marqueur à l'agent utilisateur. */
+export function isAndroidApp(): boolean {
+  try {
+    return /VoxerraApp\/Android/.test(navigator.userAgent);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Contrôles tactiles activés par défaut : application Android, téléphone ou
+ * tablette (même si le navigateur signale aussi un pointeur précis, comme un
+ * stylet), ou écran tactile sans souris.
+ */
 export function detectTouch(): boolean {
   try {
-    return typeof matchMedia === 'function' && !matchMedia('(any-pointer: fine)').matches && (navigator.maxTouchPoints ?? 0) > 0;
+    if (isAndroidApp()) return true;
+    if ((navigator.maxTouchPoints ?? 0) <= 0) return false;
+    if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)) return true;
+    return typeof matchMedia === 'function' && !matchMedia('(any-pointer: fine)').matches;
   } catch {
     return false;
   }

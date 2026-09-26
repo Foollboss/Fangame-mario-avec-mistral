@@ -84,6 +84,8 @@ public class MainActivity extends ComponentActivity {
         s.setBuiltInZoomControls(false);
         s.setDisplayZoomControls(false);
         s.setUseWideViewPort(true);
+        // marqueur lu par le jeu : contrôles tactiles activés d'office
+        s.setUserAgentString(s.getUserAgentString() + " VoxerraApp/Android");
 
         web.setWebViewClient(new WebViewClientCompat() {
             @Override
