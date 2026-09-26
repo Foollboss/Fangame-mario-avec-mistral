@@ -2,8 +2,9 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ARENA, TEAM } from '../core/Config.js';
 import { THEMES } from './Themes.js';
+import { FieldPainter } from './FieldPainter.js';
 import {
-  fieldTexture, hexPanelTexture, netTexture, radialTexture, screenTexture, cloudTexture, windowsTexture,
+  hexPanelTexture, ledTexture, netTexture, radialTexture, screenTexture, cloudTexture, windowsTexture,
 } from './Textures.js';
 
 const { halfWidth: HW, halfLength: HL, height: H, corner: C, goalHalfWidth: GW, goalHeight: GH, goalDepth: GD } = ARENA;
@@ -21,7 +22,9 @@ function skyMaterial(sky) {
     vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
     fragmentShader: `uniform vec3 top; uniform vec3 horizon; uniform vec3 bottom; varying vec3 vP;
       void main(){ float h = vP.y; vec3 c = h > 0.0 ? mix(horizon, top, pow(h, 0.55)) : mix(horizon, bottom, pow(-h, 0.4));
-      gl_FragColor = vec4(c, 1.0); }`,
+      gl_FragColor = vec4(c, 1.0);
+        #include <colorspace_fragment>
+      }`,
   });
 }
 
@@ -86,25 +89,54 @@ export class ArenaView {
     const sun = new THREE.DirectionalLight(t.sun.color, t.sun.intensity);
     sun.position.set(...t.sun.pos);
     g.add(sun);
+    this.sun = sun;
+    if (q.shadows) {
+      sun.position.normalize().multiplyScalar(160);
+      sun.castShadow = true;
+      sun.shadow.mapSize.set(2048, 2048);
+      const sc = sun.shadow.camera;
+      sc.left = -110; sc.right = 110; sc.top = 110; sc.bottom = -110; sc.near = 20; sc.far = 400;
+      sun.shadow.bias = -0.0004;
+      sun.shadow.normalBias = 0.04;
+      g.add(sun.target);
+    }
     this.flashLight = new THREE.PointLight(0xffffff, 0, 90, 1.6);
     this.flashLight.position.set(0, 10, 0);
     g.add(this.flashLight);
 
     this.buildField();
     this.buildWalls();
+    this.buildBoards();
     this.buildGoals();
     this.buildStands();
     this.buildRoof();
     this.buildScreens();
     this.buildProps();
     if (q.ambient > 0) this.buildAmbient();
+    if (q.beams && t.beams) this.buildBeams();
   }
 
   buildField() {
     const t = this.theme;
-    const tex = this.track(fieldTexture(t, this.quality.fieldTex, this.quality.anisotropy));
-    const field = new THREE.Mesh(this.track(new THREE.PlaneGeometry(HW * 2, HL * 2)), this.mat(new THREE.MeshLambertMaterial({ map: tex })));
+    const q = this.quality;
+    const f = t.field;
+    const low = q.id === 'low';
+    const { map, glow } = new FieldPainter(t, q.fieldTex, !low).paint().textures(q.anisotropy);
+    this.track(map);
+    let mat;
+    if (low) {
+      mat = new THREE.MeshLambertMaterial({ map });
+    } else {
+      this.track(glow);
+      mat = new THREE.MeshStandardMaterial({
+        map, emissiveMap: glow, emissive: new THREE.Color(f.glowColor), emissiveIntensity: f.glowIntensity,
+        roughness: f.rough, metalness: f.metal, envMapIntensity: f.env ?? 0.15,
+      });
+    }
+    this.fieldMat = this.mat(mat);
+    const field = new THREE.Mesh(this.track(new THREE.PlaneGeometry(HW * 2, HL * 2)), mat);
     field.rotation.x = -Math.PI / 2;
+    field.receiveShadow = true;
     this.group.add(field);
     // Floor outside the chamfers / under the walls
     const skirt = new THREE.Mesh(this.track(new THREE.PlaneGeometry(HW * 2 + 40, HL * 2 + 60)), this.mat(new THREE.MeshLambertMaterial({ color: new THREE.Color(t.outer).multiplyScalar(0.7) })));
@@ -168,6 +200,45 @@ export class ArenaView {
     this.group.add(new THREE.Mesh(this.track(mergeGeometries(frame)), fm));
   }
 
+  // LED boards running along the base of every wall (continuous text around the pitch).
+  buildBoards() {
+    const tex = this.track(ledTexture());
+    this.ledTex = tex;
+    const h = 2.2, y0 = 0.6;
+    const tile = (2048 / 72) * h;
+    const pts = [
+      [HW, -(HL - C)], [HW, HL - C], [HW - C, HL], [GW, HL], null, [-GW, HL], [-(HW - C), HL], [-HW, HL - C],
+      [-HW, -(HL - C)], [-(HW - C), -HL], [-GW, -HL], null, [GW, -HL], [HW - C, -HL], [HW, -(HL - C)],
+    ];
+    const geos = [];
+    let u = 0;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i], b = pts[i + 1];
+      if (!a || !b) continue;
+      const dx = b[0] - a[0], dz = b[1] - a[1];
+      const L = Math.hypot(dx, dz);
+      const mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2;
+      // inward normal points towards the centre
+      let nx = -dz / L, nz = dx / L;
+      if (nx * mx + nz * mz > 0) { nx = -nx; nz = -nz; }
+      const geo = new THREE.PlaneGeometry(L, h);
+      const yaw = Math.atan2(nx, nz);
+      const ax = Math.cos(yaw), az = -Math.sin(yaw);
+      const flip = ax * dx + az * dz < 0;
+      const uv = geo.attributes.uv;
+      for (let k = 0; k < uv.count; k++) {
+        const s = flip ? 1 - uv.getX(k) : uv.getX(k);
+        uv.setX(k, (u + s * L) / tile);
+      }
+      u += L;
+      placed(geo, mx + nx * 0.08, y0 + h / 2, mz + nz * 0.08, yaw);
+      geos.push(geo);
+    }
+    this.boardMat = this.mat(new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
+    const boards = new THREE.Mesh(this.track(mergeGeometries(geos)), this.boardMat);
+    this.group.add(boards);
+  }
+
   buildGoals() {
     const net = this.track(netTexture());
     for (const team of [0, 1]) {
@@ -197,6 +268,7 @@ export class ArenaView {
       // Goal floor and glowing goal line
       const gf = new THREE.Mesh(this.track(new THREE.PlaneGeometry(GW * 2, GD)), this.mat(new THREE.MeshLambertMaterial({ color: new THREE.Color(TEAM[team].dark) })));
       gf.rotation.x = -Math.PI / 2;
+      gf.receiveShadow = true;
       gf.position.set(0, 0.02, s * (HL + GD / 2));
       goal.add(gf);
       const line = new THREE.Mesh(this.track(new THREE.PlaneGeometry(GW * 2, 0.8)), this.mat(new THREE.MeshBasicMaterial({ color: col })));
@@ -490,6 +562,32 @@ export class ArenaView {
     }
   }
 
+  // Soft volumetric-looking cones under the roof floodlights.
+  buildBeams() {
+    const geo = this.track(new THREE.ConeGeometry(16, 50, 28, 1, true));
+    geo.translate(0, -25, 0);
+    const mat = this.mat(new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+      uniforms: { uColor: { value: new THREE.Color(this.theme.beams) }, uTime: { value: 0 } },
+      vertexShader: `varying float vH; varying vec3 vN; varying vec3 vV;
+        void main(){ vH = -position.y / 50.0; vec4 mv = modelViewMatrix * vec4(position,1.0);
+          vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
+      fragmentShader: `uniform vec3 uColor; varying float vH; varying vec3 vN; varying vec3 vV;
+        void main(){ float edge = pow(abs(dot(vN, vV)), 1.5); float a = (1.0 - vH) * 0.075 * edge;
+          gl_FragColor = vec4(uColor, a);
+        #include <colorspace_fragment>
+      }`,
+    }));
+    this.beamMat = mat;
+    for (const [x, z] of [[HW + 10, -40], [HW + 10, 0], [HW + 10, 40], [-HW - 10, -40], [-HW - 10, 0], [-HW - 10, 40]]) {
+      const cone = new THREE.Mesh(geo, mat);
+      cone.position.set(x, 51.5, z);
+      cone.rotation.z = -Math.sign(x) * 0.62;
+      cone.renderOrder = 6;
+      this.group.add(cone);
+    }
+  }
+
   buildAmbient() {
     const t = this.theme;
     const n = this.quality.ambient;
@@ -512,9 +610,41 @@ export class ArenaView {
           vec4 mv = modelViewMatrix * vec4(p, 1.0); gl_Position = projectionMatrix * mv;
           gl_PointSize = uSize / -mv.z; vA = 0.35 + 0.35 * sin(uTime * 2.0 + position.x); }`,
       fragmentShader: `uniform vec3 uColor; varying float vA;
-        void main(){ vec2 c = gl_PointCoord - 0.5; float d = dot(c, c); if (d > 0.25) discard; gl_FragColor = vec4(uColor, vA * (1.0 - d * 4.0)); }`,
+        void main(){ vec2 c = gl_PointCoord - 0.5; float d = dot(c, c); if (d > 0.25) discard; gl_FragColor = vec4(uColor, vA * (1.0 - d * 4.0));
+        #include <colorspace_fragment>
+      }`,
     }));
     this.group.add(new THREE.Points(this.track(geo), mat));
+  }
+
+  // Reflection map made from this arena's own sky and floodlights (instead of a generic studio),
+  // so glossy cars and floors pick up the right colours.
+  buildEnvironment(renderer) {
+    const t = this.theme;
+    const scene = new THREE.Scene();
+    const skyGeo = new THREE.SphereGeometry(100, 32, 16);
+    const skyMat = skyMaterial(t.sky);
+    scene.add(new THREE.Mesh(skyGeo, skyMat));
+    const groundGeo = new THREE.PlaneGeometry(400, 400);
+    groundGeo.rotateX(-Math.PI / 2);
+    const groundMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(t.outer).multiplyScalar(0.6) });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.position.y = -8;
+    scene.add(ground);
+    const panelGeo = new THREE.BoxGeometry(40, 1, 6);
+    const panelMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(t.lightPanel).multiplyScalar(2.5) });
+    for (const s of [-1, 1]) for (const z of [-40, 0, 40]) {
+      const p = new THREE.Mesh(panelGeo, panelMat);
+      p.position.set(s * 60, 45, z);
+      p.rotation.z = s * 0.5;
+      scene.add(p);
+    }
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const rt = pmrem.fromScene(scene, 0.03);
+    pmrem.dispose();
+    for (const d of [skyGeo, skyMat, groundGeo, groundMat, panelGeo, panelMat]) d.dispose();
+    this.envRT = rt;
+    return rt.texture;
   }
 
   flash(team) {
@@ -540,6 +670,10 @@ export class ArenaView {
       for (const tm of this.trimMats) tm.m.color.copy(tm.base).lerp(this.flashColor, f * 0.8).multiplyScalar(1 + f);
     }
     if (ballPos) this.flashLight.position.set(ballPos.x, 12, ballPos.z);
+    if (this.ledTex) {
+      this.ledTex.offset.x = (this.ledTex.offset.x + dt * 0.06) % 1;
+      this.boardMat.color.setRGB(1, 1, 1).lerp(this.flashColor, this.flashAmount * 0.85);
+    }
     if (this.reactorMat) {
       const pulse = 0.6 + 0.4 * Math.sin(this.time * 2.2);
       this.reactorMat.color.setRGB(0.37 * pulse + 0.2, 0.95 * pulse, 1.0 * pulse);
@@ -561,6 +695,7 @@ export class ArenaView {
   }
 
   dispose() {
+    this.envRT?.dispose();
     for (const d of this.disposables) d.dispose && d.dispose();
     this.disposables.length = 0;
   }

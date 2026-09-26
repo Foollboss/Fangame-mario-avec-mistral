@@ -77,10 +77,15 @@ export function collideCarBall(car, ball, events) {
 
     if (car.touchCooldown <= 0) {
       _dir.copy(ball.pos).sub(p.pos);
-      _dir.y *= 0.35;
+      _dir.y *= 0.42;
       p.forward(_f);
       _dir.addScaledVector(_f, -0.35 * _dir.dot(_f));
       _dir.normalize();
+      // Ground hits get some lift so the ball leaves the floor and bounces.
+      if (ball.pos.y < BALL.radius + 1.8) {
+        _dir.y += BALL.hitLift;
+        _dir.normalize();
+      }
       const s = Math.min(relSpeed, 92);
       let extra = s * hitScale(s) * (0.9 + 0.1 * p.stats.mass);
       if (p.flip) extra *= 1.12;

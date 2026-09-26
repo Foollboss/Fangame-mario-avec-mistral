@@ -239,7 +239,12 @@ export class BotAI {
     const p = car.physics;
     const sgn = attackSign(car.team);
     const reach = this.canAerial() ? 24 : sk.jumpSkill > 0.5 ? 9.5 : 6.5;
-    const est = estimateIntercept(car, this.world, ctx.predictor, reach, sk.horizon);
+    // A bouncing ball is easiest to hit on the way down: prefer a low (ground-hittable) contact
+    // unless waiting for it costs too much time.
+    const any = estimateIntercept(car, this.world, ctx.predictor, reach, sk.horizon);
+    const low = estimateIntercept(car, this.world, ctx.predictor, 4.8, sk.horizon);
+    const patience = 0.25 + sk.rotation * 0.5;
+    const est = low.reachable && (!any.reachable || low.t < any.t + patience) ? low : any;
     const P = est;
     const ownZ = -sgn * HL;
     let ax = clamp(P.x * 0.25 + this.aimOffset, -ARENA.goalHalfWidth + 3, ARENA.goalHalfWidth - 3);
@@ -543,7 +548,9 @@ export class BotAI {
     const closing = -((b.vel.x - p.vel.x) * _v.x + (b.vel.z - p.vel.z) * _v.z) / (dh || 1);
     const gap = dh - (R + CAR.halfExtents.z);
     const tContact = gap / Math.max(closing, 1);
-    const h = b.pos.y;
+    // Height of the ball when we actually reach it (it may be bouncing).
+    let h = b.pos.y;
+    if (ctx.predictor && tContact > 0.03 && tContact < 2) h = ctx.predictor.sampleAt(tContact, _v2).y;
     if (h > 4.6 && h < 11 && this.willJump) {
       const lead = h < 6.8 ? 0.34 : 0.6;
       if (tContact < lead && tContact > 0) {

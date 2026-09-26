@@ -25,6 +25,11 @@ export class CarView {
     this.cosmetics = resolveCosmetics(cosmetics);
     this.model = buildCarModel(this.cosmetics, this.team, this.opts);
     this.group.add(this.model.root);
+    if (this.opts.shadows) {
+      this.model.root.traverse((o) => {
+        if (o.isMesh && o !== this.model.under && !o.material.transparent) o.castShadow = true;
+      });
+    }
     const boost = getItem(this.cosmetics.boost) || getItem('bst_flame');
     this.boostItem = boost;
     // Flame cones at each nozzle: always visible when boosting, even with few particles.

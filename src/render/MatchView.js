@@ -31,7 +31,12 @@ export class MatchView {
     const th = this.arena.theme;
     scene.fog = new THREE.Fog(th.fog.color, th.fog.near, th.fog.far);
     scene.background = new THREE.Color(th.fog.color);
-    if (q.envMap) scene.environment = gameRenderer.getEnvMap();
+    if (q.envMap) scene.environment = this.arena.buildEnvironment(gameRenderer.renderer);
+    gameRenderer.renderer.shadowMap.enabled = !!q.shadows;
+    this.bloomStrength = q.bloom ? th.bloom ?? 0.5 : 0;
+    // Pooled light for strong hits (fixed light count: no shader recompiles mid-match)
+    this.hitLight = new THREE.PointLight(0xffffff, 0, 40, 1.8);
+    scene.add(this.hitLight);
     scene.add(this.arena.group);
 
     this.camera = new THREE.PerspectiveCamera(78, gameRenderer.width / gameRenderer.height, 0.3, 3200);
@@ -51,14 +56,21 @@ export class MatchView {
     this.ball = new BallView(q);
     scene.add(this.ball.group);
     this.ballShadow = this.makeShadow(7);
+    if (q.shadows) this.ballShadow.userData.k = 0.45; // real shadow exists; keep a faint ground marker
+    this.ballTrail = new Trail(q.trailSegments + 6, 1.7);
+    this.ballTrail.configure({ id: 'ball', color: 0x9ff4ff }, 0xffffff);
+    scene.add(this.ballTrail.mesh);
+    this.dustColor = new THREE.Color(th.dust || 0xcfe8ff);
 
     this.cars = world.cars.map((car) => {
-      const view = new CarView(car.cosmetics, car.team, { envMap: q.envMap });
+      const view = new CarView(car.cosmetics, car.team, { envMap: q.envMap, shadows: q.shadows });
       scene.add(view.group);
       const trail = new Trail(q.trailSegments, 0.75);
       trail.configure(getItem(view.cosmetics.trail), TEAM[car.team].color);
       scene.add(trail.mesh);
-      return { car, view, trail, shadow: this.makeShadow(5.2), emitAcc: 0 };
+      const shadow = this.makeShadow(5.2);
+      shadow.userData.real = !!q.shadows;
+      return { car, view, trail, shadow, emitAcc: 0 };
     });
     this.buildPads();
     this.bindEvents();
@@ -79,7 +91,7 @@ export class MatchView {
   buildPads() {
     const pads = this.world.boost.pads;
     const baseGeos = [];
-    const baseMat = new THREE.MeshLambertMaterial({ color: 0x2a2f3a });
+    const baseMat = new THREE.MeshStandardMaterial({ color: 0x9aa3b8, metalness: 0.7, roughness: 0.35, envMapIntensity: 0.6 });
     this.padBaseMat = baseMat;
     const smallGeo = new THREE.CylinderGeometry(1.1, 1.1, 0.12, 16);
     this.padCoreMat = new THREE.MeshBasicMaterial({ color: 0xffb02e });
@@ -90,6 +102,9 @@ export class MatchView {
     const orbTex = radialTexture(64, [[0, 'rgba(255,255,255,1)'], [0.3, 'rgba(255,220,140,0.9)'], [1, 'rgba(255,160,40,0)']]);
     this.orbTex = orbTex;
     this.orbMat = new THREE.SpriteMaterial({ map: orbTex, color: 0xffc04a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
+    this.discMat = new THREE.MeshBasicMaterial({ map: orbTex, color: 0xffb02e, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.8 });
+    this.discGeo = new THREE.PlaneGeometry(7.5, 7.5);
+    this.discGeo.rotateX(-Math.PI / 2);
     let si = 0;
     for (const p of pads) {
       const g = new THREE.CylinderGeometry(p.big ? 3 : 1.6, p.big ? 3.3 : 1.8, 0.14, 20);
@@ -99,8 +114,10 @@ export class MatchView {
         const s = new THREE.Sprite(this.orbMat);
         s.position.set(p.x, 1.8, p.z);
         s.scale.setScalar(4.2);
-        this.scene.add(s);
-        this.padSprites.push({ pad: p, s });
+        const disc = new THREE.Mesh(this.discGeo, this.discMat);
+        disc.position.set(p.x, 0.16, p.z);
+        this.scene.add(s, disc);
+        this.padSprites.push({ pad: p, s, disc });
       } else {
         p.viewIndex = si++;
       }
@@ -128,8 +145,9 @@ export class MatchView {
     }
     if (dirty) this.smallCores.instanceMatrix.needsUpdate = true;
     const t = this.time;
-    for (const { pad, s } of this.padSprites) {
+    for (const { pad, s, disc } of this.padSprites) {
       s.visible = pad.active;
+      disc.visible = pad.active;
       s.position.y = 1.8 + Math.sin(t * 2 + pad.x) * 0.35;
     }
   }
@@ -137,7 +155,19 @@ export class MatchView {
   bindEvents() {
     const ev = this.world.events;
     this.unsub = [
+      ev.on('ballBounce', (e) => this.onBallBounce(e)),
+      ev.on('kickoff', () => {
+        this.ball.setTeam(-1);
+        this.ballTrail.color.set(0x9ff4ff);
+      }),
       ev.on('ballTouch', (e) => {
+        this.ball.setTeam(e.car.team);
+        if (e.hit && e.strength > 25) {
+          this.hitLight.position.copy(e.point);
+          this.hitLight.color.setHex(TEAM[e.car.team].color);
+          this.hitLight.intensity = Math.min(900, e.strength * 12);
+        }
+        this.ballTrail.color.setHex(TEAM[e.car.team].color);
         if (!e.hit || e.strength < 6) return;
         _c.setHex(TEAM[e.car.team].color).lerp(WHITE, 0.5);
         this.effects.hit(e.point, e.normal, Math.min(80, e.strength), _c.clone());
@@ -209,6 +239,14 @@ export class MatchView {
     this.time += dt;
     const w = this.world;
     this.ball.update(dt, w.ball);
+    // Light trail behind a fast ball, in the colour of the last team to touch it
+    const bv = w.ball.vel;
+    const fast = !w.ball.hidden && bv.lengthSq() > 30 * 30;
+    if (fast || this.ballTrail.points.length) {
+      _r.copy(bv).cross(_v2.copy(this.camera.position).sub(w.ball.pos)).normalize();
+      if (!Number.isFinite(_r.x)) _r.set(1, 0, 0);
+      this.ballTrail.update(dt, w.ball.pos, _r, fast);
+    }
     this.placeShadow(this.ballShadow, w.ball.pos, w.ball.hidden, w.ball.radius);
     for (const entry of this.cars) {
       const { car, view, trail, shadow } = entry;
@@ -233,6 +271,7 @@ export class MatchView {
       }
     }
     this.updatePads();
+    if (this.hitLight.intensity > 0) this.hitLight.intensity = Math.max(0, this.hitLight.intensity - dt * 2500);
     this.glow.update(dt);
     this.smoke.update(dt);
     this.effects.update(dt);
@@ -254,14 +293,38 @@ export class MatchView {
     this.smoke.setScale(this.gr.pixelHeight, this.camera.fov);
   }
 
+  onBallBounce(e) {
+    const n = e.normal;
+    this.ball.impact(n, e.strength);
+    if (e.strength < 7) return;
+    const R = this.world.ball.radius;
+    const p = _v.copy(e.pos).addScaledVector(n, -R);
+    const floor = n.y > 0.7;
+    if (floor) p.y = 0.08;
+    const col = _c.copy(this.ball.tint);
+    const ring = this.effects.ring(p, col.getHex(), Math.min(14, 3 + e.strength * 0.18), 0.45, !floor);
+    if (!floor) ring.orient(n);
+    // Dust puff (floor) or sparks (walls)
+    const count = Math.min(24, Math.round(e.strength * 0.5));
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const s = 2 + Math.random() * e.strength * 0.15;
+      if (floor) {
+        this.smoke.emit(p.x + Math.cos(a) * 2, 0.4, p.z + Math.sin(a) * 2, Math.cos(a) * s, 1 + Math.random() * 3, Math.sin(a) * s, this.dustColor, 2.2, 0.8, 2.5, 0, 3, 0.45);
+      } else {
+        this.glow.emit(p.x, p.y, p.z, n.x * s + (Math.random() - 0.5) * s, n.y * s + Math.random() * 4, n.z * s + (Math.random() - 0.5) * s, col, 0.6, 0.35, 2, 14, -0.4);
+      }
+    }
+  }
+
   placeShadow(m, pos, hidden, restHeight) {
-    m.visible = !hidden;
+    m.visible = !hidden && !m.userData.real;
     if (hidden) return;
     const h = Math.max(0, pos.y - restHeight);
     m.position.set(pos.x, 0.03, pos.z);
     const s = m.userData.base * (1 + h * 0.03);
     m.scale.set(s, 1, s);
-    m.material.opacity = Math.max(0.15, 1 - h / 30);
+    m.material.opacity = Math.max(0.15, 1 - h / 30) * (m.userData.k || 1);
   }
 
   // Screen position (CSS px) of a world point, or null when behind the camera.
@@ -275,7 +338,8 @@ export class MatchView {
   }
 
   render() {
-    this.gr.render(this.scene, this.camera);
+    if (this.bloomStrength > 0) this.gr.renderBloom(this.scene, this.camera, this.bloomStrength);
+    else this.gr.render(this.scene, this.camera);
   }
 
   dispose() {
@@ -289,6 +353,7 @@ export class MatchView {
       e.shadow.material.dispose();
     }
     this.ballShadow.material.dispose();
+    this.ballTrail.dispose();
     this.shadowGeo.dispose();
     this.shadowTex.dispose();
     this.glow.dispose();
@@ -298,6 +363,8 @@ export class MatchView {
     this.smallGeo.dispose();
     this.padCoreMat.dispose();
     this.orbMat.dispose();
+    this.discMat.dispose();
+    this.discGeo.dispose();
     this.orbTex.dispose();
     this.smallCores.dispose();
   }

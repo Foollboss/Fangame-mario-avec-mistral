@@ -40,7 +40,9 @@ export class ParticleSystem {
           gl_PointSize = min(size * uScale / max(0.5, -mv.z), 160.0); vColor = color;
           vAlpha = alpha * smoothstep(2.0, 7.0, -mv.z); }`,
       fragmentShader: `uniform sampler2D map; varying vec3 vColor; varying float vAlpha;
-        void main(){ vec4 t = texture2D(map, gl_PointCoord); gl_FragColor = vec4(vColor * t.rgb, t.a * vAlpha); }`,
+        void main(){ vec4 t = texture2D(map, gl_PointCoord); gl_FragColor = vec4(vColor * t.rgb, t.a * vAlpha);
+        #include <colorspace_fragment>
+      }`,
     });
     this.points = new THREE.Points(g, this.material);
     this.points.frustumCulled = false;

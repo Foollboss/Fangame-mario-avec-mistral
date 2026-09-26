@@ -1,8 +1,8 @@
 // Graphics tiers. Everything that costs fill-rate or CPU is scaled here.
 export const QUALITY = {
-  low: { id: 'low', label: 'BASSE', pixelRatio: 0.75, maxDpr: 1, antialias: false, particles: 220, crowd: 260, fieldTex: 1024, ambient: 40, anisotropy: 1, trailSegments: 14, envMap: false },
-  medium: { id: 'medium', label: 'MOYENNE', pixelRatio: 1, maxDpr: 1.5, antialias: false, particles: 480, crowd: 900, fieldTex: 1536, ambient: 90, anisotropy: 2, trailSegments: 20, envMap: true },
-  high: { id: 'high', label: 'HAUTE', pixelRatio: 1, maxDpr: 2, antialias: true, particles: 900, crowd: 1800, fieldTex: 2048, ambient: 160, anisotropy: 4, trailSegments: 26, envMap: true },
+  low: { id: 'low', label: 'BASSE', pixelRatio: 0.75, maxDpr: 1, antialias: false, particles: 220, crowd: 260, fieldTex: 1024, ambient: 40, anisotropy: 1, trailSegments: 14, envMap: false, shadows: false, bloom: false, beams: false },
+  medium: { id: 'medium', label: 'MOYENNE', pixelRatio: 1, maxDpr: 1.5, antialias: false, particles: 480, crowd: 900, fieldTex: 1536, ambient: 90, anisotropy: 2, trailSegments: 20, envMap: true, shadows: false, bloom: false, beams: true },
+  high: { id: 'high', label: 'HAUTE', pixelRatio: 1, maxDpr: 2, antialias: true, particles: 900, crowd: 1800, fieldTex: 2048, ambient: 160, anisotropy: 4, trailSegments: 26, envMap: true, shadows: true, bloom: true, beams: true },
 };
 
 const LOW_GPU = /(Adreno \(TM\) [2-5]\d\d|Mali-[T4]|Mali-G(31|51|52|57)|PowerVR|SwiftShader|llvmpipe|Intel\(R\) HD Graphics [2-5])/i;

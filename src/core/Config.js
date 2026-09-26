@@ -19,7 +19,11 @@ export const PHYS = {
 export const BALL = {
   radius: 3,
   mass: 30,
-  restitution: 0.6,
+  gravity: 25,          // a little floatier than cars: longer, readable bounces
+  restitution: 0.74,    // floor
+  wallRestitution: 0.7, // walls, ceiling, goal
+  restSpeed: 1.4,       // impacts slower than this stop bouncing
+  hitLift: 0.14,        // upward share added to ground hits so shots pop off the floor
   friction: 0.22,
   rollingDrag: 0.18,
   airDrag: 0.03,

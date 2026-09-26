@@ -124,7 +124,7 @@ export class World {
       for (let j = i + 1; j < cars.length; j++) collideCars(cars[i], cars[j], this.events);
     }
     this.boost.update(dt, cars);
-    if (this.ball.lastImpact > 5) this.events.emit('ballBounce', { strength: this.ball.lastImpact, pos: this.ball.pos });
+    if (this.ball.lastImpact > 5) this.events.emit('ballBounce', { strength: this.ball.lastImpact, pos: this.ball.pos, normal: this.ball.impactNormal });
   }
 
   // Compact state snapshot (used by replays; the same format suits network sync).

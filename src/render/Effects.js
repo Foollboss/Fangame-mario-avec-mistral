@@ -43,7 +43,14 @@ export class Effects {
     m.position.copy(pos);
     if (!vertical) m.rotation.x = -Math.PI / 2;
     this.scene.add(m);
-    this.active.push({ t: 0, dur, update: (k) => { m.scale.setScalar(1 + k * maxScale); mat.opacity = 0.9 * (1 - k); }, dispose: () => { this.scene.remove(m); mat.dispose(); } });
+    const entry = {
+      t: 0, dur,
+      update: (k) => { m.scale.setScalar(1 + k * maxScale); mat.opacity = 0.9 * (1 - k); },
+      dispose: () => { this.scene.remove(m); mat.dispose(); },
+      orient: (n) => m.lookAt(m.position.x + n.x, m.position.y + n.y, m.position.z + n.z),
+    };
+    this.active.push(entry);
+    return entry;
   }
 
   flash(pos, color, scale = 40, dur = 0.6) {

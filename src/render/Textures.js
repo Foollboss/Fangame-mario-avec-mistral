@@ -1,8 +1,4 @@
 import * as THREE from 'three';
-import { ARENA } from '../core/Config.js';
-
-const HW = ARENA.halfWidth;
-const HL = ARENA.halfLength;
 
 export function canvas(w, h) {
   const c = document.createElement('canvas');
@@ -30,120 +26,6 @@ export function radialTexture(size = 128, stops = [[0, 'rgba(255,255,255,1)'], [
   g.fillStyle = grd;
   g.fillRect(0, 0, size, size);
   return toTexture(c);
-}
-
-// Field markings drawn in world units (x ∈ [-HW,HW], z ∈ [-HL,HL]).
-export function fieldTexture(theme, size, aniso) {
-  const W = Math.round((size * HW) / HL);
-  const H = size;
-  const c = canvas(W, H);
-  const g = c.getContext('2d');
-  const sx = W / (HW * 2), sz = H / (HL * 2);
-  const X = (x) => (x + HW) * sx;
-  const Z = (z) => (z + HL) * sz;
-  const f = theme.field;
-  g.fillStyle = f.base1;
-  g.fillRect(0, 0, W, H);
-
-  g.save();
-  if (f.pattern === 'chevron') {
-    g.fillStyle = f.base2;
-    const band = 10;
-    for (let k = -30; k < 30; k += 2) {
-      g.beginPath();
-      const z0 = k * band;
-      g.moveTo(X(-HW), Z(z0 - HW * 0.45));
-      g.lineTo(X(0), Z(z0));
-      g.lineTo(X(HW), Z(z0 - HW * 0.45));
-      g.lineTo(X(HW), Z(z0 - HW * 0.45 + band));
-      g.lineTo(X(0), Z(z0 + band));
-      g.lineTo(X(-HW), Z(z0 - HW * 0.45 + band));
-      g.closePath();
-      g.fill();
-    }
-  } else if (f.pattern === 'bands') {
-    g.fillStyle = f.base2;
-    for (let z = -HL; z < HL; z += 16) g.fillRect(0, Z(z), W, 8 * sz);
-    g.strokeStyle = f.accent;
-    g.globalAlpha = 0.35;
-    g.lineWidth = 1;
-    const r = 3.2;
-    for (let z = -HL; z < HL; z += r * 1.5) {
-      for (let x = -HW; x < HW; x += r * 1.732) {
-        const ox = (Math.round((z + HL) / (r * 1.5)) % 2) * r * 0.866;
-        hexPath(g, X(x + ox), Z(z), r * sx * 0.95);
-        g.stroke();
-      }
-    }
-    g.globalAlpha = 1;
-  } else {
-    // grid
-    g.strokeStyle = f.base2;
-    g.lineWidth = Math.max(1, sx * 0.25);
-    for (let x = -HW; x <= HW; x += 5) {
-      g.beginPath(); g.moveTo(X(x), 0); g.lineTo(X(x), H); g.stroke();
-    }
-    for (let z = -HL; z <= HL; z += 5) {
-      g.beginPath(); g.moveTo(0, Z(z)); g.lineTo(W, Z(z)); g.stroke();
-    }
-  }
-  g.restore();
-
-  // Team tint towards each goal
-  for (const [team, col] of [[0, theme.teamTint[0]], [1, theme.teamTint[1]]]) {
-    const z0 = team === 0 ? -HL : HL;
-    const grd = g.createLinearGradient(0, Z(z0), 0, Z(z0 * 0.2));
-    grd.addColorStop(0, col);
-    grd.addColorStop(1, 'rgba(0,0,0,0)');
-    g.fillStyle = grd;
-    g.fillRect(0, team === 0 ? 0 : Z(z0 * 0.2), W, Math.abs(Z(z0) - Z(z0 * 0.2)));
-  }
-
-  // Lines
-  g.strokeStyle = f.lines;
-  g.lineWidth = 0.45 * sx;
-  g.lineJoin = 'round';
-  g.shadowColor = f.glow;
-  g.shadowBlur = f.glowBlur ? f.glowBlur * sx : 0;
-  const C = ARENA.corner - 1.5;
-  const m = 1.5;
-  g.beginPath();
-  g.moveTo(X(-HW + m), Z(-HL + C));
-  g.lineTo(X(-HW + C), Z(-HL + m));
-  g.lineTo(X(HW - C), Z(-HL + m));
-  g.lineTo(X(HW - m), Z(-HL + C));
-  g.lineTo(X(HW - m), Z(HL - C));
-  g.lineTo(X(HW - C), Z(HL - m));
-  g.lineTo(X(-HW + C), Z(HL - m));
-  g.lineTo(X(-HW + m), Z(HL - C));
-  g.closePath();
-  g.stroke();
-  g.beginPath(); g.moveTo(X(-HW + m), Z(0)); g.lineTo(X(HW - m), Z(0)); g.stroke();
-  g.beginPath(); g.arc(X(0), Z(0), 13 * sx, 0, Math.PI * 2); g.stroke();
-  g.beginPath(); g.arc(X(0), Z(0), 1.2 * sx, 0, Math.PI * 2); g.fillStyle = f.lines; g.fill();
-  for (const s of [-1, 1]) {
-    const zl = s * (HL - m);
-    const zb = s * (HL - 18);
-    g.beginPath();
-    g.moveTo(X(-22), Z(zl)); g.lineTo(X(-22), Z(zb)); g.lineTo(X(22), Z(zb)); g.lineTo(X(22), Z(zl));
-    g.stroke();
-    g.beginPath();
-    g.arc(X(0), Z(zb), 9 * sx, s > 0 ? Math.PI : 0, s > 0 ? Math.PI * 2 : Math.PI);
-    g.stroke();
-  }
-  g.shadowBlur = 0;
-
-  // Centre logo
-  g.save();
-  g.translate(X(0), Z(0));
-  g.rotate(-Math.PI / 2);
-  g.fillStyle = f.logo;
-  g.font = `700 ${Math.round(5.5 * sx)}px "Chakra Petch", "Arial Narrow", sans-serif`;
-  g.textAlign = 'center';
-  g.textBaseline = 'middle';
-  g.fillText('NEON CAR ARENA', 0, 0);
-  g.restore();
-  return toTexture(c, { aniso });
 }
 
 function hexPath(g, cx, cy, r) {
@@ -189,51 +71,6 @@ export function netTexture(color = 'rgba(255,255,255,0.8)') {
     g.beginPath(); g.moveTo(0, i); g.lineTo(s, i); g.stroke();
   }
   return toTexture(c, { repeat: [1, 1] });
-}
-
-export function ballTexture() {
-  const W = 1024, H = 512;
-  const c = canvas(W, H);
-  const g = c.getContext('2d');
-  const grd = g.createLinearGradient(0, 0, 0, H);
-  grd.addColorStop(0, '#dfe6f2');
-  grd.addColorStop(0.5, '#f7f9fc');
-  grd.addColorStop(1, '#cfd8e6');
-  g.fillStyle = grd;
-  g.fillRect(0, 0, W, H);
-  // Panels: stretched hexagons on an equirectangular map read as a futuristic panelled ball.
-  g.strokeStyle = '#1b2233';
-  g.lineWidth = 6;
-  const rows = 6;
-  for (let r = 0; r <= rows; r++) {
-    const y = (r / rows) * H;
-    const n = r === 0 || r === rows ? 1 : 10;
-    for (let k = 0; k < n; k++) {
-      const x = ((k + (r % 2) * 0.5) / n) * W;
-      g.beginPath();
-      g.moveTo(x, y);
-      g.lineTo(x + W / n / 2, y + H / rows);
-      g.moveTo(x, y);
-      g.lineTo(x - W / n / 2, y + H / rows);
-      g.stroke();
-    }
-  }
-  g.fillStyle = '#10151f';
-  g.fillRect(0, H / 2 - 10, W, 20);
-  g.fillStyle = '#19e6ff';
-  g.fillRect(0, H / 2 - 4, W, 8);
-  return toTexture(c);
-}
-
-export function ballEmissiveTexture() {
-  const W = 512, H = 256;
-  const c = canvas(W, H);
-  const g = c.getContext('2d');
-  g.fillStyle = '#000';
-  g.fillRect(0, 0, W, H);
-  g.fillStyle = '#ffffff';
-  g.fillRect(0, H / 2 - 2, W, 4);
-  return toTexture(c);
 }
 
 export function carbonTexture() {
@@ -302,6 +139,42 @@ export function decalTexture(style, color = '#ffffff', accent = '#111111') {
       break;
   }
   return toTexture(c);
+}
+
+// Scrolling LED ribbon (dot-matrix look) for the boards around the pitch.
+export function ledTexture() {
+  const W = 2048, H = 72;
+  const c = canvas(W, H);
+  const g = c.getContext('2d');
+  g.fillStyle = '#04060c';
+  g.fillRect(0, 0, W, H);
+  const items = [
+    ['NEON CAR ARENA', '#ffffff'], ['◆', '#ffb547'], ['NOVA', '#19e6ff'], ['◆', '#ffb547'], ['EMBER', '#ff2f7d'],
+    ['◆', '#ffb547'], ['BOOST', '#ffb547'], ['◆', '#ffb547'], ['3 · 2 · 1 · GO', '#3dffa8'], ['◆', '#ffb547'],
+  ];
+  g.font = '700 italic 50px "Chakra Petch", "Arial Narrow", sans-serif';
+  g.textBaseline = 'middle';
+  const widths = items.map(([t]) => g.measureText(t).width + 48);
+  const total = widths.reduce((a, b) => a + b, 0);
+  let x = 24;
+  const scale = W / total;
+  g.save();
+  g.scale(scale, 1);
+  items.forEach(([t, col], i) => {
+    g.fillStyle = col;
+    g.shadowColor = col;
+    g.shadowBlur = 12;
+    g.fillText(t, x / 1, H / 2 + 3);
+    x += widths[i];
+  });
+  g.restore();
+  // Dot-matrix mask
+  g.fillStyle = 'rgba(0,0,0,0.55)';
+  for (let y = 0; y < H; y += 4) g.fillRect(0, y, W, 1);
+  for (let xx = 0; xx < W; xx += 4) g.fillRect(xx, 0, 1, H);
+  const t = toTexture(c);
+  t.wrapS = THREE.RepeatWrapping;
+  return t;
 }
 
 export function screenTexture() {
