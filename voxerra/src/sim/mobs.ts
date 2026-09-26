@@ -185,9 +185,12 @@ export class MobSystem implements SimModule {
     const counts = this.counts(p);
     const peaceful = sim.difficulty === 0;
     // Chaque seconde : quelques tentatives par groupe non saturé
+    // Îles célestes : monde paisible, peu d'hostiles (zéphyrins)
+    const calm = p.dim === 'celeste';
     for (const g of ['hostile', 'passive', 'water', 'air'] as Group[]) {
-      if (counts[g] >= CAPS[g]) continue;
+      if (counts[g] >= (calm && g === 'hostile' ? 4 : CAPS[g])) continue;
       if (g === 'hostile' && peaceful) continue;
+      if (g === 'hostile' && calm && !sim.rng.chance(0.2)) continue;
       // les animaux apparaissent rarement (ils restent)
       if (g === 'passive' && !sim.rng.chance(0.12)) continue;
       const attempts = g === 'hostile' ? 3 : 1;
@@ -310,6 +313,11 @@ export class MobSystem implements SimModule {
         if (w.dim === 'astral') {
           const y = rng.range(40, 150);
           for (let k = -3; k <= 3; k++) if (!free(y + k)) return null;
+          return y;
+        }
+        if (w.dim === 'celeste') {
+          const y = rng.range(60, 180);
+          for (let k = -2; k <= 2; k++) if (!free(y + k)) return null;
           return y;
         }
         if (w.dim === 'abime') {

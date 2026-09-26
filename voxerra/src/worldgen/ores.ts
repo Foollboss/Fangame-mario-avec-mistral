@@ -41,6 +41,11 @@ export const ASTRAL_ORES: OreSpec[] = [
   { block: 'poussiere_etoile', replace: ['pierre_astrale'], minY: 0, maxY: 200, veins: 2, size: 20 },
 ];
 
+export const CELESTE_ORES: OreSpec[] = [
+  { block: 'minerai_ambre', replace: ['pierre_celeste'], minY: 0, maxY: 220, veins: 9, size: 6 },
+  { block: 'minerai_lumirite', replace: ['pierre_celeste'], minY: 0, maxY: 220, veins: 2, size: 5 },
+];
+
 export function generateOres(buf: ChunkBuffer, specs: OreSpec[], seed: number, num: (id: string) => number, maxY = 255): void {
   specs.forEach((spec, k) => {
     const rng = new Rng(hash3(seed ^ 0x0e5, buf.cx, k, buf.cz));

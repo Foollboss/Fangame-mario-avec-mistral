@@ -647,7 +647,7 @@ export function helpScreen(app: AppApi): Screen {
     { class: 'screen dim' },
     h('div', { class: 'title' }, t('Aide et contrôles')),
     h('div', { class: 'stats-table' }, ...lines.map(([k, v]) => h('div', { class: 'srow' }, h('span', { style: { color: '#ffe080' } }, k), h('span', {}, v)))),
-    h('div', { class: 'hint', style: { margin: '12px', maxWidth: '560px', textAlign: 'center' } }, t('Progression : bois → pierre → cuivre → fer → célestine (atelier puis forge runique) → portail de pierres runiques vers l’Abîme → Tyran des braises → clé astrale → Cimes astrales → Veilleur astral.')),
+    h('div', { class: 'hint', style: { margin: '12px', maxWidth: '560px', textAlign: 'center' } }, t('Progression : bois → pierre → cuivre → fer → célestine (atelier puis forge runique) → portail de pierres runiques vers l’Abîme → Tyran des braises → clé astrale → Cimes astrales → Veilleur astral. À tout moment : portail de pierres d’aurore allumé à la plume d’azur vers les Îles célestes.')),
     button(t('Retour'), () => app.ui.pop()),
   );
   return { el, pauses: true };

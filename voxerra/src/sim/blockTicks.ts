@@ -50,6 +50,8 @@ export class BlockTicker {
       verre_volcanique: b('verre_volcanique'),
       pierre_runique: b('pierre_runique'),
       voile_abime: b('voile_abime'),
+      pierre_aurore: b('pierre_aurore'),
+      voile_celeste: b('voile_celeste'),
       sable: b('sable'),
       glace: b('glace'),
     };
@@ -219,11 +221,12 @@ export class BlockTicker {
       return;
     }
     // Portail : intégrité du cadre
-    if (id === this.ids.voile_abime) {
+    if (id === this.ids.voile_abime || id === this.ids.voile_celeste) {
       const axisX = (v >>> 12) === 0;
+      const frame = id === this.ids.voile_abime ? this.ids.pierre_runique : this.ids.pierre_aurore;
       const ok = (nx: number, ny: number, nz: number) => {
         const n = w.getId(nx, ny, nz);
-        return n === this.ids.voile_abime || n === this.ids.pierre_runique;
+        return n === id || n === frame;
       };
       if (!ok(x, y + 1, z) || !ok(x, y - 1, z) || (axisX ? !ok(x + 1, y, z) || !ok(x - 1, y, z) : !ok(x, y, z + 1) || !ok(x, y, z - 1))) w.setBlock(x, y, z, 0);
     }

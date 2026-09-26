@@ -165,7 +165,21 @@
   "tissu_bleu": "Tela azul",
   "tissu_violet": "Tela morada",
   "tissu_rose": "Tela rosa",
-  "tissu_brun": "Tela marrón"
+  "tissu_brun": "Tela marrón",
+  "pierre_aurore": "Piedra del alba",
+  "voile_celeste": "Velo celeste",
+  "pierre_celeste": "Piedra celeste",
+  "briques_celestes": "Ladrillos celestes",
+  "terre_celeste": "Tierra celeste",
+  "herbe_celeste": "Hierba celeste",
+  "nuage": "Nube",
+  "nuage_azur": "Nube azur",
+  "bois_celeste": "Tronco celeste",
+  "planches_celestes": "Tablones celestes",
+  "feuilles_celestes": "Hojas celestes",
+  "feuilles_dorees": "Hojas doradas",
+  "minerai_ambre": "Mena de ámbar solar",
+  "fleur_aurore": "Flor del alba"
  },
  "items": {
   "baton": "Palo",
@@ -291,7 +305,9 @@
   "casque_etherium": "Casco de eterio",
   "plastron_etherium": "Peto de eterio",
   "jambieres_etherium": "Grebas de eterio",
-  "bottes_etherium": "Botas de eterio"
+  "bottes_etherium": "Botas de eterio",
+  "plume_azur": "Pluma azur",
+  "ambre_solaire": "Ámbar solar"
  },
  "descs": {
   "couronne_stellaire": "Prueba de tu victoria sobre el Vigía astral.",
@@ -301,7 +317,8 @@
   "cle_astrale": "Activa un altar astral.",
   "etincelle_braise": "Enciende un marco de piedras rúnicas.",
   "elixir_vitalite": "Aumenta permanentemente la salud máxima (+2 corazones, máx. 3 veces).",
-  "pierre_rappel": "Mantén clic derecho: vuelve a tu punto de reaparición."
+  "pierre_rappel": "Mantén clic derecho: vuelve a tu punto de reaparición.",
+  "plume_azur": "Enciende un marco de piedras del alba."
  },
  "creatures": {
   "pelucheon": "Peluchón",
@@ -327,7 +344,10 @@
   "rodeur_vide": "Merodeador del vacío",
   "gardien_sylvestre": "Guardián silvestre",
   "tyran_braises": "Tirano de las brasas",
-  "veilleur_astral": "Vigía astral"
+  "veilleur_astral": "Vigía astral",
+  "grand_duvet": "Gran plumón",
+  "lapinuage": "Conejonube",
+  "zephyrin": "Cefirín"
  },
  "phases": {
   "gardien_sylvestre": [
@@ -393,12 +413,17 @@
   "prairies_stellaires": "Praderas estelares",
   "foret_cristalline": "Bosque cristalino",
   "desert_etoiles": "Desierto de estrellas",
-  "vide_astral": "Vacío astral"
+  "vide_astral": "Vacío astral",
+  "prairies_celestes": "Praderas celestes",
+  "bosquet_dore": "Arboleda dorada",
+  "hautes_iles": "Islas altas",
+  "mer_de_nuages": "Mar de nubes"
  },
  "dimensions": {
   "surface": "Tierras del Alba",
   "abime": "El Abismo ceniciento",
-  "astral": "Las Cumbres astrales"
+  "astral": "Las Cumbres astrales",
+  "celeste": "Las Islas Celestes"
  },
  "structures": {
   "village": "Aldea",
@@ -414,7 +439,8 @@
   "forteresse": "Fortaleza de basalto",
   "ruines_cendrees": "Ruinas cenicientas",
   "citadelle": "Ciudadela astral",
-  "fleche": "Aguja de cristal"
+  "fleche": "Aguja de cristal",
+  "temple_nuees": "Templo de las nubes"
  },
  "advancements": {
   "premiers_pas": [
@@ -564,6 +590,18 @@
   "cristal": [
    "Fragmento de prisma",
    "Descubrir una arboleda de cristal"
+  ],
+  "portail_celeste": [
+   "Puerta de las nubes",
+   "Enciende un portal de piedras del alba"
+  ],
+  "celeste": [
+   "Más alto que las nubes",
+   "Entra en las Islas Celestes"
+  ],
+  "ambre": [
+   "Un sol en el bolsillo",
+   "Consigue ámbar solar"
   ]
  }
 }

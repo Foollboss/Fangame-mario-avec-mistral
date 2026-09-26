@@ -11,7 +11,7 @@ export type SimEvent =
   | { t: 'death'; id: number; message: string }
   | { t: 'shake'; amount: number; to?: number }
   | { t: 'lightning'; x: number; y: number; z: number }
-  | { t: 'dimension'; to: number; dim: string; x: number; y: number; z: number; mode: 'portal' | 'altar' | 'exact' }
+  | { t: 'dimension'; to: number; dim: string; x: number; y: number; z: number; mode: 'portal' | 'altar' | 'exact'; portal?: string }
   | { t: 'boss'; id: number; name: string; hp: number; max: number; phase: number; gone?: boolean }
   | { t: 'swing'; id: number }
   | { t: 'itemPickup'; id: number; item: string; count: number; to: number };

@@ -1523,5 +1523,134 @@
    "#a8e060",
    "#4a8a2a"
   ]
+ },
+ "pierre_aurore": {
+  "p": "runestone",
+  "c": [
+   "#cfc6a4",
+   "#e0d8ba",
+   "#f0ead2"
+  ],
+  "glow": "#f0a020"
+ },
+ "voile_celeste": {
+  "p": "portal",
+  "c": [
+   "#2a6ab8",
+   "#8ad0ff",
+   "#ffffff"
+  ],
+  "alpha": 170
+ },
+ "pierre_celeste": {
+  "p": "stone",
+  "c": [
+   "#c4cad8",
+   "#d6dbe6",
+   "#e8ecf4"
+  ]
+ },
+ "briques_celestes": {
+  "p": "stonebricks",
+  "c": [
+   "#b4bccc",
+   "#c8cedc",
+   "#dce2ee"
+  ]
+ },
+ "terre_celeste": {
+  "p": "noise",
+  "c": [
+   "#8e8270",
+   "#a89c86",
+   "#bcb29c"
+  ],
+  "white": 0.45,
+  "levels": 4
+ },
+ "herbe_celeste_cote": {
+  "p": "grass_side",
+  "base": "terre_celeste"
+ },
+ "nuage": {
+  "p": "liquid",
+  "c": [
+   "#dfe8f2",
+   "#f0f5fa",
+   "#ffffff"
+  ],
+  "alpha": 215
+ },
+ "nuage_azur": {
+  "p": "liquid",
+  "c": [
+   "#5aa0e0",
+   "#80c0fa",
+   "#b8e0ff"
+  ],
+  "alpha": 215
+ },
+ "bois_celeste": {
+  "p": "log",
+  "c": [
+   "#5e6450",
+   "#727a62",
+   "#868e74"
+  ],
+  "marks": "#c8e8c0"
+ },
+ "bois_celeste_dessus": {
+  "p": "logtop",
+  "c": [
+   "#b8b494",
+   "#ccc8a8",
+   "#dedaba"
+  ],
+  "bark": "#5e6450"
+ },
+ "planches_celestes": {
+  "p": "planks",
+  "c": [
+   "#aca88c",
+   "#c8c4a8",
+   "#dcd8bc"
+  ]
+ },
+ "feuilles_celestes": {
+  "p": "leaves",
+  "c": [
+   "#5ab080",
+   "#8ad8a8",
+   "#c0f0d0"
+  ],
+  "holes": 0.18
+ },
+ "feuilles_dorees": {
+  "p": "leaves",
+  "c": [
+   "#d09a20",
+   "#f0c850",
+   "#fff0a0"
+  ],
+  "holes": 0.18
+ },
+ "minerai_ambre": {
+  "p": "ore",
+  "base": "pierre_celeste",
+  "c": [
+   "#a86410",
+   "#f0a830",
+   "#ffe098"
+  ],
+  "count": 4
+ },
+ "fleur_aurore": {
+  "p": "flower",
+  "c": [
+   "#ffd870",
+   "#ffffff",
+   "#4a9a6a"
+  ],
+  "shape": "bell"
  }
 }

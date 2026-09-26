@@ -98,7 +98,7 @@ export class Game {
   private tickAcc = 0;
   private saveTimer = 60;
   private saving: Promise<void> | null = null;
-  private travelling: { dim: string; x: number; y: number; z: number; mode: 'portal' | 'altar' | 'exact'; t: number } | null = null;
+  private travelling: { dim: string; x: number; y: number; z: number; mode: 'portal' | 'altar' | 'exact'; portal?: string; t: number } | null = null;
   private deathShown = false;
   showDebug = false;
   hideHud = false;
@@ -273,7 +273,7 @@ export class Game {
     p.body.fallDist = 0;
     this.enterDimension(dim);
     const info = DIMENSION_INFO[dim as DimensionId];
-    this.hud.toast(t('Nouvelle dimension'), info?.name ?? dim, dim === 'abime' ? 'braisite' : dim === 'astral' ? 'eclat_astral' : 'herbe');
+    this.hud.toast(t('Nouvelle dimension'), info?.name ?? dim, dimIcon(dim));
   }
 
   private drawChunkMap(g: CanvasRenderingContext2D, size: number): void {
@@ -399,7 +399,7 @@ export class Game {
         this.fx.emit('eclair', e.x, e.y, e.z, 30, 0.5);
         break;
       case 'dimension':
-        if (e.to === p.id) this.beginTravel(e.dim, e.x, e.y, e.z, e.mode);
+        if (e.to === p.id) this.beginTravel(e.dim, e.x, e.y, e.z, e.mode, e.portal);
         break;
       case 'boss':
         if (e.gone) this.boss = null;
@@ -421,9 +421,9 @@ export class Game {
   }
 
   // ------------------------------------------------------------------ voyages
-  private beginTravel(dim: string, x: number, y: number, z: number, mode: 'portal' | 'altar' | 'exact'): void {
+  private beginTravel(dim: string, x: number, y: number, z: number, mode: 'portal' | 'altar' | 'exact', portal?: string): void {
     if (this.travelling) return;
-    this.travelling = { dim, x, y, z, mode, t: 0 };
+    this.travelling = { dim, x, y, z, mode, portal, t: 0 };
     this.host.audio.play('portail_allume');
     this.chat.add(t('Voyage vers {dim}…', { dim: DIMENSION_INFO[dim as DimensionId]?.name ?? dim }), '#d8a8ff');
     this.save().then(() => {
@@ -449,13 +449,13 @@ export class Game {
       this.travelling = null;
       return;
     }
-    const pos = this.sim.completeTravel(p, tr.dim, tr.x, tr.y, tr.z, tr.mode);
+    const pos = this.sim.completeTravel(p, tr.dim, tr.x, tr.y, tr.z, tr.mode, tr.portal);
     p.setPos(pos.x, pos.y, pos.z);
     this.travelling = null;
     this.meta.dimension = tr.dim;
     for (let dx = -2; dx <= 2; dx++) for (let dz = -2; dz <= 2; dz++) this.streamer.flushAround(Math.floor(pos.x) + dx * 3, Math.floor(pos.y), Math.floor(pos.z) + dz * 3);
     const info = DIMENSION_INFO[tr.dim as DimensionId];
-    this.hud.toast(t('Nouvelle dimension'), info?.name ?? tr.dim, tr.dim === 'abime' ? 'braisite' : tr.dim === 'astral' ? 'eclat_astral' : 'herbe');
+    this.hud.toast(t('Nouvelle dimension'), info?.name ?? tr.dim, dimIcon(tr.dim));
   }
 
   // ------------------------------------------------------------------ interface
@@ -717,18 +717,24 @@ export class Game {
     const biome = BIOMES[w.biomeAt(Math.floor(p.x), Math.floor(p.z))];
     const rainy = p.dim === 'surface' && biome?.precip !== 'none';
     a.loop('pluie', rainy ? env.rain * (exposed ? 0.8 : 0.25) : 0);
-    a.loop('vent', p.dim === 'surface' && p.y > 110 && exposed ? 0.4 : p.dim === 'astral' ? 0.25 : 0);
+    a.loop('vent', p.dim === 'surface' && p.y > 110 && exposed ? 0.4 : p.dim === 'astral' ? 0.25 : p.dim === 'celeste' ? (exposed ? 0.35 : 0.15) : 0);
     a.loop('grotte', p.dim === 'surface' && !exposed && p.y < 55 ? 0.35 : p.dim === 'abime' ? 0.4 : 0);
     const nearLava = w.blockLight(Math.floor(p.x), Math.floor(p.y + 1), Math.floor(p.z)) > 9 && p.dim === 'abime';
     a.loop('lave', nearLava ? 0.35 : 0);
-    const portal = this.content.blocks.tryNum('voile_abime');
+    const portal = this.content.blocks.tryNum('voile_abime'),
+      portal2 = this.content.blocks.tryNum('voile_celeste');
     let nearPortal = false;
-    for (let dx = -3; dx <= 3 && !nearPortal; dx++) for (let dy = -2; dy <= 3 && !nearPortal; dy++) for (let dz = -3; dz <= 3 && !nearPortal; dz++) if (w.getId(Math.floor(p.x) + dx, Math.floor(p.y) + dy, Math.floor(p.z) + dz) === portal) nearPortal = true;
+    for (let dx = -3; dx <= 3 && !nearPortal; dx++)
+      for (let dy = -2; dy <= 3 && !nearPortal; dy++)
+        for (let dz = -3; dz <= 3 && !nearPortal; dz++) {
+          const id = w.getId(Math.floor(p.x) + dx, Math.floor(p.y) + dy, Math.floor(p.z) + dz);
+          if (id === portal || id === portal2) nearPortal = true;
+        }
     a.loop('portail', nearPortal ? 0.5 : 0);
     let mood: Mood = env.isNight ? 'nuit' : 'jour';
     if (p.dim === 'abime') mood = 'abime';
     else if (p.dim === 'astral') mood = 'astral';
-    else if (!exposed && p.y < 50) mood = 'grotte';
+    else if (p.dim === 'surface' && !exposed && p.y < 50) mood = 'grotte';
     if (this.boss) mood = 'boss';
     a.setMood(mood);
     const d = this.controller.camDir;
@@ -1011,4 +1017,9 @@ export class Game {
     this.camera.updateProjectionMatrix();
     this.held.resize(innerWidth / innerHeight);
   }
+}
+
+/** Icône de la notification « Nouvelle dimension ». */
+function dimIcon(dim: string): string {
+  return dim === 'abime' ? 'braisite' : dim === 'astral' ? 'eclat_astral' : dim === 'celeste' ? 'nuage' : 'herbe';
 }

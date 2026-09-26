@@ -2007,5 +2007,50 @@
    "durability": 800
   },
   "rarity": "epic"
+ },
+ {
+  "id": "plume_azur",
+  "name": "Plume d'azur",
+  "icon": {
+   "t": "feather",
+   "c": [
+    "#8ac8ff"
+   ]
+  },
+  "stack": 1,
+  "use": "ignite",
+  "useData": {
+   "portal": "celeste"
+  },
+  "tool": {
+   "type": "shears",
+   "tier": 0,
+   "speed": 1,
+   "durability": 24
+  },
+  "desc": "Allume un cadre de pierres d'aurore.",
+  "rarity": "uncommon"
+ },
+ {
+  "id": "ambre_solaire",
+  "name": "Ambre solaire",
+  "icon": {
+   "t": "gem",
+   "c": [
+    "#f0a830"
+   ]
+  },
+  "food": {
+   "energy": 2,
+   "saturation": 1,
+   "effects": [
+    {
+     "id": "regeneration",
+     "duration": 6
+    }
+   ]
+  },
+  "fuel": 1200,
+  "rarity": "uncommon"
  }
 ]

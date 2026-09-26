@@ -151,7 +151,8 @@
   "desc": "Allumer un portail de pierres runiques",
   "icon": "etincelle_braise",
   "trigger": {
-   "type": "portal_lit"
+   "type": "portal_lit",
+   "dim": "abime"
   },
   "parent": "pierre_runique"
  },
@@ -165,6 +166,39 @@
    "dim": "abime"
   },
   "parent": "portail"
+ },
+ {
+  "id": "portail_celeste",
+  "title": "Porte des nuées",
+  "desc": "Allumer un portail de pierres d’aurore",
+  "icon": "plume_azur",
+  "trigger": {
+   "type": "portal_lit",
+   "dim": "celeste"
+  },
+  "parent": "lumirite"
+ },
+ {
+  "id": "celeste",
+  "title": "Plus haut que les nuages",
+  "desc": "Entrer dans les Îles célestes",
+  "icon": "nuage",
+  "trigger": {
+   "type": "dimension",
+   "dim": "celeste"
+  },
+  "parent": "portail_celeste"
+ },
+ {
+  "id": "ambre",
+  "title": "Un soleil dans la poche",
+  "desc": "Obtenir de l’ambre solaire",
+  "icon": "ambre_solaire",
+  "trigger": {
+   "type": "obtain",
+   "item": "ambre_solaire"
+  },
+  "parent": "celeste"
  },
  {
   "id": "braisite",

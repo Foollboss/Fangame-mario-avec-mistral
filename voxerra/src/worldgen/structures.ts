@@ -10,11 +10,12 @@ import { Builder } from './structures/builder';
 import type { Placement, StructCtx, StructureType } from './structures/types';
 import { SURFACE_STRUCTURES } from './structures/surface';
 import { ABYSS_STRUCTURES, ASTRAL_STRUCTURES } from './structures/nether';
+import { CELESTE_STRUCTURES } from './structures/celeste';
 import { templateStructure } from './structures/template';
 import { Rng, hash3, hashString } from '../engine/rng';
 import { CS } from '../world/constants';
 
-export const ALL_STRUCTURES: StructureType[] = [...SURFACE_STRUCTURES, ...ABYSS_STRUCTURES, ...ASTRAL_STRUCTURES];
+export const ALL_STRUCTURES: StructureType[] = [...SURFACE_STRUCTURES, ...ABYSS_STRUCTURES, ...ASTRAL_STRUCTURES, ...CELESTE_STRUCTURES];
 
 export class StructureManager {
   readonly types: StructureType[];

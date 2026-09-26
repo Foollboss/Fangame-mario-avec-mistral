@@ -150,6 +150,8 @@ export class BlockRegistry {
   damage!: Float32Array;
   slow!: Float32Array;
   friction!: Float32Array;
+  /** Vitesse verticale donnée en touchant le bloc (nuage d'azur), 0 sinon. */
+  bounce!: Float32Array;
   connectable!: Uint8Array;
   orient!: Uint8Array;
 
@@ -188,6 +190,7 @@ export class BlockRegistry {
     this.damage = new Float32Array(n);
     this.slow = new Float32Array(n);
     this.friction = new Float32Array(n);
+    this.bounce = new Float32Array(n);
     this.connectable = new Uint8Array(n);
     this.orient = new Uint8Array(n);
 
@@ -241,6 +244,7 @@ export class BlockRegistry {
       this.damage[num] = d.damage ?? 0;
       this.slow[num] = d.slow ?? 0;
       this.friction[num] = d.friction ?? 0;
+      this.bounce[num] = d.bounce ?? 0;
       this.connectable[num] = opaque || shapeName === 'fence' || shapeName === 'wall' || shapeName === 'pane' ? 1 : 0;
       this.orient[num] = d.orient ? 1 : 0;
     });

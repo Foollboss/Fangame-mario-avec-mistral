@@ -4,6 +4,7 @@ import type { Content } from '../registry/content';
 import { OverworldGenerator } from './overworld';
 import { AbyssGenerator } from './abyss';
 import { AstralGenerator } from './astral';
+import { CelesteGenerator } from './celeste';
 import { FlatGenerator } from './flat';
 
 export interface DimGenerator {
@@ -17,7 +18,7 @@ export interface DimGenerator {
   locateStructure?(type: string, x: number, z: number): { x: number; z: number; name?: string } | null;
 }
 
-export const DIMENSIONS = ['surface', 'abime', 'astral'] as const;
+export const DIMENSIONS = ['surface', 'abime', 'astral', 'celeste'] as const;
 export type DimensionId = (typeof DIMENSIONS)[number];
 
 export interface DimensionInfo {
@@ -36,17 +37,21 @@ export const DIMENSION_INFO: Record<DimensionId, DimensionInfo> = {
   surface: { id: 'surface', name: "Terres d'Aube", height: 256, scale: 1, hasSky: true, gravity: 1, ceiling: false },
   abime: { id: 'abime', name: "L'Abîme cendré", height: 128, scale: 4, hasSky: false, gravity: 1, ceiling: true },
   astral: { id: 'astral', name: 'Les Cimes astrales', height: 256, scale: 1, hasSky: true, gravity: 0.62, ceiling: false },
+  celeste: { id: 'celeste', name: 'Les Îles célestes', height: 256, scale: 1, hasSky: true, gravity: 1, ceiling: false },
 };
 
 export function createGenerator(dim: string, seed: number, content: Content, worldType = 'normal', structures = true): DimGenerator {
   if (dim === 'surface' && worldType === 'plat') return new FlatGenerator(seed, content);
-  let g: OverworldGenerator | AbyssGenerator | AstralGenerator;
+  let g: OverworldGenerator | AbyssGenerator | AstralGenerator | CelesteGenerator;
   switch (dim) {
     case 'abime':
       g = new AbyssGenerator(seed, content);
       break;
     case 'astral':
       g = new AstralGenerator(seed, content);
+      break;
+    case 'celeste':
+      g = new CelesteGenerator(seed, content);
       break;
     default:
       g = new OverworldGenerator(seed, content);

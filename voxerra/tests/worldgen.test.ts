@@ -36,8 +36,8 @@ describe('génération du monde', () => {
     expect(top).toBeGreaterThan(20);
   });
 
-  it('génère les trois dimensions rapidement', () => {
-    for (const dim of ['surface', 'abime', 'astral']) {
+  it('génère les quatre dimensions rapidement', () => {
+    for (const dim of ['surface', 'abime', 'astral', 'celeste']) {
       const g = createGenerator(dim, 777, content);
       const t0 = performance.now();
       for (let i = 0; i < 16; i++) g.generate(i % 4, Math.floor(i / 4));

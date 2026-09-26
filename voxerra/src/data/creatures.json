@@ -5240,5 +5240,602 @@
     ]
    }
   ]
+ },
+ {
+  "id": "grand_duvet",
+  "name": "Grand-duvet",
+  "category": "passive",
+  "health": 16,
+  "speed": 3,
+  "size": [
+   0.9,
+   1.9
+  ],
+  "ai": [
+   {
+    "type": "float"
+   },
+   {
+    "type": "panic",
+    "speed": 1.7
+   },
+   {
+    "type": "follow_food",
+    "items": [
+     "graines",
+     "baies",
+     "ambre_solaire"
+    ],
+    "speed": 1.1
+   },
+   {
+    "type": "wander",
+    "speed": 0.7
+   },
+   {
+    "type": "look_around"
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "leg_l",
+     "size": [
+      2,
+      10,
+      2
+     ],
+     "pos": [
+      -3.5,
+      0,
+      -1
+     ],
+     "color": "#e0a040",
+     "role": "leg_l",
+     "pivot": [
+      -2.5,
+      10,
+      0
+     ]
+    },
+    {
+     "id": "leg_r",
+     "size": [
+      2,
+      10,
+      2
+     ],
+     "pos": [
+      1.5,
+      0,
+      -1
+     ],
+     "color": "#e0a040",
+     "role": "leg_r",
+     "pivot": [
+      2.5,
+      10,
+      0
+     ]
+    },
+    {
+     "id": "body",
+     "size": [
+      10,
+      9,
+      13
+     ],
+     "pos": [
+      -5,
+      10,
+      -6
+     ],
+     "color": "#f4f0e6",
+     "color2": "#dcd4c0",
+     "role": "body"
+    },
+    {
+     "id": "head",
+     "size": [
+      5,
+      5,
+      6
+     ],
+     "pos": [
+      -2.5,
+      24,
+      -11
+     ],
+     "color": "#f8f6f0",
+     "eyes": "#1a2a4a",
+     "role": "head",
+     "pivot": [
+      0,
+      17,
+      -6
+     ]
+    },
+    {
+     "id": "cou",
+     "size": [
+      4,
+      9,
+      4
+     ],
+     "pos": [
+      -2,
+      16,
+      -9
+     ],
+     "color": "#f4f0e6",
+     "parent": "head"
+    },
+    {
+     "id": "bec",
+     "size": [
+      2,
+      2,
+      3
+     ],
+     "pos": [
+      -1,
+      25,
+      -14
+     ],
+     "color": "#f0a030",
+     "parent": "head"
+    },
+    {
+     "id": "aigrette",
+     "size": [
+      1,
+      4,
+      3
+     ],
+     "pos": [
+      -0.5,
+      29,
+      -9
+     ],
+     "color": "#7ac8ff",
+     "parent": "head"
+    },
+    {
+     "id": "wing_l",
+     "size": [
+      1,
+      7,
+      10
+     ],
+     "pos": [
+      -6,
+      12,
+      -5
+     ],
+     "color": "#e4e0d2",
+     "role": "wing_l",
+     "pivot": [
+      -5,
+      18,
+      0
+     ]
+    },
+    {
+     "id": "wing_r",
+     "size": [
+      1,
+      7,
+      10
+     ],
+     "pos": [
+      5,
+      12,
+      -5
+     ],
+     "color": "#e4e0d2",
+     "role": "wing_r",
+     "pivot": [
+      5,
+      18,
+      0
+     ]
+    },
+    {
+     "id": "queue",
+     "size": [
+      6,
+      3,
+      5
+     ],
+     "pos": [
+      -3,
+      15,
+      6
+     ],
+     "color": "#8ac8ff",
+     "role": "tail",
+     "pivot": [
+      0,
+      16,
+      6
+     ]
+    }
+   ]
+  },
+  "loot": [
+   {
+    "item": "plume",
+    "count": [
+     1,
+     3
+    ]
+   },
+   {
+    "item": "volaille_crue",
+    "count": [
+     1,
+     2
+    ]
+   }
+  ],
+  "spawn": [
+   {
+    "dimension": "celeste",
+    "biomes": [
+     "prairies_celestes",
+     "bosquet_dore"
+    ],
+    "where": "surface",
+    "time": "day",
+    "light": [
+     9,
+     15
+    ],
+    "weight": 8,
+    "group": [
+     1,
+     3
+    ]
+   }
+  ],
+  "persistent": true
+ },
+ {
+  "id": "lapinuage",
+  "name": "Lapinuage",
+  "category": "passive",
+  "health": 6,
+  "speed": 2.6,
+  "size": [
+   0.5,
+   0.6
+  ],
+  "ai": [
+   {
+    "type": "float"
+   },
+   {
+    "type": "panic",
+    "speed": 1.8
+   },
+   {
+    "type": "follow_food",
+    "items": [
+     "baies",
+     "graines"
+    ],
+    "speed": 1.1
+   },
+   {
+    "type": "wander",
+    "speed": 0.8
+   },
+   {
+    "type": "look_around"
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "leg_l",
+     "size": [
+      2,
+      2,
+      3
+     ],
+     "pos": [
+      -3,
+      0,
+      1
+     ],
+     "color": "#e8eef6",
+     "role": "leg_l",
+     "pivot": [
+      -2,
+      2,
+      2.5
+     ]
+    },
+    {
+     "id": "leg_r",
+     "size": [
+      2,
+      2,
+      3
+     ],
+     "pos": [
+      1,
+      0,
+      1
+     ],
+     "color": "#e8eef6",
+     "role": "leg_r",
+     "pivot": [
+      2,
+      2,
+      2.5
+     ]
+    },
+    {
+     "id": "body",
+     "size": [
+      6,
+      5,
+      7
+     ],
+     "pos": [
+      -3,
+      1,
+      -3
+     ],
+     "color": "#f8fbff",
+     "color2": "#e0e8f4",
+     "role": "body"
+    },
+    {
+     "id": "head",
+     "size": [
+      4,
+      4,
+      4
+     ],
+     "pos": [
+      -2,
+      4,
+      -6
+     ],
+     "color": "#f8fbff",
+     "eyes": "#3a5aa0",
+     "role": "head",
+     "pivot": [
+      0,
+      4,
+      -3
+     ]
+    },
+    {
+     "id": "oreille_l",
+     "size": [
+      1,
+      4,
+      1
+     ],
+     "pos": [
+      -1.5,
+      8,
+      -5
+     ],
+     "color": "#ffd8e8",
+     "parent": "head"
+    },
+    {
+     "id": "oreille_r",
+     "size": [
+      1,
+      4,
+      1
+     ],
+     "pos": [
+      0.5,
+      8,
+      -5
+     ],
+     "color": "#ffd8e8",
+     "parent": "head"
+    },
+    {
+     "id": "pompon",
+     "size": [
+      3,
+      3,
+      2
+     ],
+     "pos": [
+      -1.5,
+      3,
+      4
+     ],
+     "color": "#ffffff",
+     "role": "tail",
+     "pivot": [
+      0,
+      4,
+      4
+     ]
+    }
+   ]
+  },
+  "loot": [
+   {
+    "item": "toison",
+    "count": [
+     0,
+     1
+    ]
+   }
+  ],
+  "spawn": [
+   {
+    "dimension": "celeste",
+    "biomes": [
+     "prairies_celestes",
+     "bosquet_dore",
+     "hautes_iles"
+    ],
+    "where": "surface",
+    "time": "day",
+    "light": [
+     9,
+     15
+    ],
+    "weight": 10,
+    "group": [
+     2,
+     4
+    ]
+   }
+  ],
+  "persistent": true
+ },
+ {
+  "id": "zephyrin",
+  "name": "Zéphyrin",
+  "category": "hostile",
+  "health": 20,
+  "speed": 2.4,
+  "size": [
+   1.0,
+   1.0
+  ],
+  "ai": [
+   {
+    "type": "target_player",
+    "range": 24
+   },
+   {
+    "type": "target_attacker",
+    "memory": 10
+   },
+   {
+    "type": "ranged",
+    "projectile": "boule_neige",
+    "range": 20,
+    "min": 5,
+    "cooldown": 2.4,
+    "damage": 3,
+    "speed": 26
+   },
+   {
+    "type": "fly_wander",
+    "speed": 0.5,
+    "height": [
+     3,
+     10
+    ]
+   }
+  ],
+  "model": {
+   "scale": 1,
+   "parts": [
+    {
+     "id": "corps",
+     "size": [
+      12,
+      7,
+      10
+     ],
+     "pos": [
+      -6,
+      5,
+      -5
+     ],
+     "color": "#f4f8ff",
+     "color2": "#dce6f4",
+     "role": "pulse",
+     "eyes": "#3a6ad8"
+    },
+    {
+     "id": "bouffee_l",
+     "size": [
+      5,
+      5,
+      6
+     ],
+     "pos": [
+      -10,
+      6,
+      -3
+     ],
+     "color": "#eef4fc",
+     "role": "float"
+    },
+    {
+     "id": "bouffee_r",
+     "size": [
+      5,
+      5,
+      6
+     ],
+     "pos": [
+      5,
+      6,
+      -3
+     ],
+     "color": "#eef4fc",
+     "role": "float"
+    },
+    {
+     "id": "bouffee_h",
+     "size": [
+      7,
+      4,
+      7
+     ],
+     "pos": [
+      -3.5,
+      11,
+      -3.5
+     ],
+     "color": "#ffffff",
+     "role": "pulse"
+    }
+   ]
+  },
+  "movement": "fly",
+  "gravity": 0,
+  "loot": [
+   {
+    "item": "nuage_azur",
+    "count": [
+     0,
+     2
+    ]
+   },
+   {
+    "item": "boule_neige",
+    "count": [
+     1,
+     3
+    ]
+   }
+  ],
+  "spawn": [
+   {
+    "dimension": "celeste",
+    "where": "air",
+    "time": "any",
+    "light": [
+     0,
+     15
+    ],
+    "weight": 4,
+    "group": [
+     1,
+     2
+    ]
+   }
+  ]
  }
 ]

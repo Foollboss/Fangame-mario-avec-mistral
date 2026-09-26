@@ -5,7 +5,8 @@ Tout le contenu (noms, créatures, objets, structures, dimensions, textures, son
 aucune ressource n'est copiée, tout est généré par le code ou décrit dans des fichiers de données.
 
 Progression : **Découverte → Ressources → Outils → Construction → Exploration → Combat → Technologie → Fin de partie**,
-à travers trois dimensions : les **Terres d'Aube** (surface), l'**Abîme cendré** (monde hostile) et les **Cimes astrales** (monde final).
+à travers quatre dimensions : les **Terres d'Aube** (surface), l'**Abîme cendré** (monde hostile), les **Cimes astrales** (monde final)
+et les **Îles célestes** (îles flottantes au-dessus d'une mer de nuages, accessibles à tout moment).
 
 ---
 
@@ -31,6 +32,22 @@ monde en cours est sauvegardé à la fermeture (ou quand l'appli Android passe e
 ne sont pas versionnés (trop lourds) : ils sont dans `launcher/dist/`, `desktop/dist/` et
 `android/app/build/outputs/apk/release/`. Les exécutables ne sont pas signés : Windows SmartScreen peut demander
 **Informations complémentaires → Exécuter quand même** ; sur Android, autoriser l'installation d'applis inconnues.
+
+## Les Îles célestes
+
+Une dimension lumineuse d'îles flottantes au-dessus d'une mer de nuages, accessible dès que l'on a de la lumirite.
+
+1. **Pierres d'aurore** (×4) : calcaire en croix autour d'un éclat de lumirite (atelier ou inventaire 3×3).
+2. **Cadre** : comme le portail de l'Abîme, un rectangle de pierres d'aurore (intérieur de 2×3 à 21×21 ; les coins
+   sont facultatifs), soit 10 pierres pour le plus petit.
+3. **Plume d'azur** : plume + éclat de lumirite + fiole ; l'utiliser sur le bas de l'intérieur du cadre l'allume.
+4. Rester dans le voile bleu : on arrive sur une île, près d'un portail de retour construit automatiquement.
+
+Sur place : herbe et terre célestes, pierre céleste (outils et fourneaux comme la pierre), arbres célestes et chênes
+dorés, **ambre solaire** (minerai ; se mange : régénération ; bon combustible), fleurs d'aurore, **nuages** (aucun dégât
+de chute) et **nuages d'azur** (on rebondit dessus, sauf accroupi), cascades, temple des nuées (coffre, dalles
+d'aurore). Créatures : **Grand-duvet** (grand oiseau, plumes), **Lapinuage**, **Zéphyrin** (nuage hostile qui lance
+des boules de neige, rare). Tomber des îles ramène à la surface, au même endroit, posé au sol sans dégâts.
 
 ## Langues
 
@@ -66,7 +83,7 @@ Autres commandes :
 | `npm run build:html` | version en un seul fichier : `Voxerra.html` |
 | `npm run server -- --monde serveur --graine 1234 --commandes` | serveur multijoueur dédié (port 25590) |
 | `node scripts/e2e.mjs` | parcours automatisé menu → création → jeu → inventaire (captures dans `screenshots/`) |
-| `node scripts/structures.mjs` / `creatures.mjs` / `dimensions.mjs` / `multiplayer.mjs` / `tactile.mjs` | captures de contrôle visuel (le serveur de dév. doit tourner ; `multiplayer.mjs` demande aussi `npm run server`) |
+| `node scripts/structures.mjs` / `creatures.mjs` / `dimensions.mjs` / `celeste.mjs` / `multiplayer.mjs` / `tactile.mjs` | captures de contrôle visuel (le serveur de dév. doit tourner ; `multiplayer.mjs` demande aussi `npm run server`) |
 
 ### Jouer à plusieurs
 
@@ -166,7 +183,7 @@ voxerra/
 │  ├─ registry/            types de contenu, registres blocs/objets, fusion des packs
 │  ├─ data/                contenu de base en JSON (blocs, objets, recettes, créatures, butins, progrès…)
 │  ├─ world/               colonnes, sections, lumière, formes, streaming, constantes
-│  ├─ worldgen/            générateurs des 3 dimensions, biomes, arbres, minerais, structures/
+│  ├─ worldgen/            générateurs des 4 dimensions, biomes, arbres, minerais, structures/
 │  │  └─ structures/       outil de construction, structures de surface, Abîme/Cimes, gabarits de mods
 │  ├─ render/              textures procédurales, atlas, shaders, mailleur, ciel, particules, météo,
 │  │                       modèles d'entités et d'objets, icônes, objet tenu, contour du bloc visé
@@ -241,8 +258,8 @@ Inventaire : clic gauche (prendre, poser, échanger), clic droit (moitié / un s
 Maj + clic (transfert rapide), double-clic (regrouper), touches `1`–`9` (échange avec la barre rapide).
 
 Commandes (si autorisées) : `/aide`, `/donner`, `/tp`, `/temps`, `/meteo`, `/mode`, `/effet`, `/soigner`, `/tuer`,
-`/invoquer`, `/localiser <village|ruines|tour|temple|portail|sanctuaire|observatoire|crypte|mine|donjon|forteresse|citadelle|fleche>`,
-`/dimension <surface|abime|astral>`, `/graine`, `/regle` (alias anglais et espagnols acceptés).
+`/invoquer`, `/localiser <village|ruines|tour|temple|portail|sanctuaire|observatoire|crypte|mine|donjon|forteresse|citadelle|fleche|temple_nuees>`,
+`/dimension <surface|abime|astral|celeste>`, `/graine`, `/regle` (alias anglais et espagnols acceptés).
 Pendant la saisie, des suggestions à toucher (ou `Tab`) complètent la commande et ses arguments (heures, météo, modes,
 objets, créatures, structures…) ; le bouton ➤ ou la touche Entrée du clavier du téléphone envoie. Pour un monde créé
 sans commandes : **Solo → Modifier → Autoriser les commandes**.
@@ -259,15 +276,15 @@ casser/poser, blocs orientés, dalles, escaliers, murets, barrières, portes, vi
 **Génération** (graine déterministe) : 24 biomes de surface (plaines, prairies fleuries, forêts, bouleaux, forêt ancienne,
 jungle, désert, savane, canyons ocre, marécage, taïga, taïga enneigée, toundra, montagnes, pics gelés, océans, océan gelé,
 plages, rivages rocheux, rivières, rivières gelées) dont 2 zones très rares (bosquet de cristal, forêt fongique),
-5 biomes de l'Abîme, 4 des Cimes astrales ; transitions et teintes mélangées ; montagnes avec surplombs, rivières, lacs,
+5 biomes de l'Abîme, 4 des Cimes astrales, 4 des Îles célestes ; transitions et teintes mélangées ; montagnes avec surplombs, rivières, lacs,
 grottes, lave profonde, 8 minerais répartis par profondeur, 18 types d'arbres.
 
-**Structures** (14 types + gabarits de mods) : hameaux générés par règles (routes, maisons à pignon selon le biome,
+**Structures** (15 types + gabarits de mods) : hameaux générés par règles (routes, maisons à pignon selon le biome,
 grandes maisons, forge, champs irrigués, enclos, puits, lampadaires, habitants), ruines (parfois avec cave cachée),
 tours de guet occupées par des pillards, temple des sables à chambre secrète, ruines de portail, sanctuaire moussu
 (autel du boss sylvestre), observatoire (autel astral), crypte oubliée (très rare, meilleur butin),
 mines abandonnées en réseau de galeries, donjons à foyers maudits, forteresse de basalte (Abîme), ruines cendrées,
-citadelle astrale et flèches de cristal (Cimes). 15 tables de butin.
+citadelle astrale et flèches de cristal (Cimes), temple des nuées (Îles célestes). 16 tables de butin.
 
 **Environnement** : cycle jour/nuit, soleil, lune et ses phases, étoiles, planète astrale, nuages, brouillard par biome,
 pluie, orages et éclairs, neige, cendres de l'Abîme, poussière d'étoiles, ambiances sonores par biome et sous terre.
@@ -276,20 +293,21 @@ pluie, orages et éclairs, neige, cendres de l'Abîme, poussière d'étoiles, am
 température corporelle (biome, altitude, nuit, pluie, eau, vêtements chauds, sources de lumière et de chaleur) ; 15 effets de statut ; mort avec tombe
 qui conserve les objets, réapparition au lit ou au point d'apparition ; mode hardcore.
 
-**Ressources, fabrication, inventaire** : 223 blocs (dont 57 variantes), 122 objets, 142 recettes façonnées ou sans forme,
+**Ressources, fabrication, inventaire** : 243 blocs (dont 63 variantes), 124 objets, 146 recettes façonnées ou sans forme,
 17 cuissons, 3 stations (main, atelier, forge runique), fourneaux avec combustible, outils en 6 paliers,
 armes (épées, lames élémentaires, bâtons magiques, arc et flèches), bouclier, 5 panoplies d'armure, élixirs ;
 inventaire complet (grille, barre rapide, piles, glisser-déposer, clics gauche/droit, partage, transfert rapide),
 livre de recettes avec remplissage automatique, inventaire créatif, coffres.
 
-**Créatures** (24 + 1 dans le mod d'exemple) : passives, neutres, hostiles, aquatiques, volantes, grimpeuses,
+**Créatures** (27 + 1 dans le mod d'exemple) : passives, neutres, hostiles, aquatiques, volantes, grimpeuses,
 en groupe ; IA à objectifs (repérer/perdre une cible, patrouille, fuite, nourriture, troupeau, éviter les dangers,
 chercher l'ombre, embuscade, mêlée, tir avec anticipation, piqué, explosion, téléportation) ; recherche de chemin A* ;
 apparition selon lumière, heure, biome, dimension et milieu ; 3 **boss à phases** (Gardien sylvestre, Tyran des braises,
 Veilleur astral) invoqués sur leur autel avec une offrande, barre de vie, invocations, salves, charge, bouclier.
 
 **Dimensions et progression** : portail runique (cadre de pierre runique + étincelle de braise) vers l'Abîme
-(coordonnées ×4), autel astral + clé astrale vers les Cimes (gravité réduite) ; arbre de 37 progrès ;
+(coordonnées ×4), portail d'aurore (même cadre, en pierres d'aurore, allumé à la plume d'azur) vers les Îles célestes,
+autel astral + clé astrale vers les Cimes (gravité réduite) ; arbre de 37 progrès ;
 statistiques ; fin de partie : vaincre le Veilleur astral et obtenir la couronne stellaire.
 
 **Construction et mécanismes** : blocs pleins et décoratifs, verres, tissus de 12 couleurs, lampes, lanternes,
@@ -347,15 +365,16 @@ Aucune image ni aucun son n'est fourni : tout est produit au lancement.
 
 ## Tests
 
-`npm test` exécute 49 tests :
+`npm test` exécute 54 tests :
 
 | Fichier | Couverture |
 |---|---|
-| `worldgen.test.ts` | déterminisme de la graine, graines différentes, socle et terrain, génération rapide des 3 dimensions |
+| `worldgen.test.ts` | déterminisme de la graine, graines différentes, socle et terrain, génération rapide des 4 dimensions |
 | `world.test.ts` | lecture/écriture de blocs, lumière, colonnes, RLE, sérialisation, poser/casser |
 | `save.test.ts` | aller-retour complet (monde modifié, coffre, créature, joueur), colonne corrompue, suppression |
 | `inventory.test.ts` | piles, clics, répartition, transfert rapide, sérialisation |
 | `crafting.test.ts` | recettes façonnées (miroir, décalage), sans forme, stations, cuisson |
+| `celeste.test.ts` | îles, nuages et cascades, allumage du cadre d'aurore, voyage aller-retour avec portail sur une île, rebond, chute vers la surface |
 | `mobs.test.ts` | poursuite et dégâts, chauve-furie à portée de coup, fuite, butin, apparitions nocturnes, mode paisible, phases de boss, sauvegarde |
 | `commands.test.ts` | suggestions de commandes dans les 3 langues, chaque suggestion reconnue, message de refus |
 | `structures.test.ts` | chaque structure localisable, blocs connus, coffres, déterminisme entre colonnes, désactivation |

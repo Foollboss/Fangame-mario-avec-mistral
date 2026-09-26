@@ -392,7 +392,8 @@ export class SkyRenderer {
       }
       (u.uZenith.value as THREE.Color).copy(zen);
       (u.uHorizon.value as THREE.Color).copy(hor);
-      (u.uGround.value as THREE.Color).copy(hor).multiplyScalar(0.75);
+      // Îles célestes : sous les îles, le vide reste un ciel clair
+      (u.uGround.value as THREE.Color).copy(hor).multiplyScalar(s.dim === 'celeste' ? 1.04 : 0.75);
       (u.uSunDir.value as THREE.Vector3).copy(sunDir);
       u.uSunset.value = sunset * (1 - s.rain);
       // soleil / lune

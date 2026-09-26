@@ -165,7 +165,21 @@
   "tissu_bleu": "Blue Cloth",
   "tissu_violet": "Purple Cloth",
   "tissu_rose": "Pink Cloth",
-  "tissu_brun": "Brown Cloth"
+  "tissu_brun": "Brown Cloth",
+  "pierre_aurore": "Dawnstone",
+  "voile_celeste": "Sky Veil",
+  "pierre_celeste": "Skystone",
+  "briques_celestes": "Skystone Bricks",
+  "terre_celeste": "Sky Soil",
+  "herbe_celeste": "Sky Grass",
+  "nuage": "Cloud",
+  "nuage_azur": "Azure Cloud",
+  "bois_celeste": "Skywood Log",
+  "planches_celestes": "Skywood Planks",
+  "feuilles_celestes": "Skywood Leaves",
+  "feuilles_dorees": "Golden Leaves",
+  "minerai_ambre": "Sun Amber Ore",
+  "fleur_aurore": "Dawn Flower"
  },
  "items": {
   "baton": "Stick",
@@ -291,7 +305,9 @@
   "casque_etherium": "Etherium Helmet",
   "plastron_etherium": "Etherium Chestplate",
   "jambieres_etherium": "Etherium Leggings",
-  "bottes_etherium": "Etherium Boots"
+  "bottes_etherium": "Etherium Boots",
+  "plume_azur": "Azure Feather",
+  "ambre_solaire": "Sun Amber"
  },
  "descs": {
   "couronne_stellaire": "Proof of your victory over the Astral Watcher.",
@@ -301,7 +317,8 @@
   "cle_astrale": "Activates an astral altar.",
   "etincelle_braise": "Lights a runestone frame.",
   "elixir_vitalite": "Permanently increases maximum health (+2 hearts, up to 3 times).",
-  "pierre_rappel": "Hold right click: return to your spawn point."
+  "pierre_rappel": "Hold right click: return to your spawn point.",
+  "plume_azur": "Lights a dawnstone frame."
  },
  "creatures": {
   "pelucheon": "Fluffling",
@@ -327,7 +344,10 @@
   "rodeur_vide": "Void Prowler",
   "gardien_sylvestre": "Sylvan Guardian",
   "tyran_braises": "Ember Tyrant",
-  "veilleur_astral": "Astral Watcher"
+  "veilleur_astral": "Astral Watcher",
+  "grand_duvet": "Great Downbird",
+  "lapinuage": "Cloudbunny",
+  "zephyrin": "Zephyrling"
  },
  "phases": {
   "gardien_sylvestre": [
@@ -393,12 +413,17 @@
   "prairies_stellaires": "Stellar Meadows",
   "foret_cristalline": "Crystal Forest",
   "desert_etoiles": "Star Desert",
-  "vide_astral": "Astral Void"
+  "vide_astral": "Astral Void",
+  "prairies_celestes": "Sky Meadows",
+  "bosquet_dore": "Golden Grove",
+  "hautes_iles": "High Isles",
+  "mer_de_nuages": "Sea of Clouds"
  },
  "dimensions": {
   "surface": "Dawnlands",
   "abime": "The Ashen Abyss",
-  "astral": "The Astral Peaks"
+  "astral": "The Astral Peaks",
+  "celeste": "The Sky Isles"
  },
  "structures": {
   "village": "Hamlet",
@@ -414,7 +439,8 @@
   "forteresse": "Basalt Fortress",
   "ruines_cendrees": "Ashen Ruins",
   "citadelle": "Astral Citadel",
-  "fleche": "Crystal Spire"
+  "fleche": "Crystal Spire",
+  "temple_nuees": "Temple of the Clouds"
  },
  "advancements": {
   "premiers_pas": [
@@ -564,6 +590,18 @@
   "cristal": [
    "Prism Shard",
    "Discover a crystal grove"
+  ],
+  "portail_celeste": [
+   "Gate of Clouds",
+   "Light a dawnstone portal"
+  ],
+  "celeste": [
+   "Higher than the Clouds",
+   "Enter the Sky Isles"
+  ],
+  "ambre": [
+   "A Sun in Your Pocket",
+   "Obtain sun amber"
   ]
  }
 }

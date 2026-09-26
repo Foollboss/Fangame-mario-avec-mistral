@@ -2501,5 +2501,234 @@
    "offering": "oeil_neant",
    "creature": "veilleur_astral"
   }
+ },
+ {
+  "id": "pierre_aurore",
+  "name": "Pierre d'aurore",
+  "hardness": 10,
+  "level": 3,
+  "tool": "pickaxe",
+  "sound": "stone",
+  "light": 6,
+  "color": "#e8dcb0",
+  "tags": [
+   "portal_frame"
+  ]
+ },
+ {
+  "id": "voile_celeste",
+  "name": "Voile céleste",
+  "shape": "portal",
+  "anim": "portal",
+  "light": 12,
+  "hardness": -1,
+  "solid": false,
+  "drops": "none",
+  "item": false,
+  "color": "#8ac8ff",
+  "tags": [
+   "portal"
+  ],
+  "data": {
+   "portal": "celeste"
+  },
+  "pass": "translucent"
+ },
+ {
+  "id": "pierre_celeste",
+  "name": "Pierre céleste",
+  "hardness": 1.5,
+  "color": "#d6dbe6",
+  "tags": [
+   "stone",
+   "cobble"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "briques_celestes",
+  "name": "Briques célestes",
+  "hardness": 2,
+  "color": "#c8cedc",
+  "variants": [
+   "slab",
+   "stairs",
+   "wall"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "terre_celeste",
+  "name": "Terre céleste",
+  "hardness": 0.5,
+  "tool": "shovel",
+  "sound": "dirt",
+  "color": "#a89c86",
+  "tags": [
+   "soil"
+  ]
+ },
+ {
+  "id": "herbe_celeste",
+  "name": "Herbe céleste",
+  "tex": {
+   "top": "herbe_dessus",
+   "bottom": "terre_celeste",
+   "side": "herbe_celeste_cote"
+  },
+  "hardness": 0.6,
+  "tool": "shovel",
+  "sound": "grass",
+  "drops": "terre_celeste",
+  "tint": "grass",
+  "color": "#8ad8a0",
+  "tags": [
+   "soil",
+   "grass"
+  ],
+  "tick": {
+   "type": "spread",
+   "into": "terre_celeste"
+  }
+ },
+ {
+  "id": "nuage",
+  "name": "Nuage",
+  "hardness": 0.3,
+  "sound": "snow",
+  "color": "#f4f8ff",
+  "tags": [
+   "cloud"
+  ],
+  "pass": "translucent"
+ },
+ {
+  "id": "nuage_azur",
+  "name": "Nuage d'azur",
+  "hardness": 0.3,
+  "sound": "snow",
+  "color": "#8ac8ff",
+  "tags": [
+   "cloud"
+  ],
+  "pass": "translucent",
+  "bounce": 15
+ },
+ {
+  "id": "bois_celeste",
+  "name": "Bois céleste",
+  "tex": {
+   "top": "bois_celeste_dessus",
+   "bottom": "bois_celeste_dessus",
+   "side": "bois_celeste"
+  },
+  "hardness": 2,
+  "tool": "axe",
+  "sound": "wood",
+  "color": "#7e8470",
+  "tags": [
+   "log"
+  ],
+  "flammable": true
+ },
+ {
+  "id": "planches_celestes",
+  "name": "Planches célestes",
+  "hardness": 2,
+  "tool": "axe",
+  "sound": "wood",
+  "color": "#c8c4a8",
+  "tags": [
+   "planks"
+  ],
+  "variants": [
+   "slab",
+   "stairs",
+   "fence"
+  ],
+  "flammable": true
+ },
+ {
+  "id": "feuilles_celestes",
+  "name": "Feuilles célestes",
+  "hardness": 0.2,
+  "tool": "shears",
+  "sound": "plant",
+  "anim": "sway",
+  "drops": [
+   {
+    "item": "baton",
+    "chance": 0.04
+   }
+  ],
+  "color": "#8ad8a8",
+  "tags": [
+   "leaves"
+  ],
+  "cullSelf": false,
+  "replaceable": false,
+  "flammable": true,
+  "pass": "cutout"
+ },
+ {
+  "id": "feuilles_dorees",
+  "name": "Feuilles dorées",
+  "hardness": 0.2,
+  "tool": "shears",
+  "sound": "plant",
+  "anim": "sway",
+  "light": 4,
+  "drops": [
+   {
+    "item": "ambre_solaire",
+    "chance": 0.03
+   }
+  ],
+  "color": "#f0c850",
+  "tags": [
+   "leaves"
+  ],
+  "cullSelf": false,
+  "replaceable": false,
+  "flammable": true,
+  "pass": "cutout"
+ },
+ {
+  "id": "minerai_ambre",
+  "name": "Minerai d'ambre solaire",
+  "hardness": 3,
+  "level": 1,
+  "light": 4,
+  "color": "#f0a830",
+  "drops": [
+   {
+    "item": "ambre_solaire",
+    "count": [
+     1,
+     3
+    ]
+   }
+  ],
+  "tags": [
+   "ore"
+  ],
+  "tool": "pickaxe",
+  "sound": "stone"
+ },
+ {
+  "id": "fleur_aurore",
+  "name": "Fleur d'aurore",
+  "shape": "cross",
+  "anim": "sway",
+  "hardness": 0,
+  "sound": "plant",
+  "color": "#ffd870",
+  "tags": [
+   "plant",
+   "flower"
+  ],
+  "light": 5
  }
 ]

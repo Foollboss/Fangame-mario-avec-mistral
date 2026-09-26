@@ -2011,5 +2011,57 @@
    "item": "graines",
    "count": 1
   }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   " C ",
+   "CLC",
+   " C "
+  ],
+  "key": {
+   "C": "calcaire",
+   "L": "eclat_lumirite"
+  },
+  "result": {
+   "item": "pierre_aurore",
+   "count": 4
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "plume",
+   "eclat_lumirite",
+   "fiole"
+  ],
+  "result": {
+   "item": "plume_azur",
+   "count": 1
+  }
+ },
+ {
+  "type": "shapeless",
+  "ingredients": [
+   "bois_celeste"
+  ],
+  "result": {
+   "item": "planches_celestes",
+   "count": 4
+  }
+ },
+ {
+  "type": "shaped",
+  "pattern": [
+   "XX",
+   "XX"
+  ],
+  "key": {
+   "X": "pierre_celeste"
+  },
+  "result": {
+   "item": "briques_celestes",
+   "count": 4
+  }
  }
 ]

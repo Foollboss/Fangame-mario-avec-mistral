@@ -3,6 +3,7 @@
  * corporelle, dangers de l'environnement (lave, cactus, magma, vide, suffocation).
  */
 import type { Sim } from './sim';
+import { tr } from '../i18n/i18n';
 import type { Player } from '../entity/player';
 import { BIOMES } from '../worldgen/biomes';
 import { clamp } from '../engine/math';
@@ -29,7 +30,14 @@ export function tickSurvival(sim: Sim, p: Player, dt: number): void {
       if (!p.hasEffect('resistance_feu')) p.addEffect('brulure', 6);
     }
     const voidY = p.dim === 'astral' ? -16 : p.dim === 'abime' ? -8 : -40;
-    if (p.y < voidY) p.damage(4, { type: 'void', ignoreArmor: true });
+    if (p.dim === 'celeste' && p.y < -12) {
+      // tomber des Îles célestes ramène à la surface, sous les mêmes coordonnées
+      p.body.vy = 0;
+      p.body.fallDist = 0;
+      p.addEffect('chute_lente', 10);
+      sim.emit({ t: 'msg', text: tr('Vous tombez des Îles célestes…'), color: '#9ad4ff', to: p.id });
+      sim.requestTravel(p, 'surface', { x: p.x, y: 200, z: p.z }, true);
+    } else if (p.y < voidY) p.damage(4, { type: 'void', ignoreArmor: true });
     // contact : cactus, croûte de magma
     const x0 = Math.floor(b.x - b.hw - 0.05),
       x1 = Math.floor(b.x + b.hw + 0.05);
@@ -141,6 +149,7 @@ export function applyFall(sim: Sim, p: Player, dist: number): void {
   const w = sim.world(p.dim);
   const under = w.getId(Math.floor(p.x), Math.floor(p.y - 0.2), Math.floor(p.z));
   const t = w.content.blocks;
+  if (t.hasTag(under, 'cloud')) return; // les nuages amortissent tout
   let d = dist - 3.2;
   if (t.hasTag(under, 'leaves') || under === t.tryNum('neige') || under === t.tryNum('neige_poudreuse')) d *= 0.5;
   if (under === t.tryNum('mousse')) d *= 0.6;

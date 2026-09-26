@@ -18,7 +18,7 @@ import { FurnaceSystem } from './furnace';
 import type { WorldMeta } from '../save/storage';
 import type { Entity } from '../entity/entity';
 import { DEFAULT_RULES, type GameRules } from '../save/storage';
-import { checkPortalContact, mapCoords, buildArrivalPortal, buildAstralArrival } from './portals';
+import { checkPortalContact, mapCoords, buildArrivalPortal, buildAstralArrival, portalKind, PORTAL_KINDS } from './portals';
 import { tickPlates } from './mechanisms';
 import type { Mob } from '../entity/mob';
 import type { MobSystem } from './mobs';
@@ -180,7 +180,7 @@ export class Sim {
   }
 
   /** Demande de voyage vers une autre dimension (traité par le client/serveur). */
-  requestTravel(p: Player, dim: string, from: { x: number; y: number; z: number }, exact = false): void {
+  requestTravel(p: Player, dim: string, from: { x: number; y: number; z: number }, exact = false, portal?: string): void {
     if (exact) {
       this.emit({ t: 'dimension', to: p.id, dim, x: from.x, y: from.y, z: from.z, mode: 'exact' });
       return;
@@ -195,15 +195,17 @@ export class Sim {
       this.emit({ t: 'dimension', to: p.id, dim: 'surface', x: back.x, y: back.y, z: back.z, mode: 'exact' });
       return;
     }
+    // sans portail précisé (commande /dimension) : celui de la dimension visitée
+    portal ??= PORTAL_KINDS.find((k) => k.dim === dim || k.dim === p.dim)?.id;
     const m = mapCoords(p.dim, dim, from.x, from.z);
-    const y = dim === 'abime' ? Math.max(40, Math.min(100, from.y)) : Math.max(60, from.y);
-    this.emit({ t: 'dimension', to: p.id, dim, x: m.x, y, z: m.z, mode: 'portal' });
+    const y = dim === 'abime' ? Math.max(40, Math.min(100, from.y)) : dim === 'celeste' ? Math.max(90, Math.min(150, from.y + 30)) : Math.max(60, from.y);
+    this.emit({ t: 'dimension', to: p.id, dim, x: m.x, y, z: m.z, mode: 'portal', portal });
   }
 
   /** Termine un voyage une fois la destination chargée ; renvoie la position finale. */
-  completeTravel(p: Player, dim: string, x: number, y: number, z: number, mode: 'portal' | 'altar' | 'exact'): { x: number; y: number; z: number } {
+  completeTravel(p: Player, dim: string, x: number, y: number, z: number, mode: 'portal' | 'altar' | 'exact', portal?: string): { x: number; y: number; z: number } {
     let pos: { x: number; y: number; z: number };
-    if (mode === 'portal') pos = buildArrivalPortal(this, dim, Math.floor(x), Math.floor(z), Math.floor(y));
+    if (mode === 'portal') pos = buildArrivalPortal(this, dim, Math.floor(x), Math.floor(z), Math.floor(y), portalKind(portal));
     else if (mode === 'altar' && dim === 'astral') pos = buildAstralArrival(this);
     else {
       const w = this.world(dim);

@@ -397,7 +397,8 @@ export function useItem(sim: Sim, p: Player, hit: RayHit | null, liquidHit: RayH
   if (it.tool?.type === 'hoe' && hit.face !== 3) {
     const id = w.getId(hit.x, hit.y, hit.z);
     const tilled = t.tryNum('terre_labouree');
-    if ((id === t.tryNum('terre') || id === t.tryNum('herbe')) && w.getId(hit.x, hit.y + 1, hit.z) === 0) {
+    const soil = [t.tryNum('terre'), t.tryNum('herbe'), t.tryNum('terre_celeste'), t.tryNum('herbe_celeste')];
+    if (soil.includes(id) && w.getId(hit.x, hit.y + 1, hit.z) === 0) {
       w.setBlock(hit.x, hit.y, hit.z, tilled);
       consumeDurability(sim, p, 1);
       sim.emit({ t: 'sound', id: 'pose_dirt', x: hit.x, y: hit.y, z: hit.z });
@@ -406,10 +407,11 @@ export function useItem(sim: Sim, p: Player, hit: RayHit | null, liquidHit: RayH
     return null;
   }
   if (it.use === 'ignite') {
-    if (tryIgnitePortal(sim, w, tx, ty, tz)) {
+    const kind = (it.useData?.portal as string | undefined) ?? 'abime';
+    if (tryIgnitePortal(sim, w, tx, ty, tz, kind)) {
       consumeDurability(sim, p, 1);
       sim.emit({ t: 'sound', id: 'portail_allume', x: tx, y: ty, z: tz });
-      sim.trigger(p, 'portal_lit', { dim: 'abime' });
+      sim.trigger(p, 'portal_lit', { dim: kind });
       return 'done';
     }
     return null;

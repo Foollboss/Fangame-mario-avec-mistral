@@ -116,6 +116,16 @@ export function stepMovement(world: World, b: Body, yaw: number, intent: MoveInt
   const y0 = b.y;
   moveBody(world, b, dx, dy, dz, intent.sneak || b.onGround || wasGround ? p.stepHeight : 0);
   if (!intent.flying && !b.onGround && b.y < y0 && !b.inWater && !b.onLadder) b.fallDist += y0 - b.y;
+  // nuage d'azur : on rebondit (sauf accroupi), sans dégâts de chute
+  if (b.onGround && !intent.flying && !intent.sneak) {
+    const bounce = world.content.blocks.bounce[world.getId(Math.floor(b.x), Math.floor(b.y - 0.05), Math.floor(b.z))];
+    if (bounce > 0) {
+      b.vy = Math.max(bounce, -impactVy * 0.8);
+      b.onGround = false;
+      b.fallDist = 0;
+      return 0;
+    }
+  }
   if (b.onGround && !wasGround) return impactVy;
   return 0;
 }

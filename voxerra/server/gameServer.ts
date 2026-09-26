@@ -403,9 +403,9 @@ export class GameServer {
     this.send(c, { t: 'inv', data: p.inventory.serializeAll() });
   }
 
-  private changeDimension(c: Client, p: Player, dim: string, x: number, y: number, z: number, mode: 'portal' | 'altar' | 'exact'): void {
+  private changeDimension(c: Client, p: Player, dim: string, x: number, y: number, z: number, mode: 'portal' | 'altar' | 'exact', portal?: string): void {
     this.loadAround(dim, x, z, 2);
-    const pos = this.sim.completeTravel(p, dim, x, y, z, mode);
+    const pos = this.sim.completeTravel(p, dim, x, y, z, mode, portal);
     this.loadAround(dim, pos.x, pos.z, 1);
     this.send(c, { t: 'pos', dim, x: pos.x, y: pos.y, z: pos.z, mode: 'dim' });
   }
@@ -414,7 +414,7 @@ export class GameServer {
   private onEvent(e: SimEvent): void {
     if (e.t === 'dimension') {
       const c = this.clients.find((o) => o.player?.id === e.to);
-      if (c?.player) this.changeDimension(c, c.player, e.dim, e.x, e.y, e.z, e.mode);
+      if (c?.player) this.changeDimension(c, c.player, e.dim, e.x, e.y, e.z, e.mode, e.portal);
       return;
     }
     const to = eventTarget(e);
@@ -662,7 +662,7 @@ export class GameServer {
         for (const c of this.clients) if (c.player && c.player.dim === dim && c.sent.has(k)) this.send(c, this.blockMsg(dim, x, y, z, cell));
       });
     };
-    for (const d of ['surface', 'abime', 'astral']) hook(d);
+    for (const d of ['surface', 'abime', 'astral', 'celeste']) hook(d);
   }
 
   /** Sauvegarde du monde (métadonnées, colonnes modifiées, joueurs). */

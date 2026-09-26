@@ -43,6 +43,8 @@ export class AdvancementTracker implements SimModule {
       }
       case 'dimension':
         return t.dim === data.dim;
+      case 'portal_lit':
+        return !t.dim || t.dim === data.dim;
       case 'biome':
         return t.biome === data.biome;
       default:

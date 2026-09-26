@@ -1,5 +1,5 @@
 /**
- * Définitions des biomes des trois dimensions (données pures).
+ * Définitions des biomes des quatre dimensions (données pures).
  * L'indice dans BIOMES est stocké dans chaque colonne (Uint8).
  */
 export type Precip = 'rain' | 'snow' | 'none' | 'ash' | 'stardust';
@@ -12,7 +12,7 @@ export interface WeightedStr {
 export interface BiomeDef {
   id: string;
   name: string;
-  dim: 'surface' | 'abime' | 'astral';
+  dim: 'surface' | 'abime' | 'astral' | 'celeste';
   top: string;
   filler: string;
   fillerDepth?: number;
@@ -74,6 +74,11 @@ export const BIOMES: BiomeDef[] = [
   B({ id: 'foret_cristalline', name: 'Forêt cristalline', dim: 'astral', top: 'herbe_stellaire', filler: 'pierre_astrale', grass: '#3a6a8a', foliage: '#b08aff', water: '#6a8aff', fog: '#201440', sky: '#0a061e', temp: -0.2, precip: 'stardust', trees: [{ id: 'stellaire', w: 2 }, { id: 'grand_stellaire', w: 1 }], treeChance: 0.05, plants: [{ id: 'cristal_astral', w: 1 }, { id: 'fleur_nebuleuse', w: 2 }], plantChance: 0.06, music: 'astral' }),
   B({ id: 'desert_etoiles', name: "Désert d'étoiles", dim: 'astral', top: 'poussiere_etoile', filler: 'poussiere_etoile', fillerDepth: 4, grass: '#ccc4e8', foliage: '#ccc4e8', water: '#6a8aff', fog: '#241c40', sky: '#0a0820', temp: 0, precip: 'stardust', plants: [{ id: 'cristal_astral', w: 1 }], plantChance: 0.01, music: 'astral' }),
   B({ id: 'vide_astral', name: 'Vide astral', dim: 'astral', top: 'pierre_astrale', filler: 'pierre_astrale', grass: '#3a6a8a', foliage: '#7a9aff', water: '#6a8aff', fog: '#0c0820', sky: '#030210', temp: -0.3, precip: 'none', music: 'astral' }),
+  // --- Îles célestes (ajoutés à la fin : les indices déjà sauvegardés ne bougent pas)
+  B({ id: 'prairies_celestes', name: 'Prairies célestes', dim: 'celeste', top: 'herbe_celeste', filler: 'terre_celeste', grass: '#86dca0', foliage: '#8ad8a8', water: '#5ab8ff', fog: '#d4ecff', sky: '#5aaefc', temp: 0.25, precip: 'none', trees: [{ id: 'celeste', w: 3 }, { id: 'dore', w: 1 }], treeChance: 0.018, plants: [{ id: 'herbes_hautes', w: 6 }, { id: 'fleur_aurore', w: 2 }], plantChance: 0.12 }),
+  B({ id: 'bosquet_dore', name: 'Bosquet doré', dim: 'celeste', top: 'herbe_celeste', filler: 'terre_celeste', grass: '#a6dc86', foliage: '#e8c850', water: '#5ab8ff', fog: '#fff0d0', sky: '#62b2fc', temp: 0.35, precip: 'none', trees: [{ id: 'dore', w: 3 }, { id: 'celeste', w: 1 }], treeChance: 0.05, plants: [{ id: 'fleur_aurore', w: 3 }, { id: 'herbes_hautes', w: 3 }], plantChance: 0.1 }),
+  B({ id: 'hautes_iles', name: 'Hautes îles', dim: 'celeste', top: 'pierre_celeste', filler: 'pierre_celeste', grass: '#96d8ae', foliage: '#8ad8a8', water: '#5ab8ff', fog: '#dcecff', sky: '#4ea4f8', temp: 0.05, precip: 'none', trees: [{ id: 'celeste', w: 1 }], treeChance: 0.006 }),
+  B({ id: 'mer_de_nuages', name: 'Mer de nuages', dim: 'celeste', top: 'nuage', filler: 'nuage', grass: '#86dca0', foliage: '#8ad8a8', water: '#5ab8ff', fog: '#e6f2ff', sky: '#5aaefc', temp: 0.15, precip: 'none' }),
 ];
 
 export const BIOME_INDEX = new Map(BIOMES.map((b, i) => [b.id, i]));

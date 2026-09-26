@@ -24,7 +24,7 @@ const HELP = [
   tr('/effet <id> [secondes] [niveau] — effet de statut'),
   tr('/invoquer <créature> — faire apparaître une créature'),
   tr('/localiser <structure> — structure la plus proche'),
-  tr('/dimension <surface|abime|astral> — changer de dimension'),
+  tr('/dimension <surface|abime|astral|celeste> — changer de dimension'),
   tr('/soigner — rendre santé et énergie'),
   tr('/tuer — mourir'),
   tr('/graine — graine du monde'),
@@ -151,7 +151,7 @@ export function runCommand(host: CommandHost, p: Player, line: string): { ok: bo
     case 'locate':
     case 'localizar': {
       const type = parts[0];
-      if (!type || !host.locate) return { ok: false, out: [t('Usage : /localiser <village|ruines|tour|temple|mine|donjon|sanctuaire|observatoire|crypte|forteresse|citadelle|fleche>')] };
+      if (!type || !host.locate) return { ok: false, out: [t('Usage : /localiser <village|ruines|tour|temple|mine|donjon|sanctuaire|observatoire|crypte|forteresse|citadelle|fleche|temple_nuees>')] };
       const r = host.locate(type, p.dim, p.x, p.z);
       if (!r) return { ok: false, out: [t('Aucune structure « {type} » trouvée à proximité.', { type })] };
       return { ok: true, out: [t('{type} le plus proche : x={x}, z={z} ({d} blocs)', { type: r.name ?? type, x: r.x, z: r.z, d: Math.round(Math.hypot(r.x - p.x, r.z - p.z)) })] };
@@ -159,7 +159,7 @@ export function runCommand(host: CommandHost, p: Player, line: string): { ok: bo
     case 'dimension':
     case 'dim': {
       const d = (parts[0] ?? '').toLowerCase();
-      if (!['surface', 'abime', 'astral'].includes(d)) return { ok: false, out: [t('Usage : /dimension <surface|abime|astral>')] };
+      if (!['surface', 'abime', 'astral', 'celeste'].includes(d)) return { ok: false, out: [t('Usage : /dimension <surface|abime|astral|celeste>')] };
       if (host.travel) host.travel(p, d);
       else sim.requestTravel(p, d, { x: p.x, y: p.y, z: p.z });
       return { ok: true, out: [t('Voyage vers {dim}…', { dim: d })] };
@@ -196,7 +196,7 @@ const ARG_WORDS: Record<string, Record<Lang, string[]>> = {
   meteo: { fr: ['clair', 'pluie', 'orage'], en: ['clear', 'rain', 'thunder'], es: ['despejado', 'lluvia', 'tormenta'] },
   mode: { fr: ['survie', 'creatif', 'spectateur'], en: ['survival', 'creative', 'spectator'], es: ['supervivencia', 'creativo', 'espectador'] },
 };
-const STRUCTURES = ['village', 'ruines', 'tour', 'temple', 'portail', 'sanctuaire', 'observatoire', 'crypte', 'mine', 'donjon', 'forteresse', 'citadelle', 'fleche'];
+const STRUCTURES = ['village', 'ruines', 'tour', 'temple', 'portail', 'sanctuaire', 'observatoire', 'crypte', 'mine', 'donjon', 'forteresse', 'citadelle', 'fleche', 'temple_nuees'];
 const MAX_SUGGESTIONS = 30;
 
 /**
@@ -222,7 +222,7 @@ export function completeCommand(sim: Sim, line: string, lang: Lang): string[] {
     case 'mode':
       return arg === 1 ? pick(ARG_WORDS[cmd][lang]) : [];
     case 'dimension':
-      return arg === 1 ? pick(['surface', 'abime', 'astral']) : [];
+      return arg === 1 ? pick(['surface', 'abime', 'astral', 'celeste']) : [];
     case 'localiser':
       return arg === 1 ? pick(STRUCTURES) : [];
     case 'invoquer':

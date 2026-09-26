@@ -268,6 +268,9 @@ const TREES: Record<string, TreeFn> = {
     blob(w, F, x, y + h, z, 2.7, 2.2, 2.7, r, 0.2);
     trunk(w, L, x, y, y + h - 1, z);
   },
+  // Îles célestes : arbre céleste (feuillage menthe) et chêne doré
+  celeste: roundTree('bois_celeste', 'feuilles_celestes', 5, 7),
+  dore: bigTree('bois_celeste', 'feuilles_dorees', 7, 10),
   grand_stellaire: (w, b, r, x, y, z) => {
     const L = b.num('bois_stellaire'),
       F = b.num('feuilles_stellaires');
