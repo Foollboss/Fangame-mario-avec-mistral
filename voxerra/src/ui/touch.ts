@@ -1,6 +1,6 @@
 /**
  * Contrôles tactiles : joystick de déplacement (à gauche, sprint en bout de
- * course), regard en glissant le doigt sur l'écran, appui bref = utiliser /
+ * course ou avec le bouton de course à côté), regard en glissant le doigt sur l'écran, appui bref = utiliser /
  * poser (ou frapper la créature hostile visée), appui long = casser / attaquer, boutons (saut, accroupi, attaque,
  * utilisation, inventaire, discussion, lâcher, vue, pause) et sélection de
  * l'emplacement en touchant la barre rapide.
@@ -41,6 +41,11 @@ export class TouchControls {
   private look: LookTouch | null = null;
   private sneakBtn: HTMLElement;
   private sneakOn = false;
+  private sprintBtn: HTMLElement;
+  /** Course activée par le bouton (reste active jusqu'au prochain appui). */
+  private sprintOn = false;
+  /** Course par le joystick poussé à fond vers l'avant. */
+  private joySprint = false;
   private buttonTouches = new Map<number, Action>();
 
   constructor(
@@ -94,6 +99,14 @@ export class TouchControls {
       this.sneakBtn.classList.toggle('on', this.sneakOn);
       this.input.setVirtual('sneak', this.sneakOn);
     }, { passive: false });
+    this.sprintBtn = h('div', { class: 'touch-btn touch-sprint', title: t('Courir'), 'aria-label': t('Courir'), role: 'button' }, '🏃');
+    this.sprintBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.sprintOn = !this.sprintOn;
+      this.sprintBtn.classList.toggle('on', this.sprintOn);
+      this.syncSprint();
+    }, { passive: false });
     const actions = h(
       'div',
       { class: 'touch-actions' },
@@ -112,7 +125,7 @@ export class TouchControls {
       btn('small', '👁', t('Changer de vue'), 'perspective', 'tap'),
       btn('small', '⏸', t('Menu du jeu'), 'pause', 'tap'),
     );
-    this.el = h('div', { class: 'touch-ui' }, lookArea, this.joyBase, actions, top);
+    this.el = h('div', { class: 'touch-ui' }, lookArea, this.joyBase, this.sprintBtn, actions, top);
     this.el.hidden = true;
 
     // Joystick
@@ -163,7 +176,8 @@ export class TouchControls {
           this.joyKnob.style.transform = '';
           this.joyKnob.classList.remove('sprint');
           this.input.touchMoveX = this.input.touchMoveY = 0;
-          this.input.setVirtual('sprint', false);
+          this.joySprint = false;
+          this.syncSprint();
         } else if (this.look && tt.identifier === this.look.id) {
           const l = this.look;
           this.look = null;
@@ -194,9 +208,13 @@ export class TouchControls {
     this.input.touchMoveX = mag < 0.12 ? 0 : nx;
     this.input.touchMoveY = mag < 0.12 ? 0 : ny;
     // sprint en poussant le joystick au bout, vers l'avant
-    const sprint = mag > 0.92 && ny < -0.6;
-    this.joyKnob.classList.toggle('sprint', sprint);
-    this.input.setVirtual('sprint', sprint);
+    this.joySprint = mag > 0.92 && ny < -0.6;
+    this.joyKnob.classList.toggle('sprint', this.joySprint || this.sprintOn);
+    this.syncSprint();
+  }
+
+  private syncSprint(): void {
+    this.input.setVirtual('sprint', this.sprintOn || this.joySprint);
   }
 
   private hotbarSlotAt(x: number, y: number): number {
@@ -222,6 +240,7 @@ export class TouchControls {
     this.look = null;
     this.sneakOn = false;
     this.sneakBtn.classList.remove('on');
+    this.joySprint = false;
     this.joyKnob.style.transform = '';
     this.input.releaseVirtual();
   }
@@ -241,6 +260,8 @@ export class TouchControls {
     if (show) {
       this.visible = true;
       this.el.hidden = false;
+      // le bouton de course reste actif après un menu
+      this.syncSprint();
     } else this.hide();
   }
 }

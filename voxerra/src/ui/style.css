@@ -284,6 +284,13 @@ body.touch-mode canvas#game { touch-action: none; }
   pointer-events: none;
 }
 .touch-knob.sprint { background: rgba(255, 214, 90, 0.8); }
+/* bouton de course : à droite du joystick, aligné sur son haut */
+.touch-btn.touch-sprint {
+  position: absolute;
+  left: calc(22px + min(34vmin, 170px) + min(3vmin, 14px) + env(safe-area-inset-left, 0px));
+  bottom: calc(22px + min(34vmin, 170px) - min(15vmin, 72px) + env(safe-area-inset-bottom, 0px));
+}
+.touch-btn.touch-sprint.on { background: rgba(255, 214, 90, 0.55); border-color: #ffe080; }
 .touch-actions {
   position: absolute;
   right: calc(18px + env(safe-area-inset-right, 0px));

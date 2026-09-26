@@ -496,7 +496,7 @@ export function controlsScreen(app: AppApi, onClose?: () => void): Screen {
     { class: 'screen dim' },
     h('div', { class: 'title' }, t('Commandes')),
     touchToggle(app),
-    h('div', { class: 'hint', style: { margin: '4px 0 12px', maxWidth: '620px', textAlign: 'center' } }, t('Joystick à gauche pour se déplacer (poussé à fond vers l’avant : courir), boutons à droite, glissez sur l’écran pour regarder, touchez pour utiliser / poser, appui long pour casser.')),
+    h('div', { class: 'hint', style: { margin: '4px 0 12px', maxWidth: '620px', textAlign: 'center' } }, t('Joystick à gauche pour se déplacer, bouton 🏃 à côté pour courir (un appui : court, un autre : marche), boutons à droite, glissez sur l’écran pour regarder, touchez pour utiliser / poser ou frapper, appui long pour casser.')),
     h('div', { class: 'hint', style: { marginBottom: '8px' } }, t('Cliquez sur une touche puis appuyez sur la nouvelle. Manette compatible (Xbox/PlayStation standard).')),
     list,
     h('div', { style: { height: '12px' } }),

@@ -206,7 +206,7 @@ Les contrôles tactiles s'activent tout seuls sur un appareil sans souris, et se
 | Action | Geste |
 |---|---|
 | Se déplacer | joystick en bas à gauche |
-| Sprinter | pousser le joystick à fond vers l'avant (le bouton devient jaune) |
+| Sprinter | bouton 🏃 à droite du joystick : un appui pour courir, un autre pour marcher (ou pousser le joystick à fond vers l'avant) |
 | Regarder | glisser le doigt n'importe où ailleurs sur l'écran |
 | Utiliser / poser / manger | toucher brièvement l'écran, ou maintenir ✋ |
 | Frapper une créature hostile | toucher brièvement l'écran en la visant (aide à la visée : pas besoin d'être pile dessus) |

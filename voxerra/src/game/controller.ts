@@ -185,6 +185,14 @@ export class PlayerController {
       }
       // écran tactile : aide à la visée, la créature la plus proche du réticule dans un cône de ~12°
       if (!this.targetEntity && this.host.input.touchEnabled) this.targetEntity = this.aimAssist(sim, eye, d, reach - 1.5, this.target?.dist ?? Infinity);
+      // …et garde la cible un court instant quand elle sort du cône (créatures rapides)
+      if (this.host.input.touchEnabled) {
+        this.stickyTime -= dt;
+        if (this.targetEntity) {
+          this.stickyFoe = this.targetEntity;
+          this.stickyTime = 0.3;
+        } else if (this.stickyFoe && this.stickyTime > 0 && !this.stickyFoe.dead && this.stillAimable(this.stickyFoe, eye, d, reach - 1.2)) this.targetEntity = this.stickyFoe;
+      }
       if (this.targetEntity) this.target = null;
     }
     this.swing = Math.max(0, this.swing - dt * 3.5);
@@ -213,6 +221,19 @@ export class PlayerController {
     if (!id) return;
     const snd = w.content.blocks.get(id).sound;
     this.host.playSound('pas_' + snd, p.x, p.y, p.z, vol);
+  }
+
+  private stickyFoe: LivingEntity | null = null;
+  private stickyTime = 0;
+
+  /** La créature est encore à portée et à moins de ~25° du réticule. */
+  private stillAimable(e: LivingEntity, eye: { x: number; y: number; z: number }, d: { x: number; y: number; z: number }, reach: number): boolean {
+    if (e.removed || e.dim !== this.p.dim) return false;
+    const cx = e.x - eye.x,
+      cy = e.y + e.body.h / 2 - eye.y,
+      cz = e.z - eye.z;
+    const len = Math.hypot(cx, cy, cz);
+    return len > 0.01 && len - e.body.hw <= reach && (cx * d.x + cy * d.y + cz * d.z) / len > Math.cos(0.45);
   }
 
   private aimAssist(sim: Sim, eye: { x: number; y: number; z: number }, d: { x: number; y: number; z: number }, reach: number, blockDist: number): LivingEntity | null {

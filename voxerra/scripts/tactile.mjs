@@ -54,6 +54,7 @@ async function newWorld(page) {
         w.setBlock(x0 + x, y0 - 1, z0 + z, floor);
         for (let y = 0; y <= 5; y++) w.setBlock(x0 + x, y0 + y, z0 + z, 0);
       }
+    window.__plat = { x: x0 + 0.5, y: y0, z: z0 + 0.5 };
   });
   await page.waitForTimeout(500);
 
@@ -71,6 +72,38 @@ async function newWorld(page) {
   const p1 = await page.evaluate(() => ({ x: window.voxerra.game.player.x, z: window.voxerra.game.player.z }));
   const moved = Math.hypot(p1.x - p0.x, p1.z - p0.z);
   check(moved > 1, `le joystick fait avancer le joueur (${moved.toFixed(2)} blocs)`);
+
+  // bouton de course : un appui active la course même sans pousser le joystick à fond
+  const toCenter = () => page.evaluate(() => {
+    const p = window.voxerra.game.player,
+      c = window.__plat;
+    p.setPos(c.x, c.y, c.z);
+    p.body.vx = p.body.vz = 0;
+    p.energy = 20;
+  });
+  const sprintBox = await page.locator('.touch-btn[aria-label="Courir"]').boundingBox();
+  const tapSprint = async (id) => {
+    await touch('touchStart', [[sprintBox.x + sprintBox.width / 2, sprintBox.y + sprintBox.height / 2, id]]);
+    await touch('touchEnd', []);
+  };
+  const halfForward = async (id) => {
+    await touch('touchStart', [[cx, cy, id]]);
+    await touch('touchMove', [[cx, cy - joy.height * 0.25, id]]);
+    const sprinting = await page.waitForFunction(() => window.voxerra.game.player.sprinting, null, { timeout: 1500 }).then(() => true, () => false);
+    await touch('touchEnd', []);
+    return sprinting;
+  };
+  await toCenter();
+  const walkOnly = await halfForward(30);
+  await tapSprint(31);
+  await toCenter();
+  const withBtn = await halfForward(32);
+  const lit = await page.locator('.touch-btn[aria-label="Courir"].on').count();
+  await tapSprint(33);
+  await toCenter();
+  const off = await halfForward(34);
+  check(!walkOnly && withBtn && lit === 1 && !off, `bouton 🏃 : course activée par un appui, coupée par un second (sans bouton ${walkOnly}, avec ${withBtn}, après ${off})`);
+  await toCenter();
 
   // regard : glisser sur la moitié droite de l'écran
   await touch('touchStart', [[560, 150, 2]]);
