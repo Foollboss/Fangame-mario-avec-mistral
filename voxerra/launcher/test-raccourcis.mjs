@@ -78,15 +78,28 @@ for (const [keys, what] of [
   for (const k of keys) xdo('keydown', k);
   await wait(150);
   xdo('click', '5');
-  await wait(250);
+  // la molette est prise en compte à l'image suivante : on attend son effet (au plus 1,5 s)
+  let after = before;
+  for (let i = 0; i < 15 && after === before; i++) {
+    await wait(100);
+    after = await slot();
+  }
   for (const k of [...keys].reverse()) xdo('keyup', k);
   await wait(150);
-  const after = await slot();
   check(after === (before + 1) % 9, `${what} : case ${before} → ${after}`);
 }
 
 // Ctrl+W bref, puis maintenu (répétition de touche) en courant
-const z0 = await pg.evaluate(() => window.voxerra.game.player.z);
+// en l'air (créatif, en vol) : aucun arbre ni relief ne bloque la course
+const pos = () => pg.evaluate(() => [window.voxerra.game.player.x, window.voxerra.game.player.z]);
+await pg.evaluate(() => {
+  const p = window.voxerra.game.player;
+  p.gameMode = 'creatif';
+  p.flying = true;
+  p.setPos(p.x, p.y + 40, p.z);
+});
+await wait(300);
+const p0 = await pos();
 xdo('key', 'ctrl+w');
 await wait(1500);
 check(alive() && (await inGame()), `Ctrl+W ne ferme pas le jeu (boîtes de dialogue : ${dialogs.length})`);
@@ -97,9 +110,10 @@ const sprinting = await pg.evaluate(() => window.voxerra.game.player.sprinting);
 xdo('keyup', 'w');
 xdo('keyup', 'ctrl');
 await wait(800);
-const z1 = await pg.evaluate(() => window.voxerra.game.player.z);
+const p1 = await pos();
+const moved = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
 check(alive() && (await inGame()), `Ctrl+W maintenu : le jeu reste ouvert`);
-check(sprinting === true && Math.abs(z1 - z0) > 3, `… et le joueur court (${Math.abs(z1 - z0).toFixed(1)} blocs, course ${sprinting})`);
+check(sprinting === true && moved > 1, `… et le joueur court (${moved.toFixed(1)} blocs, course ${sprinting})`);
 // Ctrl+R (R = courir aussi) ne recharge pas la page
 const navs = [];
 pg.on('framenavigated', (f) => f === pg.mainFrame() && navs.push(f.url()));

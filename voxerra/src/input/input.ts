@@ -164,12 +164,17 @@ export class InputManager {
       this.pressedCodes.add('Mouse' + e.button);
     });
     window.addEventListener('mouseup', (e) => {
-      this.down.delete('Mouse' + e.button);
-      this.releasedCodes.add('Mouse' + e.button);
+      this.releaseMouse('Mouse' + e.button);
+      this.syncButtons(e);
     });
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     document.addEventListener('pointerlockerror', () => (this.freeLook = true));
+    // verrouillage du pointeur pris ou perdu (Échap, autre fenêtre…) : plus aucun bouton ne compte comme tenu
+    document.addEventListener('pointerlockchange', () => {
+      for (const code of ['Mouse0', 'Mouse1', 'Mouse2']) this.releaseMouse(code);
+    });
     window.addEventListener('mousemove', (e) => {
+      this.syncButtons(e);
       if (document.pointerLockElement === this.canvas || (this.freeLook && this.gameFocus)) {
         this.mouseDX += e.movementX;
         this.mouseDY += e.movementY;
@@ -191,6 +196,23 @@ export class InputManager {
     );
     // Safari : geste de pincement
     window.addEventListener('gesturestart', (e) => e.preventDefault());
+  }
+
+  private releaseMouse(code: string): void {
+    if (this.down.delete(code)) this.releasedCodes.add(code);
+  }
+
+  /**
+   * Chromium perd parfois le relâchement d'un bouton (glisser commencé ailleurs, verrouillage du
+   * pointeur…) : le clic gauche restait « tenu » et le minage continuait. Chaque évènement souris
+   * donne l'état réel des boutons (`buttons`) : un bouton relâché entre-temps l'est aussi ici.
+   */
+  private syncButtons(e: MouseEvent): void {
+    if (typeof e.buttons !== 'number') return;
+    // bits de `buttons` : 1 = gauche (Mouse0), 2 = droit (Mouse2), 4 = milieu (Mouse1)
+    if (!(e.buttons & 1)) this.releaseMouse('Mouse0');
+    if (!(e.buttons & 2)) this.releaseMouse('Mouse2');
+    if (!(e.buttons & 4)) this.releaseMouse('Mouse1');
   }
 
   get locked(): boolean {

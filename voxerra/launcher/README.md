@@ -30,4 +30,5 @@ cd voxerra/launcher
 node ../scripts/build-html.mjs game/index.html && go build -o dist/voxerra-test .
 xvfb-run -a node test-launcher.mjs   # Chromium à la place d'Edge : partie, sauvegarde, Quitter, relance
 xvfb-run -a node test-raccourcis.mjs # vraies touches (xdotool) : Ctrl+W, Ctrl+R, molette avec Ctrl / Maj / Z
+xvfb-run -a node test-minage.mjs     # vrais clics (xdotool) : le minage s'arrête au relâchement, même perdu en route
 ```
