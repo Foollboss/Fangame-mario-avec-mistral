@@ -1,0 +1,23 @@
+{
+  "name": "neon-car-arena",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Neon Car Arena - jeu mobile de football automobile (Three.js)",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "build:single": "vite build --mode single",
+    "preview": "vite preview --host",
+    "test": "node tests/sim.test.mjs",
+    "test:e2e": "node tests/e2e.mjs"
+  },
+  "dependencies": {
+    "three": "0.170.0"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0",
+    "vite-plugin-singlefile": "^2.0.0",
+    "playwright-core": "1.56.0"
+  }
+}
