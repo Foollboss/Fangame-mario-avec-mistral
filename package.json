@@ -1,0 +1,21 @@
+{
+  "name": "neon-car-arena",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NEON CAR ARENA - jeu mobile de football automobile arcade (Three.js / WebGL)",
+  "type": "module",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "dev": "node tools/build.mjs --watch",
+    "test": "node tools/simtest.mjs --quick",
+    "sim": "node tools/simtest.mjs",
+    "android": "node tools/build.mjs && bash android/build-apk.sh",
+    "release": "node tools/build.mjs && cp dist/index.html release/NeonCarArena.html && bash android/build-apk.sh"
+  },
+  "dependencies": {
+    "three": "0.170.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.24.0"
+  }
+}

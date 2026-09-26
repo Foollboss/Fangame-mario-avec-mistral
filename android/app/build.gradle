@@ -1,0 +1,51 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.neoncararena.game'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.neoncararena.game'
+        minSdk 24
+        targetSdk 35
+        versionCode 1
+        versionName '1.0.0'
+    }
+
+    signingConfigs {
+        // Development key committed on purpose so sideloaded builds can update each other.
+        // Use your own private key for a store release (see README).
+        dev {
+            storeFile file('../keystore/neon-dev.jks')
+            storePassword 'neonarena'
+            keyAlias 'neon'
+            keyPassword 'neonarena'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.dev
+        }
+        debug {
+            signingConfig signingConfigs.dev
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
+    androidResources {
+        noCompress 'html'
+    }
+}
