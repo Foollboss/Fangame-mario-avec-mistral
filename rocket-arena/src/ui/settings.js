@@ -30,6 +30,7 @@ export const DEFAULT_SETTINGS = {
   p2Team: 1,
   replays: true,
   boostMode: 'normal',
+  gameMode: 'classic',
   gravityScale: 1,
 };
 

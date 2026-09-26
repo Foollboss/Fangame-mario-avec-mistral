@@ -91,14 +91,32 @@ export class Ball {
   }
 }
 
+// Heatseeker: steers the ball towards a goal and keeps it fast.
+const hDir = new Vector3();
+const hWant = new Vector3();
+export function applyHoming(s, homing, dt) {
+  let speed = s.vel.length();
+  if (speed < 1e-3) return;
+  hDir.copy(s.vel).multiplyScalar(1 / speed);
+  hWant.set(homing.x - s.pos.x, homing.y - s.pos.y, homing.z - s.pos.z).normalize();
+  const ang = Math.acos(Math.max(-1, Math.min(1, hDir.dot(hWant))));
+  const maxTurn = 1.6 * dt;
+  if (ang > 1e-4) hDir.lerp(hWant, Math.min(1, maxTurn / ang)).normalize();
+  if (speed < homing.minSpeed) speed += (homing.minSpeed - speed) * Math.min(1, dt * 2.5);
+  s.vel.copy(hDir).multiplyScalar(speed);
+}
+
 // Predicts the ball path ignoring cars. Returns an array of {t, pos, vel}.
-export function predictBall(ball, duration = 4, step = 1 / 60) {
+export function predictBall(ball, duration = 4, step = 1 / 60, homing = null) {
   const s = { pos: ball.pos.clone(), vel: ball.vel.clone(), angVel: ball.angVel.clone() };
   const out = [];
   const sub = 2;
   const dt = step / sub;
   for (let t = step; t <= duration + 1e-6; t += step) {
-    for (let i = 0; i < sub; i++) stepBallState(s, dt);
+    for (let i = 0; i < sub; i++) {
+      stepBallState(s, dt);
+      if (homing) applyHoming(s, homing, dt);
+    }
     out.push({ t, pos: s.pos.clone(), vel: s.vel.clone() });
   }
   return out;

@@ -1,9 +1,9 @@
 import { PHYS } from '../config.js';
-import { Ball, predictBall } from './ball.js';
+import { Ball, predictBall, applyHoming } from './ball.js';
 import { Car } from './car.js';
 import { collideCarBall, collideCars } from './collide.js';
 import {
-  createBoostPads, scoringTeam, KICKOFF_SPOTS, KICKOFF_SETS, RESPAWN_SPOTS,
+  ARENA, createBoostPads, scoringTeam, KICKOFF_SPOTS, KICKOFF_SETS, RESPAWN_SPOTS,
 } from './arena.js';
 
 const BASE_GRAVITY = PHYS.gravity;
@@ -34,6 +34,7 @@ export class Match {
     this.opts = {
       duration: 300,
       freeplay: false,
+      mode: 'classic',
       unlimitedBoost: false,
       noBoost: false,
       gravityScale: 1,
@@ -59,6 +60,7 @@ export class Match {
     this.skipRequested = false;
     this.replay = null;
     this.winner = -1;
+    this.heatTouches = 0;
     this.lastCountdown = 4;
     if (this.opts.freeplay) this.startFreeplay();
     else this.resetKickoff();
@@ -119,6 +121,7 @@ export class Match {
     this.clockRunning = false;
     this.lastCountdown = 4;
     this.kickoff = true;
+    this.heatTouches = 0;
     this.refreshPrediction();
     this.emit({ type: 'kickoff' });
   }
@@ -128,8 +131,18 @@ export class Match {
     return this.opts.noBoost ? 0 : PHYS.startBoost;
   }
 
+  // Heatseeker target: the goal opposite to the last team that touched the ball.
+  homing() {
+    const t = this.ball.lastTouch;
+    if (this.opts.mode !== 'heatseeker' || !t || this.ball.hidden) return null;
+    return {
+      x: 0, y: ARENA.GH * 0.45, z: t.car.team === 0 ? ARENA.L + 2 : -ARENA.L - 2,
+      minSpeed: Math.min(38, 14 + 1.6 * this.heatTouches),
+    };
+  }
+
   refreshPrediction() {
-    this.prediction = predictBall(this.ball, 4, 1 / 60);
+    this.prediction = predictBall(this.ball, 4, 1 / 60, this.homing());
   }
 
   requestSkip() {
@@ -172,6 +185,7 @@ export class Match {
         if (this.stateTime > (this.opts.freeplay ? 2 : 3)) {
           if (this.opts.freeplay) {
             this.ball.reset(0, PHYS.ballRadius, 0);
+            this.heatTouches = 0;
             this.state = 'playing';
             this.stateTime = 0;
             this.refreshPrediction();
@@ -208,7 +222,8 @@ export class Match {
     if (this.opts.duration <= 0) return;
     this.timeLeft = Math.max(0, this.timeLeft - dt);
     if (this.timeLeft > 0) return;
-    const ballDown = this.ball.pos.y - this.ball.radius < 0.08;
+    // Like the real game the match ends when the ball touches the floor (Heatseeker ends right away).
+    const ballDown = this.opts.mode === 'heatseeker' || this.ball.pos.y - this.ball.radius < 0.08;
     if (!ballDown) return;
     if (this.score[0] !== this.score[1]) this.endMatch();
     else {
@@ -260,7 +275,12 @@ export class Match {
     if (withBall && !ball.hidden) {
       const impact = ball.step(dt);
       if (impact > 2) this.emit({ type: 'bounce', pos: ball.pos.clone(), strength: impact });
-      for (const car of cars) {
+      const homing = this.homing();
+      if (homing) applyHoming(ball, homing, dt);
+      // Rotate the processing order so no team wins simultaneous touches by default.
+      const n = cars.length;
+      for (let k = 0; k < n; k++) {
+        const car = cars[(k + this.tickCount) % n];
         const hit = collideCarBall(car, ball, this.time);
         if (car.flipReset) {
           car.flipReset = false;
@@ -269,6 +289,8 @@ export class Match {
         if (hit > 0) {
           if (hit > 1.2 || !ball.lastTouch || ball.lastTouch.car !== car || this.time - ball.lastTouch.time > 0.4) {
             const touch = { car, time: this.time };
+            const prev = ball.touches[ball.touches.length - 1];
+            if (!prev || this.time - prev.time > 0.25) this.heatTouches++;
             ball.touches.push(touch);
             if (ball.touches.length > 20) ball.touches.shift();
             if (hit > 1.2) this.emit({ type: 'hit', car, pos: ball.pos.clone(), strength: hit });

@@ -231,6 +231,7 @@ class App {
       unlimitedBoost: !!cfg.unlimitedBoost || cfg.boostMode === 'unlimited',
       noBoost: cfg.boostMode === 'none',
       gravityScale: cfg.gravityScale || 1,
+      mode: cfg.gameMode || 'classic',
       replays: cfg.freeplay ? false : cfg.replays,
     });
     this.splitscreen = !!cfg.splitscreen && !cfg.freeplay;

@@ -23,6 +23,7 @@ Un jeu de **football en voitures à réaction** en 3D, inspiré de *Rocket Leagu
 - **Modes** : 1c1, 2c2, 3c3 et 4c4 contre l'IA, **écran partagé à 2 joueurs** (avec ou contre ton pote), **entraînement libre**
   (boost illimité, balle replacée ou lancée vers toi pour travailler les aériennes).
 - **IA** en 3 niveaux (Recrue, Pro, All-Star) : coups d'envoi, rotations, défense, frappes flip, tirs sautés et **aériennes**.
+- **Mode Heatseeker** : après chaque touche, la balle fonce toute seule vers le but adverse, de plus en plus vite.
 - **Mutateurs** : boost normal / illimité / désactivé, gravité normale / lunaire / forte.
 - **Règles du vrai jeu** : chrono qui démarre à la première touche, fin du match quand la balle touche le sol à 0:00,
   **prolongation** en but en or, démolitions (réapparition en 3 s), explosions de but qui repoussent les voitures.

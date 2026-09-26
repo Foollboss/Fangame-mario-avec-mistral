@@ -156,6 +156,7 @@ export class Menus {
     return {
       teamSize: s.teamSize, difficulty: s.difficulty, duration: s.duration, theme: s.theme, team: s.team,
       splitscreen: s.splitscreen, p2Team: s.p2Team, replays: s.replays, boostMode: s.boostMode, gravityScale: s.gravityScale,
+      gameMode: s.gameMode,
     };
   }
 
@@ -180,6 +181,8 @@ export class Menus {
     const themes = Object.entries(THEMES).map(([k, t]) => [k, t.label]);
     return `<div class="menu center dim"><div class="col">
       <h2>Partie rapide</h2>
+      <div class="opt"><label>Mode</label>${seg('gameMode', [['classic', 'Classique'], ['heatseeker', 'Heatseeker']], s.gameMode)}</div>
+      ${s.gameMode === 'heatseeker' ? '<div class="hint">Heatseeker : après chaque touche, la balle fonce toute seule vers le but adverse, de plus en plus vite !</div>' : ''}
       <div class="opt"><label>Format</label>${seg('teamSize', [[1, '1 c 1'], [2, '2 c 2'], [3, '3 c 3'], [4, '4 c 4']], s.teamSize)}</div>
       <div class="opt"><label>Difficulté IA</label>${seg('difficulty', diffs, s.difficulty)}</div>
       <div class="opt"><label>Durée</label>${seg('duration', [[120, '2 min'], [300, '5 min'], [600, '10 min'], [0, 'Illimitée']], s.duration)}</div>
