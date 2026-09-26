@@ -18,6 +18,8 @@ Les mondes sont sauvegardés dans le navigateur. Pour le régénérer après une
 
 Si le navigateur refuse les workers ou le verrouillage de la souris (cadre isolé, tablette), le jeu bascule seul :
 génération sur le fil principal et regard à la souris sans verrouillage.
+Dans un onglet, le navigateur se réserve `Ctrl+W` (`Ctrl` sert à courir) : le jeu demande alors confirmation avant de
+fermer ; en plein écran (`F11`) et dans les versions Windows, `Ctrl+W` est simplement ignoré.
 
 ## Versions installables : Windows (.exe) et Android (.apk)
 
@@ -218,7 +220,7 @@ voxerra/
 | Casser / attaquer | clic gauche | RT |
 | Utiliser / poser / manger / tirer / bloquer | clic droit | LT |
 | Choisir le bloc visé | clic molette | — |
-| Barre rapide | `1`–`9`, molette (change de case, sans agrandir la barre) | LB / RB |
+| Barre rapide | `1`–`9`, molette (change de case même en courant avec `Ctrl` ou accroupi, sans agrandir la barre) | LB / RB |
 | Inventaire (et livre de recettes) | `E` | Y |
 | Jeter l'objet (tout : `Ctrl+Q`) | `Q` | X |
 | Esquive | `C` | croix : bas |

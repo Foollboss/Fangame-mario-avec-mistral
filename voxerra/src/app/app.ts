@@ -174,7 +174,8 @@ export class App implements AppApi {
       if (document.hidden && this.game) this.game.save();
     });
     addEventListener('pagehide', () => this.game?.save());
-    // Navigateur, lanceur Windows : Ctrl+W (Ctrl = courir) ou la croix demandent confirmation pendant une partie.
+    // Navigateur, lanceur Windows : fermer pendant une partie demande confirmation (la croix, ou Ctrl+W dans un
+    // onglet classique, où le navigateur se réserve ce raccourci ; ailleurs, InputManager le bloque).
     // (L'application de bureau gère elle-même la fermeture et la sauvegarde.)
     addEventListener('beforeunload', (e) => {
       const host = (globalThis as { voxerraHost?: { platform?: string } }).voxerraHost;

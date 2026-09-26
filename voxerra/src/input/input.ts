@@ -127,8 +127,13 @@ export class InputManager {
 
   constructor(private canvas: HTMLElement) {
     window.addEventListener('keydown', (e) => {
+      const typing = (e.target as HTMLElement)?.tagName === 'INPUT';
+      // Ctrl sert à courir : ses raccourcis de navigateur (Ctrl+W ferme la fenêtre, Ctrl+R recharge,
+      // Ctrl+1…9 change d'onglet…) sont bloqués en jeu ; Ctrl+W et Ctrl+F4 ne ferment jamais le jeu.
+      // (Onglet de navigateur classique : Ctrl+W lui reste réservé, la confirmation de sortie prend le relais.)
+      if ((e.ctrlKey || e.metaKey) && ((this.gameFocus && !typing) || e.code === 'KeyW' || e.code === 'F4')) e.preventDefault();
       if (e.repeat) return;
-      if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
+      if (typing) return;
       this.down.add(e.code);
       this.pressedCodes.add(e.code);
       const now = performance.now();
@@ -168,7 +173,12 @@ export class InputManager {
       (e) => {
         // pas de zoom de la page (Ctrl+molette, pincement du pavé tactile) ni de défilement en jeu
         if (e.ctrlKey || this.gameFocus) e.preventDefault();
-        if (this.gameFocus && !e.ctrlKey) this.wheel += Math.sign(e.deltaY);
+        if (!this.gameFocus) return;
+        // la molette change de case quelles que soient les touches tenues : Ctrl (courir) compris ;
+        // seul le pincement du pavé tactile (Ctrl simulé, sans la touche) est ignoré
+        if (e.ctrlKey && !this.down.has('ControlLeft') && !this.down.has('ControlRight')) return;
+        // Maj+molette (s'accroupir) arrive en défilement horizontal sous Windows et macOS
+        this.wheel += Math.sign(e.deltaY !== 0 ? e.deltaY : e.shiftKey ? e.deltaX : 0);
       },
       { passive: false },
     );
