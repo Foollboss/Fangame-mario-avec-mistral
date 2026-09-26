@@ -7,7 +7,7 @@
   "scripts": {
     "build": "esbuild src/main.js --bundle --minify --format=iife --target=es2020 --outfile=dist/game.js",
     "watch": "esbuild src/main.js --bundle --sourcemap --format=iife --target=es2020 --outfile=dist/game.js --watch",
-    "serve": "npx http-server . -p 8080 -c-1",
+    "start": "npx http-server . -p 8080 -c-1 -o",
     "test": "node tests/sim.test.js"
   },
   "dependencies": {

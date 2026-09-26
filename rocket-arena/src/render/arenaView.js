@@ -488,7 +488,7 @@ export const THEMES = {
   },
   sunset: {
     label: 'Coucher de soleil', skyTop: 0x241a52, skyHorizon: 0xff8c4a, skyBottom: 0x2a1a2a, sunDir: [-0.6, 0.18, 0.5], sunGlow: 0xffb070,
-    sun: 0xffc190, sunIntensity: 1.7, hemiSky: 0xffc9a0, hemiGround: 0x2a2440, hemiIntensity: 0.55,
+    sun: 0xffc190, sunIntensity: 1.7, hemiSky: 0xffc9a0, hemiGround: 0x2a2440, hemiIntensity: 0.8,
     grassA: '#2c6e36', grassB: '#357d3d', outside: 0x2a2630, crowdTint: 0xffd8c0, structure: 0x5a5060, lamp: 0xffe0b0, rim: 0xff9d5c,
     glassOpacity: 0.08, hexOpacity: 0.45, fog: 0x7a4a50, exposure: 1.0,
   },

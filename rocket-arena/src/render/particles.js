@@ -174,13 +174,17 @@ export class Effects {
   }
 
   boost(p, dir, carVel, color, supersonic) {
-    const n = 2;
-    for (let k = 0; k < n; k++) {
-      const sp = 10 + Math.random() * 6;
+    const hot = this.tmpHot || (this.tmpHot = new THREE.Color());
+    const cool = this.tmpCool || (this.tmpCool = new THREE.Color());
+    hot.copy(color).multiplyScalar(1.6).lerp(WHITE, 0.25);
+    cool.copy(color).multiplyScalar(0.45);
+    for (let k = 0; k < 3; k++) {
+      const sp = 9 + Math.random() * 6;
+      const back = Math.random() * 0.15;
       this.add.emit({
-        x: p.x + rnd(0.05), y: p.y + rnd(0.05), z: p.z + rnd(0.05),
-        vx: -dir.x * sp + carVel.x * 0.6 + rnd(1.2), vy: -dir.y * sp + carVel.y * 0.6 + rnd(1.2), vz: -dir.z * sp + carVel.z * 0.6 + rnd(1.2),
-        life: 0.22 + Math.random() * 0.18, size: supersonic ? 0.8 : 0.6, size1: 0.12, color: WHITE, color1: color, drag: 3,
+        x: p.x - dir.x * back + rnd(0.04), y: p.y - dir.y * back + rnd(0.04), z: p.z - dir.z * back + rnd(0.04),
+        vx: -dir.x * sp + carVel.x * 0.7 + rnd(0.8), vy: -dir.y * sp + carVel.y * 0.7 + rnd(0.8), vz: -dir.z * sp + carVel.z * 0.7 + rnd(0.8),
+        life: 0.16 + Math.random() * 0.16, size: supersonic ? 0.42 : 0.34, size1: 0.04, color: hot, color1: cool, drag: 4, alpha: 0.8,
       });
     }
   }

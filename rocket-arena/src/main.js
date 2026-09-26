@@ -14,7 +14,7 @@ import { makeBallTextures, makeShadowTexture } from './render/textures.js';
 import { CarView } from './render/carModel.js';
 import { Effects } from './render/particles.js';
 import { CameraRig, horizontalToVerticalFov, keepInsideArena } from './render/camera.js';
-import { Input } from './input/input.js';
+import { Input, keyLabel } from './input/input.js';
 import { Sound } from './audio/audio.js';
 import { Hud } from './ui/hud.js';
 import { Menus } from './ui/menus.js';
@@ -251,6 +251,12 @@ class App {
     this.menus.stack = [];
     this.hud.root.classList.remove('hidden');
     this.hud.setup(this.match, this.locals, this.viewports());
+    if (!s.tutorialSeen || cfg.freeplay) {
+      const k = (a) => `<span class="key">${keyLabel(s.keys[a][0])}</span>`;
+      this.hud.showHint(`${k('throttle')}${k('reverse')} rouler · ${k('left')}${k('right')} tourner · ${k('jump')} sauter (2× = flip) · ${k('boost')} boost · ${k('ballCam')} caméra · ${k('pause')} pause${cfg.freeplay ? ` · ${k('resetBall')} balle · ${k('shootBall')} tir` : ''}`, 12);
+      s.tutorialSeen = true;
+      this.saveSettings();
+    }
     this.sound.init();
     this.sound.stopMusic();
     document.body.style.cursor = 'none';
@@ -353,6 +359,7 @@ class App {
   enterGarage() {
     if (this.garage) return;
     this.garage = { t: 0, view: null };
+    this.rigs[0].reset();
     this.refreshGarage();
   }
 
@@ -448,7 +455,7 @@ class App {
   }
 
   say(car, text) {
-    if (this.mode !== 'match' || !this.match) return;
+    if (this.mode !== 'match' || !this.match || !this.match.cars.includes(car)) return;
     const now = performance.now();
     car.chatLog = (car.chatLog || []).filter((t) => now - t < 4000);
     if (car.chatLog.length >= 3) return;
@@ -542,11 +549,11 @@ class App {
       switch (e.type) {
         case 'hit':
           this.effects.sparks(e.pos, e.strength);
-          this.sound.hit(e.pos, e.strength);
+          if (live) this.sound.hit(e.pos, e.strength);
           this.rumble(e.car, Math.min(1, e.strength / 20), Math.min(1, e.strength / 12), 90);
           if (localCars.has(e.car)) this.rigs[this.locals.findIndex((l) => l.car === e.car)].addShake(Math.min(0.25, e.strength * 0.01));
           break;
-        case 'bounce': this.sound.bounce(e.pos, e.strength); break;
+        case 'bounce': if (live) this.sound.bounce(e.pos, e.strength); break;
         case 'jump':
         case 'dodge': if (localCars.has(e.car)) this.sound.jump(e.car.pos); break;
         case 'pad':
@@ -554,27 +561,27 @@ class App {
           if (localCars.has(e.car)) this.sound.pad(e.pos, e.big);
           break;
         case 'bump':
-          this.sound.bump(e.pos, e.strength);
+          if (live) this.sound.bump(e.pos, e.strength);
           this.rumble(e.victim, 0.7, 0.5, 150);
           this.rumble(e.attacker, 0.4, 0.4, 100);
           break;
         case 'demo':
           this.effects.demolition(e.pos, TEAM_COLORS[e.victim.team].main);
-          this.sound.explosion(e.pos, false);
+          if (live) this.sound.explosion(e.pos, false);
           this.locals.forEach((l, i) => { if (l.car === e.victim || l.car === e.attacker) this.rigs[i].addShake(0.4); });
           this.rumble(e.victim, 1, 1, 400);
           this.rumble(e.attacker, 0.6, 0.8, 200);
           break;
         case 'goal':
           this.effects.explosion(e.pos, TEAM_COLORS[e.team].main, true);
-          this.sound.explosion(e.pos, true);
+          if (live) this.sound.explosion(e.pos, true);
           if (live) this.sound.horn(this.localTeams().has(e.team));
           this.rigs.forEach((r) => r.addShake(0.7));
           this.locals.forEach((l) => this.rumble(l.car, 0.8, 0.8, 600));
           break;
         case 'replayGoal':
           this.effects.explosion(e.pos, TEAM_COLORS[e.team].main, true);
-          this.sound.explosion(e.pos, true);
+          if (live) this.sound.explosion(e.pos, true);
           break;
         case 'kickoff':
         case 'replayStart':
@@ -753,6 +760,50 @@ class App {
     }
   }
 
+  // Two shots: chase cam behind the scorer, then a goal-side cam for the finish.
+  replayCamera(dt, vis) {
+    const m = this.match;
+    const ball = vis.ball.pos;
+    const info = m.goalInfo;
+    const team = info ? info.team : 0;
+    const goalZ = team === 0 ? ARENA.L : -ARENA.L;
+    const into = Math.sign(goalZ);
+    const finish = m.replay.time > m.replay.goalTime - 1.3;
+    const pos = new THREE.Vector3();
+    const look = new THREE.Vector3().copy(ball);
+    const scorerIdx = info && info.scorer ? m.cars.indexOf(info.scorer) : -1;
+    const st = scorerIdx >= 0 ? vis.cars[scorerIdx] : null;
+    let stiff = 6;
+    if (finish) {
+      const side = ball.x >= 0 ? 1 : -1;
+      pos.set(side * (ARENA.GW + 3.5), 4.2, goalZ - into * 12);
+      stiff = this.replayShot === 'finish' ? 3 : 1000;
+      this.replayShot = 'finish';
+    } else if (st && !st.demolished) {
+      const d = tmpV.copy(st.pos).sub(ball);
+      d.y = 0;
+      if (d.lengthSq() < 0.5) d.set(0, 0, -into);
+      d.normalize();
+      pos.copy(st.pos).addScaledVector(d, 4.5);
+      pos.y += 1.8;
+      look.lerp(st.pos, 0.25);
+      this.replayShot = 'chase';
+    } else {
+      const d = tmpV.set(ball.x * 0.3, 0, ball.z - goalZ);
+      if (d.lengthSq() < 1) d.set(0, 0, -into);
+      d.normalize();
+      pos.copy(ball).addScaledVector(d, 11);
+      pos.y = Math.max(ball.y + 3.5, 4);
+      this.replayShot = 'ball';
+    }
+    keepInsideArena(pos, 1);
+    this.rigs.forEach((r, i) => {
+      if (i >= this.viewports().length) return;
+      if (stiff > 100) r.reset();
+      r.setView(dt, pos, look, Math.min(stiff, 8));
+    });
+  }
+
   updateCameras(dt, vis) {
     const m = this.match;
     const s = this.settings;
@@ -766,25 +817,16 @@ class App {
         boosting: Math.sin(g.t * 0.8) > 0.6, demolished: false, steer: Math.sin(g.t * 0.7) * 0.6, spin: g.t * 3, supersonic: false,
       }, performance.now() / 1000);
       const a = 0.75 + Math.sin(g.t * 0.2) * 0.25;
-      const d = 3.4;
+      const d = 2.9;
       tmpV.set(Math.cos(a) * d, 1.0, Math.sin(a) * d);
       // Aim left of the car so it sits on the right, next to the menu.
-      tmpV2.set(-Math.sin(a), 0, Math.cos(a)).multiplyScalar(1.25);
+      tmpV2.set(-Math.sin(a), 0, Math.cos(a)).multiplyScalar(1.05);
       tmpV2.y = 0.3;
       this.rigs[0].setView(dt, tmpV, tmpV2, 3);
       return;
     }
     if (m.state === 'replay') {
-      const ball = vis.ball.pos;
-      const team = m.goalInfo ? m.goalInfo.team : 0;
-      const goalZ = team === 0 ? ARENA.L : -ARENA.L;
-      const dir = tmpV.set(ball.x * 0.3, 0, ball.z - goalZ);
-      if (dir.lengthSq() < 1) dir.set(0, 0, -Math.sign(goalZ));
-      dir.normalize();
-      const pos = new THREE.Vector3().copy(ball).addScaledVector(dir, 11);
-      pos.y = Math.max(ball.y + 3.5, 4);
-      keepInsideArena(pos, 1);
-      this.rigs.forEach((r, i) => { if (i < this.viewports().length) r.setView(dt, pos, ball, 5); });
+      this.replayCamera(dt, vis);
       return;
     }
     if (this.mode === 'menu') {
@@ -808,6 +850,8 @@ class App {
     this.locals.forEach((l, i) => {
       const st = vis.cars[this.match.cars.indexOf(l.car)];
       if (!st) return;
+      const [sx] = this.input.lookStick(i, this.splitscreen);
+      this.rigs[i].swivel += (sx * Math.PI - this.rigs[i].swivel) * Math.min(1, dt * 10);
       if (st.demolished) {
         this.rigs[i].setView(dt, this.rigs[i].pos, vis.ball.pos, 2);
         return;

@@ -338,6 +338,18 @@ export class Bot {
       const bp = this.boostPlan(match, false);
       if (bp) return bp;
     }
+    // All-Star bots sometimes hunt for a demolition.
+    if (!ownThreat && this.d.aerial > 0.7 && car.boost > 45 && match.time - (this.lastDemoTry || -99) > 12 && Math.random() < 0.05) {
+      this.lastDemoTry = match.time;
+      let prey = null;
+      let pd = 30;
+      for (const o of match.cars) {
+        if (o.team === team || o.demolished) continue;
+        const lt = localTarget(car, o.pos);
+        if (Math.abs(lt.angle) < 0.5 && lt.dist < pd) { pd = lt.dist; prey = o; }
+      }
+      if (prey) return { kind: 'demo', prey, until: match.time + 3 };
+    }
     const sup = mates.filter((m) => m !== best).indexOf(car);
     if (sup === 0 && mates.length > 2) {
       const target = ball.pos.clone().lerp(new Vector3(0, 0, ownZ), 0.45);
@@ -444,6 +456,17 @@ export class Bot {
         const desired = plan.kind === 'support' ? clamp(lt.dist * 1.2, 4, 23) : 23;
         this.driveTo(c, plan.target, desired, plan.kind !== 'support' && this.d.boostUse > 0.5);
         if (lt.dist < 2) this.planTimer = 0;
+        break;
+      }
+      case 'demo': {
+        const prey = plan.prey;
+        if (prey.demolished || match.time > plan.until) { this.planTimer = 0; break; }
+        const t = Math.min(1.5, car.pos.distanceTo(prey.pos) / Math.max(10, speed));
+        const aim = v1.copy(prey.pos).addScaledVector(prey.vel, t);
+        aim.y = 0;
+        this.driveTo(c, aim, 23, true);
+        c.boost = car.boost > 0 && Math.abs(localTarget(car, aim).angle) < 0.35;
+        this.planTimer = Math.max(this.planTimer, 0.3);
         break;
       }
       case 'chase': {

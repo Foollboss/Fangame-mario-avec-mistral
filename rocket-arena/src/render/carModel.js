@@ -68,6 +68,7 @@ export class CarView {
     const rimMat = new THREE.MeshStandardMaterial({ color: 0xc8ccd4, metalness: 0.9, roughness: 0.25 });
     const head = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xeaf4ff).multiplyScalar(1.6), toneMapped: false });
     const tail = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xff2020).multiplyScalar(1.5), toneMapped: false });
+    const trim = new THREE.MeshStandardMaterial({ color: 0x15171c, roughness: 0.7, metalness: 0.2 });
 
     const bodyMesh = new THREE.Mesh(extrude(pf.body, pf.width, 0.04), paint);
     const cabin = new THREE.Mesh(extrude(pf.cabin, pf.cabinWidth, 0.035), glass);
@@ -134,6 +135,17 @@ export class CarView {
       pivot.add(spinner);
       this.root.add(pivot);
       this.wheels.push({ pivot, spinner, front: frontWheel });
+      // Fender arch over the wheel.
+      const arch = new THREE.Mesh(new THREE.TorusGeometry(r + 0.035, 0.03, 6, 14, Math.PI), trim);
+      arch.position.set(pivot.position.x, pivot.position.y, (i % 2 ? -1 : 1) * (pf.width / 2 + 0.045));
+      this.root.add(arch);
+    }
+    // Side skirts between the wheels.
+    const skirtLen = pf.wheelX[0] - pf.wheelX[1] - pf.wheelR[0] - pf.wheelR[1] - 0.06;
+    for (const sd of [1, -1]) {
+      const skirt = new THREE.Mesh(new THREE.BoxGeometry(skirtLen, 0.05, 0.03), trim);
+      skirt.position.set((pf.wheelX[0] + pf.wheelX[1]) / 2 + (pf.wheelR[1] - pf.wheelR[0]) / 2, wheelBaseY + 0.13, sd * (pf.width / 2 + 0.04));
+      this.root.add(skirt);
     }
 
     // Boost flames.

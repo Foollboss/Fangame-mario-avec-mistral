@@ -168,6 +168,15 @@ export class Input {
     return -1;
   }
 
+  // Right stick, used to look around the car.
+  lookStick(player, splitscreen) {
+    for (const p of this.padFor(player, splitscreen)) {
+      const [x, y] = deadzone(p.axes[2] || 0, p.axes[3] || 0, 0.25);
+      if (x || y) return [x, y];
+    }
+    return [0, 0];
+  }
+
   held(action, player = 0, splitscreen = false) {
     if (this.usesKeyboard(player) && this.kb(action)) return true;
     const btn = { scoreboard: PAD.BACK }[action];

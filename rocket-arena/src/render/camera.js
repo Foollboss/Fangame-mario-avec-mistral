@@ -35,6 +35,7 @@ export class CameraRig {
     this.ready = false;
     this.ballCam = true;
     this.shake = 0;
+    this.swivel = 0;
   }
 
   reset() {
@@ -83,6 +84,11 @@ export class CameraRig {
     } else {
       desired.copy(car.pos).addScaledVector(this.fwd, -dist).addScaledVector(this.up, height);
       lookT.copy(car.pos).addScaledVector(this.up, height * 0.7).addScaledVector(this.fwd, 2.2);
+    }
+    if (this.swivel) {
+      // Right stick: orbit the camera around the car.
+      desired.sub(car.pos).applyAxisAngle(WORLD_UP, this.swivel).add(car.pos);
+      lookT.sub(car.pos).applyAxisAngle(WORLD_UP, this.swivel).add(car.pos);
     }
     keepInsideArena(desired);
 

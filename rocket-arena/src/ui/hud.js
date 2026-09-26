@@ -22,6 +22,15 @@ export class Hud {
     this.goalTimer = 0;
   }
 
+  showHint(html, seconds = 10) {
+    const d = document.createElement('div');
+    d.className = 'hint-bar';
+    d.innerHTML = html;
+    this.root.appendChild(d);
+    setTimeout(() => d.classList.add('fade'), seconds * 1000);
+    setTimeout(() => d.remove(), seconds * 1000 + 1200);
+  }
+
   setup(match, locals, viewports) {
     const r = this.root;
     r.innerHTML = `
@@ -42,19 +51,19 @@ export class Hud {
       d.className = 'phud';
       const vp = viewports[i];
       Object.assign(d.style, { left: `${vp.x * 100}%`, top: `${vp.y * 100}%`, width: `${vp.w * 100}%`, height: `${vp.h * 100}%` });
-      const scale = vp.h < 0.9 ? 0.72 : 1;
       d.innerHTML = `
-        <div class="boost" style="transform: scale(${scale}); transform-origin: bottom right">
+        <div class="boost">
           <svg viewBox="0 0 140 140"><circle cx="70" cy="70" r="60" fill="rgba(0,0,0,0.45)" stroke="rgba(255,255,255,0.12)" stroke-width="12" stroke-dasharray="${CIRC * 0.75} ${CIRC}"/>
           <circle class="arc" cx="70" cy="70" r="60" fill="none" stroke="url(#bg${i})" stroke-width="12" stroke-linecap="round" stroke-dasharray="0 ${CIRC}"/>
           <defs><linearGradient id="bg${i}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd24d"/><stop offset="1" stop-color="#ff6a00"/></linearGradient></defs></svg>
           <div class="num">33</div><div class="lbl">BOOST</div>
+          <div class="speedo"><span class="sp">0</span> <small>km/h</small></div>
         </div>
-        <div class="speedo" style="transform: scale(${scale}); transform-origin: bottom right"><span class="sp">0</span> <small>km/h</small></div>
         <div class="camtag"></div>
         <div class="popups"></div>
         <div class="demo-msg hidden">DÉTRUIT !</div>`;
       this.root.appendChild(d);
+      d.dataset.split = vp.h < 0.9 ? '1' : '0';
       return {
         el: d, car: lp.car, arc: d.querySelector('.arc'), num: d.querySelector('.num'), sp: d.querySelector('.sp'),
         speedo: d.querySelector('.speedo'), cam: d.querySelector('.camtag'), popups: d.querySelector('.popups'),
@@ -68,6 +77,7 @@ export class Hud {
     }
     this.centerTimer = 0;
     this.goalTimer = 0;
+    this.hudScale = 0;
   }
 
   showCenter(text, dur = 1, cls = '', color = '#fff') {
@@ -170,6 +180,15 @@ export class Hud {
       if (this.goalTimer <= 0) el.goal.innerHTML = '';
     }
     const inReplay = match.state === 'replay';
+    // Scale the gauges with the window so they read well from 720p to 4K.
+    const hs = Math.max(0.55, Math.min(1.6, window.innerHeight / 1000));
+    if (hs !== this.hudScale) {
+      this.hudScale = hs;
+      for (const p of this.players) {
+        const k = hs * (p.el.dataset.split === '1' ? 0.72 : 1);
+        p.el.querySelector('.boost').style.transform = `scale(${k})`;
+      }
+    }
     this.players.forEach((p, i) => {
       const car = p.car;
       p.el.style.visibility = inReplay ? 'hidden' : 'visible';
