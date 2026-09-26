@@ -14,7 +14,7 @@ Identité, véhicules, arènes, interface et effets originaux (aucun élément r
 | Format | Fichier | Comment |
 |---|---|---|
 | **HTML** | [`release/NeonCarArena.html`](release/NeonCarArena.html) | Un seul fichier autonome (≈ 0,8 Mo, fonctionne hors ligne). Ouvrez-le dans Chrome, Edge, Firefox ou Safari, sur ordinateur ou téléphone (mode paysage). |
-| **APK Android** | [`release/NeonCarArena.apk`](release/NeonCarArena.apk) | Android 7.0+ (API 24). Téléchargez-le sur le téléphone, autorisez « Installer des applis inconnues », puis ouvrez-le. |
+| **APK Android** | [`release/NeonCarArena.apk`](release/NeonCarArena.apk) | Android 5.0+ (API 21), GPU compatible OpenGL ES 3.0 / WebGL 2. Téléchargez-le sur le téléphone, autorisez « Installer des applis inconnues », puis ouvrez-le. |
 
 L’APK est signé avec une clé de **développement** (incluse dans le dépôt) pour que les versions suivantes s’installent par-dessus. Pour une publication sur le Play Store, créez votre propre clé privée (voir plus bas).
 
