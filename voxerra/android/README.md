@@ -9,6 +9,8 @@ les sauvegardes (IndexedDB) et les workers fonctionnent comme dans un navigateur
   (l'appli ajoute `VoxerraApp/Android` à l'agent utilisateur, que le jeu reconnaît).
 - Bouton Retour : Échap du jeu (menu pause, fermer un écran) ; depuis l'écran titre, met l'appli en arrière-plan.
 - Le monde est sauvegardé quand l'appli passe en arrière-plan ; « Quitter le jeu » ferme l'appli.
+- Tout l'écran, y compris sous l'encoche de la caméra : l'appli transmet sa taille au jeu (variables CSS
+  `--app-inset-*`), qui en écarte le joystick, les boutons et les textes des coins.
 - Le clavier du téléphone réduit la zone de jeu : la saisie de la discussion reste visible.
 
 ## Construire

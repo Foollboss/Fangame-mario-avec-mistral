@@ -2,6 +2,7 @@ package io.github.fullboss971.voxerra;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -12,6 +13,8 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.FrameLayout;
+
+import java.util.Locale;
 
 import androidx.activity.ComponentActivity;
 import androidx.activity.OnBackPressedCallback;
@@ -44,12 +47,21 @@ public class MainActivity extends ComponentActivity {
             "window.voxerra&&window.voxerra.game&&window.voxerra.game.save()";
 
     private WebView web;
+    private Insets cutout = Insets.NONE;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        // tout l'écran, y compris la zone de l'encoche (caméra)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            WindowManager.LayoutParams lp = getWindow().getAttributes();
+            lp.layoutInDisplayCutoutMode = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+                    ? WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+                    : WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+            getWindow().setAttributes(lp);
+        }
 
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(0xFF1B1B22);
@@ -57,11 +69,14 @@ public class MainActivity extends ComponentActivity {
         root.addView(web, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         setContentView(root);
 
-        // encoches et clavier : la WebView est réduite d'autant (la saisie de la discussion reste visible)
+        // Le jeu occupe tout l'écran. Seul le clavier réduit la WebView (la saisie reste visible) ;
+        // la taille de l'encoche est transmise à la page, qui écarte ses boutons des bords.
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
             Insets cut = insets.getInsets(WindowInsetsCompat.Type.displayCutout());
             Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
-            v.setPadding(cut.left, cut.top, cut.right, Math.max(cut.bottom, ime.bottom));
+            v.setPadding(0, 0, 0, ime.bottom);
+            cutout = cut;
+            pushInsets();
             return WindowInsetsCompat.CONSUMED;
         });
         hideSystemBars();
@@ -94,6 +109,11 @@ public class MainActivity extends ComponentActivity {
             }
 
             @Override
+            public void onPageFinished(WebView view, String url) {
+                pushInsets();
+            }
+
+            @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
                 if (HOST.equals(uri.getHost())) return false;
@@ -118,6 +138,17 @@ public class MainActivity extends ComponentActivity {
         });
 
         if (savedInstanceState == null || web.restoreState(savedInstanceState) == null) web.loadUrl(START_URL);
+    }
+
+    /** Zones à éviter (encoche) en pixels CSS : variables --app-inset-* lues par la feuille de style du jeu. */
+    private void pushInsets() {
+        if (web == null) return;
+        float d = getResources().getDisplayMetrics().density;
+        String js = String.format(Locale.ROOT,
+                "(function(s){s.setProperty('--app-inset-top','%dpx');s.setProperty('--app-inset-right','%dpx');"
+                        + "s.setProperty('--app-inset-bottom','%dpx');s.setProperty('--app-inset-left','%dpx');})(document.documentElement.style)",
+                Math.round(cutout.top / d), Math.round(cutout.right / d), Math.round(cutout.bottom / d), Math.round(cutout.left / d));
+        web.evaluateJavascript(js, null);
     }
 
     private void hideSystemBars() {

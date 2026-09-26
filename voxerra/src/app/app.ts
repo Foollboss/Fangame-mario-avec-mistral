@@ -250,7 +250,11 @@ export class App implements AppApi {
   /** Échelle de l'interface, réduite automatiquement sur les petits écrans. */
   private applyUiZoom(): void {
     const fit = Math.min(1, innerWidth / 860, innerHeight / 600);
-    (document.getElementById('ui') as HTMLElement).style.zoom = String(Math.max(0.4, this.settings.guiScale * fit));
+    const ui = document.getElementById('ui') as HTMLElement;
+    const zoom = Math.max(0.4, this.settings.guiScale * fit);
+    ui.style.zoom = String(zoom);
+    // les marges d'encoche (--sa-*) ne doivent pas être réduites par le zoom de l'interface
+    ui.style.setProperty('--ui-zoom', String(zoom));
   }
 
   private onResize(): void {
