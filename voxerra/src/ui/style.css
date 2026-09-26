@@ -333,7 +333,7 @@ body.touch-mode canvas#game { touch-action: none; }
 
 /* en mode tactile, la discussion passe en haut à gauche pour laisser la place au joystick */
 body.touch-mode .chat { top: calc(6px + var(--sa-top)); left: calc(6px + var(--sa-left)); bottom: auto; width: min(520px, 55vw); font-size: 14px; }
-/* bouton ✕ des écrans (inventaire, coffre, discussion…) en mode tactile */
+/* bouton croix des écrans (inventaire, coffre, discussion…) en mode tactile */
 .touch-close { display: none; }
 body.touch-mode .touch-close:not([hidden]) {
   display: flex; align-items: center; justify-content: center;
@@ -346,3 +346,15 @@ body.touch-mode .touch-close:not([hidden]) {
 }
 /* en mode tactile, les notifications passent sous la rangée de boutons du haut */
 body.touch-mode .toasts { top: calc(64px + var(--sa-top)); }
+
+/* icônes en pixel art des boutons (src/ui/pixelIcons.ts) */
+.px-icon { display: block; pointer-events: none; }
+.touch-btn .px-icon { width: 52%; height: 52%; }
+.touch-btn.small .px-icon { width: 64%; height: 64%; }
+.touch-close .px-icon { width: 20px; height: 20px; }
+.btn .px-icon { margin: 0 auto; width: 22px; height: 22px; }
+.chat-send { display: flex; align-items: center; justify-content: center; }
+.chat-send .px-icon { width: 18px; height: 18px; }
+.px-icon.trash { width: 22px; height: 22px; }
+.px-icon.inline { display: inline-block; width: 0.9em; height: 0.9em; margin-left: 6px; vertical-align: -1px; color: #7ee07e; }
+

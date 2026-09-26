@@ -1,6 +1,7 @@
 /** Gestionnaire d'écrans : pile d'écrans modaux au-dessus du HUD. */
 import { h, clear } from './dom';
 import { t } from '../i18n/i18n';
+import { pixelIcon } from './pixelIcons';
 
 export interface Screen {
   el: HTMLElement;
@@ -20,7 +21,7 @@ export class UIManager {
   readonly hudLayer: HTMLElement;
   readonly screenLayer: HTMLElement;
   readonly overlayLayer: HTMLElement;
-  /** Bouton ✕ des écrans tactiles (remplace Échap / E), visible seulement en mode tactile. */
+  /** Bouton croix des écrans tactiles (remplace Échap / E), visible seulement en mode tactile. */
   private closeBtn: HTMLElement;
   private stack: Screen[] = [];
   onStackChange: () => void = () => {};
@@ -31,7 +32,7 @@ export class UIManager {
     this.hudLayer = h('div', { class: 'hud passthrough' });
     this.screenLayer = h('div', { class: 'screens', style: { position: 'absolute', inset: '0', pointerEvents: 'none' } });
     this.overlayLayer = h('div', { class: 'overlays passthrough', style: { position: 'absolute', inset: '0' } });
-    this.closeBtn = h('button', { class: 'touch-close', 'aria-label': t('Fermer'), title: t('Fermer'), hidden: true }, '✕');
+    this.closeBtn = h('button', { class: 'touch-close', 'aria-label': t('Fermer'), title: t('Fermer'), hidden: true }, pixelIcon('croix'));
     this.closeBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       const top = this.top;

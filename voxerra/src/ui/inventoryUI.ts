@@ -16,6 +16,7 @@ import { fillSlot } from './hud';
 import type { Station, Recipe } from '../crafting/recipes';
 import type { FurnaceData } from '../sim/furnace';
 import { t, tr } from '../i18n/i18n';
+import { pixelIcon } from './pixelIcons';
 
 export interface InvContext {
   content: Content;
@@ -664,7 +665,7 @@ export class CreativeScreen extends ContainerScreen {
     this.tabsEl = h('div', { class: 'creative-tabs' });
     const bar = h('div', { class: 'slots', style: { gridTemplateColumns: 'repeat(9, 42px)', marginTop: '8px' } });
     for (let i = 0; i < 9; i++) bar.appendChild(this.slot({ c: this.inv, i, shiftTo: () => [] }));
-    const trash = h('div', { class: 'slot', title: t('Détruire l’objet tenu') }, h('div', { style: { position: 'absolute', inset: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '22px' } }, '✕'));
+    const trash = h('div', { class: 'slot', title: t('Détruire l’objet tenu') }, h('div', { style: { position: 'absolute', inset: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' } }, pixelIcon('croix', 'trash')));
     trash.addEventListener('mousedown', (e) => {
       e.stopPropagation();
       this.inv.cursor = null;

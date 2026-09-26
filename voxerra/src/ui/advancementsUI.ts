@@ -6,6 +6,7 @@ import type { Sim } from '../sim/sim';
 import type { Player } from '../entity/player';
 import type { AdvancementDef } from '../registry/types';
 import { t } from '../i18n/i18n';
+import { pixelIcon } from './pixelIcons';
 
 export function advancementsScreen(app: AppApi, sim: Sim, _p: Player): Screen {
   const tracker = (sim as unknown as { advancements?: { done: Set<string> } }).advancements;
@@ -75,7 +76,7 @@ export function advancementsScreen(app: AppApi, sim: Sim, _p: Player): Screen {
     const node = h('div', { class: 'adv-node' + (done.has(d.id) ? ' done' : '') + (d.goal ? ' goal' : ''), style: { left: `${PAD + p.x * SX}px`, top: `${PAD + p.y * SY}px` } }, h('img', { src: app.icons.icon(d.icon) }));
     node.addEventListener('mouseenter', () => {
       info.innerHTML = '';
-      info.append(h('div', { style: { color: done.has(d.id) ? '#ffe070' : '#ffffff' } }, d.title + (done.has(d.id) ? ' ✔' : '')), h('div', { class: 'hint' }, d.desc));
+      info.append(h('div', { style: { color: done.has(d.id) ? '#ffe070' : '#ffffff' } }, d.title, done.has(d.id) ? pixelIcon('coche', 'inline') : null), h('div', { class: 'hint' }, d.desc));
     });
     layer.appendChild(node);
   }

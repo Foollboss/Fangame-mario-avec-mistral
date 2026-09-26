@@ -2,6 +2,7 @@
 import { h, clear } from './dom';
 import { t } from '../i18n/i18n';
 import type { Screen } from './ui';
+import { pixelIcon } from './pixelIcons';
 
 export class ChatLog {
   readonly el: HTMLElement;
@@ -55,7 +56,7 @@ export function chatInput(log: ChatLog, initial: string, onSend: (text: string) 
     input.value = '';
     close();
   };
-  const sendBtn = h('button', { class: 'chat-send', type: 'submit', title: t('Envoyer'), 'aria-label': t('Envoyer') }, '➤');
+  const sendBtn = h('button', { class: 'chat-send', type: 'submit', title: t('Envoyer'), 'aria-label': t('Envoyer') }, pixelIcon('envoyer'));
   const form = h('form', { class: 'chat-form' }, input, sendBtn);
   form.addEventListener('submit', (e) => {
     e.preventDefault();

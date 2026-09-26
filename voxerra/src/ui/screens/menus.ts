@@ -7,6 +7,7 @@ import { DEFAULT_RULES, type GameMode, type WorldMeta } from '../../save/storage
 import { seedFromString } from '../../engine/rng';
 import { DEFAULT_BINDINGS, type Action } from '../../input/input';
 import { t, tr, locale, getLang, LANGS, type Lang } from '../../i18n/i18n';
+import { pixelIcon } from '../pixelIcons';
 
 const MODE_LABEL = (m: GameMode): string => ({ survie: t('Mode survie'), creatif: t('Mode créatif'), hardcore: t('Mode hardcore'), spectateur: t('Mode spectateur') })[m] ?? m;
 const DIFF = (): string[] => [t('Paisible'), t('Facile'), t('Normale'), t('Difficile')];
@@ -41,7 +42,7 @@ export function mainMenu(app: AppApi): Screen {
       h(
         'div',
         { class: 'row', style: { marginTop: '14px' } },
-        button('🌐', () => app.ui.push(languageScreen(app)), 'square icon-btn'),
+        button(pixelIcon('globe'), () => app.ui.push(languageScreen(app)), 'square icon-btn'),
         button(t('Options...'), () => app.ui.push(optionsScreen(app, false)), 'half'),
         button(t('Quitter le jeu'), () => {
           const host = appHost();
@@ -505,7 +506,7 @@ export function controlsScreen(app: AppApi, onClose?: () => void): Screen {
     { class: 'screen dim' },
     h('div', { class: 'title' }, t('Commandes')),
     touchToggle(app),
-    h('div', { class: 'hint', style: { margin: '4px 0 12px', maxWidth: '620px', textAlign: 'center' } }, t('Joystick à gauche pour se déplacer, bouton 🏃 à côté pour courir (un appui : court, un autre : marche), boutons à droite, glissez sur l’écran pour regarder, touchez pour utiliser / poser ou frapper, appui long pour casser.')),
+    h('div', { class: 'hint', style: { margin: '4px 0 12px', maxWidth: '620px', textAlign: 'center' } }, t('Joystick à gauche pour se déplacer, bouton de course juste à côté (un appui : court, un autre : marche), boutons à droite, glissez sur l’écran pour regarder, touchez pour utiliser / poser ou frapper, appui long pour casser.')),
     h('div', { class: 'hint', style: { marginBottom: '8px' } }, t('Cliquez sur une touche puis appuyez sur la nouvelle. Manette compatible (Xbox/PlayStation standard).')),
     list,
     h('div', { style: { height: '12px' } }),

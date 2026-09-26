@@ -54,7 +54,7 @@ des boules de neige, rare). Tomber des îles ramène à la surface, au même end
 Le jeu est entièrement traduit en **français**, **anglais** et **espagnol** : menus, HUD, inventaires, messages,
 commandes (avec leurs noms anglais et espagnols : `/give`, `/dar`, `/locate`, `/localizar`…), messages de mort et
 noms de tout le contenu (blocs, objets, créatures, biomes, progrès, structures, dimensions). Au premier lancement,
-la langue du navigateur est choisie ; on la change avec le bouton 🌐 du menu principal ou dans **Options → Langue**,
+la langue du navigateur est choisie ; on la change avec le bouton globe du menu principal ou dans **Options → Langue**,
 sans recharger la page.
 
 - Textes de l'interface : `src/i18n/en.json` et `src/i18n/es.json` (le texte français sert de clé).
@@ -236,21 +236,22 @@ Toutes les touches se réaffectent dans **Options → Commandes**.
 
 Les contrôles tactiles s'activent tout seuls sur téléphone, tablette ou écran tactile sans souris (et toujours dans
 l'appli Android), et se règlent avec l'interrupteur **Contrôles tactiles** (premier bouton de **Options** et tout en
-haut de **Options → Commandes**).
+haut de **Options → Commandes**). Les boutons portent de petites icônes en pixel art (aucun émoji : même rendu sur
+tous les appareils).
 
 | Action | Geste |
 |---|---|
 | Se déplacer | joystick en bas à gauche |
-| Sprinter | bouton 🏃 à droite du joystick : un appui pour courir, un autre pour marcher (le joystick seul ne fait jamais courir) |
+| Sprinter | bouton de course (bonhomme qui court) à droite du joystick : un appui pour courir, un autre pour marcher (le joystick seul ne fait jamais courir) |
 | Regarder | glisser le doigt n'importe où ailleurs sur l'écran |
-| Utiliser / poser / manger | toucher brièvement l'écran, ou maintenir ✋ |
+| Utiliser / poser / manger | toucher brièvement l'écran, ou maintenir le bouton main |
 | Frapper une créature hostile | toucher brièvement l'écran en la visant (aide à la visée : pas besoin d'être pile dessus) |
-| Casser / attaquer | appui long sur l'écran, ou maintenir ⚔ (maintenu, les coups s'enchaînent dès que l'arme est rechargée) |
-| Sauter / nager | ⇧ (maintenir pour nager ou monter) |
-| S'accroupir | ⇩ (interrupteur) |
+| Casser / attaquer | appui long sur l'écran, ou maintenir le bouton épée (maintenu, les coups s'enchaînent dès que l'arme est rechargée) |
+| Sauter / nager | bouton double flèche vers le haut (maintenir pour nager ou monter) |
+| S'accroupir | bouton double flèche vers le bas (interrupteur) |
 | Barre rapide | toucher une case |
-| Inventaire, discussion, commande, jeter, vue, pause | boutons 🎒 💬 / ⤓ 👁 ⏸ en haut à droite (le clavier du téléphone s'ouvre directement) |
-| Fermer l'inventaire, un coffre, la discussion… | bouton ✕ en haut à droite |
+| Inventaire, discussion, commande, jeter, vue, pause | boutons coffre, bulle, `/`, flèche vers le bas, œil et pause en haut à droite (le clavier du téléphone s'ouvre directement) |
+| Fermer l'inventaire, un coffre, la discussion… | bouton croix en haut à droite |
 
 Les menus défilent quand l'écran est trop petit ; le zoom du navigateur (pincement, `Ctrl` + molette) est bloqué
 en jeu.
@@ -262,7 +263,7 @@ Commandes (si autorisées) : `/aide`, `/donner`, `/tp`, `/temps`, `/meteo`, `/mo
 `/invoquer`, `/localiser <village|ruines|tour|temple|portail|sanctuaire|observatoire|crypte|mine|donjon|forteresse|citadelle|fleche|temple_nuees>`,
 `/dimension <surface|abime|astral|celeste>`, `/graine`, `/regle` (alias anglais et espagnols acceptés).
 Pendant la saisie, des suggestions à toucher (ou `Tab`) complètent la commande et ses arguments (heures, météo, modes,
-objets, créatures, structures…) ; le bouton ➤ ou la touche Entrée du clavier du téléphone envoie. Pour un monde créé
+objets, créatures, structures…) ; le bouton d'envoi (flèche) ou la touche Entrée du clavier du téléphone envoie. Pour un monde créé
 sans commandes : **Solo → Modifier → Autoriser les commandes**.
 
 ---

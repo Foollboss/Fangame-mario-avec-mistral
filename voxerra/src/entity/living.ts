@@ -128,7 +128,8 @@ export abstract class LivingEntity extends Entity {
       dz /= l;
       this.body.vx += dx * 7 * kb;
       this.body.vz += dz * 7 * kb;
-      this.body.vy = Math.max(this.body.vy, 5 * Math.min(1, kb));
+      // dans l'eau, l'élan vers le haut est bien plus faible (on est repoussé, pas projeté en l'air)
+      this.body.vy = Math.max(this.body.vy, (this.body.inWater ? 2 : 5) * Math.min(1, kb));
     }
     // effets élémentaires
     if (src.element === 'fire' && !this.fireImmune) this.addEffect('brulure', 4);

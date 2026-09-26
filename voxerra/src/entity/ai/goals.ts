@@ -41,9 +41,12 @@ function groundNear(sim: Sim, m: Mob, x: number, y: number, z: number): number |
   const bx = Math.floor(x),
     bz = Math.floor(z);
   if (!w.isLoaded(bx, bz)) return null;
+  // une créature qui nage peut aussi viser la surface de l'eau
+  const swim = m.swimming(w);
   for (let dy = 4; dy >= -6; dy--) {
     const yy = Math.floor(y) + dy;
     const below = w.getId(bx, yy - 1, bz);
+    if (swim && t.liquid[below] === 1 && !t.solid[w.getId(bx, yy, bz)] && !t.liquid[w.getId(bx, yy, bz)]) return yy;
     if (!t.solid[below] || t.damage[below] > 0) continue;
     if (t.solid[w.getId(bx, yy, bz)] || t.solid[w.getId(bx, yy + 1, bz)]) continue;
     if (t.liquid[w.getId(bx, yy, bz)] === 2 && !m.fireImmune) continue;
@@ -339,6 +342,8 @@ function wander(p: P, patrol = false): Goal {
   let t = 0;
   return {
     canStart(m, _sim) {
+      // repos entre deux promenades (vérifié à chaque tick de 1/20 s)
+      idle -= 0.05;
       return idle <= 0 || Math.random() < 0.004;
     },
     canContinue: (m) => m.moving && t > 0,
@@ -365,7 +370,6 @@ function wander(p: P, patrol = false): Goal {
     stop: (m) => m.stopMoving(),
     always: false,
   };
-  // idle diminue via lookAround (voir ci-dessous) : on l'expose par fermeture
 }
 
 function lookAround(): Goal {

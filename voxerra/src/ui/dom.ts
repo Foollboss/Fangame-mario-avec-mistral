@@ -24,7 +24,7 @@ export function clear(el: HTMLElement): void {
   while (el.firstChild) el.removeChild(el.firstChild);
 }
 
-export function button(label: string, onClick: () => void, cls = ''): HTMLButtonElement {
+export function button(label: string | Node, onClick: () => void, cls = ''): HTMLButtonElement {
   return h('button', { class: `btn ${cls}`, onclick: (e: Event) => {
     e.stopPropagation();
     playClick();

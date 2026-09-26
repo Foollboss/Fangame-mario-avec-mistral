@@ -1,6 +1,6 @@
 /**
  * Contrôles tactiles : joystick de déplacement (à gauche ; on court avec le
- * bouton 🏃 à côté, jamais automatiquement), regard en glissant le doigt sur l'écran, appui bref = utiliser /
+ * bouton de course à côté, jamais automatiquement), regard en glissant le doigt sur l'écran, appui bref = utiliser /
  * poser (ou frapper la créature hostile visée), appui long = casser / attaquer, boutons (saut, accroupi, attaque,
  * utilisation, inventaire, discussion, lâcher, vue, pause) et sélection de
  * l'emplacement en touchant la barre rapide.
@@ -8,6 +8,7 @@
 import { h } from './dom';
 import type { InputManager, Action } from '../input/input';
 import { t } from '../i18n/i18n';
+import { pixelIcon } from './pixelIcons';
 
 export interface TouchHost {
   /** Le joueur est en jeu, sans écran ouvert. */
@@ -53,7 +54,7 @@ export class TouchControls {
     const lookArea = h('div', { class: 'touch-look' });
     this.joyKnob = h('div', { class: 'touch-knob' });
     this.joyBase = h('div', { class: 'touch-joy' }, this.joyKnob);
-    const btn = (cls: string, label: string, title: string, action: Action, mode: 'hold' | 'tap') => {
+    const btn = (cls: string, label: string | Node, title: string, action: Action, mode: 'hold' | 'tap') => {
       const b = h('div', { class: 'touch-btn ' + cls, title, 'aria-label': title, role: 'button' }, label);
       b.addEventListener('touchstart', (e) => {
         e.preventDefault();
@@ -74,7 +75,7 @@ export class TouchControls {
       return b;
     };
     // discussion / commande : ouvertes au relâchement du doigt (geste reconnu par le navigateur → clavier affiché)
-    const chatBtn = (label: string, title: string, initial: string) => {
+    const chatBtn = (label: string | Node, title: string, initial: string) => {
       const b = h('div', { class: 'touch-btn small', title, 'aria-label': title, role: 'button' }, label);
       b.addEventListener('touchstart', (e) => {
         e.preventDefault();
@@ -89,7 +90,7 @@ export class TouchControls {
       b.addEventListener('touchcancel', () => b.classList.remove('on'));
       return b;
     };
-    this.sneakBtn = h('div', { class: 'touch-btn sneak', title: t('S’accroupir'), 'aria-label': t('S’accroupir'), role: 'button' }, '⇩');
+    this.sneakBtn = h('div', { class: 'touch-btn sneak', title: t('S’accroupir'), 'aria-label': t('S’accroupir'), role: 'button' }, pixelIcon('bas'));
     this.sneakBtn.addEventListener('touchstart', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -97,7 +98,7 @@ export class TouchControls {
       this.sneakBtn.classList.toggle('on', this.sneakOn);
       this.input.setVirtual('sneak', this.sneakOn);
     }, { passive: false });
-    this.sprintBtn = h('div', { class: 'touch-btn touch-sprint', title: t('Courir'), 'aria-label': t('Courir'), role: 'button' }, '🏃');
+    this.sprintBtn = h('div', { class: 'touch-btn touch-sprint', title: t('Courir'), 'aria-label': t('Courir'), role: 'button' }, pixelIcon('course'));
     this.sprintBtn.addEventListener('touchstart', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -108,20 +109,20 @@ export class TouchControls {
     const actions = h(
       'div',
       { class: 'touch-actions' },
-      btn('attack', '⚔', t('Attaquer / casser'), 'attack', 'hold'),
-      btn('use', '✋', t('Utiliser / poser'), 'use', 'hold'),
+      btn('attack', pixelIcon('epee'), t('Attaquer / casser'), 'attack', 'hold'),
+      btn('use', pixelIcon('main'), t('Utiliser / poser'), 'use', 'hold'),
       this.sneakBtn,
-      btn('jump', '⇧', t('Sauter / nager'), 'jump', 'hold'),
+      btn('jump', pixelIcon('haut'), t('Sauter / nager'), 'jump', 'hold'),
     );
     const top = h(
       'div',
       { class: 'touch-top' },
-      btn('small', '🎒', t('Inventaire'), 'inventory', 'tap'),
-      chatBtn('💬', t('Discussion'), ''),
+      btn('small', pixelIcon('coffre'), t('Inventaire'), 'inventory', 'tap'),
+      chatBtn(pixelIcon('bulle'), t('Discussion'), ''),
       chatBtn('/', t('Commande'), '/'),
-      btn('small', '⤓', t('Lâcher l’objet'), 'drop', 'tap'),
-      btn('small', '👁', t('Changer de vue'), 'perspective', 'tap'),
-      btn('small', '⏸', t('Menu du jeu'), 'pause', 'tap'),
+      btn('small', pixelIcon('lacher'), t('Lâcher l’objet'), 'drop', 'tap'),
+      btn('small', pixelIcon('oeil'), t('Changer de vue'), 'perspective', 'tap'),
+      btn('small', pixelIcon('pause'), t('Menu du jeu'), 'pause', 'tap'),
     );
     this.el = h('div', { class: 'touch-ui' }, lookArea, this.joyBase, this.sprintBtn, actions, top);
     this.el.hidden = true;

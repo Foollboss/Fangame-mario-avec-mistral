@@ -6,6 +6,7 @@
 import { LivingEntity, type DamageSource } from './living';
 import type { CreatureDef } from '../registry/types';
 import type { Sim } from '../sim/sim';
+import type { World } from '../world/world';
 import { moveBody, probeEnvironment } from '../physics/collision';
 import { findPath, type PathNode } from './ai/pathfind';
 import { createGoal, type Goal } from './ai/goals';
@@ -97,6 +98,35 @@ export class Mob extends LivingEntity {
   moveDirect(x: number, y: number, z: number, speed = 1): void {
     this.dest = { x, y, z, speed, direct: true };
     this.path = null;
+  }
+
+  /** Dans l'eau (ou flottant à sa surface). */
+  swimming(w: World): boolean {
+    const t = w.content.blocks;
+    return this.body.inWater || t.liquid[w.getId(Math.floor(this.x), Math.floor(this.y - 0.3), Math.floor(this.z))] === 1;
+  }
+
+  /** L'obstacle devant (direction dx, dz) fait-il un seul bloc de haut ? */
+  private canStepOver(w: World, dx: number, dz: number): boolean {
+    const t = w.content.blocks;
+    const l = Math.hypot(dx, dz) || 1;
+    const ax = Math.floor(this.x + (dx / l) * (this.body.hw + 0.45)),
+      az = Math.floor(this.z + (dz / l) * (this.body.hw + 0.45));
+    const y = Math.floor(this.y + 0.05);
+    // rien à enjamber dans cette direction (bloqué par un reste d'élan contre un mur de côté) : pas de saut
+    if (!t.solid[w.getId(ax, y, az)]) return false;
+    const h = Math.max(1, Math.ceil(this.body.h));
+    for (let k = 1; k <= h; k++) if (t.solid[w.getId(ax, y + k, az)]) return false;
+    return true;
+  }
+
+  /** Longe un mur : nouvelle destination sur le côté (au hasard à gauche ou à droite). */
+  private slideAlongWall(dx: number, dz: number, speed: number): void {
+    const l = Math.hypot(dx, dz) || 1;
+    const side = Math.random() < 0.5 ? 1 : -1;
+    const px = (-dz / l) * side,
+      pz = (dx / l) * side;
+    this.moveDirect(this.x + px * 5 - (dx / l) * 1.5, this.y, this.z + pz * 5 - (dz / l) * 1.5, speed);
   }
 
   stopMoving(): void {
@@ -219,7 +249,7 @@ export class Mob extends LivingEntity {
         this.repath -= dt;
         if (!this.path || this.repath <= 0) {
           this.repath = 1 + Math.random() * 0.5;
-          this.path = findPath(w, Math.floor(this.x), Math.floor(this.y + 0.1), Math.floor(this.z), Math.floor(d.x), Math.floor(d.y), Math.floor(d.z), { height: Math.ceil(b.h), canSwim: false, fireImmune: this.fireImmune, maxNodes: this.def.category === 'boss' ? 600 : 300 });
+          this.path = findPath(w, Math.floor(this.x), Math.floor(this.y + 0.1), Math.floor(this.z), Math.floor(d.x), Math.floor(d.y), Math.floor(d.z), { height: Math.ceil(b.h), canSwim: this.swimming(w), fireImmune: this.fireImmune, maxNodes: this.def.category === 'boss' ? 600 : 300 });
           this.pathIdx = 0;
         }
         const p = this.path;
@@ -267,8 +297,8 @@ export class Mob extends LivingEntity {
       this.pitch *= 0.9;
     }
     this.lookTarget = null;
-    // Intégration
-    const acc = b.onGround || mv === 'fly' || mv === 'hover' || b.inWater ? 10 : 2.5;
+    // Intégration (dans l'eau, l'élan — un recul par exemple — s'amortit plus lentement)
+    const acc = b.onGround || mv === 'fly' || mv === 'hover' ? 10 : b.inWater ? 4 : 2.5;
     const k = Math.min(1, acc * dt);
     b.vx += (tvx - b.vx) * k;
     b.vz += (tvz - b.vz) * k;
@@ -284,11 +314,14 @@ export class Mob extends LivingEntity {
       b.vy -= grav * dt;
       if (b.vy < -50) b.vy = -50;
     }
-    // Saut / escalade quand bloqué
+    // Saut / escalade quand bloqué : seulement si l'obstacle fait un bloc de haut ;
+    // devant un mur plus haut (berge, falaise), on le longe au lieu de sauter sur place.
     if (b.hitH && (tvx !== 0 || tvz !== 0)) {
       if (mv === 'climb') b.vy = 3.2;
-      else if (b.onGround && mv === 'ground') b.vy = 8.4 * Math.sqrt(dimGrav);
-      else if (b.inWater) b.vy = 4;
+      else if ((b.onGround || b.inWater) && mv === 'ground') {
+        if (this.canStepOver(w, tvx, tvz)) b.vy = b.onGround ? 8.4 * Math.sqrt(dimGrav) : 7;
+        else if (d) this.slideAlongWall(tvx, tvz, d.speed);
+      } else if (b.inWater) b.vy = 4;
     }
     const y0 = b.y;
     const wasGround = b.onGround;

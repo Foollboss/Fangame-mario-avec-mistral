@@ -38,6 +38,9 @@ async function newWorld(page) {
   const touch = (type, points) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: points.map(([x, y, id]) => ({ x, y, id })) });
 
   check(await page.locator('.touch-ui').isVisible(), 'contrôles tactiles affichés (activés automatiquement sur écran tactile)');
+  // aucun émoji dans l'interface : les boutons utilisent des icônes en pixel art
+  const emoji = await page.evaluate(() => (document.body.innerText.match(/\p{Extended_Pictographic}/gu) ?? []).join(' '));
+  check(!emoji, `aucun émoji à l'écran (${emoji || 'aucun'}) ; icônes dessinées : ${await page.locator('.touch-ui svg.px-icon').count()}`);
   await page.screenshot({ path: `${outDir}/telephone-jeu.png` });
 
   // dégage les alentours (le monde est aléatoire : arbres, falaises…)
@@ -106,7 +109,7 @@ async function newWorld(page) {
   await tapSprint(33);
   await toCenter();
   const off = await halfForward(34);
-  check(!walkOnly && withBtn && lit === 1 && !off, `bouton 🏃 : course activée par un appui, coupée par un second (sans bouton ${walkOnly}, avec ${withBtn}, après ${off})`);
+  check(!walkOnly && withBtn && lit === 1 && !off, `bouton de course : course activée par un appui, coupée par un second (sans bouton ${walkOnly}, avec ${withBtn}, après ${off})`);
   await toCenter();
 
   // regard : glisser sur la moitié droite de l'écran
@@ -135,7 +138,7 @@ async function newWorld(page) {
   await touch('touchEnd', []);
   check(jumped, 'le bouton de saut fait sauter');
 
-  // inventaire (bouton 🎒) puis fermeture avec ✕
+  // inventaire (bouton coffre) puis fermeture avec la croix
   const tapEl = async (sel, id) => {
     // le rendu logiciel du navigateur de test est lent : on attend le retour des contrôles
     await page.waitForFunction(() => window.voxerra.touch.visible && !window.voxerra.ui.open, null, { timeout: 5000 }).catch(() => {});
@@ -148,7 +151,7 @@ async function newWorld(page) {
   const invOpen = await page.waitForFunction(() => window.voxerra.ui.open, null, { timeout: 5000 }).then(() => true, () => false);
   check(invOpen, 'le bouton sac ouvre l’inventaire');
   await page.waitForTimeout(400);
-  check(await page.locator('.touch-close').isVisible(), 'bouton ✕ affiché');
+  check(await page.locator('.touch-close').isVisible(), 'bouton de fermeture (croix) affiché');
   await page.screenshot({ path: `${outDir}/telephone-inventaire.png` });
   // toucher une case prend la pile, toucher une case vide la pose
   const withItem = page.locator('.screen .slot:has(img)').last();
@@ -162,7 +165,7 @@ async function newWorld(page) {
   await page.locator('.touch-close').tap();
   await page.waitForTimeout(400);
   const back = await page.waitForFunction(() => !window.voxerra.ui.open && window.voxerra.touch.visible, null, { timeout: 5000 }).then(() => true, () => false);
-  check(back, '✕ ferme l’inventaire et les contrôles reviennent');
+  check(back, 'la croix ferme l’inventaire et les contrôles reviennent');
 
   // Chauve-furie : appui bref en visant approximativement (aide à la visée) → coups
   await page.evaluate(() => {

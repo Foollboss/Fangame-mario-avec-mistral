@@ -989,7 +989,7 @@ export class Game {
         commit();
       } catch (e) {
         console.error('Échec de la sauvegarde', e);
-        this.chat.add(t('⚠ Échec de la sauvegarde (espace de stockage ?)'), '#ff6060');
+        this.chat.add(t('Échec de la sauvegarde (espace de stockage ?)'), '#ff6060');
       }
       setTimeout(() => this.hud.setSaving(false), 600);
     };
