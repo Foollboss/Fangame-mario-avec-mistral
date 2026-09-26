@@ -18,6 +18,17 @@ Les mondes sont sauvegardés dans le navigateur. Pour le régénérer après une
 Si le navigateur refuse les workers ou le verrouillage de la souris (cadre isolé, tablette), le jeu bascule seul :
 génération sur le fil principal et regard à la souris sans verrouillage.
 
+## Versions installables : Windows (.exe) et Android (.apk)
+
+| Plateforme | Fichier | Construire | Détails |
+|---|---|---|---|
+| Windows 10/11 (64 bits) | `Voxerra-1.0.0-Windows.exe` (portable, ~90 Mo, sans installation) | `npm run build:exe` | [`desktop/README.md`](desktop/README.md) |
+| Android 7+ | `app-release.apk` (~2,5 Mo) | `npm run build:apk` | [`android/README.md`](android/README.md) |
+
+Les deux embarquent le même fichier `Voxerra.html`. Dans ces versions, **Quitter le jeu** ferme l'application et le
+monde en cours est sauvegardé à la fermeture (ou quand l'appli Android passe en arrière-plan). Les fichiers produits
+ne sont pas versionnés (trop lourds) : ils sont dans `desktop/dist/` et `android/app/build/outputs/apk/release/`.
+
 ## Langues
 
 Le jeu est entièrement traduit en **français**, **anglais** et **espagnol** : menus, HUD, inventaires, messages,
@@ -136,6 +147,8 @@ ici tout reste en texte, modifiable, testable et exécutable en une commande.
 ```
 voxerra/
 ├─ index.html, package.json, tsconfig.json, vite.config.ts
+├─ desktop/                version Windows (Electron) : fenêtre, pont « Quitter », icônes, essai automatique
+├─ android/                version Android (Gradle) : activité WebView plein écran, icônes, clé de signature
 ├─ public/mods/            mods « données » chargés au démarrage (index.json + lucioles.json d'exemple)
 ├─ server/
 │  ├─ server.ts            point d'entrée du serveur dédié (options, boucle 20 ticks/s)

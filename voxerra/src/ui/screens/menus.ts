@@ -43,7 +43,11 @@ export function mainMenu(app: AppApi): Screen {
         { class: 'row', style: { marginTop: '14px' } },
         button('🌐', () => app.ui.push(languageScreen(app)), 'square icon-btn'),
         button(t('Options...'), () => app.ui.push(optionsScreen(app, false)), 'half'),
-        button(t('Quitter le jeu'), () => app.ui.push(quitScreen(app)), 'half'),
+        button(t('Quitter le jeu'), () => {
+          const host = appHost();
+          if (host) host.quit();
+          else app.ui.push(quitScreen(app));
+        }, 'half'),
         button('?', () => app.ui.push(helpScreen(app)), 'square icon-btn'),
       ),
     ),
@@ -51,6 +55,11 @@ export function mainMenu(app: AppApi): Screen {
     h('div', { class: 'corner right' }, t('Fangame original — aucun contenu tiers')),
   );
   return { el, onEscape: () => {} };
+}
+
+/** Version installée (Windows, Android) : l'application hôte sait fermer le jeu. */
+function appHost(): { quit(): void } | undefined {
+  return (globalThis as { voxerraHost?: { quit(): void } }).voxerraHost;
 }
 
 function quitScreen(app: AppApi): Screen {

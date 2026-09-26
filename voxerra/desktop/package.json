@@ -1,0 +1,53 @@
+{
+  "name": "voxerra-desktop",
+  "productName": "Voxerra",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Voxerra — version de bureau (Windows)",
+  "author": "@Fullboss971",
+  "license": "UNLICENSED",
+  "main": "main.cjs",
+  "scripts": {
+    "prepare-app": "node prepare.mjs",
+    "start": "node prepare.mjs && electron .",
+    "build:win": "node prepare.mjs && electron-builder --win portable --x64"
+  },
+  "devDependencies": {
+    "electron": "44.4.5",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "io.github.fullboss971.voxerra",
+    "productName": "Voxerra",
+    "copyright": "@Fullboss971",
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "app/**"
+    ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "portable": {
+      "artifactName": "Voxerra-${version}-Windows.exe",
+      "unpackDirName": "Voxerra"
+    },
+    "electronLanguages": [
+      "fr",
+      "en-US",
+      "es"
+    ]
+  }
+}
