@@ -19,7 +19,7 @@ export class ItemRegistry {
     // 2) objets implicites pour les blocs
     for (const b of blocks.list) {
       if (b.num === 0 || b.def.item === false || this.byId.has(b.id)) continue;
-      this.add({ id: b.id, name: b.name, block: b.id }, blocks);
+      this.add({ id: b.id, name: b.name, block: b.id, desc: b.def.desc }, blocks);
     }
   }
 

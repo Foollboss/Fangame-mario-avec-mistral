@@ -39,11 +39,18 @@ ne sont pas versionnés (trop lourds) : ils sont dans `launcher/dist/`, `desktop
 
 Une dimension lumineuse d'îles flottantes au-dessus d'une mer de nuages, accessible dès que l'on a de la lumirite.
 
-1. **Pierres d'aurore** (×4) : calcaire en croix autour d'un éclat de lumirite (atelier ou inventaire 3×3).
+1. **Pierres d'aurore** (×4) : calcaire en croix autour d'un éclat de lumirite, à l'**atelier** (la recette ne tient pas
+   dans la grille 2×2 de l'inventaire). En créatif : onglet Construction, ou taper « portail » ou « aurore » dans la
+   recherche (elle lit aussi les descriptions et ignore les accents).
 2. **Cadre** : comme le portail de l'Abîme, un rectangle de pierres d'aurore (intérieur de 2×3 à 21×21 ; les coins
    sont facultatifs), soit 10 pierres pour le plus petit.
 3. **Plume d'azur** : plume + éclat de lumirite + fiole ; l'utiliser sur le bas de l'intérieur du cadre l'allume.
 4. Rester dans le voile bleu : on arrive sur une île, près d'un portail de retour construit automatiquement.
+
+**Ruine de portail céleste** (pendant de la ruine de portail de l'Abîme, aussi fréquente) : au lieu d'un cadre runique
+enfoncé dans la cendre, un cadre de pierres d'aurore brisé sur un îlot de calcaire qui **flotte** au-dessus du sol,
+entouré de nuages. Un escalier de nuages y monte ; le coffre contient des pierres d'aurore, souvent une plume d'azur,
+des plumes, de la lumirite et des fioles : de quoi compléter le cadre et l'allumer. `/localiser portail_celeste`.
 
 Sur place : herbe et terre célestes, pierre céleste (outils et fourneaux comme la pierre), arbres célestes et chênes
 dorés, **ambre solaire** (minerai ; se mange : régénération ; bon combustible), fleurs d'aurore, **nuages** (aucun dégât
@@ -262,7 +269,7 @@ Inventaire : clic gauche (prendre, poser, échanger), clic droit (moitié / un s
 Maj + clic (transfert rapide), double-clic (regrouper), touches `1`–`9` (échange avec la barre rapide).
 
 Commandes (si autorisées) : `/aide`, `/donner`, `/tp`, `/temps`, `/meteo`, `/mode`, `/effet`, `/soigner`, `/tuer`,
-`/invoquer`, `/localiser <village|ruines|tour|temple|portail|sanctuaire|observatoire|crypte|mine|donjon|forteresse|citadelle|fleche|temple_nuees>`,
+`/invoquer`, `/localiser <village|ruines|tour|temple|portail|portail_celeste|sanctuaire|observatoire|crypte|mine|donjon|forteresse|citadelle|fleche|temple_nuees>`,
 `/dimension <surface|abime|astral|celeste>`, `/graine`, `/regle` (alias anglais et espagnols acceptés).
 Pendant la saisie, des suggestions à toucher (ou `Tab`) complètent la commande et ses arguments (heures, météo, modes,
 objets, créatures, structures…) ; le bouton d'envoi (flèche) ou la touche Entrée du clavier du téléphone envoie. Pour un monde créé
@@ -283,9 +290,9 @@ plages, rivages rocheux, rivières, rivières gelées) dont 2 zones très rares 
 5 biomes de l'Abîme, 4 des Cimes astrales, 4 des Îles célestes ; transitions et teintes mélangées ; montagnes avec surplombs, rivières, lacs,
 grottes, lave profonde, 8 minerais répartis par profondeur, 18 types d'arbres.
 
-**Structures** (15 types + gabarits de mods) : hameaux générés par règles (routes, maisons à pignon selon le biome,
+**Structures** (16 types + gabarits de mods) : hameaux générés par règles (routes, maisons à pignon selon le biome,
 grandes maisons, forge, champs irrigués, enclos, puits, lampadaires, habitants), ruines (parfois avec cave cachée),
-tours de guet occupées par des pillards, temple des sables à chambre secrète, ruines de portail, sanctuaire moussu
+tours de guet occupées par des pillards, temple des sables à chambre secrète, ruines de portail (runique, et céleste sur son îlot flottant), sanctuaire moussu
 (autel du boss sylvestre), observatoire (autel astral), crypte oubliée (très rare, meilleur butin),
 mines abandonnées en réseau de galeries, donjons à foyers maudits, forteresse de basalte (Abîme), ruines cendrées,
 citadelle astrale et flèches de cristal (Cimes), temple des nuées (Îles célestes). 16 tables de butin.

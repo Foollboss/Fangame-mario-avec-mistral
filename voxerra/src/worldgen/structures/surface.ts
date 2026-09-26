@@ -1,7 +1,7 @@
 /**
  * Structures des Terres d'Aube : hameaux (générés par règles : routes,
  * maisons, fermes, forge, enclos), ruines, tours de guet, temple des sables,
- * ruines de portail, sanctuaire moussu (autel du Gardien sylvestre),
+ * ruines de portail (runique et céleste), sanctuaire moussu (autel du Gardien sylvestre),
  * observatoire (autel astral), crypte (très rare).
  */
 import { Builder, S, W, N, E, DX, DZ } from './builder';
@@ -589,6 +589,89 @@ const portalRuin: StructureType = {
   },
 };
 
+// ------------------------------------------------------------------ ruine de portail céleste
+/**
+ * Pendant lumineux de la ruine de portail : au lieu d'un cadre runique enfoncé dans la cendre,
+ * un cadre de pierres d'aurore brisé sur un îlot de calcaire qui flotte au-dessus du sol,
+ * entouré de nuages ; un escalier de nuages y monte, un coffre garde de quoi le réparer.
+ */
+const skyPortalRuin: StructureType = {
+  id: 'portail_celeste',
+  name: 'Ruine de portail céleste',
+  aliases: ['ruine_portail_celeste', 'portail_aurore', 'sky_portal', 'portal_celeste'],
+  dim: 'surface',
+  region: 14,
+  salt: 111,
+  chance: 0.35,
+  radius: 8,
+  site(ctx, x, z, rng) {
+    if (WATERY.has(biomeId(ctx, x, z))) return null;
+    const [lo, hi, h] = flatness(ctx, x, z, 5);
+    if (lo <= SEA_LEVEL || hi - lo > 6) return null;
+    return { x, y: h, z, rot: rng.int(4), seed: rng.nextU32() };
+  },
+  build(b, p) {
+    b.at(p.x, p.y, p.z, p.rot);
+    const c = (n: string) => b.c(n);
+    const lime = c('calcaire'),
+      cloud = c('nuage'),
+      frame = c('pierre_aurore');
+    const I = 6; // dessus de l'îlot
+    b.clearTrees(-8, -7, 8, 7, -2, 20);
+    // sol : calcaire et gravier clairs, fleurs d'aurore, nuages tombés
+    for (let x = -5; x <= 5; x++)
+      for (let z = -4; z <= 4; z++) {
+        if (Math.abs(x) / 5.5 + Math.abs(z) / 4.5 > 1.1) continue;
+        b.clearAbove(x, 1, z, I + 8);
+        b.foundation(x, 0, z, c('pierre'));
+        const r = b.rnd(x, 0, z, 7);
+        b.set(x, 0, z, r < 0.45 ? lime : r < 0.6 ? c('gravier') : c('herbe'));
+        const f = b.rnd(x, 1, z, 8);
+        if (f < 0.1) b.place(x, 1, z, c('fleur_aurore'));
+        else if (f > 0.94) b.place(x, 1, z, cloud);
+      }
+    // îlot flottant : dessus de calcaire, dessous qui s'affine en nuages
+    for (let x = -4; x <= 4; x++)
+      for (let z = -3; z <= 3; z++) {
+        const d = (x / 4.5) ** 2 + (z / 3.5) ** 2;
+        if (d > 1) continue;
+        b.set(x, I, z, lime);
+        if (d <= 0.55) b.set(x, I - 1, z, lime);
+        else if (b.rnd(x, I - 1, z, 9) < 0.5) b.set(x, I - 1, z, cloud);
+        if (d <= 0.2) b.set(x, I - 2, z, cloud);
+      }
+    // cadre 4×5 (intérieur 2×3) avec des pierres manquantes, deux autres tombées au sol
+    for (let x = -1; x <= 2; x++)
+      for (let y = I + 1; y <= I + 5; y++) {
+        const edge = x === -1 || x === 2 || y === I + 1 || y === I + 5;
+        if (!edge) continue;
+        if (b.keep(x, y, 0, 0.72)) b.set(x, y, 0, frame);
+        else if (b.keep(x, y, 0, 0.5)) b.set(x, y, 0, lime);
+      }
+    b.set(3, 1, 2, frame);
+    b.set(-3, 1, -2, frame);
+    // coffre au pied du cadre, fleurs sur l'îlot
+    b.chest(-3, I + 1, 1, E, 'portail_celeste_ruine');
+    b.place(3, I + 1, -1, c('fleur_aurore'));
+    b.place(-2, I + 1, -2, c('fleur_aurore'));
+    // escalier de nuages : du sol jusqu'au bord de l'îlot
+    for (let i = 0; i < I; i++) {
+      b.set(-6 + i, 1 + i, 5, cloud);
+      b.clearAbove(-6 + i, 2 + i, 5, 3);
+    }
+    b.set(-1, I, 4, cloud);
+    // quelques nuages qui dérivent au-dessus
+    for (const [x, y, z] of [
+      [-5, I + 6, -2],
+      [-4, I + 6, -2],
+      [4, I + 7, 1],
+      [5, I + 7, 1],
+      [5, I + 7, 2],
+    ])
+      b.set(x, y, z, cloud);
+  },
+};
+
 // ------------------------------------------------------------------ sanctuaire moussu
 const sanctuary: StructureType = {
   id: 'sanctuaire',
@@ -923,7 +1006,7 @@ const dungeon: StructureType = {
   },
 };
 
-export const SURFACE_STRUCTURES: StructureType[] = [mine, dungeon, village, ruins, tower, temple, portalRuin, sanctuary, observatory, crypt];
+export const SURFACE_STRUCTURES: StructureType[] = [mine, dungeon, village, ruins, tower, temple, portalRuin, skyPortalRuin, sanctuary, observatory, crypt];
 export type { StructCtx, Placement };
 void W;
 void E;

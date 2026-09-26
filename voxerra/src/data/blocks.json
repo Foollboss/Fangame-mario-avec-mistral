@@ -2260,6 +2260,7 @@
  {
   "id": "pierre_runique",
   "name": "Pierre runique",
+  "desc": "Cadre du portail de l'Abîme cendré (s'allume à l'étincelle de braise).",
   "hardness": 10,
   "level": 3,
   "tool": "pickaxe",
@@ -2505,6 +2506,7 @@
  {
   "id": "pierre_aurore",
   "name": "Pierre d'aurore",
+  "desc": "Cadre du portail des Îles célestes (s'allume à la plume d'azur).",
   "hardness": 10,
   "level": 3,
   "tool": "pickaxe",

@@ -151,7 +151,7 @@ export function runCommand(host: CommandHost, p: Player, line: string): { ok: bo
     case 'locate':
     case 'localizar': {
       const type = parts[0];
-      if (!type || !host.locate) return { ok: false, out: [t('Usage : /localiser <village|ruines|tour|temple|mine|donjon|sanctuaire|observatoire|crypte|forteresse|citadelle|fleche|temple_nuees>')] };
+      if (!type || !host.locate) return { ok: false, out: [t('Usage : /localiser <village|ruines|tour|temple|portail|portail_celeste|mine|donjon|sanctuaire|observatoire|crypte|forteresse|citadelle|fleche|temple_nuees>')] };
       const r = host.locate(type, p.dim, p.x, p.z);
       if (!r) return { ok: false, out: [t('Aucune structure « {type} » trouvée à proximité.', { type })] };
       return { ok: true, out: [t('{type} le plus proche : x={x}, z={z} ({d} blocs)', { type: r.name ?? type, x: r.x, z: r.z, d: Math.round(Math.hypot(r.x - p.x, r.z - p.z)) })] };
@@ -196,7 +196,7 @@ const ARG_WORDS: Record<string, Record<Lang, string[]>> = {
   meteo: { fr: ['clair', 'pluie', 'orage'], en: ['clear', 'rain', 'thunder'], es: ['despejado', 'lluvia', 'tormenta'] },
   mode: { fr: ['survie', 'creatif', 'spectateur'], en: ['survival', 'creative', 'spectator'], es: ['supervivencia', 'creativo', 'espectador'] },
 };
-const STRUCTURES = ['village', 'ruines', 'tour', 'temple', 'portail', 'sanctuaire', 'observatoire', 'crypte', 'mine', 'donjon', 'forteresse', 'citadelle', 'fleche', 'temple_nuees'];
+const STRUCTURES = ['village', 'ruines', 'tour', 'temple', 'portail', 'portail_celeste', 'sanctuaire', 'observatoire', 'crypte', 'mine', 'donjon', 'forteresse', 'citadelle', 'fleche', 'temple_nuees'];
 const MAX_SUGGESTIONS = 30;
 
 /**

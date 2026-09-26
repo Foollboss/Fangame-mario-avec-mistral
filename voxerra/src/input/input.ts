@@ -126,14 +126,21 @@ export class InputManager {
   touchMoveY = 0;
 
   constructor(private canvas: HTMLElement) {
+    // Ctrl sert à courir : ses raccourcis de navigateur (Ctrl+W ferme la fenêtre, Ctrl+R recharge,
+    // Ctrl+1…9 change d'onglet…) sont bloqués en jeu ; Ctrl+W et Ctrl+F4 ne ferment jamais le jeu, même
+    // pendant une saisie (phase de capture : les champs qui arrêtent la propagation n'y échappent pas).
+    // (Onglet de navigateur classique : Ctrl+W lui reste réservé, la confirmation de sortie prend le relais.)
+    window.addEventListener(
+      'keydown',
+      (e) => {
+        const typing = (e.target as HTMLElement)?.tagName === 'INPUT';
+        if ((e.ctrlKey || e.metaKey) && ((this.gameFocus && !typing) || e.code === 'KeyW' || e.code === 'F4')) e.preventDefault();
+      },
+      { capture: true },
+    );
     window.addEventListener('keydown', (e) => {
-      const typing = (e.target as HTMLElement)?.tagName === 'INPUT';
-      // Ctrl sert à courir : ses raccourcis de navigateur (Ctrl+W ferme la fenêtre, Ctrl+R recharge,
-      // Ctrl+1…9 change d'onglet…) sont bloqués en jeu ; Ctrl+W et Ctrl+F4 ne ferment jamais le jeu.
-      // (Onglet de navigateur classique : Ctrl+W lui reste réservé, la confirmation de sortie prend le relais.)
-      if ((e.ctrlKey || e.metaKey) && ((this.gameFocus && !typing) || e.code === 'KeyW' || e.code === 'F4')) e.preventDefault();
       if (e.repeat) return;
-      if (typing) return;
+      if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
       this.down.add(e.code);
       this.pressedCodes.add(e.code);
       const now = performance.now();

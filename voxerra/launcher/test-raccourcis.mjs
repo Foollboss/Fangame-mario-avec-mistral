@@ -107,6 +107,18 @@ xdo('key', 'ctrl+r');
 await wait(1500);
 check(alive() && navs.length === 0 && (await inGame()), 'Ctrl+R ne recharge pas la page');
 
+// pendant une saisie (discussion) : Ctrl+W ne ferme pas non plus
+xdo('key', 't');
+await wait(600);
+check(await pg.evaluate(() => document.activeElement?.tagName === 'INPUT'), 'discussion ouverte, saisie active');
+xdo('key', 'ctrl+w');
+await wait(1500);
+check(alive(), `Ctrl+W pendant la saisie : le jeu reste ouvert (boîtes de dialogue : ${dialogs.length})`);
+xdo('key', 'Escape');
+await wait(600);
+xdo('click', '1');
+await wait(400);
+
 // menu pause ouvert : Ctrl+W ne ferme pas non plus
 xdo('key', 'Escape');
 await wait(600);

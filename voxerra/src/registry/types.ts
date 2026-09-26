@@ -44,6 +44,8 @@ export interface DropDef {
 export interface BlockDef {
   id: string;
   name: string;
+  /** Description de l'objet correspondant (infobulle, recherche de l'inventaire créatif). */
+  desc?: string;
   tex?: TexSpec;
   shape?: ShapeName;
   pass?: PassName;

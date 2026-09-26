@@ -360,7 +360,7 @@ class CraftingScreen extends ContainerScreen {
 
   private renderBook(): void {
     if (!this.bookList) return;
-    const q = (this.bookSearch?.value ?? '').trim().toLowerCase();
+    const q = fold((this.bookSearch?.value ?? '').trim());
     clear(this.bookList);
     const book = this.ctx.content.recipes;
     const seen = new Set<string>();
@@ -369,8 +369,8 @@ class CraftingScreen extends ContainerScreen {
       if (!book.fitsIn(r, this.gw, this.gw)) continue;
       if (r.station === 'forge' && this.station !== 'forge') continue;
       if (seen.has(r.result.item)) continue;
-      const name = this.ctx.content.items.name(r.result.item).toLowerCase();
-      if (q && !name.includes(q)) continue;
+      const res = this.ctx.content.items.get(r.result.item);
+      if (q && res && !matchesSearch(res, q)) continue;
       seen.add(r.result.item);
       entries.push({ r, ok: this.haveIngredients(r) });
     }
@@ -628,6 +628,14 @@ export class FurnaceScreen extends ContainerScreen {
   }
 }
 
+/** Texte de recherche : minuscules, sans accents (« ile celeste » trouve « Îles célestes »). */
+const fold = (s: string): string => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+
+/** Un objet correspond à la recherche par son nom, son identifiant ou sa description. */
+function matchesSearch(it: { id: string; name: string; desc?: string }, q: string): boolean {
+  return fold(it.name).includes(q) || it.id.includes(q) || (!!it.desc && fold(it.desc).includes(q));
+}
+
 const CREATIVE_TABS: { id: string; name: string; test: (c: Content, id: string) => boolean }[] = [
   { id: 'construction', name: tr('Construction'), test: (c, id) => {
     const it = c.items.get(id)!;
@@ -693,11 +701,11 @@ export class CreativeScreen extends ContainerScreen {
 
   private renderGrid(): void {
     clear(this.gridEl);
-    const q = this.search.value.trim().toLowerCase();
+    const q = fold(this.search.value.trim());
     const tab = CREATIVE_TABS.find((t) => t.id === this.tab);
     const c = this.ctx.content;
     for (const it of c.items.list) {
-      if (q ? !it.name.toLowerCase().includes(q) && !it.id.includes(q) : tab && !tab.test(c, it.id)) continue;
+      if (q ? !matchesSearch(it, q) : tab && !tab.test(c, it.id)) continue;
       const el = h('div', { class: 'slot' }, h('img', { class: 'ico', src: this.ctx.icons.icon(it.id) }));
       el.title = it.name;
       el.addEventListener('mousedown', (e) => {

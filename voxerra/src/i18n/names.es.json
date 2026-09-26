@@ -318,7 +318,9 @@
   "etincelle_braise": "Enciende un marco de piedras rúnicas.",
   "elixir_vitalite": "Aumenta permanentemente la salud máxima (+2 corazones, máx. 3 veces).",
   "pierre_rappel": "Mantén clic derecho: vuelve a tu punto de reaparición.",
-  "plume_azur": "Enciende un marco de piedras del alba."
+  "plume_azur": "Enciende un marco de piedras del alba.",
+  "pierre_runique": "Marco del portal del Abismo ceniciento (se enciende con una chispa de brasa).",
+  "pierre_aurore": "Marco del portal de las Islas Celestes (se enciende con una pluma azur)."
  },
  "creatures": {
   "pelucheon": "Peluchón",
@@ -431,6 +433,7 @@
   "tour": "Torre de vigía",
   "temple": "Templo de las arenas",
   "portail": "Ruina de portal",
+  "portail_celeste": "Ruina de portal celeste",
   "sanctuaire": "Santuario musgoso",
   "observatoire": "Observatorio",
   "crypte": "Cripta olvidada",

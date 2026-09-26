@@ -6,13 +6,13 @@ import fs from 'node:fs';
 
 const url = process.argv[2] ?? 'http://localhost:5173/';
 const outDir = process.argv[3] ?? 'screenshots/structures';
-const ids = (process.argv[4] ?? 'village,ruines,tour,temple,portail,sanctuaire,observatoire,crypte').split(',');
+const ids = (process.argv[4] ?? 'village,ruines,tour,temple,portail,portail_celeste,sanctuaire,observatoire,crypte').split(',');
 fs.mkdirSync(outDir, { recursive: true });
 const browser = await chromium.launch({
   executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
   args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
 });
-const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+const page = await browser.newPage({ viewport: { width: 1280, height: 720 }, locale: 'fr-FR' });
 const logs = [];
 page.on('console', (m) => logs.push(`[${m.type()}] ${m.text()}`));
 page.on('pageerror', (e) => logs.push(`[pageerror] ${e.message}\n${e.stack}`));

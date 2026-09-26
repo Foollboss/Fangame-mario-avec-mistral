@@ -318,7 +318,9 @@
   "etincelle_braise": "Lights a runestone frame.",
   "elixir_vitalite": "Permanently increases maximum health (+2 hearts, up to 3 times).",
   "pierre_rappel": "Hold right click: return to your spawn point.",
-  "plume_azur": "Lights a dawnstone frame."
+  "plume_azur": "Lights a dawnstone frame.",
+  "pierre_runique": "Frame of the Ashen Abyss portal (lit with an ember spark).",
+  "pierre_aurore": "Frame of the Sky Isles portal (lit with an azure feather)."
  },
  "creatures": {
   "pelucheon": "Fluffling",
@@ -431,6 +433,7 @@
   "tour": "Watchtower",
   "temple": "Sand Temple",
   "portail": "Ruined Portal",
+  "portail_celeste": "Ruined Sky Portal",
   "sanctuaire": "Mossy Sanctuary",
   "observatoire": "Observatory",
   "crypte": "Forgotten Crypt",

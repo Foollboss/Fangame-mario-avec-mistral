@@ -3,6 +3,7 @@ import { content, newSim, flatWorld, loadArea } from './helpers';
 import { Player } from '../src/entity/player';
 import { createGenerator } from '../src/worldgen/generator';
 import { CelesteGenerator } from '../src/worldgen/celeste';
+import type { OverworldGenerator } from '../src/worldgen/overworld';
 import { tryIgnitePortal, checkPortalContact } from '../src/sim/portals';
 import { applyFall } from '../src/sim/survival';
 import type { SimEvent } from '../src/sim/events';
@@ -126,5 +127,58 @@ describe('Îles célestes', () => {
     p.setPos(10.5, -20, 10.5);
     for (let i = 0; i < 12; i++) sim.tick();
     expect(events.some((e) => e.t === 'dimension' && e.dim === 'surface' && e.mode === 'exact')).toBe(true);
+  });
+
+  it('ruine de portail céleste : îlot flottant, escalier de nuages, cadre à réparer puis à allumer', () => {
+    const sim = newSim(20250917);
+    const w = sim.world('surface');
+    w.trackDirty = false;
+    const gen = createGenerator('surface', w.seed, content) as OverworldGenerator;
+    const found = gen.structures.locate('portail_celeste', 0, 0, 20000)!;
+    expect(found).not.toBeNull();
+    const type = gen.structures.find('portail_celeste')!;
+    const size = type.region * 16;
+    const p = gen.structures.placement(type, Math.floor(found.x / size), Math.floor(found.z / size))!;
+    expect([p.x, p.z]).toEqual([found.x, found.z]);
+    const cx = Math.floor(p.x / 16),
+      cz = Math.floor(p.z / 16);
+    loadArea(w, cx, cz, 1);
+    // coordonnées locales de la structure → monde (même rotation que le constructeur)
+    const at = (x: number, y: number, z: number): [number, number, number] => {
+      const r = p.rot;
+      const wx = r === 1 ? p.x - z : r === 2 ? p.x - x : r === 3 ? p.x + z : p.x + x;
+      const wz = r === 1 ? p.z + x : r === 2 ? p.z - z : r === 3 ? p.z - x : p.z + z;
+      return [wx, p.y + y, wz];
+    };
+    const id = (x: number, y: number, z: number) => w.getId(...at(x, y, z));
+    // îlot de calcaire qui flotte au-dessus du sol
+    expect(id(0, 6, 0)).toBe(B('calcaire'));
+    // escalier de nuages jusqu'au bord de l'îlot, avec de la place pour la tête (au plus un peu de neige)
+    const free = (x: number, y: number, z: number) => !content.blocks.solid[id(x, y, z)];
+    for (let i = 0; i < 6; i++) {
+      expect(id(-6 + i, 1 + i, 5)).toBe(B('nuage'));
+      expect(free(-6 + i, 2 + i, 5) && free(-6 + i, 3 + i, 5)).toBe(true);
+    }
+    // l'îlot flotte bien : du vide entre le sol et lui
+    for (const y of [2, 3]) expect(free(0, y, 0)).toBe(true);
+    expect(id(-1, 6, 4)).toBe(B('nuage'));
+    expect(id(-1, 6, 3)).toBe(B('calcaire'));
+    // cadre brisé : des pierres d'aurore, mais pas toutes
+    const frame = B('pierre_aurore');
+    const edges: [number, number][] = [];
+    for (let x = -1; x <= 2; x++) for (let y = 7; y <= 11; y++) if (x === -1 || x === 2 || y === 7 || y === 11) edges.push([x, y]);
+    const present = edges.filter(([x, y]) => id(x, y, 0) === frame).length;
+    expect(present).toBeGreaterThanOrEqual(5);
+    expect(id(3, 1, 2) === frame || id(-3, 1, -2) === frame).toBe(true);
+    // coffre de la ruine au pied du cadre
+    let chest = false;
+    for (let dz = -1; dz <= 1; dz++)
+      for (let dx = -1; dx <= 1; dx++)
+        chest ||= gen.generate(cx + dx, cz + dz).blockEntities.some((b) => b.data.type === 'chest' && b.data.loot === 'portail_celeste_ruine');
+    expect(chest).toBe(true);
+    // réparé avec les pierres manquantes, le cadre s'allume à la plume d'azur
+    for (const [x, y] of edges) w.setBlock(...at(x, y, 0), frame);
+    expect(tryIgnitePortal(sim, w, ...at(0, 8, 0), 'celeste')).toBe(true);
+    for (const [x, y] of [[0, 8], [1, 8], [0, 10], [1, 10]]) expect(id(x, y, 0)).toBe(B('voile_celeste'));
   });
 });
