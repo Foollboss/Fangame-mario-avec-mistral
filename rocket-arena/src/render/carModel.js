@@ -130,7 +130,7 @@ const SHARED = [tireGeo, rimGeo, hubGeo, spokeGeo, flameGeo, coreGeo, pipeGeo, s
 const tmpF = new THREE.Vector3();
 
 export class CarView {
-  constructor(car, { teamColor, accent = 0x222222, boostColor = null, showName = true }) {
+  constructor(car, { teamColor, accent = 0x222222, boostColor = null, showName = true, lite = false }) {
     this.car = car;
     const key = PROFILES[car.bodyKey] ? car.bodyKey : 'octane';
     const pf = PROFILES[key];
@@ -139,13 +139,12 @@ export class CarView {
     this.root = new THREE.Group();
     this.group.add(this.root);
 
-    const paint = new THREE.MeshPhysicalMaterial({
-      color: teamColor, metalness: 0.5, roughness: 0.34, clearcoat: 0.7, clearcoatRoughness: 0.14,
-    });
-    const accentMat = new THREE.MeshPhysicalMaterial({ color: accent, metalness: 0.6, roughness: 0.35, clearcoat: 0.6 });
-    const glass = new THREE.MeshPhysicalMaterial({
-      color: 0x060a14, metalness: 0.2, roughness: 0.04, clearcoat: 1, clearcoatRoughness: 0.02, envMapIntensity: 1.6,
-    });
+    // Clear coat looks great but costs a lot on phones: the lite path uses standard materials.
+    const Paint = lite ? THREE.MeshStandardMaterial : THREE.MeshPhysicalMaterial;
+    const coat = (o, c) => (lite ? o : { ...o, ...c });
+    const paint = new Paint(coat({ color: teamColor, metalness: 0.5, roughness: 0.3 }, { roughness: 0.34, clearcoat: 0.7, clearcoatRoughness: 0.14 }));
+    const accentMat = new Paint(coat({ color: accent, metalness: 0.6, roughness: 0.35 }, { clearcoat: 0.6 }));
+    const glass = new Paint(coat({ color: 0x060a14, metalness: 0.3, roughness: 0.06, envMapIntensity: 1.6 }, { clearcoat: 1, clearcoatRoughness: 0.02 }));
     const trim = new THREE.MeshStandardMaterial({ color: 0x121419, roughness: 0.62, metalness: 0.3 });
     const tire = new THREE.MeshStandardMaterial({ color: 0x151517, roughness: 0.88 });
     const rimMat = new THREE.MeshStandardMaterial({ color: 0xe2e6ee, metalness: 0.75, roughness: 0.3 });

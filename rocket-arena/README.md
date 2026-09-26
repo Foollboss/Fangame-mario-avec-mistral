@@ -1,7 +1,28 @@
 # Supersonic Arena 🚗⚽🚀
 
-Un jeu de **football en voitures à réaction** en 3D, inspiré de *Rocket League*, jouable sur **PC** directement dans le navigateur
-(Chrome, Edge ou Firefox). Aucune installation, aucun serveur : tout est calculé en local.
+Un jeu de **football en voitures à réaction** en 3D, inspiré de *Rocket League*, jouable sur **PC** dans le navigateur
+(Chrome, Edge ou Firefox) et sur **Android** (APK avec commandes tactiles). Aucun serveur : tout est calculé en local.
+
+## Installer sur Android (APK)
+
+1. Sur ton téléphone, télécharge [`SupersonicArena.apk`](SupersonicArena.apk) (sur GitHub : ouvre le fichier puis
+   *Download raw file*).
+2. Ouvre le fichier téléchargé. Android demande d'autoriser l'installation d'applications depuis cette source
+   (navigateur ou gestionnaire de fichiers) : accepte, puis **Installer**.
+3. Lance **Supersonic Arena** : le jeu s'ouvre en plein écran, en paysage.
+
+Android 8.0 minimum. Commandes tactiles :
+
+- **Moitié gauche de l'écran** : un joystick apparaît sous ton pouce. Haut = accélérer, bas = freiner / reculer,
+  gauche / droite = tourner ; en l'air il fait pivoter la voiture.
+- **SAUT** (bleu) : saut, et une deuxième pression en tenant le joystick = flip. **BOOST** (orange) : maintiens pour foncer.
+- **DÉRAPE** : dérapage au sol, air roll en l'air. **CAM** : caméra balle / voiture. **II** : pause.
+  Le bouton *Retour* d'Android met aussi en pause.
+- En entraînement libre : **BALLE** replace la balle devant toi, **TIR** te la lance dessus.
+- Une manette Bluetooth peut aussi fonctionner.
+
+L'APK est signé avec une clé de test publique (`android/keystore/`) pour pouvoir être réinstallé par-dessus une version
+précédente ; ce n'est pas une clé de publication sur le Play Store.
 
 ## Lancer le jeu
 
@@ -33,6 +54,9 @@ Un jeu de **football en voitures à réaction** en 3D, inspiré de *Rocket Leagu
 - **Garage** : 4 carrosseries avec leur hitbox (Octane, Dominus, Breakout, Merc), couleur secondaire, couleur de la traînée de boost.
 - **Messages rapides** (touches 1 à 8 ou croix directionnelle : « Joli tir ! », « Quel arrêt ! », « Calculé. »…) — les bots
   répondent aussi —, **reset de flip** en touchant la balle avec les roues, vibrations des manettes.
+- **Graphismes** : carrosseries lissées avec toit peint et vitres teintées, feux stop, jantes chromées, ombres de contact,
+  reflets calculés à partir du ciel de chaque arène, nuages, ville au loin, tribunes couvertes et projecteurs,
+  relief de la pelouse, anti-crénelage, bloom, étalonnage des couleurs, traînée de balle rapide.
 - Effets : traînées de boost, traînée supersonique, étincelles, explosions, bloom, ombres, sons synthétisés (moteur, boost, frappes,
   klaxon de but, foule) et musique de menu.
 - **Clavier/souris entièrement reconfigurable** et support des **manettes** Xbox/PlayStation.
@@ -66,12 +90,18 @@ npm install
 npm run build   # recompile dist/game.js
 npm run watch   # recompile à chaque modification
 npm test        # simule des matchs IA contre IA sans affichage pour vérifier la physique
+npm run apk     # recompile le jeu puis l'APK Android (SupersonicArena.apk)
 ```
+
+Pour `npm run apk`, il faut un JDK 17+ et le SDK Android (plateforme 35, build-tools 35) : indique son chemin dans
+`android/local.properties` (`sdk.dir=/chemin/vers/android-sdk`) ou via la variable `ANDROID_HOME`. Le projet
+`android/` est une simple application WebView qui embarque `index.html`, `style.css` et `dist/game.js`.
 
 - `src/sim/` : simulation (arène en champ de distance signé, voiture, balle, collisions, règles du match, replays) — tourne à 120 Hz
   et fonctionne aussi dans Node.
 - `src/ai/` : intelligence artificielle des bots.
 - `src/render/` : rendu Three.js (arène, stade, voitures, particules, caméras).
-- `src/ui/`, `src/input/`, `src/audio/` : menus, HUD, clavier/souris/manette et sons WebAudio.
+- `src/ui/`, `src/input/`, `src/audio/` : menus, HUD, clavier/souris/manette/tactile et sons WebAudio.
+- `android/` : projet Gradle de l'application Android.
 
 *Projet de fan non officiel, sans lien avec Psyonix ni Epic Games. Rocket League est une marque de Psyonix LLC.*

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <!-- Ball -->
+    <path android:pathData="M54,20a17,17 0,1 1,0 34a17,17 0,1 1,0 -34z" android:fillColor="#E6EBF2" android:strokeColor="#0B1330" android:strokeWidth="2.5" />
+    <path android:pathData="M54,29l7,5l-3,8h-8l-3,-8z" android:fillColor="#3A3F4A" />
+    <!-- Car -->
+    <path android:pathData="M28,74c2,-6 6,-9 12,-10l8,-6c3,-2 7,-3 11,-3h9c4,0 7,2 9,5l4,4c3,1 5,4 5,8v3h-58z" android:fillColor="#FFFFFF" />
+    <path android:pathData="M50,62l5,-4c2,-1 4,-2 7,-2h5c2,0 4,1 5,3l2,3z" android:fillColor="#0B1330" />
+    <path android:pathData="M38,77a6,6 0,1 1,0 12a6,6 0,1 1,0 -12z" android:fillColor="#0B1330" />
+    <path android:pathData="M74,77a6,6 0,1 1,0 12a6,6 0,1 1,0 -12z" android:fillColor="#0B1330" />
+    <!-- Boost flame -->
+    <path android:pathData="M28,70l-10,3l10,3z" android:fillColor="#FFD24D" />
+</vector>

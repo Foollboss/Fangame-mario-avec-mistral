@@ -170,7 +170,7 @@ export class Menus {
       <button class="btn" data-action="garage">Garage<small>Carrosserie, couleurs et traînée de boost</small></button>
       <button class="btn" data-action="settings">Paramètres<small>Graphismes, caméra, audio, manette</small></button>
       <button class="btn" data-action="controls">Commandes<small>Clavier/souris et manette — touches personnalisables</small></button>
-      <button class="btn" data-action="fullscreen">Plein écran</button>
+      ${this.app.isApp ? '' : '<button class="btn" data-action="fullscreen">Plein écran</button>'}
       <div class="footer">Jeu de fan non officiel inspiré de Rocket League®. Manette Xbox/PlayStation supportée.<br>F11 ou « Plein écran » pour une immersion totale.</div>
     </div></div>`;
   }

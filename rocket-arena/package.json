@@ -1,6 +1,6 @@
 {
   "name": "supersonic-arena",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Jeu de foot en voitures a reaction inspire de Rocket League, jouable sur PC dans le navigateur.",
   "private": true,
   "type": "module",
@@ -8,7 +8,8 @@
     "build": "esbuild src/main.js --bundle --minify --format=iife --target=es2020 --outfile=dist/game.js",
     "watch": "esbuild src/main.js --bundle --sourcemap --format=iife --target=es2020 --outfile=dist/game.js --watch",
     "start": "npx http-server . -p 8080 -c-1 -o",
-    "test": "node tests/sim.test.js"
+    "test": "node tests/sim.test.js",
+    "apk": "npm run build && cd android && ./gradlew --no-daemon assembleRelease && cp app/build/outputs/apk/release/app-release.apk ../SupersonicArena.apk"
   },
   "dependencies": {
     "three": "^0.186.1"

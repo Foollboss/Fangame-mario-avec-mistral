@@ -175,9 +175,9 @@ input[type=text] { background: rgba(255, 255, 255, 0.06); border: 1px solid var(
 .tb-slide { right: 5vmin; bottom: 32vmin; width: 14vmin; height: 14vmin; font-size: 2.6vmin; }
 .tb-cam { right: 22vmin; bottom: 27vmin; width: 11vmin; height: 11vmin; font-size: 2.3vmin; }
 .tb-pause { left: 2vmin; top: 2vmin; width: 10vmin; height: 10vmin; border-radius: 14px; font-size: 3.4vmin; font-style: normal; }
-.tb-reset, .tb-shoot { display: none; top: 18vmin; width: 12vmin; height: 12vmin; font-size: 2.3vmin; }
-#touch.freeplay .tb-reset { display: flex; right: 19vmin; }
-#touch.freeplay .tb-shoot { display: flex; right: 4vmin; }
+.tb-reset, .tb-shoot { display: none; top: 2vmin; width: 13vmin; height: 10vmin; border-radius: 14px; font-size: 2.4vmin; }
+#touch.freeplay .tb-reset { display: flex; left: 14vmin; }
+#touch.freeplay .tb-shoot { display: flex; left: 29vmin; }
 .touch .boost { top: 8px; right: 8px; bottom: auto; transform-origin: top right; }
 .touch .camtag { display: none; }
 .touch #feed { top: 12vmin; right: auto; left: 2vmin; align-items: flex-start; width: 42vw; }

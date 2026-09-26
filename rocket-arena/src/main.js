@@ -327,7 +327,7 @@ class App {
       const accent = local ? new THREE.Color(s.accent).getHex() : ACCENT_POOL[(i * 3 + 1) % ACCENT_POOL.length];
       const boost = local && s.boostColor !== 'team' ? new THREE.Color(s.boostColor).getHex() : null;
       const view = new CarView(car, {
-        teamColor: TEAM_COLORS[car.team].main, accent, boostColor: boost, showName: !local || this.splitscreen,
+        teamColor: TEAM_COLORS[car.team].main, accent, boostColor: boost, showName: !local || this.splitscreen, lite: !this.quality.bloom,
       });
       // In split screen a player never sees their own name tag.
       const li = this.locals.findIndex((l) => l.car === car);
@@ -428,7 +428,7 @@ class App {
     const fake = { bodyKey: s.body, name: s.playerName, team: 0 };
     const view = new CarView(fake, {
       teamColor: TEAM_COLORS[0].main, accent: new THREE.Color(s.accent).getHex(),
-      boostColor: s.boostColor !== 'team' ? new THREE.Color(s.boostColor).getHex() : null, showName: false,
+      boostColor: s.boostColor !== 'team' ? new THREE.Color(s.boostColor).getHex() : null, showName: false, lite: !this.quality.bloom,
     });
     this.scene.add(view.group);
     this.garage.view = view;
@@ -942,6 +942,27 @@ function boot() {
     return;
   }
   window.app = new App();
+  // Hooks used by the Android app (back button, app sent to background).
+  window.androidBack = () => {
+    const a = window.app;
+    if (a.menus.isOpen()) {
+      if (a.menus.screen === 'main') return 'exit';
+      if (a.menus.screen === 'pause') a.resume();
+      else if (a.menus.screen === 'end') a.quitToMenu();
+      else a.menus.back();
+      return 'ok';
+    }
+    if (a.mode === 'match') {
+      a.pause();
+      return 'ok';
+    }
+    return 'exit';
+  };
+  window.androidPause = () => {
+    const a = window.app;
+    if (a.mode === 'match' && !a.paused && a.match && a.match.state !== 'ended') a.pause();
+    if (a.sound.ctx) a.sound.ctx.suspend();
+  };
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
