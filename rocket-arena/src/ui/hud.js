@@ -90,6 +90,10 @@ export class Hud {
     setTimeout(() => d.remove(), 6000);
   }
 
+  chat(car, text) {
+    this.feed(`${this.name(car)} : <span style="color:#fff">${esc(text)}</span>`, car.team === 0 ? '#2f7bff' : '#ff8a1f');
+  }
+
   popup(p, text, pts) {
     const d = document.createElement('div');
     d.className = 'popup';
@@ -138,6 +142,9 @@ export class Hud {
         for (const p of this.players) if (p.car === e.car) this.popup(p, e.label, e.points);
         if (e.label === 'ARRÊT' || e.label === 'ARRÊT ÉPIQUE') this.feed(`🧤 ${this.name(e.car)} — ${e.label.toLowerCase()}`, '#9fe0ff');
         break;
+      case 'flipReset':
+        for (const p of this.players) if (p.car === e.car) this.popup(p, 'RESET DE FLIP !', 0);
+        break;
       case 'replayStart':
         this.el.goal.innerHTML = '';
         break;
@@ -178,6 +185,7 @@ export class Hud {
       p.speedo.classList.toggle('ss', car.supersonic);
       p.cam.textContent = opts.ballCam[i] ? 'CAMÉRA BALLE' : 'CAMÉRA VOITURE';
       if (!car.demolished) p.demo.classList.add('hidden');
+      else p.demo.textContent = `DÉTRUIT ! Retour dans ${Math.max(1, Math.ceil(car.respawnTimer))}…`;
     });
     el.fps.classList.toggle('hidden', !opts.showFps);
     if (opts.showFps) el.fps.textContent = `${opts.fps} FPS`;

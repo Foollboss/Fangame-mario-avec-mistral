@@ -5,7 +5,7 @@ import { predictedGoal } from '../sim/match.js';
 
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const R = PHYS.ballRadius;
-const G = new Vector3(0, PHYS.gravity, 0);
+const G = new Vector3(0, PHYS.gravity, 0); // refreshed each use, gravity can be a mutator
 
 const v1 = new Vector3();
 const v2 = new Vector3();
@@ -132,6 +132,7 @@ class Aerial {
     if (car.onGround && this.t > 0.3) return true;
     if (match.ball.lastTouch && match.ball.lastTouch.time > match.time - 0.05 && this.t > 0.3) return true;
     const Tr = Math.max(T, 0.08);
+    G.y = PHYS.gravity;
     const aReq = v1.copy(this.target).sub(car.pos).addScaledVector(car.vel, -Tr).multiplyScalar(2 / (Tr * Tr)).sub(G);
     const need = aReq.length();
     const dir = aReq.clone().normalize();
@@ -248,6 +249,7 @@ export class Bot {
 
   findIntercept(match, allowAerial) {
     const car = this.car;
+    G.y = PHYS.gravity;
     this.computeReach();
     const pred = match.prediction;
     const maxAerial = 5 + this.d.aerial * 10;

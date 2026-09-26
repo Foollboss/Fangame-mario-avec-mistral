@@ -53,6 +53,7 @@ export function collideCarBall(car, ball, time) {
     else { n.set(0, 0, Math.sign(loc.z) || 1); pen = dz + R; }
   }
   cp.set(cx, cy, cz).applyQuaternion(car.quat).add(car.pos);
+  const underside = n.y < -0.85;
   n.applyQuaternion(car.quat);
 
   ball.pos.addScaledVector(n, pen * MC / (MB + MC));
@@ -64,6 +65,13 @@ export function collideCarBall(car, ball, time) {
   vb.crossVectors(ball.angVel, rb).add(ball.vel);
   const vrel = t1.copy(vb).sub(vc);
   const vn = vrel.dot(n);
+  if (underside && !car.onGround && (car.hasJumped || car.hasFlipped || car.hasDoubleJumped)) {
+    // Touching the ball with the wheels gives the flip back (flip reset).
+    car.hasJumped = false;
+    car.hasDoubleJumped = false;
+    car.hasFlipped = false;
+    car.flipReset = true;
+  }
   if (vn >= 0) return 0;
   const relSpeed = Math.min(Math.hypot(ball.vel.x - car.vel.x, ball.vel.y - car.vel.y, ball.vel.z - car.vel.z), 46);
 

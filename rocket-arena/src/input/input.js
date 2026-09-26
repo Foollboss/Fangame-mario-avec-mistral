@@ -152,6 +152,22 @@ export class Input {
     return false;
   }
 
+  // Returns the quick chat index pressed this frame, or -1.
+  quickChat(player, splitscreen) {
+    if (this.usesKeyboard(player) && this.frameKeys) {
+      for (let i = 1; i <= 8; i++) if (this.frameKeys.has(`Digit${i}`) || this.frameKeys.has(`Numpad${i}`)) return i - 1;
+    }
+    for (const p of this.padFor(player, splitscreen)) {
+      const pr = this.padPressed.get(p.index);
+      if (!pr) continue;
+      if (pr[PAD.LEFT]) return 1;
+      if (pr[PAD.RIGHT]) return 2;
+      if (pr[PAD.UP]) return 0;
+      if (pr[PAD.DOWN]) return 3;
+    }
+    return -1;
+  }
+
   held(action, player = 0, splitscreen = false) {
     if (this.usesKeyboard(player) && this.kb(action)) return true;
     const btn = { scoreboard: PAD.BACK }[action];
@@ -173,7 +189,8 @@ export class Input {
       steer = this.kb('right') - this.kb('left');
       pitch = throttle;
       roll = this.kb('rollRight') - this.kb('rollLeft');
-      jump = !!this.kb('jump');
+      // A tap shorter than a frame still counts as a press.
+      jump = !!this.kb('jump') || this.keys('jump').some((k) => this.frameKeys && this.frameKeys.has(k));
       boost = !!this.kb('boost');
       handbrake = !!this.kb('handbrake');
     }

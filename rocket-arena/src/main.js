@@ -21,6 +21,7 @@ import { Menus } from './ui/menus.js';
 import { loadSettings, saveSettings, QUALITY } from './ui/settings.js';
 
 const DT = PHYS.dt;
+const QUICK_CHAT = ['Je l\'ai !', 'Joli tir !', 'Quel arrêt !', 'Merci !', 'Calculé.', 'Oups…', 'Défends !', 'Bien joué !'];
 const ACCENT_POOL = [0x1b1d22, 0xe8e8e8, 0xd62828, 0xf7c948, 0x2ec27e, 0x8a4dff, 0x00c2d1, 0x444a57];
 const tmpV = new THREE.Vector3();
 const tmpV2 = new THREE.Vector3();
@@ -208,7 +209,7 @@ class App {
     if (cfg.splitscreen) humans.push(human(s.player2Name, cfg.p2Team, bodies[(bodies.indexOf(s.body) + 1) % bodies.length], 1));
     for (let team = 0; team < 2; team++) {
       const mine = humans.filter((h) => h.team === team);
-      players.push(...mine.slice(0, size));
+      players.push(...mine);
       for (let i = mine.length; i < size; i++) {
         players.push({ team, name: names.pop(), body: bodies[Math.floor(Math.random() * bodies.length)], isBot: true });
       }
@@ -227,7 +228,9 @@ class App {
       players,
       duration: cfg.freeplay ? 0 : cfg.duration,
       freeplay: !!cfg.freeplay,
-      unlimitedBoost: !!cfg.unlimitedBoost,
+      unlimitedBoost: !!cfg.unlimitedBoost || cfg.boostMode === 'unlimited',
+      noBoost: cfg.boostMode === 'none',
+      gravityScale: cfg.gravityScale || 1,
       replays: cfg.freeplay ? false : cfg.replays,
     });
     this.splitscreen = !!cfg.splitscreen && !cfg.freeplay;
@@ -436,6 +439,52 @@ class App {
     if (this.match.opts.freeplay && this.locals[0]) {
       if (inp.pressed('resetBall', 0, split)) this.freeplayBall(false);
       if (inp.pressed('shootBall', 0, split)) this.freeplayBall(true);
+    } else {
+      for (let p = 0; p < this.locals.length; p++) {
+        const msg = inp.quickChat(p, split);
+        if (msg >= 0) this.say(this.locals[p].car, QUICK_CHAT[msg]);
+      }
+    }
+  }
+
+  say(car, text) {
+    if (this.mode !== 'match' || !this.match) return;
+    const now = performance.now();
+    car.chatLog = (car.chatLog || []).filter((t) => now - t < 4000);
+    if (car.chatLog.length >= 3) return;
+    car.chatLog.push(now);
+    this.hud.chat(car, text);
+  }
+
+  botChatter(e) {
+    if (this.mode !== 'match' || this.match.opts.freeplay) return;
+    const bots = this.match.cars.filter((c) => c.isBot);
+    const pick = (list) => list[Math.floor(Math.random() * list.length)];
+    const later = (car, text) => setTimeout(() => this.say(car, text), 700 + Math.random() * 1500);
+    if (e.type === 'goal') {
+      const winners = bots.filter((c) => c.team === e.team);
+      const losers = bots.filter((c) => c.team !== e.team);
+      if (winners.length && Math.random() < 0.5) later(pick(winners), e.scorer && e.scorer.isBot && winners.includes(e.scorer) ? pick(['Calculé.', 'Et c\'est dedans !']) : pick(['Joli tir !', 'Quel but !', 'Merci !']));
+      if (losers.length && Math.random() < 0.35) later(pick(losers), pick(['Oups…', 'Ça arrive…', 'Pas mal.']));
+    } else if (e.type === 'stat' && e.label.startsWith('ARRÊT') && Math.random() < 0.35) {
+      const others = bots.filter((c) => c !== e.car);
+      if (others.length) later(pick(others), 'Quel arrêt !');
+    } else if (e.type === 'end') {
+      bots.forEach((b) => { if (Math.random() < 0.6) later(b, pick(['GG', 'Bien joué !', 'Belle partie !'])); });
+    }
+  }
+
+  rumble(car, strong, weak, ms) {
+    const i = this.locals.findIndex((l) => l.car === car);
+    if (i < 0) return;
+    for (const pad of this.input.padFor(i, this.splitscreen)) {
+      try {
+        if (pad.vibrationActuator && pad.vibrationActuator.playEffect) {
+          pad.vibrationActuator.playEffect('dual-rumble', { duration: ms, strongMagnitude: strong, weakMagnitude: weak });
+        }
+      } catch (err) {
+        // Rumble is optional.
+      }
     }
   }
 
@@ -486,11 +535,15 @@ class App {
     const live = this.mode === 'match';
     const localCars = new Set(this.locals.map((l) => l.car));
     for (const e of this.frameEvents) {
-      if (live) this.hud.onEvent(e, m);
+      if (live) {
+        this.hud.onEvent(e, m);
+        this.botChatter(e);
+      }
       switch (e.type) {
         case 'hit':
           this.effects.sparks(e.pos, e.strength);
           this.sound.hit(e.pos, e.strength);
+          this.rumble(e.car, Math.min(1, e.strength / 20), Math.min(1, e.strength / 12), 90);
           if (localCars.has(e.car)) this.rigs[this.locals.findIndex((l) => l.car === e.car)].addShake(Math.min(0.25, e.strength * 0.01));
           break;
         case 'bounce': this.sound.bounce(e.pos, e.strength); break;
@@ -500,17 +553,24 @@ class App {
           this.effects.padPickup(e.pos, e.big);
           if (localCars.has(e.car)) this.sound.pad(e.pos, e.big);
           break;
-        case 'bump': this.sound.bump(e.pos, e.strength); break;
+        case 'bump':
+          this.sound.bump(e.pos, e.strength);
+          this.rumble(e.victim, 0.7, 0.5, 150);
+          this.rumble(e.attacker, 0.4, 0.4, 100);
+          break;
         case 'demo':
           this.effects.demolition(e.pos, TEAM_COLORS[e.victim.team].main);
           this.sound.explosion(e.pos, false);
           this.locals.forEach((l, i) => { if (l.car === e.victim || l.car === e.attacker) this.rigs[i].addShake(0.4); });
+          this.rumble(e.victim, 1, 1, 400);
+          this.rumble(e.attacker, 0.6, 0.8, 200);
           break;
         case 'goal':
           this.effects.explosion(e.pos, TEAM_COLORS[e.team].main, true);
           this.sound.explosion(e.pos, true);
           if (live) this.sound.horn(this.localTeams().has(e.team));
           this.rigs.forEach((r) => r.addShake(0.7));
+          this.locals.forEach((l) => this.rumble(l.car, 0.8, 0.8, 600));
           break;
         case 'replayGoal':
           this.effects.explosion(e.pos, TEAM_COLORS[e.team].main, true);

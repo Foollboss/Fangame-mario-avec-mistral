@@ -107,7 +107,7 @@ export class Menus {
   }
 
   setOption(key, v) {
-    const numeric = ['teamSize', 'duration', 'team', 'p2Team'];
+    const numeric = ['teamSize', 'duration', 'team', 'p2Team', 'gravityScale'];
     let val = v;
     if (numeric.includes(key)) val = Number(v);
     if (v === 'true' || v === 'false') val = v === 'true';
@@ -155,7 +155,7 @@ export class Menus {
     const s = this.s;
     return {
       teamSize: s.teamSize, difficulty: s.difficulty, duration: s.duration, theme: s.theme, team: s.team,
-      splitscreen: s.splitscreen, p2Team: s.p2Team, replays: s.replays,
+      splitscreen: s.splitscreen, p2Team: s.p2Team, replays: s.replays, boostMode: s.boostMode, gravityScale: s.gravityScale,
     };
   }
 
@@ -189,6 +189,9 @@ export class Menus {
       ${s.splitscreen ? `<div class="opt"><label>Joueur 2</label>${seg('p2Team', [[s.team, 'Avec moi'], [1 - s.team, 'Contre moi']], s.p2Team)}</div>
       <div class="hint">Joueur 1 : clavier/souris (ou 2e manette). Joueur 2 : première manette branchée.</div>` : ''}
       <div class="opt"><label>Replays des buts</label>${seg('replays', [[true, 'Oui'], [false, 'Non']], s.replays)}</div>
+      <h3>Mutateurs</h3>
+      <div class="opt"><label>Boost</label>${seg('boostMode', [['normal', 'Normal'], ['unlimited', 'Illimité'], ['none', 'Aucun']], s.boostMode)}</div>
+      <div class="opt"><label>Gravité</label>${seg('gravityScale', [[1, 'Normale'], [0.35, 'Lunaire'], [1.6, 'Forte']], s.gravityScale)}</div>
       <div class="btn-row"><button class="btn" data-action="back">Retour</button><button class="btn primary" data-action="start">Lancer le match</button></div>
     </div></div>`;
   }
@@ -244,6 +247,8 @@ export class Menus {
       <div class="opt"><label>Volume général</label>${slider('volMaster', 0, 1, 0.05, 'pct')}</div>
       <div class="opt"><label>Effets</label>${slider('volSfx', 0, 1, 0.05, 'pct')}</div>
       <div class="opt"><label>Musique (menus)</label>${slider('volMusic', 0, 1, 0.05, 'pct')}</div>
+      <p class="hint">Messages rapides : touches <span class="key">1</span> à <span class="key">8</span>
+      (Je l'ai ! · Joli tir ! · Quel arrêt ! · Merci ! · Calculé. · Oups… · Défends ! · Bien joué !)</p>
       <h3>Manette</h3>
       <div class="opt"><label>Zone morte</label>${slider('deadzone', 0.02, 0.4, 0.01)}</div>
       <div class="opt"><label>Inverser le tangage</label>${seg('invertPitch', [[false, 'Non'], [true, 'Oui']], s.invertPitch)}</div>
@@ -261,13 +266,15 @@ export class Menus {
     const pad = [
       ['Accélérer / reculer', 'RT / LT'], ['Diriger · tangage · lacet', 'Stick gauche'], ['Sauter / double saut / flip', 'A (✕)'],
       ['Boost', 'B (○) ou RB (R1)'], ['Dérapage / air roll libre', 'X (□)'], ['Air roll gauche', 'LB (L1)'], ['Caméra balle', 'Y (△)'],
-      ['Tableau des scores', 'Back / Share'], ['Pause', 'Start / Options'],
+      ['Tableau des scores', 'Back / Share'], ['Pause', 'Start / Options'], ['Messages rapides', 'Croix directionnelle'],
     ].map(([l, k]) => `<tr><td>${l}</td><td><span class="key">${k}</span></td></tr>`).join('');
     return `<div class="menu center dim"><div class="col">
       <h2>Commandes</h2>
       <p class="hint">Clique sur une touche puis appuie sur la nouvelle touche (ou un bouton de souris) pour la réassigner.</p>
       <h3>Clavier / souris</h3>
       <table class="keys-table">${rows}</table>
+      <p class="hint">Messages rapides : touches <span class="key">1</span> à <span class="key">8</span>
+      (Je l'ai ! · Joli tir ! · Quel arrêt ! · Merci ! · Calculé. · Oups… · Défends ! · Bien joué !)</p>
       <h3>Manette</h3>
       <table class="keys-table">${pad}</table>
       <h3>Astuces de pilote</h3>

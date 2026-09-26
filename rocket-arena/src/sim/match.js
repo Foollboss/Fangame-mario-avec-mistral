@@ -6,6 +6,7 @@ import {
   createBoostPads, scoringTeam, KICKOFF_SPOTS, KICKOFF_SETS, RESPAWN_SPOTS,
 } from './arena.js';
 
+const BASE_GRAVITY = PHYS.gravity;
 const POINTS = { goal: 100, assist: 50, save: 50, epicSave: 75, shot: 20, demo: 25 };
 const RECORD_EVERY = 2;
 const RECORD_FRAMES = 60 * 12;
@@ -34,6 +35,8 @@ export class Match {
       duration: 300,
       freeplay: false,
       unlimitedBoost: false,
+      noBoost: false,
+      gravityScale: 1,
       replays: true,
       ...opts,
     };
@@ -100,7 +103,7 @@ export class Match {
         x *= s;
         z *= s;
         car.placeAt(x, z, -x, -z);
-        car.boost = PHYS.startBoost;
+        car.boost = this.startBoost();
       });
     }
     // Kickoff spots are chosen per team; mirror orange onto blue so kickoffs are fair.
@@ -109,7 +112,7 @@ export class Match {
     for (let i = 0; i < Math.min(blue.length, orange.length); i++) {
       const b = blue[i];
       orange[i].placeAt(-b.pos.x, -b.pos.z, b.pos.x, b.pos.z);
-      orange[i].boost = PHYS.startBoost;
+      orange[i].boost = this.startBoost();
     }
     this.state = 'countdown';
     this.stateTime = 0;
@@ -118,6 +121,11 @@ export class Match {
     this.kickoff = true;
     this.refreshPrediction();
     this.emit({ type: 'kickoff' });
+  }
+
+  startBoost() {
+    if (this.opts.unlimitedBoost) return 100;
+    return this.opts.noBoost ? 0 : PHYS.startBoost;
   }
 
   refreshPrediction() {
@@ -129,6 +137,8 @@ export class Match {
   }
 
   tick(dt) {
+    // Mutators: the whole simulation reads gravity from PHYS.
+    PHYS.gravity = BASE_GRAVITY * this.opts.gravityScale;
     this.time += dt;
     this.stateTime += dt;
     this.tickCount++;
@@ -241,6 +251,7 @@ export class Match {
       }
       car.step(dt);
       if (this.opts.unlimitedBoost) car.boost = 100;
+      else if (this.opts.noBoost) car.boost = 0;
       if (car.justJumped) this.emit({ type: 'jump', car });
       if (car.justDodged) this.emit({ type: 'dodge', car });
     }
@@ -251,6 +262,10 @@ export class Match {
       if (impact > 2) this.emit({ type: 'bounce', pos: ball.pos.clone(), strength: impact });
       for (const car of cars) {
         const hit = collideCarBall(car, ball, this.time);
+        if (car.flipReset) {
+          car.flipReset = false;
+          this.emit({ type: 'flipReset', car });
+        }
         if (hit > 0) {
           if (hit > 1.2 || !ball.lastTouch || ball.lastTouch.car !== car || this.time - ball.lastTouch.time > 0.4) {
             const touch = { car, time: this.time };
@@ -328,6 +343,7 @@ export class Match {
     const s = car.team === 0 ? 1 : -1;
     const stats = car.stats;
     car.placeAt(x * s, z * s, 0, s);
+    car.boost = this.startBoost();
     car.stats = stats;
     this.emit({ type: 'respawn', car });
   }
@@ -342,7 +358,7 @@ export class Match {
       const r = pad.big ? 2.08 : 1.44;
       const h = pad.big ? 1.68 : 1.65;
       for (const car of this.cars) {
-        if (car.demolished || car.boost >= 100) continue;
+        if (car.demolished || car.boost >= 100 || this.opts.noBoost) continue;
         const dx = car.pos.x - pad.pos.x;
         const dz = car.pos.z - pad.pos.z;
         if (dx * dx + dz * dz < r * r && car.pos.y < h) {

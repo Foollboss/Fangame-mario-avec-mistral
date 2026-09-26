@@ -29,6 +29,8 @@ export const DEFAULT_SETTINGS = {
   splitscreen: false,
   p2Team: 1,
   replays: true,
+  boostMode: 'normal',
+  gravityScale: 1,
 };
 
 export function loadSettings() {
