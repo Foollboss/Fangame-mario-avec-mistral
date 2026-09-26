@@ -174,6 +174,15 @@ export class App implements AppApi {
       if (document.hidden && this.game) this.game.save();
     });
     addEventListener('pagehide', () => this.game?.save());
+    // Navigateur, lanceur Windows : Ctrl+W (Ctrl = courir) ou la croix demandent confirmation pendant une partie.
+    // (L'application de bureau gère elle-même la fermeture et la sauvegarde.)
+    addEventListener('beforeunload', (e) => {
+      const host = (globalThis as { voxerraHost?: { platform?: string } }).voxerraHost;
+      if (!this.game || host?.platform === 'desktop') return;
+      this.game.save();
+      e.preventDefault();
+      e.returnValue = '';
+    });
     addEventListener('pointerdown', () => this.audio.unlock(), { capture: true });
     addEventListener('keydown', () => this.audio.unlock(), { capture: true });
     canvas.addEventListener('click', () => {

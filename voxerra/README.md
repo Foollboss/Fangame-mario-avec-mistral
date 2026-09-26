@@ -22,12 +22,15 @@ génération sur le fil principal et regard à la souris sans verrouillage.
 
 | Plateforme | Fichier | Construire | Détails |
 |---|---|---|---|
-| Windows 10/11 (64 bits) | `Voxerra-1.0.0-Windows.exe` (portable, ~90 Mo, sans installation) | `npm run build:exe` | [`desktop/README.md`](desktop/README.md) |
-| Android 7+ | `app-release.apk` (~2,5 Mo) | `npm run build:apk` | [`android/README.md`](android/README.md) |
+| Windows 10/11 (64 bits) | `Voxerra.exe` (≈ 7 Mo, s'affiche dans une fenêtre Microsoft Edge) | `npm run build:launcher` | [`launcher/README.md`](launcher/README.md) |
+| Windows 10/11 (64 bits) | `Voxerra-1.0.0-Windows.exe` (≈ 90 Mo, Chromium intégré, portable) | `npm run build:exe` | [`desktop/README.md`](desktop/README.md) |
+| Android 7+ | `app-release.apk` (≈ 2,5 Mo) | `npm run build:apk` | [`android/README.md`](android/README.md) |
 
-Les deux embarquent le même fichier `Voxerra.html`. Dans ces versions, **Quitter le jeu** ferme l'application et le
+Toutes embarquent le même fichier `Voxerra.html`. Dans ces versions, **Quitter le jeu** ferme l'application et le
 monde en cours est sauvegardé à la fermeture (ou quand l'appli Android passe en arrière-plan). Les fichiers produits
-ne sont pas versionnés (trop lourds) : ils sont dans `desktop/dist/` et `android/app/build/outputs/apk/release/`.
+ne sont pas versionnés (trop lourds) : ils sont dans `launcher/dist/`, `desktop/dist/` et
+`android/app/build/outputs/apk/release/`. Les exécutables ne sont pas signés : Windows SmartScreen peut demander
+**Informations complémentaires → Exécuter quand même** ; sur Android, autoriser l'installation d'applis inconnues.
 
 ## Langues
 
@@ -147,7 +150,8 @@ ici tout reste en texte, modifiable, testable et exécutable en une commande.
 ```
 voxerra/
 ├─ index.html, package.json, tsconfig.json, vite.config.ts
-├─ desktop/                version Windows (Electron) : fenêtre, pont « Quitter », icônes, essai automatique
+├─ launcher/               Voxerra.exe léger (Go) : sert le jeu en local et l'ouvre dans une fenêtre Edge
+├─ desktop/                version Windows autonome (Electron) : fenêtre, pont « Quitter », icônes, essai automatique
 ├─ android/                version Android (Gradle) : activité WebView plein écran, icônes, clé de signature
 ├─ public/mods/            mods « données » chargés au démarrage (index.json + lucioles.json d'exemple)
 ├─ server/
