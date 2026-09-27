@@ -160,6 +160,8 @@ export class InputManager {
     });
     window.addEventListener('blur', () => this.down.clear());
     canvas.addEventListener('mousedown', (e) => {
+      // pas de sélection ni de glisser-déposer lancés par le navigateur (ils peuvent avaler le relâchement)
+      e.preventDefault();
       this.down.add('Mouse' + e.button);
       this.pressedCodes.add('Mouse' + e.button);
     });
@@ -185,6 +187,7 @@ export class InputManager {
       (e) => {
         // pas de zoom de la page (Ctrl+molette, pincement du pavé tactile) ni de défilement en jeu
         if (e.ctrlKey || this.gameFocus) e.preventDefault();
+        this.syncButtons(e);
         if (!this.gameFocus) return;
         // la molette change de case quelles que soient les touches tenues : Ctrl (courir) compris ;
         // seul le pincement du pavé tactile (Ctrl simulé, sans la touche) est ignoré

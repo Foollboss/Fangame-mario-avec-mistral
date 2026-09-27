@@ -8,6 +8,7 @@ package main
 import (
 	"bytes"
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -36,6 +37,13 @@ window.voxerraHost = {
       }, 400);
     });
   },
+  // « verrouillage du clic » de Windows : état, et coupure pendant la session (rétabli en quittant)
+  mouse: function () {
+    return fetch('/souris').then(function (r) { return r.json(); });
+  },
+  setClickLockCut: function (cut) {
+    return fetch('/souris/verrou-clic?couper=' + (cut ? 1 : 0), { method: 'POST' }).then(function (r) { return r.json(); });
+  },
 };
 setInterval(function () { fetch('/alive', { method: 'POST' }).catch(function () {}); }, 5000);
 fetch('/alive', { method: 'POST' }).catch(function () {});
@@ -46,6 +54,35 @@ type state struct {
 	lastAlive time.Time
 	quit      chan struct{}
 	quitOnce  sync.Once
+	// verrouillage du clic de Windows coupé par le lanceur (à rétablir en quittant)
+	mouseMu sync.Mutex
+	cut     bool
+}
+
+func (s *state) cutClickLock() {
+	s.mouseMu.Lock()
+	defer s.mouseMu.Unlock()
+	if on, _ := getClickLock(); on && !s.cut && setClickLock(false) == nil {
+		s.cut = true
+	}
+}
+
+func (s *state) restoreClickLock() {
+	s.mouseMu.Lock()
+	defer s.mouseMu.Unlock()
+	if s.cut && setClickLock(true) == nil {
+		s.cut = false
+	}
+}
+
+func (s *state) writeMouse(w http.ResponseWriter) {
+	s.mouseMu.Lock()
+	on, ms := getClickLock()
+	info := map[string]any{"verrouClic": on, "delai": ms, "coupe": s.cut}
+	s.mouseMu.Unlock()
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-store")
+	json.NewEncoder(w).Encode(info)
 }
 
 func (s *state) alive() {
@@ -94,6 +131,22 @@ func handler(s *state) http.Handler {
 		s.alive()
 		w.WriteHeader(http.StatusNoContent)
 	})
+	mux.HandleFunc("/souris", func(w http.ResponseWriter, r *http.Request) {
+		s.writeMouse(w)
+	})
+	mux.HandleFunc("/souris/verrou-clic", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "POST", http.StatusMethodNotAllowed)
+			return
+		}
+		switch r.URL.Query().Get("couper") {
+		case "1":
+			s.cutClickLock()
+		case "0":
+			s.restoreClickLock()
+		}
+		s.writeMouse(w)
+	})
 	mux.HandleFunc("/quit", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "POST", http.StatusMethodNotAllowed)
@@ -130,6 +183,7 @@ func main() {
 		return
 	}
 	s := &state{quit: make(chan struct{})}
+	defer s.restoreClickLock()
 	srv := &http.Server{Handler: handler(s), ReadHeaderTimeout: 10 * time.Second}
 	go srv.Serve(ln)
 

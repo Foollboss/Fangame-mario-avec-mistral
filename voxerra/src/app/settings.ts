@@ -25,6 +25,8 @@ export interface Settings {
   bindings: Record<Action, string[]>;
   servers: { name: string; address: string }[];
   mods: string[];
+  /** Lanceur Windows : « verrouillage du clic » de Windows coupé pendant le jeu, laissé, ou à demander. */
+  clickLock: 'demander' | 'couper' | 'garder';
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -48,6 +50,7 @@ export const DEFAULT_SETTINGS: Settings = {
   bindings: structuredClone(DEFAULT_BINDINGS),
   servers: [{ name: 'Serveur local', address: 'ws://localhost:25590' }],
   mods: [],
+  clickLock: 'demander',
 };
 
 const KEY = 'voxerra.settings.v1';

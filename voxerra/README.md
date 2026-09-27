@@ -262,6 +262,11 @@ tous les appareils).
 | Inventaire, discussion, commande, jeter, vue, pause | boutons coffre, bulle, `/`, flèche vers le bas, œil et pause en haut à droite (le clavier du téléphone s'ouvre directement) |
 | Fermer l'inventaire, un coffre, la discussion… | bouton croix en haut à droite |
 
+Le minage continue après avoir lâché le clic gauche ? C'est le **verrouillage du clic** de Windows (Paramètres →
+Bluetooth et appareils → Souris → Paramètres de souris supplémentaires → onglet Boutons), ou le « verrou de
+glissement » d'un pavé tactile : Windows garde alors le bouton enfoncé. `Voxerra.exe` le détecte et propose de le
+couper pendant le jeu (rétabli en quittant).
+
 Les menus défilent quand l'écran est trop petit ; le zoom du navigateur (pincement, `Ctrl` + molette) est bloqué
 en jeu.
 

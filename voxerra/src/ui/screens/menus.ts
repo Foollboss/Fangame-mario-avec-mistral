@@ -8,6 +8,7 @@ import { seedFromString } from '../../engine/rng';
 import { DEFAULT_BINDINGS, type Action } from '../../input/input';
 import { t, tr, locale, getLang, LANGS, type Lang } from '../../i18n/i18n';
 import { pixelIcon } from '../pixelIcons';
+import { addClickLockOption } from './clickLock';
 
 const MODE_LABEL = (m: GameMode): string => ({ survie: t('Mode survie'), creatif: t('Mode créatif'), hardcore: t('Mode hardcore'), spectateur: t('Mode spectateur') })[m] ?? m;
 const DIFF = (): string[] => [t('Paisible'), t('Facile'), t('Normale'), t('Difficile')];
@@ -418,6 +419,7 @@ export function optionsScreen(app: AppApi, inGame: boolean): Screen {
     cycle(t('Résolution'), [{ v: 0.75, t: t('Performance') }, { v: 1, t: t('Normale') }, { v: 1.5, t: t('Haute') }], s.pixelRatio, (v) => ((s.pixelRatio = v), save())),
     cycle(t('Taille de l’interface'), [{ v: 0.85, t: t('Petite') }, { v: 1, t: t('Normale') }, { v: 1.2, t: t('Grande') }], s.guiScale, (v) => ((s.guiScale = v), save())),
   );
+  addClickLockOption(app, grid);
   const nameIn = h('input', { class: 'input', value: s.playerName, maxlength: 16 }) as HTMLInputElement;
   nameIn.addEventListener('change', () => {
     s.playerName = nameIn.value.trim() || t('Aventurier');

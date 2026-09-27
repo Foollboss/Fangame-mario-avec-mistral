@@ -31,6 +31,7 @@ import { BIOMES } from '../worldgen/biomes';
 import { setLang, getLang, t, type Lang } from '../i18n/i18n';
 import { localizeContent } from '../i18n/content';
 import { TouchControls } from '../ui/touch';
+import { checkClickLock } from '../ui/screens/clickLock';
 import { connectToServer } from '../net/connect';
 
 export const VERSION = '1.0.0';
@@ -194,6 +195,7 @@ export class App implements AppApi {
     };
     await this.startPanorama();
     this.showMainMenu();
+    void checkClickLock(this);
     requestAnimationFrame(this.loop);
     // hook de test automatisé
     (window as unknown as { voxerra: App }).voxerra = this;
