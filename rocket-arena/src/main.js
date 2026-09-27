@@ -58,6 +58,20 @@ class App {
     this.settings = loadSettings();
     const params = new URLSearchParams(window.location.search);
     this.isApp = params.get('app') === 'android';
+    // Windows .exe: native window with full screen and quit hooks provided by the launcher.
+    this.isDesktop = params.get('app') === 'desktop';
+    if (this.isDesktop) {
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'F11' && window.appToggleFullscreen) {
+          e.preventDefault();
+          window.appToggleFullscreen();
+        }
+      });
+    }
+    // Launcher fallback in a normal browser: keep the local server alive while the game is open.
+    if (params.get('app') === 'desktop-browser') {
+      setInterval(() => { fetch('/alive', { cache: 'no-store' }).catch(() => {}); }, 5000);
+    }
     this.isTouch = this.isApp || params.has('touch') || isTouchDevice();
     document.body.classList.toggle('touch', this.isTouch);
     // Phones get lighter graphics until the player picks something else.

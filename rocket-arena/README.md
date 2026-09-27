@@ -3,6 +3,18 @@
 Un jeu de **football en voitures à réaction** en 3D, inspiré de *Rocket League*, jouable sur **PC** dans le navigateur
 (Chrome, Edge ou Firefox) et sur **Android** (APK avec commandes tactiles). Aucun serveur : tout est calculé en local.
 
+## Jouer sur PC Windows (.exe)
+
+1. Télécharge [`SupersonicArena.exe`](SupersonicArena.exe) (sur GitHub : ouvre le fichier puis *Download raw file*).
+2. Double-clique dessus : le jeu s'ouvre directement en plein écran dans sa propre fenêtre. Rien à installer, tout le jeu
+   est à l'intérieur de ce seul fichier (7 Mo).
+3. **F11** passe de plein écran à fenêtre, et le bouton **Quitter le jeu** du menu ferme l'application.
+
+L'exe n'est pas signé numériquement : au premier lancement, Windows peut afficher « Windows a protégé votre
+ordinateur ». Clique sur **Informations complémentaires** puis **Exécuter quand même**. Il faut Windows 10 ou 11
+(il utilise le moteur Edge WebView2 déjà présent ; s'il manque, le jeu s'ouvre dans ton navigateur). Tes réglages
+sont gardés d'une partie à l'autre.
+
 ## Installer sur Android (APK)
 
 1. Sur ton téléphone, télécharge [`SupersonicArena.apk`](SupersonicArena.apk) (sur GitHub : ouvre le fichier puis
@@ -100,7 +112,13 @@ npm run build   # recompile dist/game.js
 npm run watch   # recompile à chaque modification
 npm test        # simule des matchs IA contre IA sans affichage pour vérifier la physique
 npm run apk     # recompile le jeu puis l'APK Android (SupersonicArena.apk)
+npm run exe     # recompile le jeu puis l'exe Windows (SupersonicArena.exe), avec Go 1.24+
 ```
+
+L'exe est un petit programme Go (`desktop/`) qui embarque `index.html`, `style.css` et `dist/game.js`, les sert sur
+`127.0.0.1` et les affiche dans une fenêtre WebView2 (plein écran, F11, bouton Quitter). Il se compile depuis Linux,
+macOS ou Windows. L'icône, le manifeste et les infos de version sont dans `desktop/winres/` ; après les avoir modifiés,
+régénère la ressource avec `cd desktop && go run github.com/tc-hib/go-winres@v0.3.3 make --in winres/winres.json --arch amd64`.
 
 Pour `npm run apk`, il faut un JDK 17+ et le SDK Android (plateforme 35, build-tools 35) : indique son chemin dans
 `android/local.properties` (`sdk.dir=/chemin/vers/android-sdk`) ou via la variable `ANDROID_HOME`. Le projet
@@ -112,5 +130,6 @@ Pour `npm run apk`, il faut un JDK 17+ et le SDK Android (plateforme 35, build-t
 - `src/render/` : rendu Three.js (arène, stade, voitures, particules, caméras).
 - `src/ui/`, `src/input/`, `src/audio/` : menus, HUD, clavier/souris/manette/tactile et sons WebAudio.
 - `android/` : projet Gradle de l'application Android.
+- `desktop/` : lanceur Windows (.exe) en Go.
 
 *Projet de fan non officiel, sans lien avec Psyonix ni Epic Games. Rocket League est une marque de Psyonix LLC.*

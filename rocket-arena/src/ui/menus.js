@@ -143,8 +143,12 @@ export class Menus {
         app.saveSettings();
         this.render();
         break;
+      case 'quitGame':
+        if (window.appQuit) window.appQuit();
+        break;
       case 'fullscreen':
-        if (document.fullscreenElement) document.exitFullscreen();
+        if (window.appToggleFullscreen) window.appToggleFullscreen();
+        else if (document.fullscreenElement) document.exitFullscreen();
         else document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
         break;
       default: break;
@@ -171,7 +175,8 @@ export class Menus {
       <button class="btn" data-action="garage">Garage<small>Carrosserie, couleurs et traînée de boost</small></button>
       <button class="btn" data-action="settings">Paramètres<small>Graphismes, caméra, audio, manette</small></button>
       <button class="btn" data-action="controls">Commandes<small>Clavier/souris et manette — touches personnalisables</small></button>
-      ${this.app.isApp ? '' : '<button class="btn" data-action="fullscreen">Plein écran</button>'}
+      ${this.app.isApp ? '' : `<button class="btn" data-action="fullscreen">Plein écran${this.app.isDesktop ? '<small>F11 pour basculer fenêtre / plein écran</small>' : ''}</button>`}
+      ${this.app.isDesktop ? '<button class="btn" data-action="quitGame">Quitter le jeu</button>' : ''}
       <div class="footer">Jeu de fan non officiel inspiré de Rocket League®. Manette Xbox/PlayStation supportée.<br>F11 ou « Plein écran » pour une immersion totale.</div>
     </div></div>`;
   }
