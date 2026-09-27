@@ -9,10 +9,6 @@ Windows 10 et 11 ; sinon Google Chrome, sinon le navigateur par défaut).
 - `Ctrl` sert à courir : `Ctrl+W` ne ferme jamais la fenêtre et, en jeu, les autres raccourcis du navigateur
   (`Ctrl+R`, `Ctrl+1`…`9`…) sont ignorés. Pendant une partie, la croix de la fenêtre demande confirmation.
 - Relancer `Voxerra.exe` alors qu'il tourne déjà ouvre simplement une nouvelle fenêtre.
-- **Verrouillage du clic de Windows** (ClickLock) : s'il est activé, tenir le clic gauche un moment le garde enfoncé
-  après l'avoir lâché, et l'on continue de miner (le navigateur ne peut pas voir la différence). Le jeu le signale
-  au lancement et propose de le couper pendant la session ; le lanceur le rétablit en quittant, sans modifier le
-  profil Windows (réglage dans **Options**).
 
 Pour une application entièrement autonome (Chromium intégré, ≈ 90 Mo), voir [`../desktop`](../desktop).
 
@@ -35,5 +31,4 @@ node ../scripts/build-html.mjs game/index.html && go build -o dist/voxerra-test 
 xvfb-run -a node test-launcher.mjs   # Chromium à la place d'Edge : partie, sauvegarde, Quitter, relance
 xvfb-run -a node test-raccourcis.mjs # vraies touches (xdotool) : Ctrl+W, Ctrl+R, molette avec Ctrl / Maj / Z
 xvfb-run -a node test-minage.mjs     # vrais clics (xdotool) : le minage s'arrête au relâchement, même perdu en route
-xvfb-run -a node test-verrou-clic.mjs # verrouillage du clic simulé : question, coupure, Options, rétabli en quittant
 ```
