@@ -115,6 +115,7 @@ export class Car {
     this.justJumped = false;
     this.justDodged = false;
     this.righting = 0;
+    this.wallGrip = this.wallGrip ?? true;
   }
 
   placeAt(x, z, dirX, dirZ) {
@@ -288,6 +289,12 @@ export class Car {
     const lat = c.handbrake ? 2.2 : 26;
     this.vel.addScaledVector(Rp, vR * Math.exp(-lat * dt) - vR);
     this.vel.addScaledVector(N, -PHYS.stickyAccel * dt);
+    if (this.wallGrip && N.y < 0.7 && (Math.abs(vF) > 1.5 || Math.abs(c.throttle) > 0.1 || c.boost)) {
+      // Arcade grip: while driving, the wheels hold the car on walls and the ceiling against gravity.
+      const away = PHYS.gravity * N.y;
+      if (away > 0) this.vel.addScaledVector(N, -away * dt);
+      this.vel.addScaledVector(N, -1.5 * dt);
+    }
     this.angVel.copy(N).multiplyScalar(yawRate);
 
     if (jumpPressed) {
@@ -322,8 +329,9 @@ export class Car {
         this.hasFlipped = true;
         this.justJumped = true;
       } else if (this.canDodge()) {
-        const dx = c.pitch;
-        const dy = clamp(c.yaw + c.roll, -1, 1);
+        // Assisted flight rewrites pitch/yaw; the raw stick is kept for dodges.
+        const dx = c.dodgeX ?? c.pitch;
+        const dy = c.dodgeY ?? clamp(c.yaw + c.roll, -1, 1);
         if (Math.abs(dx) + Math.abs(dy) >= 0.5) this.dodge(dx, dy);
         else {
           this.vel.addScaledVector(U, PHYS.jumpImpulse);

@@ -127,7 +127,7 @@ export class Menus {
       case 'controls': this.show('controls'); break;
       case 'back': this.back(); break;
       case 'start': app.startMatch(this.matchConfig()); break;
-      case 'startFree': app.startMatch({ freeplay: true, unlimitedBoost: this.freeUnlimited !== false }); break;
+      case 'startFree': app.startMatch({ freeplay: true, unlimitedBoost: this.freeUnlimited !== false, wallGrip: this.s.wallGrip }); break;
       case 'resume': app.resume(); break;
       case 'restart': app.restart(); break;
       case 'quit': app.quitToMenu(); break;
@@ -156,6 +156,7 @@ export class Menus {
     return {
       teamSize: s.teamSize, difficulty: s.difficulty, duration: s.duration, theme: s.theme, team: s.team,
       splitscreen: s.splitscreen, p2Team: s.p2Team, replays: s.replays, boostMode: s.boostMode, gravityScale: s.gravityScale,
+      wallGrip: s.wallGrip,
       gameMode: s.gameMode,
     };
   }
@@ -195,6 +196,7 @@ export class Menus {
       <h3>Mutateurs</h3>
       <div class="opt"><label>Boost</label>${seg('boostMode', [['normal', 'Normal'], ['unlimited', 'Illimité'], ['none', 'Aucun']], s.boostMode)}</div>
       <div class="opt"><label>Gravité</label>${seg('gravityScale', [[1, 'Normale'], [0.35, 'Lunaire'], [1.6, 'Forte']], s.gravityScale)}</div>
+      <div class="opt"><label>Murs &amp; plafond</label>${seg('wallGrip', [['arcade', 'On colle partout'], ['real', 'Réaliste (RL)']], s.wallGrip)}</div>
       <div class="btn-row"><button class="btn" data-action="back">Retour</button><button class="btn primary" data-action="start">Lancer le match</button></div>
     </div></div>`;
   }
@@ -206,6 +208,8 @@ export class Menus {
       <h2>Entraînement libre</h2>
       <div class="opt"><label>Arène</label>${seg('theme', themes, s.theme)}</div>
       <div class="opt"><label>Boost illimité</label>${seg('freeUnlimited', [[true, 'Oui'], [false, 'Non']], this.freeUnlimited !== false)}</div>
+      <div class="opt"><label>Murs &amp; plafond</label>${seg('wallGrip', [['arcade', 'On colle partout'], ['real', 'Réaliste (RL)']], s.wallGrip)}</div>
+      <div class="opt"><label>Vol assisté</label>${seg('airAssist', [[true, 'Oui'], [false, 'Non']], s.airAssist)}</div>
       ${this.app.isTouch ? '<p class="hint">Bouton <b>BALLE</b> : replacer la balle devant toi · <b>TIR</b> : la balle est lancée vers toi (parfait pour les aériennes).</p>'
     : `<p class="hint">Touche <span class="key">${keyLabel(s.keys.resetBall[0])}</span> : replacer la balle devant toi ·
       <span class="key">${keyLabel(s.keys.shootBall[0])}</span> : la balle est lancée vers toi (parfait pour s'entraîner aux aériennes).</p>`}
@@ -247,6 +251,10 @@ export class Menus {
       <div class="opt"><label>Hauteur</label>${slider('camHeight', 0.5, 2, 0.05)}</div>
       <div class="opt"><label>Rigidité</label>${slider('camStiffness', 4, 25, 1)}</div>
       <div class="opt"><label>Caméra balle au départ</label>${seg('ballCamDefault', [[true, 'Oui'], [false, 'Non']], s.ballCamDefault)}</div>
+      <h3>Pilotage</h3>
+      <div class="opt"><label>Vol assisté au boost</label>${seg('airAssist', [[true, 'Oui'], [false, 'Non']], s.airAssist)}</div>
+      <p class="hint">Vol assisté : en l'air, le stick / joystick / ${keyLabel(s.keys.throttle[0])}${keyLabel(s.keys.reverse[0])} oriente directement la voiture
+      (haut = monter) et elle garde son cap toute seule : maintiens le boost pour voler. Sans assistance, contrôle aérien de Rocket League.</p>
       <h3>Audio</h3>
       <div class="opt"><label>Volume général</label>${slider('volMaster', 0, 1, 0.05, 'pct')}</div>
       <div class="opt"><label>Effets</label>${slider('volSfx', 0, 1, 0.05, 'pct')}</div>

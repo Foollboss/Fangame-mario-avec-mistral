@@ -32,6 +32,8 @@ export const DEFAULT_SETTINGS = {
   boostMode: 'normal',
   gameMode: 'classic',
   gravityScale: 1,
+  wallGrip: 'arcade',
+  airAssist: null,
 };
 
 export function hasSavedSettings() {

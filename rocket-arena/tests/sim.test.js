@@ -3,6 +3,8 @@ import { Match } from '../src/sim/match.js';
 import { Bot } from '../src/ai/bot.js';
 import { PHYS } from '../src/config.js';
 import { sdArena } from '../src/sim/arena.js';
+import { AirAssist } from '../src/input/airAssist.js';
+import { emptyControls } from '../src/sim/car.js';
 
 function runMatch(teamSize, difficulty, seconds) {
   const players = [];
@@ -100,6 +102,43 @@ for (const [speed, min, max] of [[14, 17, 23], [23, 27, 36]]) {
   let maxY = 0;
   for (let i = 0; i < 480; i++) { car.controls.throttle = 1; car.controls.boost = i < 200; car.controls.steer = i > 150 ? -0.3 : 0; m.tick(PHYS.dt); maxY = Math.max(maxY, car.pos.y); }
   check('monte sur le mur latéral (hauteur atteinte)', maxY, 8, 21);
+}
+
+// Wall and ceiling driving: up the side wall, then along the ceiling.
+for (const [grip, min, max] of [['arcade', 2, 10], ['real', 0, 1]]) {
+  const m = new Match({ players: [{ team: 0, name: 'P' }], freeplay: true, wallGrip: grip });
+  const car = m.cars[0];
+  car.placeAt(10, 20, 1, 0);
+  let ceiling = 0;
+  for (let i = 0; i < 900; i++) {
+    car.controls.throttle = 1;
+    car.controls.boost = true;
+    car.boost = 100;
+    m.tick(PHYS.dt);
+    if (car.onGround && car.groundNormal.y < -0.9) ceiling += PHYS.dt;
+  }
+  check(`temps passé à rouler au plafond (${grip})`, ceiling, min, max);
+}
+
+// Assisted flight: jump, hold boost and push the stick up.
+{
+  const m = freeplay();
+  const car = m.cars[0];
+  car.boost = 100;
+  const assist = new AirAssist();
+  let maxY = 0;
+  for (let i = 0; i < 540; i++) {
+    const c = car.controls;
+    Object.assign(c, emptyControls());
+    c.jump = i < 20;
+    c.up = i > 25 ? 1 : 0;
+    c.pitch = c.up;
+    c.boost = i > 25;
+    assist.apply(car, c, PHYS.dt);
+    m.tick(PHYS.dt);
+    maxY = Math.max(maxY, car.pos.y);
+  }
+  check('vol assisté au boost (altitude atteinte)', maxY, 12, 21);
 }
 
 for (const [size, diff, secs] of [[1, 'allstar', 120], [2, 'pro', 120], [3, 'allstar', 120], [1, 'rookie', 90]]) {

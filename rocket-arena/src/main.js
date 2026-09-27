@@ -16,6 +16,7 @@ import { Effects } from './render/particles.js';
 import { CameraRig, horizontalToVerticalFov, keepInsideArena } from './render/camera.js';
 import { Input, keyLabel } from './input/input.js';
 import { TouchControls, isTouchDevice } from './input/touch.js';
+import { AirAssist } from './input/airAssist.js';
 import { Sound } from './audio/audio.js';
 import { Hud } from './ui/hud.js';
 import { Menus } from './ui/menus.js';
@@ -61,6 +62,9 @@ class App {
     document.body.classList.toggle('touch', this.isTouch);
     // Phones get lighter graphics until the player picks something else.
     if (this.isTouch && !hasSavedSettings()) this.settings.quality = 'medium';
+    // Assisted flight is on by default on touch screens, off with keyboard/gamepad (Rocket League controls).
+    if (this.settings.airAssist === null || this.settings.airAssist === undefined) this.settings.airAssist = this.isTouch;
+    this.assists = [new AirAssist(), new AirAssist()];
     this.canvas = document.getElementById('game');
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -151,6 +155,7 @@ class App {
 
   applySettings(save = true) {
     const s = this.settings;
+    if (s.airAssist === null || s.airAssist === undefined) s.airAssist = !!this.isTouch;
     this.sound.applyVolumes();
     if (this.qualityKey && this.qualityKey !== s.quality) this.buildWorld(this.themeKey, true);
     this.qualityKey = s.quality;
@@ -265,6 +270,7 @@ class App {
       noBoost: cfg.boostMode === 'none',
       gravityScale: cfg.gravityScale || 1,
       mode: cfg.gameMode || 'classic',
+      wallGrip: cfg.wallGrip || this.settings.wallGrip || 'arcade',
       replays: cfg.freeplay ? false : cfg.replays,
     });
     this.splitscreen = !!cfg.splitscreen && !cfg.freeplay;
@@ -276,6 +282,7 @@ class App {
     this.bots = this.match.cars.filter((c) => c.isBot).map((c) => new Bot(c, cfg.difficulty || 'pro'));
     this.createCarViews(this.match);
     this.rigs.forEach((r) => { r.reset(); r.ballCam = s.ballCamDefault; });
+    this.assists.forEach((a) => { a.active = false; });
     this.mode = 'match';
     this.paused = false;
     this.endTimer = -1;
@@ -287,14 +294,17 @@ class App {
     this.hud.setup(this.match, this.locals, this.viewports());
     if (this.isTouch) {
       if (!s.tutorialSeen || cfg.freeplay) {
-        this.hud.showHint('Joystick à gauche : rouler et diriger (en l\'air : pivoter) · <b>SAUT</b> deux fois = flip · <b>BOOST</b> · <b>DÉRAPE</b> = dérapage / air roll', 9);
+        this.hud.showHint(`Joystick à gauche : rouler et diriger · <b>SAUT</b> deux fois = flip · <b>BOOST</b> · <b>DÉRAPE</b> = dérapage<br>
+          <b>Voler</b> : SAUT puis maintiens BOOST${s.airAssist ? ', le joystick dirige le vol (haut = monter)' : ', joystick vers le bas pour lever le nez'} ·
+          <b>Murs et plafond</b> : fonce vers un mur, tu montes dessus !`, 11);
         s.tutorialSeen = true;
         this.saveSettings();
       }
       this.enterFullscreen();
     } else if (!s.tutorialSeen || cfg.freeplay) {
       const k = (a) => `<span class="key">${keyLabel(s.keys[a][0])}</span>`;
-      this.hud.showHint(`${k('throttle')}${k('reverse')} rouler · ${k('left')}${k('right')} tourner · ${k('jump')} sauter (2× = flip) · ${k('boost')} boost · ${k('ballCam')} caméra · ${k('pause')} pause${cfg.freeplay ? ` · ${k('resetBall')} balle · ${k('shootBall')} tir` : ''}`, 12);
+      this.hud.showHint(`${k('throttle')}${k('reverse')} rouler · ${k('left')}${k('right')} tourner · ${k('jump')} sauter (2× = flip) · ${k('boost')} boost · ${k('ballCam')} caméra · ${k('pause')} pause${cfg.freeplay ? ` · ${k('resetBall')} balle · ${k('shootBall')} tir` : ''}<br>
+        <b>Voler</b> : ${k('jump')} puis maintiens ${k('boost')}${s.airAssist ? ` — ${k('throttle')} monte, ${k('reverse')} descend, ${k('left')}${k('right')} tournent` : ` en levant le nez avec ${k('reverse')}`} · <b>Murs et plafond</b> : fonce vers un mur !`, 13);
       s.tutorialSeen = true;
       this.saveSettings();
     }
@@ -583,7 +593,10 @@ class App {
 
   step() {
     const m = this.match;
-    for (const lp of this.locals) this.input.controls(lp.index, this.splitscreen, lp.car.controls);
+    for (const lp of this.locals) {
+      this.input.controls(lp.index, this.splitscreen, lp.car.controls);
+      if (this.settings.airAssist) this.assists[lp.index].apply(lp.car, lp.car.controls, DT);
+    }
     for (const b of this.bots) b.update(DT, m);
     m.tick(DT);
     if (m.events.length) {

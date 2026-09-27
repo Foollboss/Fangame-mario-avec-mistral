@@ -14,7 +14,8 @@ Un jeu de **football en voitures à réaction** en 3D, inspiré de *Rocket Leagu
 Android 8.0 minimum. Commandes tactiles :
 
 - **Moitié gauche de l'écran** : un joystick apparaît sous ton pouce. Haut = accélérer, bas = freiner / reculer,
-  gauche / droite = tourner ; en l'air il fait pivoter la voiture.
+  gauche / droite = tourner ; en l'air il dirige le vol (haut = monter).
+- **Voler** : SAUT puis maintiens BOOST en poussant le joystick vers le haut. **Murs / plafond** : fonce vers un mur.
 - **SAUT** (bleu) : saut, et une deuxième pression en tenant le joystick = flip. **BOOST** (orange) : maintiens pour foncer.
 - **DÉRAPE** : dérapage au sol, air roll en l'air. **CAM** : caméra balle / voiture. **II** : pause.
   Le bouton *Retour* d'Android met aussi en pause.
@@ -41,6 +42,12 @@ précédente ; ce n'est pas une clé de publication sur le Play Store.
   « impulsion Psyonix » sur les frappes, rebonds et effets de balle.
 - **Arène complète** avec rampes courbes : on peut rouler sur les **murs et le plafond**, entrer dans les cages, 34 pastilles de boost
   aux positions officielles, 3 ambiances (jour, coucher de soleil, nuit).
+- **Murs et plafond** : fonce vers un mur, la rampe te fait monter ; continue et tu arrives au plafond. En mode
+  « On colle partout » (par défaut), tant que tu roules les roues tiennent au mur et au plafond ; le mode
+  « Réaliste (RL) » reprend la vraie physique où l'on tombe du plafond.
+- **Voler au nitro** : saute puis maintiens le boost. Avec le **vol assisté** (activé par défaut sur téléphone, option dans
+  *Paramètres → Pilotage*), le joystick / stick / W-S dirige directement la voiture (haut = monter) et elle garde son cap
+  toute seule ; sans assistance, c'est le contrôle aérien de Rocket League.
 - **Modes** : 1c1, 2c2, 3c3 et 4c4 contre l'IA, **écran partagé à 2 joueurs** (avec ou contre ton pote), **entraînement libre**
   (boost illimité, balle replacée ou lancée vers toi pour travailler les aériennes).
 - **IA** en 3 niveaux (Recrue, Pro, All-Star) : coups d'envoi, rotations, défense, frappes flip, tirs sautés et **aériennes**.

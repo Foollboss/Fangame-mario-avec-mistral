@@ -204,6 +204,7 @@ export class Input {
     let throttle = 0;
     let steer = 0;
     let pitch = 0;
+    let up = 0; // stick pushed up / W, regardless of pitch inversion (used by assisted flight)
     let roll = 0;
     let jump = false;
     let boost = false;
@@ -212,6 +213,7 @@ export class Input {
       throttle = this.kb('throttle') - this.kb('reverse');
       steer = this.kb('right') - this.kb('left');
       pitch = throttle;
+      up = throttle;
       roll = this.kb('rollRight') - this.kb('rollLeft');
       // A tap shorter than a frame still counts as a press.
       jump = !!this.kb('jump') || this.keys('jump').some((k) => this.frameKeys && this.frameKeys.has(k));
@@ -226,6 +228,7 @@ export class Input {
       if (Math.abs(ax) > Math.abs(steer)) steer = ax;
       const py = s.invertPitch ? ay : -ay;
       if (Math.abs(py) > Math.abs(pitch)) pitch = py;
+      if (Math.abs(ay) > Math.abs(up)) up = -ay;
       if (b(PAD.LB) > 0.5) roll = -1;
       jump = jump || b(PAD.A) > 0.5;
       boost = boost || b(PAD.B) > 0.5 || b(PAD.RB) > 0.5;
@@ -236,6 +239,7 @@ export class Input {
       if (Math.abs(t.y) > Math.abs(throttle)) throttle = t.y;
       if (Math.abs(t.x) > Math.abs(steer)) steer = t.x;
       if (Math.abs(t.y) > Math.abs(pitch)) pitch = t.y;
+      if (Math.abs(t.y) > Math.abs(up)) up = t.y;
       jump = jump || t.jump || this.frameVirtual.has('jump');
       boost = boost || t.boost;
       handbrake = handbrake || t.handbrake;
@@ -248,6 +252,9 @@ export class Input {
     out.jump = jump;
     out.boost = boost;
     out.handbrake = handbrake;
+    out.up = Math.max(-1, Math.min(1, up));
+    out.dodgeX = undefined;
+    out.dodgeY = undefined;
     return out;
   }
 }

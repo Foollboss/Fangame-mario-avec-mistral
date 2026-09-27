@@ -117,7 +117,7 @@ input[type=text] { background: rgba(255, 255, 255, 0.06); border: 1px solid var(
 @keyframes popupA { 0% { transform: translateY(20px) scale(0.6); opacity: 0; } 10% { transform: none; opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(-20px); } }
 .demo-msg { position: absolute; top: 45%; left: 0; right: 0; text-align: center; font: italic 900 38px var(--font); color: #ff7070; text-shadow: 0 3px 12px #000; }
 .split-line { position: absolute; left: 0; right: 0; top: 50%; height: 3px; background: #000; }
-.hint-bar { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); background: rgba(6, 10, 22, 0.8); border: 1px solid var(--line);
+.hint-bar { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); text-align: center; background: rgba(6, 10, 22, 0.8); border: 1px solid var(--line);
   padding: 8px 16px; border-radius: 4px; font-size: 14px; white-space: nowrap; transition: opacity 1s; }
 .hint-bar .key { cursor: default; }
 .hint-bar.fade { opacity: 0; }

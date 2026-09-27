@@ -43,6 +43,7 @@ export class Match {
     };
     this.ball = new Ball();
     this.cars = this.opts.players.map((p) => new Car(p));
+    for (const car of this.cars) car.wallGrip = this.opts.wallGrip !== 'real';
     this.pads = createBoostPads();
     this.score = [0, 0];
     this.timeLeft = this.opts.duration;
