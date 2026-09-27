@@ -37,8 +37,8 @@ export class ParticleSystem {
       vertexShader: `attribute float size; attribute float alpha; attribute vec3 color;
         uniform float uScale; varying vec3 vColor; varying float vAlpha;
         void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * mv;
-          gl_PointSize = min(size * uScale / max(0.5, -mv.z), 160.0); vColor = color;
-          vAlpha = alpha * smoothstep(2.0, 7.0, -mv.z); }`,
+          gl_PointSize = min(size * uScale / max(0.5, -mv.z), 110.0); vColor = color;
+          vAlpha = alpha * smoothstep(3.5, 11.0, -mv.z); }`,
       fragmentShader: `uniform sampler2D map; varying vec3 vColor; varying float vAlpha;
         void main(){ vec4 t = texture2D(map, gl_PointCoord); gl_FragColor = vec4(vColor * t.rgb, t.a * vAlpha);
         #include <colorspace_fragment>

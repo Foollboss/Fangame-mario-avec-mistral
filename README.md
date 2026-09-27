@@ -5,9 +5,9 @@ Identité, véhicules, arènes, interface et effets originaux (aucun élément r
 
 ![Sky Stadium](docs/screenshots/sky-stadium.png)
 
-| Neon Dome | Desert Reactor | Garage |
-|---|---|---|
-| ![](docs/screenshots/neon-dome.png) | ![](docs/screenshots/desert-reactor.png) | ![](docs/screenshots/garage.png) |
+| Neon Dome | Desert Reactor | Au plafond | Garage |
+|---|---|---|---|
+| ![](docs/screenshots/neon-dome.png) | ![](docs/screenshots/desert-reactor.png) | ![](docs/screenshots/ceiling.png) | ![](docs/screenshots/garage.png) |
 
 ## Jouer tout de suite
 
@@ -24,9 +24,11 @@ Boucle complète : **menu → match → pilotage → physique → balle → but 
 
 - **Modes** : Match rapide 3v3, Duel 1v1, Chaos 4v4, Tournoi (quart / demi / finale, élimination directe), Entraînement (terrain libre, tirs, aériens, dribble, contrôle de balle).
 - **Match** : 2, 3 ou 5 minutes, compte à rebours, but quand la balle franchit entièrement la ligne, ralenti + explosion + annonce, **replay automatique du but** (passable), engagement automatique, prolongation « but en or » en cas d’égalité, buzzer qui attend que la balle touche le sol, écran de résultats (points, buts, passes décisives, arrêts, tirs, MVP).
-- **Voiture** : accélérer, freiner, marche arrière, tourner, sauter (saut maintenu plus haut), double saut, **dash** directionnel (salto avant/arrière/latéral) au sol ou en l’air, boost au sol et en l’air (aériens), rotation en l’air (tangage/lacet), démolitions à vitesse supersonique, redressement automatique.
+- **Voiture** : accélérer, freiner, marche arrière, tourner, sauter (saut maintenu plus haut), double saut, **dash** directionnel (salto avant/arrière/latéral) au sol ou en l’air, démolitions à vitesse supersonique, redressement automatique.
+- **Rouler sur les murs et le plafond** : le sol se courbe en rampe jusqu’aux murs et les murs rejoignent le plafond par une autre courbe. La voiture monte les rampes, roule sur les murs et au plafond (elle y tient tant qu’elle avance ; à l’arrêt au plafond, elle tombe). Sauter depuis un mur ou le plafond propulse dans la direction opposée à la surface, et atterrir roues en avant sur un mur ou au plafond fonctionne aussi.
+- **Voler avec le boost** : en l’air, le boost pousse dans l’axe du capot, plus fort que la gravité : on pointe le nez vers le haut et on vole. Au tactile, joystick vers le haut = le nez monte (réglable).
 - **Balle rebondissante** : restitution élevée (sol et murs), gravité un peu plus légère que les voitures, frappes au sol qui décollent la balle ; la balle s'écrase et reprend sa forme à chaque rebond, laisse une onde et de la poussière au sol, une traînée lumineuse quand elle va vite, et ses coutures prennent la couleur de la dernière équipe qui l'a touchée.
-- **Physique arcade maison** (pas de moteur externe) : pas fixe 120 Hz, masse, accélération, vitesse max, frottements, adhérence latérale, suspension ressort-amortisseur (tangage, roulis, compression à l’atterrissage), collisions voiture/voiture et voiture/balle avec impulsion « arcade » lisible, balle avec masse, rebonds, roulement, effet et inertie, arène avec coins coupés, poteaux et transversale arrondis.
+- **Physique arcade maison** (pas de moteur externe) : pas fixe 120 Hz, masse, accélération, vitesse max, frottements, adhérence latérale, suspension ressort-amortisseur (tangage, roulis, compression à l’atterrissage), collisions voiture/voiture et voiture/balle avec impulsion « arcade » lisible, balle avec masse, rebonds, roulement, effet et inertie. L’arène est une forme continue (champ de distance signée) : coins arrondis, rampes courbes au sol et au plafond, poteaux et transversale arrondis ; la balle monte elle aussi les rampes et les murs.
 - **Boost** : jauge 0–100, 6 grandes capsules (100) et 24 petites (+12) qui réapparaissent, flammes, particules, traînée et son.
 - **Bots** (4 niveaux : Facile, Moyen, Difficile, Expert) : prédiction de trajectoire de la balle, interception, rôles dynamiques attaquant / soutien / défenseur (y compris avec vous comme coéquipier), rotations, retour au but, gardien, arrêts, dégagements, passes centrées, sauts, dashs, aériens (Difficile/Expert), récupération de boost, anti-blocage. Les niveaux diffèrent en temps de réaction, précision, anticipation, vitesse, usage du boost et discipline de placement.
 - **3 arènes** : Neon Dome (nuit, dôme de verre, skyline), Desert Reactor (coucher de soleil, dunes, réacteurs), Sky Stadium (stade dans les nuages). Terrain peint pour chaque arène (dalles lumineuses, pierre et sable, pelouse tondue avec chevrons), lignes qui brillent, zones d'équipe, marquages des capsules et des engagements. Panneaux LED qui défilent tout autour du terrain, tribunes avec foule animée, écrans géants avec le score, rampes lumineuses aux couleurs des équipes, faisceaux des projecteurs, flash dynamique au but et aux frappes.
@@ -45,7 +47,7 @@ Boucle complète : **menu → match → pilotage → physique → balle → but 
 
 | Action | Tactile | Clavier | Manette |
 |---|---|---|---|
-| Direction / rotation en l’air | Joystick gauche | ZQSD / WASD / flèches | Stick gauche |
+| Direction / rotation en l’air (tactile : haut = le nez monte) | Joystick gauche | ZQSD / WASD / flèches | Stick gauche |
 | Accélérer / freiner-reculer | GAZ / FREIN | Z-W / S (ou flèches) | RT / LT |
 | Saut (2× = double saut) | SAUT | Espace | A |
 | Boost | BOOST | Maj | B / RB |
@@ -105,7 +107,6 @@ Détails dans [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Correspondance avec 
 
 - **Pas de multijoueur en ligne** pour l’instant. L’architecture est prête (simulation déterministe à pas fixe, sans rendu, entrées sérialisables, snapshots d’état déjà utilisés par les replays) ; le serveur, le matchmaking, les salons, les amis et le classement restent à écrire. Voir `docs/ARCHITECTURE.md`.
 - **Pas de sauvegarde cloud** : l’interface de stockage est prévue (`LocalStorageBackend` / `MemoryBackend`), seul le stockage local existe. L’export/import par code permet déjà de transférer une progression.
-- Les voitures ne roulent pas sur les murs ni le plafond (elles rebondissent dessus).
 - La suspension est un ressort-amortisseur global (tangage, roulis, compression), pas quatre roues indépendantes.
 - Modèles 3D procéduraux low-poly et sons synthétisés : lisibles et légers, mais à remplacer par des assets d’artistes pour une version commerciale.
 - L’APK a été compilé et vérifié (signature, manifeste, contenu) mais cet environnement ne permet pas de lancer un émulateur Android. Le jeu lui-même a été testé dans Chromium (même moteur que la WebView Android) en viewport mobile avec de vrais événements tactiles multi-doigts.

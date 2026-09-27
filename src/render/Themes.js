@@ -8,7 +8,7 @@ export const THEMES = {
     fog: { color: 0x0a0820, near: 180, far: 620 },
     field: {
       base1: '#0a1632', base2: 'rgba(90,160,255,0.2)', lines: 'rgba(210,244,255,0.95)', pattern: 'tiles', logo: 'rgba(160,220,255,0.22)',
-      grain: 6, glowColor: 0x8feaff, glowIntensity: 1.3, rough: 0.28, metal: 0.3, env: 1,
+      grain: 6, glowColor: 0x8feaff, glowIntensity: 1.3, rough: 0.28, metal: 0.3, env: 1, rampColor: '#15244d',
     },
     teamTint: ['rgba(25,230,255,0.22)', 'rgba(255,47,125,0.22)'],
     outer: 0x06070f,
@@ -35,7 +35,7 @@ export const THEMES = {
     fog: { color: 0xd9824a, near: 200, far: 700 },
     field: {
       base1: '#c98b52', base2: 'rgba(130,60,30,0.28)', lines: 'rgba(255,248,235,0.95)', pattern: 'bands', logo: 'rgba(90,40,20,0.3)',
-      grain: 12, glowColor: 0xfff0d0, glowIntensity: 0.25, rough: 0.95, metal: 0, env: 0.4, nameAlpha: 0.3,
+      grain: 12, glowColor: 0xfff0d0, glowIntensity: 0.25, rough: 0.95, metal: 0, env: 0.4, nameAlpha: 0.3, rampColor: '#a86a3c',
     },
     teamTint: ['rgba(25,200,255,0.25)', 'rgba(255,47,125,0.25)'],
     outer: 0xb4703f,
@@ -62,7 +62,7 @@ export const THEMES = {
     fog: { color: 0xcfeaff, near: 260, far: 900 },
     field: {
       base1: '#2c863a', base2: '#379844', chevron: 'rgba(8,48,14,0.13)', lines: 'rgba(255,255,255,0.95)', pattern: 'chevron', logo: 'rgba(255,255,255,0.16)',
-      grain: 14, glowColor: 0xffffff, glowIntensity: 0.18, rough: 0.95, metal: 0, env: 0.4, nameAlpha: 0.28,
+      grain: 14, glowColor: 0xffffff, glowIntensity: 0.18, rough: 0.95, metal: 0, env: 0.4, nameAlpha: 0.28, rampColor: '#8fa3b5',
     },
     teamTint: ['rgba(25,200,255,0.2)', 'rgba(255,47,125,0.2)'],
     outer: 0x8fb4c8,

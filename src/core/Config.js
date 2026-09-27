@@ -5,7 +5,8 @@ export const ARENA = {
   halfWidth: 50,      // X
   halfLength: 72,     // Z, goal line position
   height: 38,         // ceiling
-  corner: 16,         // 45° chamfer size in each XZ corner
+  cornerRadius: 20,   // rounded vertical corners (XZ)
+  rampRadius: 8,      // curved transition floor↔wall and wall↔ceiling (drivable)
   goalHalfWidth: 14,
   goalHeight: 11,
   goalDepth: 11,
@@ -43,7 +44,7 @@ export const CAR = {
   brakeDecel: 62,
   coastDecel: 9,
   boostAccel: 32,
-  airBoostAccel: 30,
+  airBoostAccel: 44,     // > gravity: pointing the nose up with boost makes the car fly
   grip: 10,
   turnRate: 2.3,
   jumpImpulse: 11,
@@ -55,9 +56,11 @@ export const CAR = {
   secondJumpWindow: 1.35,
   airPitchRate: 5.2,
   airYawRate: 4.2,
-  airResponse: 7,
+  airResponse: 9,
   capsuleOffset: 1.35,
-  capsuleRadius: 1.3,
+  capsuleRadius: 1.3,     // car vs car
+  bodyRadius: 0.85,       // car body vs arena (smaller than ride height: wheels do the rest)
+  stickSpeed: 8,          // below this, a car on the ceiling without throttle falls off
   boostPerSecond: 33.3,
 };
 

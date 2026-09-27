@@ -141,6 +141,31 @@ export function decalTexture(style, color = '#ffffff', accent = '#111111') {
   return toTexture(c);
 }
 
+// Tiles for the curved ramps: theme-coloured panels with thin seams.
+export function rampTexture(theme) {
+  const s = 256;
+  const c = canvas(s, s);
+  const g = c.getContext('2d');
+  const base = new THREE.Color(theme.field.rampColor || theme.field.base1);
+  g.fillStyle = `#${base.getHexString()}`;
+  g.fillRect(0, 0, s, s);
+  const light = base.clone().lerp(new THREE.Color(0xffffff), 0.12);
+  const dark = base.clone().multiplyScalar(0.7);
+  for (let y = 0; y < 4; y++) {
+    for (let x = 0; x < 4; x++) {
+      g.fillStyle = `#${(Math.random() < 0.5 ? light : base).getHexString()}`;
+      g.fillRect(x * 64 + 2, y * 64 + 2, 60, 60);
+    }
+  }
+  g.strokeStyle = `#${dark.getHexString()}`;
+  g.lineWidth = 4;
+  for (let i = 0; i <= s; i += 64) {
+    g.beginPath(); g.moveTo(i, 0); g.lineTo(i, s); g.stroke();
+    g.beginPath(); g.moveTo(0, i); g.lineTo(s, i); g.stroke();
+  }
+  return toTexture(c, { repeat: [1, 1] });
+}
+
 // Scrolling LED ribbon (dot-matrix look) for the boards around the pitch.
 export function ledTexture() {
   const W = 2048, H = 72;

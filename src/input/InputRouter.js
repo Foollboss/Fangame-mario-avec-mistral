@@ -32,7 +32,10 @@ export class InputRouter {
     const sens = c.sensitivity;
     const shape = (v) => Math.sign(v) * Math.min(1, Math.pow(Math.abs(v), 1.15) * sens);
     s.steer = shape(raw.stickX);
-    s.pitch = shape(raw.stickY) * (c.invertY ? -1 : 1);
+    // Physics: positive pitch = nose down. Touch default: stick up = nose up (climb, like a
+    // flying game); keyboard and gamepads keep the classic "forward = nose down".
+    const flight = this.lastDevice === 'touch' ? -1 : 1;
+    s.pitch = shape(raw.stickY) * flight * (c.invertY ? -1 : 1);
     const autoAccel = c.autoAccel && this.lastDevice === 'touch';
     s.throttle = raw.brake ? -1 : raw.accel || autoAccel ? 1 : 0;
     s.jump = raw.jump;

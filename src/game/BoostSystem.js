@@ -1,5 +1,5 @@
 // Boost pads: 6 large (full refill) and 24 small (+12). Layout is point-symmetric for fairness.
-const BIG = [[44, 0], [-44, 0], [38, 58], [-38, 58], [38, -58], [-38, -58]];
+const BIG = [[40, 0], [-40, 0], [38, 58], [-38, 58], [38, -58], [-38, -58]];
 const SMALL_HALF = [
   [14, 62], [-14, 62],
   [0, 46], [30, 46], [-30, 46],

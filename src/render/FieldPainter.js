@@ -205,30 +205,38 @@ export class FieldPainter {
   }
 
   lines() {
-    const C = ARENA.corner - 1.5;
-    const m = 1.5;
+    // Outline where the flat pitch meets the curved ramps (rounded like the arena)
+    const RV = ARENA.rampRadius;
+    const RC = ARENA.cornerRadius;
     this.both((g, glow) => {
       g.strokeStyle = glow ? '#ffffff' : this.f.lines;
       g.fillStyle = g.strokeStyle;
       g.lineJoin = 'round';
       g.lineWidth = 0.5 * this.sx;
       const outline = (inset) => {
-        const i = inset;
+        const hw = HW - RV - inset, hl = HL - RV - inset, r = Math.max(1, RC - RV - inset);
         g.beginPath();
-        g.moveTo(this.X(-HW + m + i), this.Z(-HL + C + i));
-        g.lineTo(this.X(-HW + C + i), this.Z(-HL + m + i));
-        g.lineTo(this.X(HW - C - i), this.Z(-HL + m + i));
-        g.lineTo(this.X(HW - m - i), this.Z(-HL + C + i));
-        g.lineTo(this.X(HW - m - i), this.Z(HL - C - i));
-        g.lineTo(this.X(HW - C - i), this.Z(HL - m - i));
-        g.lineTo(this.X(-HW + C + i), this.Z(HL - m - i));
-        g.lineTo(this.X(-HW + m + i), this.Z(HL - C - i));
+        g.moveTo(this.X(-hw + r), this.Z(-hl));
+        g.lineTo(this.X(hw - r), this.Z(-hl));
+        g.arc(this.X(hw - r), this.Z(-hl + r), r * this.sx, -Math.PI / 2, 0);
+        g.lineTo(this.X(hw), this.Z(hl - r));
+        g.arc(this.X(hw - r), this.Z(hl - r), r * this.sx, 0, Math.PI / 2);
+        g.lineTo(this.X(-hw + r), this.Z(hl));
+        g.arc(this.X(-hw + r), this.Z(hl - r), r * this.sx, Math.PI / 2, Math.PI);
+        g.lineTo(this.X(-hw), this.Z(-hl + r));
+        g.arc(this.X(-hw + r), this.Z(-hl + r), r * this.sx, Math.PI, Math.PI * 1.5);
         g.closePath();
         g.stroke();
       };
-      outline(0);
+      const m = 1.5;
+      outline(0.6);
       g.lineWidth = 0.2 * this.sx;
-      outline(1.1);
+      outline(1.7);
+      // Goal lines in the goal mouths (no ramp there)
+      g.lineWidth = 0.5 * this.sx;
+      for (const s of [-1, 1]) {
+        g.beginPath(); g.moveTo(this.X(-ARENA.goalHalfWidth), this.Z(s * (HL - 0.3))); g.lineTo(this.X(ARENA.goalHalfWidth), this.Z(s * (HL - 0.3))); g.stroke();
+      }
       g.lineWidth = 0.5 * this.sx;
       g.beginPath(); g.moveTo(this.X(-HW + m), this.Z(0)); g.lineTo(this.X(HW - m), this.Z(0)); g.stroke();
       g.beginPath(); g.arc(this.X(0), this.Z(0), 13 * this.sx, 0, Math.PI * 2); g.stroke();

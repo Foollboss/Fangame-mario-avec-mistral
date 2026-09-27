@@ -2,7 +2,7 @@ import { BALL, CAR } from '../core/Config.js';
 import { GoalManager } from './GoalManager.js';
 
 export const DRILLS = {
-  free: { label: 'Terrain libre', desc: 'Balle libre, boost infini. « Balle » replace la balle devant vous.' },
+  free: { label: 'Terrain libre', desc: 'Boost infini : roulez sur les murs et le plafond, volez avec le boost. « Balle » replace la balle devant vous.' },
   shots: { label: 'Tirs', desc: 'Des balles apparaissent dans le camp adverse : marquez le plus possible.' },
   aerial: { label: 'Aériens', desc: 'La balle est lancée en l’air : touchez-la avant qu’elle ne retombe.' },
   dribble: { label: 'Dribble', desc: 'La balle démarre sur votre toit : gardez-la le plus longtemps possible.' },

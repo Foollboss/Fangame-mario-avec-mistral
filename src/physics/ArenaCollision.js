@@ -1,140 +1,92 @@
 import { ARENA } from '../core/Config.js';
 
-// The arena is described as a set of finite, one-sided rectangles facing the playable volume.
-// Sphere-vs-rectangle uses the closest point on the rectangle, so rectangle edges behave like
-// rounded edges (goal posts, crossbar) for free. Rectangles meeting at a concave junction are
-// extended past it (MARGIN) so balls never catch on their edges; convex edges stay exact.
-// Floor (y=0) and ceiling (y=height) are infinite planes handled analytically.
-
-const MARGIN = 6;
-const S2 = Math.SQRT1_2;
-
-function rect(cx, cy, cz, nx, ny, nz, ux, uy, uz, hu, hv) {
-  // v = n x u
-  const vx = ny * uz - nz * uy;
-  const vy = nz * ux - nx * uz;
-  const vz = nx * uy - ny * ux;
-  return { cx, cy, cz, nx, ny, nz, ux, uy, uz, vx, vy, vz, hu, hv };
-}
-
-export function buildArenaRects(a = ARENA) {
-  const { halfWidth: HW, halfLength: HL, height: H, corner: C, goalHalfWidth: GW, goalHeight: GH, goalDepth: GD } = a;
-  const M = MARGIN;
-  const rects = [];
-  const hy = H / 2;
-  const hv = H / 2 + M;
-
-  // Side walls
-  for (const sx of [-1, 1]) {
-    rects.push(rect(sx * HW, hy, 0, -sx, 0, 0, 0, 0, 1, HL - C + M, hv));
-  }
-  // Corner chamfers
-  for (const sx of [-1, 1]) {
-    for (const sz of [-1, 1]) {
-      rects.push(rect(sx * (HW - C / 2), hy, sz * (HL - C / 2), -sx * S2, 0, -sz * S2, -sx * S2, 0, sz * S2, (C * Math.SQRT2) / 2 + M, hv));
-    }
-  }
-  for (const sz of [-1, 1]) {
-    const z = sz * HL;
-    // End wall, both sides of the goal (inner edge = goal post, exact)
-    const a1 = GW;
-    const a2 = HW - C + M;
-    for (const sx of [-1, 1]) {
-      rects.push(rect(sx * (a1 + a2) / 2, hy, z, 0, 0, -sz, 1, 0, 0, (a2 - a1) / 2, hv));
-    }
-    // End wall above the goal (bottom edge = crossbar)
-    const topH = (H + M - GH) / 2;
-    rects.push(rect(0, GH + topH, z, 0, 0, -sz, 1, 0, 0, GW, topH));
-
-    // Goal box interior
-    const zBack = sz * (HL + GD);
-    rects.push(rect(0, GH / 2, zBack, 0, 0, -sz, 1, 0, 0, GW + M, GH / 2 + M));
-    const zMid = sz * (HL + (GD + M) / 2);
-    for (const sx of [-1, 1]) {
-      rects.push(rect(sx * GW, (GH - M) / 2, zMid, -sx, 0, 0, 0, 0, 1, (GD + M) / 2, (GH + M) / 2));
-    }
-    rects.push(rect(0, GH, zMid, 0, -1, 0, 1, 0, 0, GW, (GD + M) / 2));
-  }
-  return rects;
-}
+// The arena is one smooth signed distance field (negative inside the playable volume):
+// a box with rounded vertical corners whose floor and ceiling curve into the walls (the
+// quarter-pipes cars drive on), united with the two goal boxes. The smooth union rounds the
+// goal posts and crossbar; the floor stays perfectly flat, goals included.
+const smin = (a, b, k) => {
+  const h = Math.max(k - Math.abs(a - b), 0) / k;
+  return Math.min(a, b) - h * h * k * 0.25;
+};
 
 export class ArenaCollision {
   constructor(arena = ARENA) {
     this.arena = arena;
-    this.rects = buildArenaRects(arena);
-    this._n = { x: 0, y: 0, z: 0 };
+    this.HW = arena.halfWidth;
+    this.HL = arena.halfLength;
+    this.H = arena.height;
+    this.Rc = arena.cornerRadius;
+    this.Rv = arena.rampRadius;
+    this.GW = arena.goalHalfWidth;
+    this.GH = arena.goalHeight;
+    const GD = arena.goalDepth;
+    const M = this.Rv + 4; // the goal volume reaches into the pitch past the ramp
+    this.gcz = this.HL + (GD - M) / 2;
+    this.ghz = (GD + M) / 2;
+    this.gcy = (this.GH - 2) / 2;
+    this.ghy = (this.GH + 2) / 2;
+    this.k = 2.2;
+    this.g = { x: 0, y: 1, z: 0 };
   }
 
-  // Resolves a sphere against the arena. `p` ({x,y,z}) is moved out of every contact in sequence;
-  // `onContact(nx, ny, nz, pen)` lets the caller react (velocity response, events).
-  resolveSphere(p, r, onContact, withFloor = true) {
-    const H = this.arena.height;
-    if (withFloor && p.y < r) {
-      const pen = r - p.y;
-      p.y = r;
-      onContact && onContact(0, 1, 0, pen);
-    }
-    if (p.y > H - r) {
-      const pen = p.y - (H - r);
-      p.y = H - r;
-      onContact && onContact(0, -1, 0, pen);
-    }
-    const rects = this.rects;
-    for (let i = 0; i < rects.length; i++) {
-      const R = rects[i];
-      const dx = p.x - R.cx;
-      const dy = p.y - R.cy;
-      const dz = p.z - R.cz;
-      const dn = dx * R.nx + dy * R.ny + dz * R.nz;
-      if (dn > r || dn < -r * 2.5) continue;
-      const du = dx * R.ux + dy * R.uy + dz * R.uz;
-      const dv = dx * R.vx + dy * R.vy + dz * R.vz;
-      const inU = du >= -R.hu && du <= R.hu;
-      const inV = dv >= -R.hv && dv <= R.hv;
-      let nx, ny, nz, pen;
-      if (dn < 0) {
-        if (!inU || !inV) continue; // behind the plane but outside the rectangle
-        nx = R.nx; ny = R.ny; nz = R.nz;
-        pen = r - dn;
-      } else if (inU && inV) {
-        if (dn >= r) continue;
-        nx = R.nx; ny = R.ny; nz = R.nz;
-        pen = r - dn;
-      } else {
-        const cu = du < -R.hu ? -R.hu : du > R.hu ? R.hu : du;
-        const cv = dv < -R.hv ? -R.hv : dv > R.hv ? R.hv : dv;
-        const qx = R.cx + R.ux * cu + R.vx * cv;
-        const qy = R.cy + R.uy * cu + R.vy * cv;
-        const qz = R.cz + R.uz * cu + R.vz * cv;
-        const ex = p.x - qx;
-        const ey = p.y - qy;
-        const ez = p.z - qz;
-        const d2 = ex * ex + ey * ey + ez * ez;
-        if (d2 >= r * r) continue;
-        const d = Math.sqrt(d2);
-        if (d < 1e-6) {
-          nx = R.nx; ny = R.ny; nz = R.nz;
-        } else {
-          nx = ex / d; ny = ey / d; nz = ez / d;
-        }
-        pen = r - d;
-      }
-      p.x += nx * pen;
-      p.y += ny * pen;
-      p.z += nz * pen;
-      onContact && onContact(nx, ny, nz, pen);
+  sd(x, y, z) {
+    const { HW, HL, H, Rc, Rv } = this;
+    const qx = Math.abs(x) - HW + Rc;
+    const qz = Math.abs(z) - HL + Rc;
+    const d2 = Math.hypot(Math.max(qx, 0), Math.max(qz, 0)) + Math.min(Math.max(qx, qz), 0) - Rc;
+    const wx = d2 + Rv;
+    const wy = Math.abs(y - H / 2) - H / 2 + Rv;
+    const shell = Math.hypot(Math.max(wx, 0), Math.max(wy, 0)) + Math.min(Math.max(wx, wy), 0) - Rv;
+    const bx = Math.abs(x) - this.GW;
+    const by = Math.abs(y - this.gcy) - this.ghy;
+    const bz = Math.abs(Math.abs(z) - this.gcz) - this.ghz;
+    const goal = Math.hypot(Math.max(bx, 0), Math.max(by, 0), Math.max(bz, 0)) + Math.min(Math.max(bx, by, bz), 0);
+    return Math.max(smin(shell, goal, this.k), -y);
+  }
+
+  // Outward unit gradient of the field (tetrahedral finite differences) into this.g.
+  gradient(x, y, z) {
+    const h = 0.02;
+    const a = this.sd(x + h, y - h, z - h);
+    const b = this.sd(x - h, y - h, z + h);
+    const c = this.sd(x - h, y + h, z - h);
+    const d = this.sd(x + h, y + h, z + h);
+    let nx = a - b - c + d, ny = -a - b + c + d, nz = -a + b - c + d;
+    const l = Math.hypot(nx, ny, nz) || 1;
+    const g = this.g;
+    g.x = nx / l; g.y = ny / l; g.z = nz / l;
+    return g;
+  }
+
+  // Distance to the nearest surface and its inward normal (towards the playable volume).
+  surface(p, outN) {
+    const depth = -this.sd(p.x, p.y, p.z);
+    const g = this.gradient(p.x, p.y, p.z);
+    outN.set(-g.x, -g.y, -g.z);
+    return depth;
+  }
+
+  // Cars can drive on the floor, ramps, walls and ceiling, but not on the inside of the goals.
+  drivable(p, n) {
+    if (n.y > 0.7) return true;
+    return !(Math.abs(p.z) > this.HL - 1 && Math.abs(p.x) < this.GW + 1.5 && p.y < this.GH + 2);
+  }
+
+  // Pushes a sphere out of the boundary. onContact(nx, ny, nz, pen) gets the inward normal.
+  resolveSphere(p, r, onContact) {
+    for (let it = 0; it < 3; it++) {
+      const s = this.sd(p.x, p.y, p.z);
+      if (s <= -r) return;
+      const g = this.gradient(p.x, p.y, p.z);
+      const pen = s + r;
+      p.x -= g.x * pen;
+      p.y -= g.y * pen;
+      p.z -= g.z * pen;
+      onContact && onContact(-g.x, -g.y, -g.z, pen);
     }
   }
 
-  // Keeps a point (e.g. camera) inside the arena with a small radius.
   clampPoint(p, r = 0.6) {
-    this.resolveSphere(p, r, null, true);
-    // Safety net far outside (should not happen)
-    const a = this.arena;
-    const lim = a.halfLength + a.goalDepth - r;
-    if (p.z > lim) p.z = lim;
-    if (p.z < -lim) p.z = -lim;
-    if (p.x > a.halfWidth - r) p.x = a.halfWidth - r;
-    if (p.x < -a.halfWidth + r) p.x = -a.halfWidth + r;
+    this.resolveSphere(p, r, null);
   }
 }

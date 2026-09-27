@@ -269,7 +269,7 @@ export class UIManager {
     if (tab === 'controls') {
       body = [
         range('controls', 'sensitivity', 'Sensibilité de direction', 'Réponse du joystick', x),
-        toggle('controls', 'invertY', 'Inverser l’axe vertical', 'Tangage en l’air'),
+        toggle('controls', 'invertY', 'Inverser l’axe vertical en vol', 'Par défaut : joystick vers le haut = le nez monte'),
         toggle('controls', 'leftHanded', 'Mode gaucher', 'Joystick à droite, boutons à gauche'),
         toggle('controls', 'autoAccel', 'Accélération automatique', 'Jouable avec un seul pouce à droite'),
         toggle('controls', 'vibration', 'Vibrations'),

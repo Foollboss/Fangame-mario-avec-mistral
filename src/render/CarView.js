@@ -74,9 +74,8 @@ export class CarView {
       w.spin.position.y = drop;
     }
     // Underglow fades with height
-    const h = p.pos.y - 1.05;
-    m.under.material.opacity = Math.max(0, 0.55 - h * 0.12);
-    m.under.visible = h < 5 && p.grounded;
+    m.under.material.opacity = 0.55;
+    m.under.visible = p.grounded;
     if (m.topper) {
       m.topper.rotation.y += dt * 1.5;
     }

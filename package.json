@@ -1,6 +1,6 @@
 {
   "name": "neon-car-arena",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "description": "NEON CAR ARENA - jeu mobile de football automobile arcade (Three.js / WebGL)",
   "type": "module",

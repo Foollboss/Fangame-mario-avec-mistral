@@ -204,7 +204,50 @@ function testProgression() {
   check(levelFromXp(total - 1).level === 49, 'level curve off by one');
 }
 
+// 5. Driving up a wall and across the ceiling, falling off it when stopped, flying with boost.
+function testWallsAndFlight() {
+  console.log('• Murs, plafond et vol');
+  const w = new World({ seed: 5 });
+  const car = w.addCar({ team: 0, name: 'T', vehicleId: 'pulse' });
+  const p = car.physics;
+  const inp = { steer: 0, pitch: 0, throttle: 1, jump: false, boost: true, dash: false, dodgeX: 0, dodgeY: 0 };
+  w.ball.reset(0, BALL.radius, 60);
+  p.place(0, 0, Math.PI / 2);
+  car.boost = 100;
+  let onWall = 0, onCeiling = 0;
+  for (let i = 0; i < 120 * 3; i++) {
+    w.step(1 / 120, [inp]);
+    if (p.grounded && Math.abs(p.surfN.y) < 0.2 && p.pos.y > 10) onWall++;
+    if (p.grounded && p.surfN.y < -0.9) onCeiling++;
+    if (!inside(p.pos, 1)) { check(false, 'car left the arena while wall driving'); break; }
+  }
+  check(onWall > 10, 'car did not drive up the wall');
+  check(onCeiling > 10, 'car did not reach the ceiling');
+  // Stopped on the ceiling: falls
+  p.place(0, 0, 0);
+  p.pos.set(0, ARENA.height - 1.05, 0);
+  p.surfN.set(0, -1, 0);
+  p.setBasis();
+  const idle = { ...inp, throttle: 0, boost: false };
+  for (let i = 0; i < 120; i++) w.step(1 / 120, [idle]);
+  check(!p.grounded || p.surfN.y > 0.9, 'a stopped car stayed stuck on the ceiling');
+  // Flight: jump, nose up, boost
+  p.place(0, -40, 0);
+  car.boost = 100;
+  let top = 0;
+  const fly = { ...inp, throttle: 0 };
+  for (let i = 0; i < 120 * 3; i++) {
+    fly.jump = i < 20;
+    fly.boost = i > 30;
+    fly.pitch = i > 25 && i < 60 ? -1 : 0;
+    w.step(1 / 120, [fly]);
+    top = Math.max(top, p.pos.y);
+  }
+  check(top > 20, `boost flight too weak (max height ${top.toFixed(1)})`);
+}
+
 testProgression();
+testWallsAndFlight();
 testContainment();
 testBallSettles();
 testCar();

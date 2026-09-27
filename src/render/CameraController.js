@@ -4,6 +4,8 @@ import { clamp, smooth } from '../core/MathUtil.js';
 const _v = new THREE.Vector3();
 const _v2 = new THREE.Vector3();
 const _look = new THREE.Vector3();
+const _up = new THREE.Vector3();
+const _w = new THREE.Vector3();
 
 // Third-person chase camera with ball-cam, boost FOV, shake, arena collision and cinematic modes.
 export class CameraController {
@@ -39,6 +41,11 @@ export class CameraController {
     const p = car.physics;
     const cp = p.pos;
     const bp = ball.pos;
+    const onWall = p.onWall;
+    // "Up" for the camera offset: world up on the floor, leaning towards the surface normal on
+    // walls and the ceiling so the camera stays inside the arena and on the car's side.
+    const up = _up.set(0, 1, 0);
+    if (onWall) up.copy(p.surfN).multiplyScalar(0.85).add(_w.set(0, 0.3, 0)).normalize();
     let target;
     if (this.ballCam && !ball.hidden) {
       target = _v.set(bp.x - cp.x, 0, bp.z - cp.z);
@@ -47,20 +54,27 @@ export class CameraController {
       if (p.grounded || p.vel.lengthSq() < 64) p.forward(_v);
       else _v.copy(p.vel);
       _v.y = 0;
+      // Driving straight up/down a wall: look at the car from the pitch side.
+      if (onWall && _v.lengthSq() < 0.09) _v.set(-p.surfN.x, 0, -p.surfN.z);
       target = _v;
-      if (s.assist && !ball.hidden) {
+      if (s.assist && !ball.hidden && !onWall) {
         _v2.set(bp.x - cp.x, 0, bp.z - cp.z).normalize();
         target.normalize().lerp(_v2, 0.18);
       }
     }
-    if (target.lengthSq() < 1e-4) target.set(0, 0, 1);
+    if (target.lengthSq() < 1e-4) target.copy(this.dir);
     target.normalize();
     const k = instant ? 1 : smooth(6 * s.stiffness, dt);
     this.dir.lerp(target, k).normalize();
 
     const dist = s.distance * (1 + clamp((p.speed - 36) / 60, 0, 0.2));
     const desired = _v2.copy(cp).addScaledVector(this.dir, -dist);
-    desired.y = cp.y * (p.grounded ? 1 : 0.85) + s.height;
+    if (onWall) {
+      desired.y = cp.y;
+      desired.addScaledVector(up, s.height + 2);
+    } else {
+      desired.y = cp.y * (p.grounded ? 1 : 0.85) + s.height;
+    }
     if (this.ballCam && !ball.hidden) desired.y += clamp((bp.y - cp.y) * 0.12, 0, 4);
     const kp = instant ? 1 : smooth(14 * s.stiffness, dt);
     this.pos.lerp(desired, kp);
@@ -68,8 +82,13 @@ export class CameraController {
 
     if (this.ballCam && !ball.hidden) {
       _look.copy(cp).lerp(bp, 0.42);
-      _look.y = Math.min(_look.y, cp.y + 7);
-      _look.y = Math.max(_look.y, cp.y + 0.5);
+      if (!onWall) {
+        _look.y = Math.min(_look.y, cp.y + 7);
+        _look.y = Math.max(_look.y, cp.y + 0.5);
+      }
+    } else if (onWall) {
+      p.forward(_w);
+      _look.copy(cp).addScaledVector(_w, 6);
     } else {
       _look.copy(cp).addScaledVector(this.dir, 7);
       _look.y = cp.y + 1.6;

@@ -52,9 +52,7 @@ export function collideCarBall(car, ball, events) {
 
   // Positional correction: the light ball moves most.
   ball.pos.addScaledVector(_n, pen * 0.9);
-  p.pos.x -= _n.x * pen * 0.1;
-  p.pos.z -= _n.z * pen * 0.1;
-  if (!p.grounded) p.pos.y -= _n.y * pen * 0.1;
+  p.nudge(-_n.x * pen * 0.1, -_n.y * pen * 0.1, -_n.z * pen * 0.1);
 
   _rel.copy(ball.vel).sub(p.vel);
   if (p.flip) {
@@ -71,9 +69,7 @@ export function collideCarBall(car, ball, events) {
     const invMc = 1 / p.mass;
     const j = (-(1 + 0.1) * vn) / (invMb + invMc);
     ball.vel.addScaledVector(_n, j * invMb);
-    p.vel.x -= _n.x * j * invMc;
-    p.vel.z -= _n.z * j * invMc;
-    p.vel.y -= _n.y * j * invMc * (p.grounded ? 0 : 1);
+    p.vel.addScaledVector(_n, -j * invMc);
 
     if (car.touchCooldown <= 0) {
       _dir.copy(ball.pos).sub(p.pos);
@@ -148,10 +144,8 @@ export function collideCars(A, B, events) {
   const pen = r * 2 - dist;
   const total = pa.mass + pb.mass;
   const ka = pb.mass / total, kb = pa.mass / total;
-  pa.pos.x -= _n.x * pen * ka; pa.pos.z -= _n.z * pen * ka;
-  pb.pos.x += _n.x * pen * kb; pb.pos.z += _n.z * pen * kb;
-  if (!pa.grounded) pa.pos.y -= _n.y * pen * ka;
-  if (!pb.grounded) pb.pos.y += _n.y * pen * kb;
+  pa.nudge(-_n.x * pen * ka, -_n.y * pen * ka, -_n.z * pen * ka);
+  pb.nudge(_n.x * pen * kb, _n.y * pen * kb, _n.z * pen * kb);
 
   _rel.copy(pb.vel).sub(pa.vel);
   const vn = _rel.dot(_n);

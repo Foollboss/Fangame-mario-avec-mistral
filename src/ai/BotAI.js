@@ -343,8 +343,10 @@ export class BotAI {
       cx = _v.x;
     }
     this.plan.mode = 'save';
-    this.plan.tx = clamp(cx, -ARENA.goalHalfWidth + 3, ARENA.goalHalfWidth - 3);
-    this.plan.tz = ownZ - sgn * 1.5;
+    // Race to the line beside the ball's path, never through it from behind (own goals).
+    const side = Math.sign(car.pos.x - cx) || 1;
+    this.plan.tx = clamp(cx + side * (R + 1.5), -ARENA.goalHalfWidth + 1.5, ARENA.goalHalfWidth - 1.5);
+    this.plan.tz = ownZ + sgn * 0.5;
     this.plan.speed = 60;
     this.plan.boost = true;
     this.plan.ball = null;
@@ -362,8 +364,10 @@ export class BotAI {
     if (this.skill.rotation >= 0.6 && distOwn < 58) {
       // Goalkeeper: stand in the mouth of the goal, shifted towards the ball.
       this.plan.mode = 'keeper';
-      this.plan.tx = clamp(b.x * 0.3, -9, 9);
-      this.plan.tz = ownZ + sgn * 3.5;
+      // Hug the line and cover the near post when the ball runs along the end wall ramp.
+      const nearLine = Math.abs(b.z - ownZ) < 24;
+      this.plan.tx = clamp(b.x * (nearLine ? 0.7 : 0.3), -11, 11);
+      this.plan.tz = ownZ + sgn * (nearLine ? 1.8 : 3.5);
       this.plan.boost = this.useBoost && Math.abs(car.pos.z - ownZ) > 45;
       return;
     }
@@ -443,19 +447,27 @@ export class BotAI {
     }
   }
 
+  // Keeps driving targets on the flat part of the pitch (before the curved ramps).
   clampTarget(tx, tz, allowGoal = false) {
-    const lim = HW - 4;
-    tx = clamp(tx, -lim, lim);
-    const zl = allowGoal && Math.abs(tx) < ARENA.goalHalfWidth - 2 ? HL + 3 : HL - 3;
-    tz = clamp(tz, -zl, zl);
-    const cc = HW + HL - ARENA.corner - 5;
-    const s = Math.abs(tx) + Math.abs(tz);
-    if (s > cc) {
-      const k = cc / s;
-      tx *= k; tz *= k;
+    const Rv = ARENA.rampRadius;
+    const lx = HW - Rv - 2;
+    const inGoal = allowGoal && Math.abs(tx) < ARENA.goalHalfWidth - 2;
+    const lz = inGoal ? HL + 3 : HL - Rv - 2;
+    tx = clamp(tx, -lx, lx);
+    tz = clamp(tz, -lz, lz);
+    if (!inGoal) {
+      const r = ARENA.cornerRadius - Rv - 2;
+      const cx = HW - ARENA.cornerRadius, cz = HL - ARENA.cornerRadius;
+      const ox = Math.abs(tx) - cx, oz = Math.abs(tz) - cz;
+      const d = Math.hypot(ox, oz);
+      if (ox > 0 && oz > 0 && d > r) {
+        tx = Math.sign(tx) * (cx + (ox / d) * r);
+        tz = Math.sign(tz) * (cz + (oz / d) * r);
+      }
     }
     return [tx, tz];
   }
+
 
   avoidBall(tx, tz) {
     const p = this.car.physics.pos;
@@ -477,8 +489,19 @@ export class BotAI {
     const inp = this.input;
     const dx = tx - p.pos.x, dz = tz - p.pos.z;
     const dist = Math.hypot(dx, dz);
-    const yaw = p.grounded ? p.yaw : p.headingYaw();
-    const ang = wrapAngle(Math.atan2(dx, dz) - yaw);
+    let ang;
+    if (p.onWall) {
+      // On a ramp/wall/ceiling: steer in the surface plane towards the target (usually back down).
+      const n = p.surfN;
+      _v.set(dx, 1 - p.pos.y, dz);
+      _v.addScaledVector(n, -_v.dot(n));
+      const f = p.fwd;
+      _v2.crossVectors(f, _v);
+      ang = Math.atan2(_v2.dot(n), f.dot(_v));
+    } else {
+      const yaw = p.grounded ? p.yaw : p.headingYaw();
+      ang = wrapAngle(Math.atan2(dx, dz) - yaw);
+    }
     let steer = clamp(-ang * this.skill.steerGain, -1, 1);
     const vf = p.forwardSpeed;
     // Don't arrive faster than the turn allows (turn radius = v / yawRate).
@@ -515,7 +538,7 @@ export class BotAI {
     else this.stuck = Math.max(0, this.stuck - dt * 2);
     if (this.stuck > 1.1) {
       this.stuck = 0;
-      this.reverse = 0.7;
+      this.reverse = 0.95;
     }
   }
 

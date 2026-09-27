@@ -3,11 +3,12 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { ARENA, TEAM } from '../core/Config.js';
 import { THEMES } from './Themes.js';
 import { FieldPainter } from './FieldPainter.js';
+import { perimeter, rampProfile, wallProfile, sweep, band, rampCaps, ceilingGeometry } from './ArenaShell.js';
 import {
-  hexPanelTexture, ledTexture, netTexture, radialTexture, screenTexture, cloudTexture, windowsTexture,
+  hexPanelTexture, ledTexture, rampTexture, netTexture, radialTexture, screenTexture, cloudTexture, windowsTexture,
 } from './Textures.js';
 
-const { halfWidth: HW, halfLength: HL, height: H, corner: C, goalHalfWidth: GW, goalHeight: GH, goalDepth: GD } = ARENA;
+const { halfWidth: HW, halfLength: HL, height: H, cornerRadius: RC, rampRadius: RV, goalHalfWidth: GW, goalHeight: GH, goalDepth: GD } = ARENA;
 
 function skyMaterial(sky) {
   return new THREE.ShaderMaterial({
@@ -145,98 +146,68 @@ export class ArenaView {
     this.group.add(skirt);
   }
 
+  // Glass walls and ceiling, opaque curved ramps (drivable), goal openings, neon trims.
   buildWalls() {
     const t = this.theme;
+    const pts = perimeter();
+    this.perimeterPts = pts;
+    const mouth = (i) => pts[i].mouth && pts[i + 1].mouth;
     const hex = this.track(hexPanelTexture());
     const glass = this.mat(new THREE.MeshBasicMaterial({
       map: hex, color: t.wall.color, transparent: true, opacity: t.wall.opacity, depthWrite: false, side: THREE.DoubleSide,
       blending: t.wall.additive ? THREE.AdditiveBlending : THREE.NormalBlending,
     }));
-    const geos = [];
-    const sideLen = (HL - C) * 2;
-    for (const s of [-1, 1]) {
-      geos.push(placed(tiledPlane(sideLen, H), s * HW, H / 2, 0, s * -Math.PI / 2));
-      for (const sz of [-1, 1]) {
-        const len = C * Math.SQRT2;
-        geos.push(placed(tiledPlane(len, H), s * (HW - C / 2), H / 2, sz * (HL - C / 2), Math.atan2(-s, -sz)));
-      }
-      // End walls beside and above the goal
-      const w = HW - C - GW;
-      for (const sx of [-1, 1]) geos.push(placed(tiledPlane(w, H), sx * (GW + w / 2), H / 2, s * HL, s > 0 ? Math.PI : 0));
-      geos.push(placed(tiledPlane(GW * 2, H - GH), 0, GH + (H - GH) / 2, s * HL, s > 0 ? Math.PI : 0));
-    }
-    const walls = new THREE.Mesh(this.track(mergeGeometries(geos)), glass);
+    // Walls + upper ramps (the first profile segment, below the crossbar, is open at the goals)
+    const walls = new THREE.Mesh(this.track(sweep(pts, wallProfile(), { uvScale: 12, skip: (i, j) => j === 0 && mouth(i) })), glass);
     walls.renderOrder = 2;
-    this.group.add(walls);
+    // Ceiling: same glass, a touch fainter so the sky stays readable
+    const ceilMat = this.mat(glass.clone());
+    ceilMat.opacity = t.wall.opacity * 0.7;
+    const ceiling = new THREE.Mesh(this.track(ceilingGeometry()), ceilMat);
+    ceiling.renderOrder = 2;
+    this.group.add(walls, ceiling);
 
-    // Lit trims: bottom edge and top rail, coloured by the half they belong to.
-    for (const team of [0, 1]) {
-      const col = TEAM[team].color;
-      const zs = team === 0 ? -1 : 1;
-      const trim = [];
-      for (const s of [-1, 1]) {
-        trim.push(placed(new THREE.BoxGeometry(0.5, 0.5, HL - C), s * (HW - 0.2), 0.25, zs * (HL - C) / 2));
-        trim.push(placed(new THREE.BoxGeometry(0.5, 0.5, HL - C), s * (HW - 0.2), H, zs * (HL - C) / 2));
-        const len = C * Math.SQRT2;
-        trim.push(placed(new THREE.BoxGeometry(len, 0.5, 0.5), s * (HW - C / 2), 0.25, zs * (HL - C / 2), Math.atan2(-s, -zs)));
-        trim.push(placed(new THREE.BoxGeometry(len, 0.5, 0.5), s * (HW - C / 2), H, zs * (HL - C / 2), Math.atan2(-s, -zs)));
-        const w = HW - C - GW;
-        trim.push(placed(new THREE.BoxGeometry(w, 0.5, 0.5), s * (GW + w / 2), 0.25, zs * HL));
-        trim.push(placed(new THREE.BoxGeometry(w, 0.5, 0.5), s * (GW + w / 2), H, zs * HL));
-      }
-      trim.push(placed(new THREE.BoxGeometry(GW * 2, 0.5, 0.5), 0, H, zs * HL));
-      const m = this.mat(new THREE.MeshBasicMaterial({ color: col }));
-      const mesh = new THREE.Mesh(this.track(mergeGeometries(trim)), m);
-      this.group.add(mesh);
-      (this.trimMats || (this.trimMats = [])).push({ m, base: new THREE.Color(col) });
-    }
-    // Structural frame columns
+    // Lower ramps: solid, drivable, tiled like the pitch border
+    const rampTex = this.track(rampTexture(t));
+    const rampMat = this.mat(new THREE.MeshStandardMaterial({
+      map: rampTex, roughness: t.field.rough ?? 0.6, metalness: t.field.metal ?? 0.1, envMapIntensity: t.field.env ?? 0.3, side: THREE.DoubleSide,
+    }));
+    const prof = rampProfile();
+    const ramps = new THREE.Mesh(this.track(sweep(pts, prof, { uvScale: 6, skip: (i) => mouth(i) })), rampMat);
+    ramps.receiveShadow = true;
+    const caps = new THREE.Mesh(this.track(rampCaps(prof)), rampMat);
+    this.group.add(ramps, caps);
+
+    // Neon trims: where the floor meets the ramp, and along the top of the walls.
+    const cyan = new THREE.Color(TEAM[0].color), mag = new THREE.Color(TEAM[1].color);
+    const teamCol = (p) => (p.z < 0 ? cyan : mag);
+    const trimMat = this.mat(new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide, toneMapped: false }));
+    const foot = band(pts, { d0: RV - 0.25, d1: RV + 0.25, y0: 0.05, y1: 0.05, colors: teamCol, skip: mouth });
+    const top = band(pts, { d0: 0.06, d1: 0.06, y0: H - RV - 0.25, y1: H - RV + 0.25, colors: teamCol });
+    const rim = band(pts, { d0: 0.06, d1: 0.06, y0: RV - 0.12, y1: RV + 0.12, colors: teamCol, skip: mouth });
+    this.group.add(new THREE.Mesh(this.track(mergeGeometries([foot, top, rim])), trimMat));
+    this.trimMats = [{ m: trimMat, base: new THREE.Color(0xffffff) }];
+
+    // Structural columns outside the glass
     const frame = [];
     const fm = this.mat(new THREE.MeshLambertMaterial({ color: t.frame }));
-    for (const s of [-1, 1]) {
-      for (let z = -HL + C; z <= HL - C + 0.1; z += (HL - C) / 3) frame.push(placed(new THREE.BoxGeometry(1.2, H, 1.2), s * (HW + 0.6), H / 2, z));
-      for (const sz of [-1, 1]) frame.push(placed(new THREE.BoxGeometry(1.2, H, 1.2), s * (HW - C), H / 2, sz * (HL + 0.6)));
+    for (const sx of [-1, 1]) {
+      for (const z of [-HL + RC, -HL / 3, HL / 3, HL - RC]) frame.push(placed(new THREE.BoxGeometry(1.2, H, 1.2), sx * (HW + 0.7), H / 2, z));
+      for (const sz of [-1, 1]) for (const x of [GW + 1.5, HW - RC]) frame.push(placed(new THREE.BoxGeometry(1.2, H, 1.2), sx * x, H / 2, sz * (HL + 0.7)));
     }
     this.group.add(new THREE.Mesh(this.track(mergeGeometries(frame)), fm));
   }
 
-  // LED boards running along the base of every wall (continuous text around the pitch).
+  // LED boards on the walls just above the ramps (continuous text around the pitch).
   buildBoards() {
     const tex = this.track(ledTexture());
     this.ledTex = tex;
-    const h = 2.2, y0 = 0.6;
+    const h = 2.2, y0 = RV + 0.35;
     const tile = (2048 / 72) * h;
-    const pts = [
-      [HW, -(HL - C)], [HW, HL - C], [HW - C, HL], [GW, HL], null, [-GW, HL], [-(HW - C), HL], [-HW, HL - C],
-      [-HW, -(HL - C)], [-(HW - C), -HL], [-GW, -HL], null, [GW, -HL], [HW - C, -HL], [HW, -(HL - C)],
-    ];
-    const geos = [];
-    let u = 0;
-    for (let i = 0; i < pts.length - 1; i++) {
-      const a = pts[i], b = pts[i + 1];
-      if (!a || !b) continue;
-      const dx = b[0] - a[0], dz = b[1] - a[1];
-      const L = Math.hypot(dx, dz);
-      const mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2;
-      // inward normal points towards the centre
-      let nx = -dz / L, nz = dx / L;
-      if (nx * mx + nz * mz > 0) { nx = -nx; nz = -nz; }
-      const geo = new THREE.PlaneGeometry(L, h);
-      const yaw = Math.atan2(nx, nz);
-      const ax = Math.cos(yaw), az = -Math.sin(yaw);
-      const flip = ax * dx + az * dz < 0;
-      const uv = geo.attributes.uv;
-      for (let k = 0; k < uv.count; k++) {
-        const s = flip ? 1 - uv.getX(k) : uv.getX(k);
-        uv.setX(k, (u + s * L) / tile);
-      }
-      u += L;
-      placed(geo, mx + nx * 0.08, y0 + h / 2, mz + nz * 0.08, yaw);
-      geos.push(geo);
-    }
-    this.boardMat = this.mat(new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
-    const boards = new THREE.Mesh(this.track(mergeGeometries(geos)), this.boardMat);
-    this.group.add(boards);
+    const pts = this.perimeterPts;
+    const geo = band(pts, { d0: 0.08, d1: 0.08, y0, y1: y0 + h, uvScale: tile, skip: (i) => pts[i].mouth && pts[i + 1].mouth });
+    this.boardMat = this.mat(new THREE.MeshBasicMaterial({ map: tex, toneMapped: false, side: THREE.DoubleSide }));
+    this.group.add(new THREE.Mesh(this.track(geo), this.boardMat));
   }
 
   buildGoals() {
@@ -307,8 +278,8 @@ export class ArenaView {
         }
       }
     };
-    addStand(HW + 3, 0, (HL - C) * 2 + 6, -Math.PI / 2, 0);
-    addStand(-HW - 3, 0, (HL - C) * 2 + 6, Math.PI / 2, 0);
+    addStand(HW + 3, 0, (HL - RC) * 2 + 6, -Math.PI / 2, 0);
+    addStand(-HW - 3, 0, (HL - RC) * 2 + 6, Math.PI / 2, 0);
     addStand(0, HL + GD + 3, (HW - 4) * 2, Math.PI, 0);
     addStand(0, -HL - GD - 3, (HW - 4) * 2, 0, 0);
     const stands = new THREE.Mesh(this.track(mergeGeometries(standGeos)), this.mat(new THREE.MeshLambertMaterial({ color: t.stands })));
