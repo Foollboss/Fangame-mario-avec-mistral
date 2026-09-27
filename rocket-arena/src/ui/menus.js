@@ -283,8 +283,10 @@ export class Menus {
     return `<div class="menu center dim"><div class="col">
       <h2>Commandes</h2>
       ${this.app.isTouch ? `<h3>Écran tactile</h3>
-      <p class="hint">• Pose le pouce n'importe où sur la <b>moitié gauche</b> : le joystick apparaît. Haut = accélérer, bas = freiner / reculer,
-      gauche/droite = tourner. En l'air, il fait pivoter la voiture.<br>
+      <p class="hint">• <b>▲ AVANCER</b> (vert) et <b>▼ RECULER</b> (rouge) à droite : accélérer, freiner et reculer.
+      Tu peux glisser le pouce d'un bouton à l'autre (AVANCER → BOOST) sans le lever.<br>
+      • Pose le pouce n'importe où sur la <b>moitié gauche</b> : le joystick apparaît pour <b>tourner</b>.
+      En l'air, il dirige le vol (haut = monter).<br>
       • <b>SAUT</b> (bleu) : appuie deux fois en tenant le joystick pour un flip. <b>BOOST</b> (orange) : maintiens pour foncer.<br>
       • <b>DÉRAPE</b> : dérapage au sol, air roll en l'air. <b>CAM</b> : caméra balle / voiture. <b>II</b> : pause.<br>
       • Une manette Bluetooth fonctionne aussi.</p>` : ''}

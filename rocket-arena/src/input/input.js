@@ -236,7 +236,9 @@ export class Input {
     }
     if (player === 0 && this.touch && this.touch.visible) {
       const t = this.touch.state();
-      if (Math.abs(t.y) > Math.abs(throttle)) throttle = t.y;
+      // Pedals drive; the joystick's vertical axis is only used in the air.
+      const pedal = (t.gas ? 1 : 0) - (t.reverse ? 1 : 0);
+      if (Math.abs(pedal) > Math.abs(throttle)) throttle = pedal;
       if (Math.abs(t.x) > Math.abs(steer)) steer = t.x;
       if (Math.abs(t.y) > Math.abs(pitch)) pitch = t.y;
       if (Math.abs(t.y) > Math.abs(up)) up = t.y;

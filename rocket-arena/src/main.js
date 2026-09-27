@@ -294,7 +294,7 @@ class App {
     this.hud.setup(this.match, this.locals, this.viewports());
     if (this.isTouch) {
       if (!s.tutorialSeen || cfg.freeplay) {
-        this.hud.showHint(`Joystick à gauche : rouler et diriger · <b>SAUT</b> deux fois = flip · <b>BOOST</b> · <b>DÉRAPE</b> = dérapage<br>
+        this.hud.showHint(`<b>▲ AVANCER</b> / <b>▼ RECULER</b> à droite · joystick à gauche pour tourner · <b>SAUT</b> deux fois = flip · <b>BOOST</b> · <b>DÉRAPE</b><br>
           <b>Voler</b> : SAUT puis maintiens BOOST${s.airAssist ? ', le joystick dirige le vol (haut = monter)' : ', joystick vers le bas pour lever le nez'} ·
           <b>Murs et plafond</b> : fonce vers un mur, tu montes dessus !`, 11);
         s.tutorialSeen = true;

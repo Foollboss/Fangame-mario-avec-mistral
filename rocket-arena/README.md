@@ -13,8 +13,10 @@ Un jeu de **football en voitures à réaction** en 3D, inspiré de *Rocket Leagu
 
 Android 8.0 minimum. Commandes tactiles :
 
-- **Moitié gauche de l'écran** : un joystick apparaît sous ton pouce. Haut = accélérer, bas = freiner / reculer,
-  gauche / droite = tourner ; en l'air il dirige le vol (haut = monter).
+- **▲ AVANCER** (vert) et **▼ RECULER** (rouge), à droite : accélérer, freiner et reculer. On peut glisser le pouce
+  d'un bouton à l'autre (par exemple d'AVANCER vers BOOST) sans le lever.
+- **Moitié gauche de l'écran** : un joystick apparaît sous ton pouce pour **tourner** ; en l'air il dirige le vol
+  (haut = monter).
 - **Voler** : SAUT puis maintiens BOOST en poussant le joystick vers le haut. **Murs / plafond** : fonce vers un mur.
 - **SAUT** (bleu) : saut, et une deuxième pression en tenant le joystick = flip. **BOOST** (orange) : maintiens pour foncer.
 - **DÉRAPE** : dérapage au sol, air roll en l'air. **CAM** : caméra balle / voiture. **II** : pause.

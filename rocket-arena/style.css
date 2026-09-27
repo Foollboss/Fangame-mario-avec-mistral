@@ -170,10 +170,14 @@ input[type=text] { background: rgba(255, 255, 255, 0.06); border: 1px solid var(
   border: 2px solid rgba(255, 255, 255, 0.45); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35); transition: transform 0.05s, background 0.05s;
 }
 .tbtn.on { transform: scale(0.92); background: rgba(255, 255, 255, 0.5); color: #0b1020; }
-.tb-jump { right: 4vmin; bottom: 7vmin; width: 22vmin; height: 22vmin; background: rgba(47, 123, 255, 0.45); font-size: 4vmin; }
-.tb-boost { right: 29vmin; bottom: 3vmin; width: 19vmin; height: 19vmin; background: rgba(255, 138, 31, 0.5); font-size: 3.6vmin; }
-.tb-slide { right: 5vmin; bottom: 32vmin; width: 14vmin; height: 14vmin; font-size: 2.6vmin; }
-.tb-cam { right: 22vmin; bottom: 27vmin; width: 11vmin; height: 11vmin; font-size: 2.3vmin; }
+.tb-jump { right: 3vmin; bottom: 5vmin; width: 21vmin; height: 21vmin; background: rgba(47, 123, 255, 0.45); font-size: 3.8vmin; }
+.tb-boost { right: 26vmin; bottom: 2.5vmin; width: 18vmin; height: 18vmin; background: rgba(255, 138, 31, 0.5); font-size: 3.4vmin; }
+.tb-gas, .tb-rev { flex-direction: column; border-radius: 3vmin; font-size: 5vmin; font-style: normal; line-height: 1; }
+.tb-gas small, .tb-rev small { font: italic 900 2.3vmin var(--font); letter-spacing: 1px; margin-top: 0.6vmin; }
+.tb-gas { right: 3vmin; bottom: 29vmin; width: 21vmin; height: 19vmin; background: rgba(46, 194, 126, 0.45); }
+.tb-rev { right: 26vmin; bottom: 23vmin; width: 15vmin; height: 13vmin; background: rgba(214, 60, 60, 0.42); font-size: 4vmin; }
+.tb-slide { right: 46vmin; bottom: 3vmin; width: 14vmin; height: 14vmin; font-size: 2.6vmin; }
+.tb-cam { right: 44vmin; bottom: 20vmin; width: 11vmin; height: 11vmin; font-size: 2.3vmin; }
 .tb-pause { left: 2vmin; top: 2vmin; width: 10vmin; height: 10vmin; border-radius: 14px; font-size: 3.4vmin; font-style: normal; }
 .tb-reset, .tb-shoot { display: none; top: 2vmin; width: 13vmin; height: 10vmin; border-radius: 14px; font-size: 2.4vmin; }
 #touch.freeplay .tb-reset { display: flex; left: 14vmin; }
