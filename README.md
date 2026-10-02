@@ -25,6 +25,20 @@ Trois façons de démarrer :
 | **Continuer** | Reprend la sauvegarde locale (automatique toutes les 45 s et en quittant l'onglet ; manuelle depuis une Statue des Sept ou le menu). |
 | **Voyageur confirmé** | Rang 60, équipe **Keqing · Venti · Tartaglia · Diona niveau 90**, exactement comme sur la capture. |
 
+## Version Android (APK)
+
+Le dossier `android/` contient une enveloppe Android minimale (une `WebView` plein écran paysage qui charge le jeu
+depuis ses assets, sans permission ni connexion). Pour générer l'APK signé :
+
+```bash
+export ANDROID_HOME=/chemin/vers/android-sdk   # platforms;android-34 + build-tools;35.0.0
+./android/build-apk.sh                          # -> android/build/teyvat-pixel.apk
+```
+
+Le script n'utilise pas Gradle (aapt2 + javac + d8 + apksigner) et crée une clé de signature locale la première fois.
+Pour installer l'APK, autorisez « l'installation d'applis inconnues » pour votre navigateur / gestionnaire de fichiers.
+Le bouton Retour d'Android ferme le menu ouvert, ou quitte depuis l'écran titre.
+
 ## Commandes
 
 | Action | Clavier (touches physiques, donc ZQSD sur AZERTY) | Tactile |
