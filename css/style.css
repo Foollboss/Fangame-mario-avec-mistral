@@ -1,0 +1,11 @@
+html, body {
+  margin: 0; padding: 0; height: 100%; overflow: hidden;
+  background: #05070f; color: #fff; font-family: monospace;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  touch-action: none; overscroll-behavior: none;
+}
+body { display: flex; align-items: center; justify-content: center; }
+#game {
+  image-rendering: pixelated; image-rendering: crisp-edges;
+  display: block; touch-action: none; cursor: default;
+}
