@@ -59,11 +59,12 @@
     G.Audio.setVolumes(S.settings.music, S.settings.sfx);
     for (const w of G.World.waypoints) w.unlocked = !!S.unlocked[w.id];
     G.Player.reset(S.pos.x, S.pos.y);
+    if (!load) { G.P.dir = 'u'; G.P.ang = -Math.PI / 2; }
     G.feed.length = 0; G.banners.length = 0; G.logMsgs.length = 0;
     G.dialog = null; G.Dialog.active = false; G.fade = null; G.cutin = null; G.pendingBurst = null; G.freeze = 0;
     G.Entities.initWorld();
     G.cam.x = G.P.x; G.cam.y = G.P.y;
-    G.paimon.x = G.P.x - 14; G.paimon.y = G.P.y;
+    G.paimon.x = G.P.x - 14; G.paimon.y = G.P.y; G.paimon.say = null;
     G.P.region = '';
     G.mode = 'play';
     G.Menus.cur = null;
@@ -160,7 +161,7 @@
     }
     if (G.hitstop > 0) { G.hitstop -= dt; I.endFrame(); return; }
 
-    if (G.dialog) { G.Dialog.update(dt); G.updatePaimon(dt); I.endFrame(); return; }
+    if (G.dialog) { G.Dialog.update(dt); G.updatePaimon(dt); G.updatePaimonSay(dt); I.endFrame(); return; }
 
     // monde
     S.t += dt; S.stats.play += dt;
@@ -170,6 +171,9 @@
     G.Combat.update(dt);
     G.Entities.update(dt, G.cam, G.view.w, G.view.h);
     G.updatePaimon(dt);
+    G.updatePaimonSay(dt);
+    G.hintTimer -= dt;
+    if (G.hintTimer <= 0) { G.hintTimer = 0.7; G.checkHints(); }
     // caméra
     const tx = G.P.x, ty = G.P.y - 6;
     const lerp = 1 - Math.pow(0.0005, dt);
@@ -307,6 +311,16 @@
     camY = WH > h ? G.clamp(camY, 0, WH - h) : Math.round((WH - h) / 2);
     camX += sx; camY += sy;
     G.World.drawGround(ctx, camX, camY, w, h, t);
+    // ombres de nuages qui glissent sur le terrain
+    if (G.nightness() < 0.7) {
+      for (let i = 0; i < 7; i++) {
+        const cx = ((i * 811 + t * 7) % (WW + 700)) - 350, cy = (i * 577) % WH + Math.sin(t * 0.05 + i) * 40;
+        if (cx + 200 < camX || cx - 200 > camX + w || cy + 110 < camY || cy - 110 > camY + h) continue;
+        ctx.fillStyle = 'rgba(24,48,72,0.10)';
+        G.S.ell(ctx, Math.round(cx - camX), Math.round(cy - camY), 150, 64, 'rgba(24,48,72,0.10)');
+        G.S.ell(ctx, Math.round(cx - camX + 70), Math.round(cy - camY - 28), 90, 40, 'rgba(24,48,72,0.08)');
+      }
+    }
     G.Combat.drawGround(ctx, camX, camY, t);
     G.Entities.drawGroundFx(ctx, camX, camY, t);
     const list = G.Entities.buildDrawList(camX, camY, w, h, t);
@@ -370,5 +384,6 @@
     }
   }
 
+  document.addEventListener('visibilitychange', () => { if (document.hidden && G.state && G.mode !== 'title' && G.mode !== 'loading') G.Save.save(); });
   window.addEventListener('DOMContentLoaded', boot);
 })();

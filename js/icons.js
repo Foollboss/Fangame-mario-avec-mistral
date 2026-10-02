@@ -173,19 +173,20 @@
 
   // Anneau d'énergie (liste d'équipe)
   I.ringIcon = (el, fill) => {
-    const key = 'ring' + el + Math.round(fill * 12);
+    const key = 'ring' + el + Math.round(fill * 16);
     if (cache[key]) return cache[key];
     const E = G.EL[el];
-    const R = 11;
+    const R = 12;
     const c = G.canvas(R * 2 + 1, R * 2 + 1);
     const ctx = c.ctx;
     for (let y = -R; y <= R; y++) for (let x = -R; x <= R; x++) {
       const d = Math.sqrt(x * x + y * y);
       if (d > R + 0.4) continue;
-      if (d > R - 2) {
+      if (d > R - 3) {
         let ang = Math.atan2(x, -y); if (ang < 0) ang += Math.PI * 2;
-        ctx.fillStyle = ang / (Math.PI * 2) <= fill ? E.color : 'rgba(20,28,44,0.65)';
-      } else ctx.fillStyle = 'rgba(14,22,40,0.55)';
+        const on = ang / (Math.PI * 2) <= fill;
+        ctx.fillStyle = on ? (d > R - 1.2 ? E.light : E.color) : 'rgba(18,26,46,0.7)';
+      } else ctx.fillStyle = fill >= 1 ? G.mix(E.dark, '#0e1628', 0.35) : 'rgba(14,22,40,0.62)';
       ctx.fillRect(x + R, y + R, 1, 1);
     }
     const s = I.elSym(el, fill >= 1 ? '#ffffff' : E.light);

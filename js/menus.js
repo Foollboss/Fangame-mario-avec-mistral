@@ -48,6 +48,7 @@
   // Cadre commun
   M.frame = function (ctx, w, h, title, opts) {
     opts = opts || {};
+    UI.region(0, 0, w, h, {}); // capte les clics hors boutons (doit venir en premier)
     ctx.globalAlpha = 0.82; px(ctx, 0, 0, w, h, '#0a0e1e'); ctx.globalAlpha = 1;
     const x = 8, y = 8, pw = w - 16, ph = h - 16;
     UI.panel(ctx, x, y, pw, ph, { fill: opts.fill });
@@ -56,7 +57,6 @@
     const back = M.p && M.p.prev;
     UI.button(ctx, x + pw - 36, y + 4, 30, 12, '✕', () => M.close());
     if (back) UI.button(ctx, x + pw - 70, y + 4, 30, 12, '◀', () => M.back());
-    UI.region(0, 0, w, h, {}); // capte les clics hors boutons
     return { x: x + 6, y: y + 22, w: pw - 12, h: ph - 28 };
   };
   const rarityStars = (ctx, n, x, y, col) => { G.text(ctx, '★'.repeat(n), x, y, col || '#e8a838'); };
@@ -482,18 +482,17 @@
   }
   function drawSummary(ctx, w, h, t) {
     G.text(ctx, 'Résultats', w / 2, 10, '#f4efe0', { align: 'c', outline: '#10182a', scale: 2 });
-    const n = WS.results.length, cols = Math.min(5, n), cw = 40;
+    const n = WS.results.length, cols = Math.min(5, n), cw = 54;
     const x0 = w / 2 - (cols * cw) / 2, y0 = Math.round(h * 0.2);
     WS.results.forEach((r, i) => {
       const x = x0 + (i % cols) * cw, y = y0 + Math.floor(i / cols) * 56;
       const col = r.rarity === 5 ? '#ffd45a' : r.rarity === 4 ? '#c07dff' : '#6ab8ff';
       px(ctx, x + 2, y, cw - 4, 50, G.mix(col, '#10182a', 0.7)); px(ctx, x + 2, y + 47, cw - 4, 3, col);
-      if (r.id) { ctx.drawImage(G.S.portrait(r.id, 24), x + 8, y + 4); G.text(ctx, G.CHARS[r.id].name.slice(0, 7), x + cw / 2, y + 32, '#fff', { align: 'c' }); if (r.isNew) G.text(ctx, 'NEW', x + cw / 2, y + 5, '#ffe27a', { align: 'c', outline: '#3a2a10' }); }
-      else { ctx.drawImage(G.I.item(r.item), x + 12, y + 8); G.text(ctx, G.ITEMS[r.item].name.slice(0, 8), x + cw / 2, y + 32, '#fff', { align: 'c' }); }
+      if (r.id) { ctx.drawImage(G.S.portrait(r.id, 24), x + 8, y + 4); G.text(ctx, G.fit(G.CHARS[r.id].name, cw - 4), x + cw / 2, y + 32, '#fff', { align: 'c' }); if (r.isNew) G.text(ctx, 'NEW', x + cw / 2, y + 5, '#ffe27a', { align: 'c', outline: '#3a2a10' }); }
+      else { ctx.drawImage(G.I.item(r.item), x + 12, y + 8); G.text(ctx, G.fit(G.ITEMS[r.item].name, cw - 4), x + cw / 2, y + 32, '#fff', { align: 'c' }); }
       G.text(ctx, '★'.repeat(r.rarity), x + cw / 2, y + 40, col, { align: 'c' });
     });
     UI.button(ctx, w / 2 - 30, h - 22, 60, 14, 'Terminer', () => { WS.mode = 'idle'; });
-    UI.region(0, 0, w, h, {});
   }
 
   // =====================================================================
@@ -691,11 +690,11 @@
   // =====================================================================
   M.defs.dead = {
     draw(ctx, w, h, t) {
+      UI.region(0, 0, w, h, {});
       ctx.globalAlpha = 0.7; px(ctx, 0, 0, w, h, '#10060a'); ctx.globalAlpha = 1;
       G.text(ctx, 'Votre équipe a été vaincue', w / 2, h * 0.34, '#ff9a8a', { align: 'c', outline: '#2a0a0a', scale: 2 });
       G.text(ctx, 'Réapparaissez au dernier téléporteur avec la moitié des PV.', w / 2, h * 0.34 + 22, '#e8e0cc', { align: 'c', outline: '#10182a' });
       UI.button(ctx, w / 2 - 50, h * 0.55, 100, 16, 'Réapparaître', () => G.respawn());
-      UI.region(0, 0, w, h, {});
     },
   };
 })();

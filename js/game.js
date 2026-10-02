@@ -33,7 +33,7 @@
       stamina: 240, staminaMax: 240,
       quest: { main: 0, step: 0, flags: {}, done: {} },
       commissions: null, commDay: -1, commDone: 0,
-      opened: {}, taken: {}, unlocked: { plateau: true }, statues: {}, seelies: {}, camps: {},
+      opened: {}, taken: {}, unlocked: { plateau: true }, statues: { plateau: { lvl: 1, off: 0 } }, seelies: {}, camps: {},
       bp: { xp: 0, claimed: {} }, codex: {}, stats: { kills: 0, chests: 0, reactions: 0, flowers: 0, anemo: 0, wishes: 0, play: 0 },
       pity: { e5: 0, e4: 0, s5: 0, s4: 0, guaranteed: false },
       settings: { music: 0.5, sfx: 0.7, hints: true },
@@ -54,7 +54,8 @@
       S.active = 0;
       Object.assign(S.inv, { mora: 2000, primo: 1600, fate: 5, apple: 3, bread: 1, book1: 3 });
     }
-    Object.values(S.chars).forEach((cs) => { cs.hp = G.charStats(cs).hp; cs.energy = 0; });
+    Object.values(S.chars).forEach((cs, i) => { cs.hp = G.charStats(cs).hp; cs.energy = 0; });
+    if (vet) S.party.forEach((id, i) => { if (i > 0) S.chars[id].energy = G.CHARS[id].burst.cost; });
     return S;
   };
 
@@ -66,6 +67,8 @@
   G.feed = [];
   G.banners = [];
   G.toast = function (text, item, n) {
+    const last = G.feed[G.feed.length - 1];
+    if (item && last && last.item === item && last.t < 2.2) { last.n = (last.n || 0) + (n || 0); last.t = Math.min(last.t, 0.4); return; }
     G.feed.push({ text, item, n, t: 0, life: 3.2 });
     if (G.feed.length > 6) G.feed.shift();
   };

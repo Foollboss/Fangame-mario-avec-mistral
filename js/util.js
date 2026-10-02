@@ -124,14 +124,25 @@
     return out;
   };
 
-  // Teinte tous les pixels opaques d'une couleur (flash de dégâts)
+  // Teinte tous les pixels opaques d'une couleur (flash de dégâts) — mis en cache
+  const tintCache = new WeakMap();
   G.tint = (src, color) => {
+    let m = tintCache.get(src);
+    if (!m) { m = {}; tintCache.set(src, m); }
+    if (m[color]) return m[color];
     const c = G.canvas(src.width, src.height);
     c.ctx.drawImage(src, 0, 0);
     c.ctx.globalCompositeOperation = 'source-atop';
     c.ctx.fillStyle = color;
     c.ctx.fillRect(0, 0, c.width, c.height);
-    return c;
+    return (m[color] = c);
+  };
+  // Raccourcit un texte pour tenir dans maxW pixels
+  G.fit = (str, maxW) => {
+    str = String(str);
+    if (G.textW(str) <= maxW) return str;
+    while (str.length > 1 && G.textW(str + '…') > maxW) str = str.slice(0, -1);
+    return str + '…';
   };
 
   // Sprite de cercle pixel parfait (plein et/ou anneau)

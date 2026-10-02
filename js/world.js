@@ -386,7 +386,7 @@
     // ---- Cours des Séelies ----
     const courts = [
       { x: 92, y: 52, path: [[66, 60], [78, 56], [86, 54], [92, 52]] },
-      { x: 48, y: 90, path: [[64, 66], [58, 76], [52, 86], [48, 90]] },
+      { x: 48, y: 90, path: [[56, 60], [54, 72], [51, 82], [48, 90]] },
       { x: 120, y: 66, path: [[86, 66], [100, 68], [112, 66], [120, 66]] },
     ];
     courts.forEach((c, i) => {
@@ -573,10 +573,10 @@
         break;
       }
       case T.COBBLE: {
-        voro(wx, wy, 7, 61);
+        voro(wx, wy, 9, 61);
         const edge = vr.d2 - vr.d1;
-        if (edge < 1.1) c = PAL.cobbleD;
-        else { c = PAL.cobble[Math.floor(vr.id * 2.99)]; if (wx - vr.cx < -1 && wy - vr.cy < -1) c = PAL.cobbleL; }
+        if (edge < 1.0) c = PAL.cobbleD;
+        else { c = PAL.cobble[Math.floor(vr.id * 2.99)]; if (edge < 2.2 && wx - vr.cx + wy - vr.cy < 0) c = PAL.cobbleL; }
         break;
       }
       case T.CLIFF: {

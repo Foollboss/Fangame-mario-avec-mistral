@@ -169,21 +169,21 @@
   // ---------- Ennemis ----------
   // hp : multiple de la PV de référence ; atk : % PV de référence du joueur ; spd : px/s
   G.ENEMIES = {
-    slime_pyro: { name: 'Gelée Pyro', kind: 'slime', el: 'pyro', hp: 3, atk: 0.035, spd: 26, r: 6, sense: 90, exp: 20, mora: [20, 40], drops: [['slimeC', 0.7], ['book1', 0.08]] },
-    slime_hydro: { name: 'Gelée Hydro', kind: 'slime', el: 'hydro', hp: 3, atk: 0.035, spd: 26, r: 6, sense: 90, exp: 20, mora: [20, 40], drops: [['slimeC', 0.7], ['book1', 0.08]] },
-    slime_cryo: { name: 'Gelée Cryo', kind: 'slime', el: 'cryo', hp: 3, atk: 0.035, spd: 26, r: 6, sense: 90, exp: 20, mora: [20, 40], drops: [['slimeC', 0.7], ['book1', 0.08]] },
-    slime_electro: { name: 'Gelée Électro', kind: 'slime', el: 'electro', hp: 3, atk: 0.035, spd: 28, r: 6, sense: 90, exp: 20, mora: [20, 40], drops: [['slimeC', 0.7], ['book1', 0.08]] },
-    slime_anemo: { name: 'Gelée Anémo', kind: 'slime', el: 'anemo', hp: 3, atk: 0.035, spd: 28, r: 6, sense: 90, exp: 20, mora: [20, 40], drops: [['slimeC', 0.7], ['book1', 0.08]] },
-    slime_big: { name: 'Grande Gelée', kind: 'slime', el: 'hydro', hp: 14, atk: 0.07, spd: 22, r: 10, sense: 100, exp: 60, mora: [60, 110], drops: [['slimeC', 1], ['book2', 0.2]], big: true },
-    hilichurl: { name: 'Hilichurl', kind: 'melee', el: null, hp: 5, atk: 0.06, spd: 34, r: 6, sense: 100, exp: 35, mora: [30, 60], drops: [['mask', 0.7], ['arrowhead', 0.2], ['apple', 0.1], ['book1', 0.12]] },
-    hili_archer: { name: 'Hilichurl archer', kind: 'ranged', el: null, hp: 4, atk: 0.05, spd: 30, r: 6, sense: 150, range: 120, exp: 40, mora: [30, 60], drops: [['arrowhead', 0.6], ['mask', 0.5], ['book1', 0.12]] },
-    hili_fighter: { name: 'Hilichurl combattant', kind: 'melee', el: null, hp: 5.5, atk: 0.07, spd: 40, r: 6, sense: 110, exp: 40, mora: [30, 60], drops: [['mask', 0.7], ['book1', 0.15]], rush: true },
-    mitachurl: { name: 'Mitachurl', kind: 'brute', el: null, hp: 26, atk: 0.12, spd: 24, r: 9, sense: 110, exp: 140, mora: [150, 260], drops: [['mask', 1], ['book2', 0.6], ['bread', 0.3]], shield: true },
-    mage_pyro: { name: 'Mage Abyssal Pyro', kind: 'mage', el: 'pyro', hp: 7, atk: 0.07, spd: 28, r: 6, sense: 150, range: 130, exp: 80, mora: [60, 100], drops: [['crystal', 0.8], ['book2', 0.3]], shieldHP: 3 },
-    mage_hydro: { name: 'Mage Abyssal Hydro', kind: 'mage', el: 'hydro', hp: 7, atk: 0.07, spd: 28, r: 6, sense: 150, range: 130, exp: 80, mora: [60, 100], drops: [['crystal', 0.8], ['book2', 0.3]], shieldHP: 3 },
-    mage_cryo: { name: 'Mage Abyssal Cryo', kind: 'mage', el: 'cryo', hp: 7, atk: 0.07, spd: 28, r: 6, sense: 150, range: 130, exp: 80, mora: [60, 100], drops: [['crystal', 0.8], ['book2', 0.3]], shieldHP: 3 },
-    mage_electro: { name: 'Mage Abyssal Électro', kind: 'mage', el: 'electro', hp: 7, atk: 0.07, spd: 28, r: 6, sense: 150, range: 130, exp: 80, mora: [60, 100], drops: [['crystal', 0.8], ['book2', 0.3]], shieldHP: 3 },
-    hypostasis: { name: 'Hypostase Anémo', kind: 'boss', el: 'anemo', hp: 330, atk: 0.14, spd: 30, r: 16, sense: 400, range: 200, exp: 2000, mora: [4000, 6000], drops: [['core', 1], ['book3', 2], ['book2', 3]], boss: true },
+    slime_pyro: { name: 'Gelée Pyro', kind: 'slime', el: 'pyro', hp: 3, atk: 0.05, spd: 26, r: 6, sense: 90, exp: 20, mora: [20, 40], drops: [['slimeC', 0.7], ['book1', 0.08]] },
+    slime_hydro: { name: 'Gelée Hydro', kind: 'slime', el: 'hydro', hp: 3, atk: 0.05, spd: 26, r: 6, sense: 90, exp: 20, mora: [20, 40], drops: [['slimeC', 0.7], ['book1', 0.08]] },
+    slime_cryo: { name: 'Gelée Cryo', kind: 'slime', el: 'cryo', hp: 3, atk: 0.05, spd: 26, r: 6, sense: 90, exp: 20, mora: [20, 40], drops: [['slimeC', 0.7], ['book1', 0.08]] },
+    slime_electro: { name: 'Gelée Électro', kind: 'slime', el: 'electro', hp: 3, atk: 0.05, spd: 28, r: 6, sense: 90, exp: 20, mora: [20, 40], drops: [['slimeC', 0.7], ['book1', 0.08]] },
+    slime_anemo: { name: 'Gelée Anémo', kind: 'slime', el: 'anemo', hp: 3, atk: 0.05, spd: 28, r: 6, sense: 90, exp: 20, mora: [20, 40], drops: [['slimeC', 0.7], ['book1', 0.08]] },
+    slime_big: { name: 'Grande Gelée', kind: 'slime', el: 'hydro', hp: 14, atk: 0.09, spd: 22, r: 10, sense: 100, exp: 60, mora: [60, 110], drops: [['slimeC', 1], ['book2', 0.2]], big: true },
+    hilichurl: { name: 'Hilichurl', kind: 'melee', el: null, hp: 5, atk: 0.08, spd: 34, r: 6, sense: 100, exp: 35, mora: [30, 60], drops: [['mask', 0.7], ['arrowhead', 0.2], ['apple', 0.1], ['book1', 0.12]] },
+    hili_archer: { name: 'Hilichurl archer', kind: 'ranged', el: null, hp: 4, atk: 0.07, spd: 30, r: 6, sense: 150, range: 120, exp: 40, mora: [30, 60], drops: [['arrowhead', 0.6], ['mask', 0.5], ['book1', 0.12]] },
+    hili_fighter: { name: 'Hilichurl combattant', kind: 'melee', el: null, hp: 5.5, atk: 0.09, spd: 40, r: 6, sense: 110, exp: 40, mora: [30, 60], drops: [['mask', 0.7], ['book1', 0.15]], rush: true },
+    mitachurl: { name: 'Mitachurl', kind: 'brute', el: null, hp: 26, atk: 0.14, spd: 24, r: 9, sense: 110, exp: 140, mora: [150, 260], drops: [['mask', 1], ['book2', 0.6], ['bread', 0.3]], shield: true },
+    mage_pyro: { name: 'Mage Abyssal Pyro', kind: 'mage', el: 'pyro', hp: 7, atk: 0.09, spd: 28, r: 6, sense: 150, range: 130, exp: 80, mora: [60, 100], drops: [['crystal', 0.8], ['book2', 0.3]], shieldHP: 3 },
+    mage_hydro: { name: 'Mage Abyssal Hydro', kind: 'mage', el: 'hydro', hp: 7, atk: 0.09, spd: 28, r: 6, sense: 150, range: 130, exp: 80, mora: [60, 100], drops: [['crystal', 0.8], ['book2', 0.3]], shieldHP: 3 },
+    mage_cryo: { name: 'Mage Abyssal Cryo', kind: 'mage', el: 'cryo', hp: 7, atk: 0.09, spd: 28, r: 6, sense: 150, range: 130, exp: 80, mora: [60, 100], drops: [['crystal', 0.8], ['book2', 0.3]], shieldHP: 3 },
+    mage_electro: { name: 'Mage Abyssal Électro', kind: 'mage', el: 'electro', hp: 7, atk: 0.09, spd: 28, r: 6, sense: 150, range: 130, exp: 80, mora: [60, 100], drops: [['crystal', 0.8], ['book2', 0.3]], shieldHP: 3 },
+    hypostasis: { name: 'Hypostase Anémo', kind: 'boss', el: 'anemo', hp: 330, atk: 0.16, spd: 30, r: 16, sense: 400, range: 200, exp: 2000, mora: [4000, 6000], drops: [['core', 1], ['book3', 2], ['book2', 3]], boss: true },
   };
 
   // Réactions élémentaires (nom affiché + couleur)
@@ -200,8 +200,8 @@
 
   // ---------- Progression ----------
   G.sLevel = (L) => 0.05 + 0.95 * Math.pow((L - 1) / 89, 1.1);
-  G.charExpToNext = (L) => 100 + 45 * L;
-  G.arExpToNext = (ar) => 300 + 120 * ar;
+  G.charExpToNext = (L) => 60 + 25 * L;
+  G.arExpToNext = (ar) => 200 + 80 * ar;
   G.enemyLevel = (ar, bonus) => G.clamp(Math.round(2 + ar * 1.45) + (bonus || 0), 1, 90);
   G.REF_PLAYER_HP = 15000;
 

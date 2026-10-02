@@ -554,7 +554,7 @@
       const nx = p.x + p.vx * dt, ny = p.y + p.vy * dt;
       const gy = ny + (p.gy != null ? p.gy - p.y * 0 : 0) * 0;
       let remove = false;
-      if (G.World.isSolidAt(nx, ny + (p.from === 'p' ? 8 : 0))) remove = true;
+      if (G.World.isSolidAt(nx, ny + 10)) remove = true;
       p.x = nx; p.y = ny;
       if (p.homing) {
         const t = C.nearest(p.x, p.y, 100);

@@ -18,7 +18,7 @@
     });
   };
 
-  const W_SPEED = 56, S_SPEED = 92, SWIM_SPEED = 34;
+  const W_SPEED = 62, S_SPEED = 100, SWIM_SPEED = 38;
 
   // ---------------------------------------------------------------
   // Interactions possibles autour du joueur

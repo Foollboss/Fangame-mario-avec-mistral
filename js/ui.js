@@ -292,8 +292,8 @@
       const frac = c2.energy / d2.burst.cost;
       const ring = G.I.ringIcon(d2.el, Math.min(1, frac));
       const rx = L.pr.x - 24 - Math.max(G.textW(d2.name), 40) - 14;
-      ctx.drawImage(ring, Math.round(rx - 11), Math.round(row.y - 11));
-      if (frac >= 1 && Math.floor(t * 4) % 2) ctx.drawImage(circ(12, null, G.EL[d2.el].light), Math.round(rx - 12), Math.round(row.y - 12));
+      ctx.drawImage(ring, Math.round(rx - 12), Math.round(row.y - 12));
+      if (frac >= 1 && Math.floor(t * 4) % 2) ctx.drawImage(circ(13, null, '#ffffff'), Math.round(rx - 13), Math.round(row.y - 13));
       // nom + PV
       G.text(ctx, d2.name, L.pr.x - 17, row.y - 8, dead ? '#9aa0b0' : '#ffffff', { align: 'r', outline: '#142030' });
       const bw = Math.max(G.textW(d2.name), 40);
@@ -320,11 +320,13 @@
     if (P.shield && P.shield.t > 0) px(ctx, hb.left, hb.y - 4, Math.round(hb.w * Math.min(1, P.shield.hp / P.shield.max)), 2, G.EL[P.shield.el].light);
     G.text(ctx, Math.max(0, Math.round(cs.hp)) + ' / ' + st.hp, hb.left + hb.w / 2, hb.y - 3, '#ffffff', { align: 'c', outline: '#1a2a1a' });
 
-    // gadget : aliment rapide
-    const food = ['apple', 'bread', 'meal'].find((id) => (S.inv[id] || 0) > 0);
+    // gadget : feuille d'érable = en-cas rapide (touche T)
+    const foodN = (S.inv.apple || 0) + (S.inv.bread || 0) + (S.inv.meal || 0);
     roundBtn(ctx, { x: L.gadget.x, y: L.gadget.y, r: 11 }, 0.85, '#e8e0cc');
-    ctx.drawImage(food ? G.I.item(food) : G.I.maple(), Math.round(L.gadget.x - (food ? 8 : 9)), Math.round(L.gadget.y - (food ? 8 : 9)));
-    if (food) G.text(ctx, String(S.inv[food]), L.gadget.x + 6, L.gadget.y + 8, '#fff', { align: 'c', outline: '#1a1a2a' });
+    ctx.globalAlpha = foodN ? 1 : 0.55;
+    ctx.drawImage(G.I.maple(), Math.round(L.gadget.x - 9), Math.round(L.gadget.y - 9));
+    ctx.globalAlpha = 1;
+    if (foodN) G.text(ctx, String(foodN), L.gadget.x + 7, L.gadget.y + 6, '#fff', { align: 'c', outline: '#1a1a2a' });
     UI.region(L.gadget.x - 11, L.gadget.y - 11, 22, 22, { onDown: () => G.input.fire('gadget') });
 
     // chat
@@ -464,6 +466,7 @@
     if (!d) return;
     const line = d.script[d.i];
     if (!line) return;
+    UI.region(0, 0, w, h, { onClick: () => { const l = G.dialog && G.dialog.script[G.dialog.i]; if (l && !l.choices) G.Dialog.advance(); } });
     const bw = Math.min(w - 24, 420), bh = 56;
     const bx = Math.round(w / 2 - bw / 2), by = h - bh - 12;
     px(ctx, 0, by - 14, w, bh + 28, 'rgba(8,12,24,0.35)');
@@ -500,7 +503,6 @@
         UI.region(cx, y, cw, ch, { onClick: () => G.Dialog.choose(i) });
       });
     }
-    UI.region(0, 0, w, h, { onClick: () => { const l = G.dialog && G.dialog.script[G.dialog.i]; if (l && !l.choices) G.Dialog.advance(); } });
   };
 
   // ---------- Plan rapproché (déchaînement) ----------

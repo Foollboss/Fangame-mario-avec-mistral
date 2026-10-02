@@ -77,7 +77,7 @@
       C.spark(this.x, this.y - 6, d.el ? G.EL[d.el].light : '#ffffff', 16, 90);
       C.ring(this.x, this.y, 14, d.el ? G.EL[d.el].color : '#ffffff', 0.3);
       S.stats.kills++;
-      G.addArExp(Math.round(d.exp / 5));
+      G.addArExp(Math.round(d.exp * 0.8));
       G.state.bp.xp += Math.max(1, Math.round(d.exp / 10));
       const mora = G.irand(d.mora[0], d.mora[1]) * (1 + Math.floor(S.ar / 20) * 0.25);
       Entities.drop('mora', Math.round(mora), this.x, this.y);
@@ -497,7 +497,7 @@
       [['book3', 2, 1], ['primo', 40, 1], ['fate', 1, 1], ['meal', 2, 1]],
     ][tier];
     loot.forEach(([id, n, ch]) => { if (Math.random() < ch) Entities.drop(id, n, c.x, c.y - 4); });
-    G.addArExp([10, 25, 50, 100][tier]);
+    G.addArExp([20, 50, 100, 200][tier]);
     G.state.bp.xp += [4, 8, 14, 30][tier];
     C.spark(c.x, c.y - 8, ['#f0d070', '#9ab6ff', '#ffe27a', '#d9a0ff'][tier], 18, 80);
     C.ring(c.x, c.y, 18, '#ffe27a', 0.4);
@@ -621,14 +621,18 @@
   // =====================================================================
   function updateAmbient(dt, camX, camY, vw, vh) {
     const A = E.ambient;
-    if (A.length < 9 && Math.random() < dt * 2) {
+    if (A.filter((q) => q.kind === 'bf').length < 7 && Math.random() < dt * 2) {
       const x = camX + G.rand(-60, vw + 60), y = camY + G.rand(-40, vh + 40);
       const tt = World.tileAt(Math.floor(x / TS), Math.floor(y / TS));
       if (tt === G.S.T.GRASS || tt === G.S.T.FOREST) A.push({ kind: 'bf', x, y, a: Math.random() * 6.28, t: 0, col: G.pick(['#ffffff', '#f7a6c4', '#ffe27a', '#8fc8ff']), life: G.rand(10, 25) });
     }
+    if (A.length < 16 && Math.random() < dt * 3) {
+      A.push({ kind: 'seed', x: camX - 20, y: camY + G.rand(0, vh), a: 0, t: Math.random() * 6, life: G.rand(10, 18), col: '#ffffff' });
+    }
     for (let i = A.length - 1; i >= 0; i--) {
       const b = A[i];
       b.t += dt; b.life -= dt;
+      if (b.kind === 'seed') { b.x += 22 * dt; b.y += Math.sin(b.t * 2.3) * 8 * dt; if (b.life <= 0 || b.x > camX + vw + 40) A.splice(i, 1); continue; }
       b.a += G.rand(-4, 4) * dt;
       b.x += Math.cos(b.a) * 14 * dt; b.y += Math.sin(b.a) * 9 * dt;
       if (b.life <= 0 || b.x < camX - 140 || b.x > camX + vw + 140 || b.y < camY - 100 || b.y > camY + vh + 100) A.splice(i, 1);
@@ -870,6 +874,7 @@
     for (const s of World.seelies) if (!s.done && s.pi >= s.path.length) { const a = 0.4 + 0.3 * Math.sin(t * 5); ctx.globalAlpha = a; px(ctx, Math.round(s.court.x - camX) - 1, Math.round(s.court.y - camY) - 40, 3, 36, '#d2c8ff'); ctx.globalAlpha = 1; }
     // ambiance
     for (const b of E.ambient) {
+      if (b.kind === 'seed') { const sx = Math.round(b.x - camX), sy = Math.round(b.y - camY + Math.sin(b.t * 2.3) * 3); px(ctx, sx, sy, 2, 1, '#ffffff'); px(ctx, sx - 1, sy + 1, 1, 1, 'rgba(255,255,255,0.7)'); px(ctx, sx + 2, sy - 1, 1, 1, 'rgba(210,255,210,0.8)'); continue; }
       const spr = G.S.butterfly(Math.floor(t * 8 + b.x) % 2, b.col);
       ctx.drawImage(spr, Math.round(b.x - camX), Math.round(b.y - camY - 10 + Math.sin(b.t * 6) * 2));
     }
@@ -889,7 +894,49 @@
     const spr = G.S.paimon(Math.floor(t * 3));
     const x = Math.round(pm.x - camX), y = Math.round(pm.y - camY);
     ctx.fillStyle = 'rgba(30,40,60,0.2)'; C.S_ell(ctx, x, y, 4, 1);
-    ctx.drawImage(spr, x - 9, y - 38 + Math.round(Math.sin(t * 2.5) * 2));
+    const by = y - 38 + Math.round(Math.sin(t * 2.5) * 2);
+    ctx.drawImage(spr, x - 9, by);
+    const sy = pm.say;
+    if (sy) {
+      const a = sy.t < 0.25 ? sy.t / 0.25 : sy.t > sy.life - 0.4 ? Math.max(0, (sy.life - sy.t) / 0.4) : 1;
+      ctx.globalAlpha = a;
+      const lines = G.wrap(sy.text, 112, 1);
+      const bw = Math.max.apply(null, lines.map((l) => G.textW(l))) + 10, bh = lines.length * 9 + 7;
+      const bx = Math.round(G.clamp(x - bw / 2, 2, G.view.w - bw - 2)), byy = Math.round(by - bh - 6);
+      px(ctx, bx, byy, bw, bh, '#f6f1e6'); px(ctx, bx, byy, bw, 1, '#d3bc8e'); px(ctx, bx, byy + bh - 1, bw, 1, '#d3bc8e'); px(ctx, bx, byy, 1, bh, '#d3bc8e'); px(ctx, bx + bw - 1, byy, 1, bh, '#d3bc8e');
+      px(ctx, x - 2, byy + bh, 5, 1, '#f6f1e6'); px(ctx, x - 1, byy + bh + 1, 3, 1, '#f6f1e6'); px(ctx, x, byy + bh + 2, 1, 1, '#f6f1e6');
+      lines.forEach((l, i) => G.text(ctx, l, bx + 5, byy + 4 + i * 9, '#3b4255'));
+      G.text(ctx, 'Paimon', bx + 3, byy - 8, '#ffe9a0', { outline: '#1a1a2a' });
+      ctx.globalAlpha = 1;
+    }
+  };
+  G.paimonSay = function (text, life) { G.paimon.say = { text, t: 0, life: life || Math.max(4, text.length / 14) }; };
+  G.updatePaimonSay = function (dt) { const sy = G.paimon.say; if (sy) { sy.t += dt; if (sy.t >= sy.life) G.paimon.say = null; } };
+
+  // Conseils contextuels de Paimon
+  G.hintTimer = 0;
+  G.checkHints = function () {
+    const S = G.state, h = (S.quest.flags.hints = S.quest.flags.hints || {});
+    if (G.paimon.say || G.dialog || S.stats.play < 7) return;
+    const say = (k, t) => { if (h[k]) return false; h[k] = 1; G.paimonSay(t); return true; };
+    const newbie = S.mode === 'new';
+    const cs = G.cs();
+    if (newbie && S.stats.play > 6 && !G.dialog) { if (say('move', 'Déplace-toi avec ZQSD/WASD ou le joystick. Maintiens Maj (ou le bouton ») pour courir !')) return; }
+    let near = null, nd = 1e9;
+    for (const e of E.enemies) { if (e.dead) continue; const d = Math.hypot(e.x - P.x, e.y - P.y); if (d < nd) { nd = d; near = e; } }
+    if (near && nd < 150) {
+      if (newbie && say('enemy', 'Un ennemi ! Attaque (clic / J), compétence (E), déchaînement (Q). Les gelées Pyro craignent l’Hydro !')) return;
+      if (near.shield > 0 && say('shield', 'Ce mage a un bouclier : brise-le avec l’élément opposé (Hydro↔Pyro, Électro→Hydro, Cryo→Électro, Pyro→Cryo) !')) return;
+      if (near.kind === 'brute' && say('brute', 'Le bouclier du Mitachurl bloque les attaques de face : contourne-le ou utilise tes compétences !')) return;
+    }
+    if (S.stamina < 40 && say('stamina', 'Tu es à bout de souffle ! L’endurance se régénère quand tu ne cours pas.')) return;
+    if (cs.hp / G.charStats(cs).hp < 0.3 && say('lowhp', 'Tes PV sont bas ! Mange quelque chose (T) ou prie devant une Statue des Sept.')) return;
+    if (G.nightness() > 0.8 && say('night', 'Il fait nuit… Les feux de camp et les lampadaires éclairent le chemin.')) return;
+    if (P.swim && say('swim', 'Nager consomme de l’endurance. Ne reste pas trop longtemps dans l’eau !')) return;
+    for (const e of E.enemies) if (e.frozen > 0 && say('freeze', 'Gelé ! Frappe-le avec une attaque lourde pour le briser.')) return;
+    for (const c of World.chests) if (!S.opened[c.id] && Math.hypot(c.x - P.x, c.y - P.y) < 90 && say('chest', 'Un coffre ! Approche-toi et appuie sur F.')) return;
+    for (const s of World.seelies) if (!s.done && !s.started && Math.hypot(s.x - P.x, s.y - P.y) < 100 && say('seelie', 'Une Séelie ! Suis-la : elle va te mener à sa cour, et à un trésor.')) return;
+    for (const c of World.collectibles) if (c.kind === 'anemo' && !(S.taken[c.id] > S.t) && Math.hypot(c.x - P.x, c.y - P.y) < 110 && say('anemo', 'Un Anémoculus ! Récupère-les puis offre-les à une Statue des Sept.')) return;
   };
 
   Entities.drawTop = function (ctx, camX, camY, t) {
