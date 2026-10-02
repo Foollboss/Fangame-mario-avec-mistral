@@ -88,6 +88,7 @@
       if (this.boss) for (let i = 0; i < 30; i++) C.spark(this.x + G.rand(-20, 20), this.y - G.rand(0, 30), '#7af0c4', 3, 120);
       if (G.Quest) G.Quest.event('kill', { type: this.type, kind: this.kind, camp: this.camp, boss: this.boss });
       if (G.Audio) G.Audio.sfx(this.boss ? 'boom' : 'die');
+      if (!S.codex[this.type]) G.handDot = true;
       S.codex[this.type] = (S.codex[this.type] || 0) + 1;
       if (this.camp) Entities.campCheck(this.camp);
     }

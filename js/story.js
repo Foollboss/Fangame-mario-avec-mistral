@@ -121,7 +121,7 @@
     q.step++; q.prog = 0;
     if (rw) rw();
     const nx = Quest.cur();
-    if (nx) { G.banner('Quête principale', nx.text, 'quest'); G.questDot = true; }
+    if (nx) { G.banner('Quête principale', nx.text, 'quest'); G.questDot = true; G.menuDot = true; }
     else { G.banner('Prologue terminé !', 'Le vent de la liberté souffle sur Mondstadt', 'quest'); }
     if (G.Audio) G.Audio.sfx('quest');
   };

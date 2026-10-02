@@ -22,16 +22,6 @@
   // ---------- Sprites utilitaires ----------
   const circ = (r, fill, stroke) => { const k = 'c' + r + fill + stroke; return cache[k] || (cache[k] = G.circleSprite(r, fill, stroke, 1)); };
   UI.circ = circ;
-  const maskCircle = (src, d) => {
-    const k = 'mask' + d + src.__id;
-    if (cache[k]) return cache[k];
-    const c = G.canvas(d, d);
-    c.ctx.drawImage(src, 0, 0, d, d);
-    c.ctx.globalCompositeOperation = 'destination-in';
-    c.ctx.drawImage(circ(Math.floor(d / 2) - 1, '#fff', null), 0, 0);
-    return (cache[k] = c);
-  };
-  let idc = 0;
   const portrait = (id) => {
     const p = G.S.portrait(id, 24);
     if (p.__id === undefined) p.__id = id;
@@ -86,9 +76,11 @@
     L.hpbar = { right: Math.round(Math.min(w * 0.575, L.skill.x - L.skill.r - 24)), w: Math.round(Math.max(60, 305 * u)), y: h - Math.round(mx(70 * u, 11)) };
     L.hpbar.left = L.hpbar.right - L.hpbar.w;
     L.gadget = { x: L.hpbar.left - 56, y: L.hpbar.y - 3 };
+    if (L.gadget.x - 11 < L.chat.x + 12) L.chat.y = L.gadget.y - 26; // écran étroit : le chat passe au-dessus
     // équipe
     L.party = [];
-    for (let i = 0; i < 3; i++) L.party.push({ y: Math.round(mx(193 * u, 34) + i * mx(88 * u, 20)) });
+    const py0 = Math.max(mx(193 * u, 34), L.ping.y + 18);
+    for (let i = 0; i < 3; i++) L.party.push({ y: Math.round(py0 + i * mx(88 * u, 22)) });
     L.pr = { x: w - Math.round(mx(55 * u, 17)) };
     return L;
   };

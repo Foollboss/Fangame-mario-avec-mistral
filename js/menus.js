@@ -16,6 +16,8 @@
     const d = M.defs[name];
     if (d && d.open) d.open(M.p);
     if (name === 'bag') G.bagDot = false;
+    if (name === 'paimon') G.menuDot = false;
+    if (name === 'chars') G.charDot = false;
     if (name === 'quests') G.questDot = false;
     if (name === 'commissions') { G.commDot = false; G.Quest.ensureCommissions(); }
     if (name === 'handbook') G.handDot = false;
@@ -260,8 +262,9 @@
       const stats = [['PV max', G.fmt(st.hp)], ['ATQ', G.fmt(st.atk)], ['DÉF', G.fmt(st.def)], ['Taux crit.', (st.cr * 100).toFixed(1) + '%'], ['Dég. crit.', (st.cd * 100).toFixed(1) + '%'], [el.fr, '+' + (st.elb * 100).toFixed(1) + '%']];
       const two = iw >= 190, colW = two ? Math.floor(iw / 2) : iw;
       const sy2 = ly + 62;
-      stats.forEach((s2, i) => { const x = ix + (two ? (i % 2) * colW : 0), y = sy2 + (two ? Math.floor(i / 2) : i) * 10; G.text(ctx, s2[0], x, y, C().inkL); G.text(ctx, s2[1], x + colW - 8, y, C().ink, { align: 'r' }); });
-      let ky = sy2 + (two ? 34 : 64);
+      const maxRows = Math.max(2, Math.floor((by - sy2 - 6) / 10));
+      stats.slice(0, two ? 6 : Math.min(6, maxRows)).forEach((s2, i) => { const x = ix + (two ? (i % 2) * colW : 0), y = sy2 + (two ? Math.floor(i / 2) : i) * 10; G.text(ctx, s2[0], x, y, C().inkL); G.text(ctx, s2[1], x + colW - 8, y, C().ink, { align: 'r' }); });
+      let ky = sy2 + (two ? 34 : Math.min(6, maxRows) * 10 + 4);
       if (ky + 28 <= by) {
         G.text(ctx, 'E · ' + d.skill.n, ix, ky, '#7a4ab0'); ky += 10;
         G.text(ctx, 'Q · ' + d.burst.n, ix, ky, '#b8602a'); ky += 10;

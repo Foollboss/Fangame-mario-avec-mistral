@@ -16,7 +16,7 @@
   function resize() {
     const iw = window.innerWidth, ih = window.innerHeight;
     let k = ih < 520 ? Math.max(1, Math.round(ih / 200)) : Math.max(1, Math.round(ih / 290));
-    while (k > 1 && iw / k < 360) k--;
+    while (k > 1 && iw / k < 320) k--;
     const w = Math.max(200, Math.floor(iw / k)), h = Math.max(120, Math.floor(ih / k));
     G.view.k = k; G.view.w = w; G.view.h = h;
     cv.width = w; cv.height = h;
@@ -69,8 +69,9 @@
     G.mode = 'play';
     G.Menus.cur = null;
     if (S.commissions == null) G.Quest.ensureCommissions();
-    G.menuDot = true;
-    G.charDot = false; G.bagDot = false; G.handDot = false;
+    G.menuDot = true; G.questDot = !load;
+    const vetStart = S.mode === 'veteran' && !load;
+    G.charDot = vetStart; G.bagDot = vetStart; G.handDot = vetStart; G.commDot = vetStart;
     G.lastAuto = 0;
     if (!load) { G.Story.intro(); G.Save.save(); }
     else G.banner('Bon retour !', 'Rang d’aventure ' + S.ar, 'zone');

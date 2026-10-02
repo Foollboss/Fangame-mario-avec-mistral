@@ -79,7 +79,7 @@
   G.gain = function (id, n, silent) {
     const S = G.state;
     S.inv[id] = (S.inv[id] || 0) + n;
-    if (!silent) G.toast(G.ITEMS[id].name, id, n);
+    if (!silent) { G.toast(G.ITEMS[id].name, id, n); if (id !== 'mora') G.bagDot = true; if (id.indexOf('book') === 0) G.charDot = true; }
     if (G.Quest) G.Quest.event('gain', { id, n });
   };
   G.has = (id, n) => (G.state.inv[id] || 0) >= (n || 1);
