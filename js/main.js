@@ -34,6 +34,8 @@
     resize();
     window.addEventListener('resize', resize);
     G.input.attach(cv);
+    G.mode = 'lang'; // le choix de langue s'affiche pendant la génération du monde
+    langSel = G.lang === 'en' ? 1 : 0;
     requestAnimationFrame(frame);
     await new Promise((r) => setTimeout(r, 30));
     loadProg = 0.02;
@@ -46,7 +48,7 @@
     await G.World.buildChunks((p) => { loadProg = 0.2 + p * 0.8; });
     G.Player.reset(G.World.pois.spawn.x, G.World.pois.spawn.y);
     ready = true;
-    G.mode = 'title';
+    if (G.mode === 'loading') G.mode = 'title';
     window.G_READY = true;
   }
 
@@ -104,6 +106,7 @@
     let dt = Math.min(0.1, (ts - last) / 1000);
     last = ts;
     if (G.mode === 'loading') { drawLoading(); return; }
+    if (G.mode === 'lang') { langFrame(ts / 1000, Math.min(dt, 0.05)); return; }
     acc += dt;
     let steps = 0;
     while (acc >= 1 / 60 && steps < 5) { update(1 / 60); acc -= 1 / 60; steps++; }
@@ -219,7 +222,7 @@
     G.Audio.setMusic('title');
   }
 
-  function drawTitle(t) {
+  function drawTitle(t, bgOnly) {
     const { w, h } = G.view;
     // ciel
     for (let y = 0; y < h; y += 2) px(ctx, 0, y, w, 2, G.mix('#4f9de6', '#cfe9ff', Math.pow(y / h, 0.8)));
@@ -269,6 +272,15 @@
     // séelie
     const sl = G.S.seelie(Math.floor(t * 3));
     ctx.drawImage(sl, Math.round(w * 0.2), Math.round(py - 190 + Math.sin(t * 2) * 5), sl.width * 2, sl.height * 2);
+    if (bgOnly) return;
+    // bouton de langue (drapeau actuel)
+    {
+      const fl = flagSprite(G.lang === 'en' ? 'en' : 'fr');
+      const fx = w - fl.width - 10, fy = 8;
+      px(ctx, fx - 2, fy - 2, fl.width + 4, fl.height + 4, '#f4efe0');
+      ctx.drawImage(fl, fx, fy);
+      G.UI.region(fx - 4, fy - 4, fl.width + 8, fl.height + 8, { onClick: () => { G.Audio.sfx('click'); langSel = G.lang === 'en' ? 1 : 0; G.mode = 'lang'; } });
+    }
     // titre
     G.text(ctx, 'TEYVAT PIXEL', w / 2, 14, '#ffffff', { align: 'c', outline: '#1f3a6a', scale: 4 });
     G.text(ctx, 'Un fan-game en pixel-art inspiré de Genshin Impact', w / 2, 50, '#fff6c8', { align: 'c', outline: '#1f3a6a' });
@@ -288,6 +300,78 @@
     });
     G.text(ctx, 'ZQSD / WASD · clic · E · Q · F · 1-4 — ou tactile', w / 2, h - 22, '#ffffff', { align: 'c', outline: '#1f3a6a' });
     G.text(ctx, 'Projet de fan non officiel — sans lien avec HoYoverse. Tous les graphismes sont générés par code.', w / 2, h - 11, '#e8f0ff', { align: 'c', outline: '#1f3a6a' });
+  }
+
+
+  // ------------------------------------------------------------------
+  //  Choix de la langue (drapeaux pixel-art)
+  // ------------------------------------------------------------------
+  let langSel = 0;
+  const flagCache = {};
+  function flagSprite(id) {
+    if (flagCache[id]) return flagCache[id];
+    let c;
+    if (id === 'fr') {
+      c = G.canvas(39, 26);
+      px(c.ctx, 0, 0, 13, 26, '#0055a4'); px(c.ctx, 13, 0, 13, 26, '#ffffff'); px(c.ctx, 26, 0, 13, 26, '#ef4135');
+    } else {
+      c = G.canvas(49, 26);
+      for (let i = 0; i < 13; i++) px(c.ctx, 0, i * 2, 49, 2, i % 2 ? '#ffffff' : '#b22234');
+      px(c.ctx, 0, 0, 20, 14, '#3c3b6e');
+      const A = [2, 6, 9, 13, 16], B = [4, 8, 11, 15];
+      [2, 5, 7, 10, 12].forEach((y, r) => (r % 2 ? B : A).forEach((x) => px(c.ctx, x, y, 1, 1, '#ffffff')));
+    }
+    return (flagCache[id] = c);
+  }
+  // dessine un drapeau « qui flotte » (colonnes décalées en sinus)
+  function drawFlag(id, x, y, sc, t, amp) {
+    const f = flagSprite(id);
+    for (let cx = 0; cx < f.width; cx++) {
+      const dy = Math.round(Math.sin(cx * 0.32 + t * 3.2) * amp);
+      ctx.drawImage(f, cx, 0, 1, f.height, x + cx * sc, y + dy, sc, f.height * sc);
+      if ((cx + Math.floor(t * 6)) % 7 === 0) { ctx.globalAlpha = 0.12; px(ctx, x + cx * sc, y + dy, sc, f.height * sc, '#000000'); ctx.globalAlpha = 1; }
+    }
+  }
+  function chooseLang(l) {
+    G.setLang(l);
+    G.Audio.sfx('unlock');
+    G.mode = ready ? 'title' : 'loading';
+    title.sel = 0;
+  }
+  function langFrame(t, dt) {
+    const I = G.input, { w, h } = G.view;
+    ctx.imageSmoothingEnabled = false;
+    G.UI.begin();
+    title.t += dt;
+    if (I.anyEdge('ArrowLeft', 'KeyA', 'ArrowRight', 'KeyD')) langSel = 1 - langSel;
+    if (I.edge('KeyF')) langSel = 0;
+    if (I.edge('KeyE')) langSel = 1;
+    if (I.anyEdge('Enter', 'NumpadEnter', 'Space')) { chooseLang(langSel ? 'en' : 'fr'); I.endFrame(); return; }
+    drawTitle(t, true);
+    ctx.globalAlpha = 0.55; px(ctx, 0, 0, w, h, '#0a1230'); ctx.globalAlpha = 1;
+    G.text(ctx, 'TEYVAT PIXEL', w / 2, Math.round(h * 0.07), '#ffffff', { align: 'c', outline: '#1f3a6a', scale: 3 });
+    G.text(ctx, 'Choisis ta langue', w / 2, Math.round(h * 0.07) + 28, '#fff6c8', { align: 'c', outline: '#1f3a6a', scale: 2 });
+    G.text(ctx, 'Choose your language', w / 2, Math.round(h * 0.07) + 46, '#fff6c8', { align: 'c', outline: '#1f3a6a', scale: 2 });
+    const sc = w >= 520 ? 3 : 2;
+    const items = [{ id: 'fr', label: 'Français' }, { id: 'en', label: 'English' }];
+    const fw = [39 * sc, 49 * sc], gap = Math.round(w * 0.06);
+    const cardW = fw.map((v) => v + 16), total = cardW[0] + cardW[1] + gap;
+    let x = Math.round(w / 2 - total / 2);
+    const cy = Math.round(h * 0.52 - 20);
+    items.forEach((it, i) => {
+      const sel = langSel === i;
+      const bob = sel ? Math.round(Math.sin(t * 5) * 1.5) : 0;
+      const cw = cardW[i], chh = 26 * sc + 40;
+      const cyy = cy + bob - (sel ? 3 : 0);
+      px(ctx, x - 3, cyy - 3, cw + 6, chh + 6, sel ? '#e0b455' : '#1a2448');
+      px(ctx, x, cyy, cw, chh, sel ? '#f6f1e6' : 'rgba(18,24,44,0.92)');
+      drawFlag(it.id, x + 8, cyy + 8, sc, t + i, sc >= 3 ? 1.2 : 1);
+      G.text(ctx, it.label, x + cw / 2, cyy + 26 * sc + 18, sel ? '#3b4255' : '#ffffff', { align: 'c', scale: 2 });
+      G.UI.region(x - 3, cyy - 3, cw + 6, chh + 6, { onClick: () => { langSel = i; chooseLang(it.id); } });
+      x += cw + gap;
+    });
+    G.text(ctx, '← →  ·  Enter / tap', w / 2, h - 16, '#e8f0ff', { align: 'c', outline: '#1f3a6a' });
+    I.endFrame();
   }
 
   function drawLoading() {

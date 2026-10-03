@@ -477,12 +477,12 @@
       tx = bx + 66;
     }
     G.text(ctx, line.who, tx, by + 6, '#d3bc8e', { shadow: '#0a0e1a' });
-    const shown = line.text.slice(0, Math.floor(d.shown));
+    const shown = G.tr(line.text).slice(0, Math.floor(d.shown));
     const lines = G.wrap(shown, bx + bw - tx - 10, 1);
     lines.slice(0, 4).forEach((ln, i) => G.text(ctx, ln, tx, by + 19 + i * 10, '#ffffff', { shadow: '#0a0e1a' }));
-    if (d.shown >= line.text.length && !line.choices && Math.floor(t * 3) % 2) G.text(ctx, '▼', bx + bw - 14, by + bh - 12, '#d3bc8e');
+    if (d.shown >= G.tr(line.text).length && !line.choices && Math.floor(t * 3) % 2) G.text(ctx, '▼', bx + bw - 14, by + bh - 12, '#d3bc8e');
     // choix
-    if (line.choices && d.shown >= line.text.length) {
+    if (line.choices && d.shown >= G.tr(line.text).length) {
       const cw = 140, ch = 15;
       const cx = Math.round(w - cw - 14), cy = Math.round(by - line.choices.length * (ch + 3) - 10);
       line.choices.forEach((c, i) => {

@@ -641,7 +641,7 @@
         px(ctx, r.x, y, r.w, rh - 1, i % 2 ? '#e8e0d0' : '#f0e9db');
         ctx.drawImage(G.I.item(it.id), r.x + 2, y + 1);
         G.text(ctx, d.name, r.x + 22, y + 2, C().ink);
-        G.text(ctx, SH.tab === 0 ? d.desc.slice(0, 44) : '×' + (S.inv[it.id] || 0), r.x + 22, y + 10, C().inkL);
+        G.text(ctx, SH.tab === 0 ? G.fit(d.desc, r.w - 100) : '×' + (S.inv[it.id] || 0), r.x + 22, y + 10, C().inkL);
         const lab = SH.tab === 0 ? it.price + ' Méra' : '+' + it.price + ' (1)';
         UI.button(ctx, r.x + r.w - 62, y + 2, 58, 13, lab, () => {
           if (SH.tab === 0) { if (G.spend('mora', it.price)) { G.gain(it.id, 1); if (G.Audio) G.Audio.sfx('mora'); } else G.toast('Pas assez de Méra.'); }
@@ -683,8 +683,9 @@
       UI.button(ctx, r.x + 6, r.y + 38, 150, 13, 'Suivi de quête : ' + (S.settings.hints !== false ? 'oui' : 'non'), () => { S.settings.hints = !(S.settings.hints !== false); });
       UI.button(ctx, r.x + 6, r.y + 55, 150, 13, 'Sauvegarder maintenant', () => { G.Save.save(); G.toast('Partie sauvegardée.'); });
       UI.button(ctx, r.x + 6, r.y + 72, 150, 13, 'Retour au titre', () => { G.Save.save(); G.toTitle(); });
+      UI.button(ctx, r.x + 6, r.y + 89, 150, 13, 'Langue / Language : ' + (G.lang === 'en' ? 'English' : 'Français'), () => { G.setLang(G.lang === 'en' ? 'fr' : 'en'); });
       const lines = ['Commandes (clavier) :', 'ZQSD / WASD / flèches : se déplacer   Maj : sprint / esquive', 'Clic ou J : attaque   E : compétence   Q : déchaînement', '1-4 : changer de personnage   F : interagir   Espace : saut', 'T : manger   M : carte   C : personnages   B : sac   Échap : menu', 'Tactile : joystick à gauche, boutons à droite.'];
-      lines.forEach((ln, i) => G.text(ctx, ln, r.x + 6, r.y + 94 + i * 10, i ? C().inkL : C().ink));
+      lines.forEach((ln, i) => G.text(ctx, ln, r.x + 6, r.y + 110 + i * 10, i ? C().inkL : C().ink));
     },
   };
 

@@ -139,7 +139,7 @@
   };
   // Raccourcit un texte pour tenir dans maxW pixels
   G.fit = (str, maxW) => {
-    str = String(str);
+    str = G.tr ? G.tr(String(str)) : String(str);
     if (G.textW(str) <= maxW) return str;
     while (str.length > 1 && G.textW(str + '…') > maxW) str = str.slice(0, -1);
     return str + '…';
@@ -165,7 +165,7 @@
     return c;
   };
 
-  G.fmt = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  G.fmt = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, G.lang === 'en' ? ',' : ' ');
   G.fmtT = (s) => {
     const m = Math.floor(s / 60), sec = Math.floor(s % 60);
     return m + ':' + String(sec).padStart(2, '0');

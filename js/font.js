@@ -92,6 +92,7 @@
   add('▼', fromArt(['.....', '.....', '.....', 'XXXXX', '.XXX.', '..X..', '.....']));
   add('✓', fromArt(['.....', '....X', '....X', 'X..X.', '.XX..', '..X..', '.....']));
   add('✕', fromArt(['.....', 'X...X', '.X.X.', '..X..', '.X.X.', 'X...X', '.....']));
+  add('←', fromArt(['.....', '..X..', '.X...', 'XXXXX', '.X...', '..X..', '.....']));
   add('→', fromArt(['.....', '..X..', '...X.', 'XXXXX', '...X.', '..X..', '.....']));
   add('−', fromArt(['.....', '.....', '.....', 'XXXXX', '.....', '.....', '.....']));
   add('◆', fromArt(['..X..', '.XXX.', 'XXXXX', '.XXX.', '..X..', '.....', '.....']));
@@ -118,10 +119,11 @@
     return g.x1 - g.x0 + 2;
   }
 
+  const tr = (s) => (G.tr ? G.tr(String(s)) : String(s));
   G.textW = function (str, scale) {
     scale = scale || 1;
     let w = 0;
-    for (const ch of String(str)) w += adv(ch);
+    for (const ch of tr(str)) w += adv(ch);
     return Math.max(0, w - 1) * scale;
   };
 
@@ -143,7 +145,7 @@
   G.text = function (ctx, str, x, y, color, opts) {
     opts = opts || {};
     const s = opts.scale || 1;
-    str = String(str);
+    str = tr(str);
     const w = G.textW(str, s);
     let px = x;
     if (opts.align === 'c') px = x - Math.floor(w / 2);
@@ -161,7 +163,7 @@
   // Découpe un texte en lignes selon une largeur max
   G.wrap = function (str, maxW, scale) {
     const out = [];
-    String(str).split('\n').forEach((para) => {
+    tr(str).split('\n').forEach((para) => {
       let line = '';
       para.split(' ').forEach((word) => {
         const t = line ? line + ' ' + word : word;

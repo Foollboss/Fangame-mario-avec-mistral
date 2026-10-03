@@ -20,7 +20,7 @@
   Dialog.advance = function () {
     const d = G.dialog; if (!d) return;
     const line = d.script[d.i];
-    if (d.shown < line.text.length) { d.shown = line.text.length; return; }
+    if (d.shown < G.tr(line.text).length) { d.shown = G.tr(line.text).length; return; }
     if (line.choices) return;
     d.i++; d.shown = 0; d.sel = 0;
     if (G.Audio) G.Audio.sfx('click');
@@ -47,13 +47,13 @@
     const d = G.dialog; if (!d) return;
     d.t += dt;
     const line = d.script[d.i]; if (!line) return;
-    if (d.shown < line.text.length) { const before = Math.floor(d.shown); d.shown = Math.min(line.text.length, d.shown + dt * 55); if (Math.floor(d.shown) !== before && Math.floor(d.shown) % 3 === 0 && G.Audio) G.Audio.sfx('type'); }
+    if (d.shown < G.tr(line.text).length) { const before = Math.floor(d.shown); d.shown = Math.min(G.tr(line.text).length, d.shown + dt * 55); if (Math.floor(d.shown) !== before && Math.floor(d.shown) % 3 === 0 && G.Audio) G.Audio.sfx('type'); }
     const I = G.input;
     if (I.anyEdge('Space', 'Enter', 'KeyF', 'NumpadEnter')) {
-      if (line.choices && d.shown >= line.text.length) Dialog.choose(d.sel);
+      if (line.choices && d.shown >= G.tr(line.text).length) Dialog.choose(d.sel);
       else Dialog.advance();
     }
-    if (line.choices && d.shown >= line.text.length) {
+    if (line.choices && d.shown >= G.tr(line.text).length) {
       if (I.anyEdge('ArrowUp', 'KeyW')) d.sel = (d.sel + line.choices.length - 1) % line.choices.length;
       if (I.anyEdge('ArrowDown', 'KeyS')) d.sel = (d.sel + 1) % line.choices.length;
       for (let k = 0; k < line.choices.length; k++) if (I.edge('Digit' + (k + 1))) Dialog.choose(k);

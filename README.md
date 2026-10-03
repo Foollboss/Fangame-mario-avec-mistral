@@ -17,6 +17,11 @@ Aucune installation, aucune dépendance : ouvrez simplement **`index.html`** dan
 Pour l'héberger (par ex. GitHub Pages) : publiez le dossier tel quel, c'est un site statique.
 Pour le servir en local : `npx serve .` (ou `python3 -m http.server`).
 
+Au lancement, un **écran de choix de la langue** propose un drapeau français 🇫🇷 et un drapeau américain 🇺🇸
+(clic / toucher, flèches + Entrée, ou `F` / `E`). Le jeu est entièrement jouable en **français** et en **anglais** ;
+le choix est mémorisé et peut être changé à tout moment depuis l'écran titre (drapeau en haut à droite) ou les **Réglages**
+(« Langue / Language »).
+
 Trois façons de démarrer :
 
 | Mode | Description |
@@ -105,6 +110,7 @@ index.html            page unique (canvas)
 css/style.css
 js/util.js            maths, bruit, couleurs, canvas, contours pixel
 js/font.js            police bitmap 5×7 avec accents français
+js/i18n.js            traduction anglaise (dictionnaire + règles) et choix de la langue
 js/data.js            éléments, personnages, ennemis, objets, vœux
 js/sprites.js         tuiles, décors, bâtiments, personnages « poupée », ennemis (procédural)
 js/icons.js           icônes du HUD, symboles élémentaires, objets
@@ -124,7 +130,9 @@ js/main.js            démarrage, boucle, écran titre, rendu
 
 ## Notes
 
-- Les textes du jeu sont en français ; les libellés du HUD repris de la capture restent en anglais
-  (« Adventure Rank », « Lv. », « UID »).
+- Le français est la langue source : les textes sont écrits en français dans le code et **traduits à l'affichage**
+  (`G.tr`, dans `js/i18n.js`) quand la langue est l'anglais. Les données de sauvegarde restent donc indépendantes de la langue.
+  Pour ajouter une phrase, il suffit d'ajouter la paire `FR → EN` dans `G.EN` (ou une règle dans `RULES` pour les textes composés).
+- Les libellés du HUD repris de la capture (« Adventure Rank », « Lv. », « UID ») sont les mêmes dans les deux langues.
 - La sauvegarde est stockée dans le navigateur (`localStorage`) ; l'effacer remet le jeu à zéro.
 - « Voyageur confirmé » est idéal pour tester : toutes les compétences sont déjà utilisables et les vœux sont disponibles.
