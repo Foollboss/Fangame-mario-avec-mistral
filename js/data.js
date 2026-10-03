@@ -28,57 +28,57 @@
   G.CHARS = {
     aether: C({
       name: 'Voyageur', title: 'Étranger venu d’ailleurs', el: 'anemo', weapon: 'sword', rarity: 5, hp90: 15200, atk90: 1850, def90: 780, wname: 'Épée du voyageur',
-      look: { hair: '#f0cb5a', hairD: '#c9992f', eye: '#f0a52a', outfit: '#f3f1e8', outfitD: '#cfcab8', accent: '#e2a93a', legs: '#e9e6da', shoes: '#c9a24a', style: 'pony', head: 'none', cape: '#f7f5ee' },
+      look: { m: true, hair: '#f0cb5a', hairD: '#c9992f', eye: '#f0a52a', outfit: '#f3f1e8', outfitD: '#cfcab8', accent: '#e2a93a', legs: '#e9e6da', shoes: '#c9a24a', style: 'pony', head: 'none', cape: '#f7f5ee' },
       skill: { n: 'Tempête déferlante', k: 'vortex', cd: 8, r: 34, dur: 1.4, mult: 1.6, pull: 120, dist: 38, el: 'anemo' },
       burst: { n: 'Fureur des vents', k: 'zone', cost: 60, cd: 15, r: 52, dur: 6, tick: 0.5, mult: 0.55, pull: 80, el: 'anemo' },
     }),
-    amber: C({
-      name: 'Amber', title: 'Éclaireuse du vent', el: 'pyro', weapon: 'bow', rarity: 4, hp90: 11500, atk90: 1650, def90: 600, wname: 'Arc de chasse',
-      look: { hair: '#8d4b2b', hairD: '#6a3320', eye: '#4a8ad8', outfit: '#d9483a', outfitD: '#a8302a', accent: '#f4f0e6', legs: '#f4f0e6', shoes: '#6a3a2a', style: 'pony', head: 'ribbon', cape: null },
-      skill: { n: 'Mini-Baron explosif', k: 'decoy', cd: 12, dur: 3.5, r: 40, mult: 2.4, el: 'pyro', name: 'Baron' },
-      burst: { n: 'Pluie de flèches', k: 'nova', cost: 40, cd: 12, r: 56, mult: 0.9, hits: 6, el: 'pyro' },
+    lyney: C({
+      name: 'Lyney', title: 'Magicien de la scène', el: 'pyro', weapon: 'bow', rarity: 5, hp90: 12400, atk90: 2000, def90: 700, wname: 'Arc du grand illusionniste',
+      look: { m: true, hair: '#2b2433', hairD: '#1a1520', eye: '#7a8ae8', outfit: '#26202e', outfitD: '#17121e', accent: '#d9483a', legs: '#2a2430', shoes: '#d9483a', style: 'short', head: 'tophat', cape: '#8a2a30' },
+      skill: { n: 'Piège de lumière', k: 'decoy', cd: 12, dur: 3.5, r: 42, mult: 2.8, el: 'pyro', name: 'Piège' },
+      burst: { n: 'Grand final', k: 'nova', cost: 50, cd: 14, r: 58, mult: 1.0, hits: 6, el: 'pyro' },
     }),
     kaeya: C({
       name: 'Kaeya', title: 'Capitaine de cavalerie', el: 'cryo', weapon: 'sword', rarity: 4, hp90: 13400, atk90: 1700, def90: 790, wname: 'Épée de cavalerie',
-      look: { hair: '#2b3b72', hairD: '#1e2a55', eye: '#5fb8e8', outfit: '#2f4c8f', outfitD: '#22386b', accent: '#e9d27a', legs: '#252c4a', shoes: '#1e2038', style: 'short', head: 'eyepatch', cape: '#e8eef6' },
+      look: { m: true, hair: '#2b3b72', hairD: '#1e2a55', eye: '#5fb8e8', outfit: '#2f4c8f', outfitD: '#22386b', accent: '#e9d27a', legs: '#252c4a', shoes: '#1e2038', style: 'short', head: 'eyepatch', cape: '#e8eef6' },
       skill: { n: 'Morsure de givre', k: 'cone', cd: 6, r: 36, arc: 1.6, mult: 2.5, n2: 1, el: 'cryo' },
       burst: { n: 'Danse de la tempête', k: 'orbit', cost: 60, cd: 15, dur: 8, r: 34, mult: 0.9, tickRate: 0.35, el: 'cryo' },
     }),
-    lisa: C({
-      name: 'Lisa', title: 'Bibliothécaire', el: 'electro', weapon: 'catalyst', rarity: 4, hp90: 11000, atk90: 1700, def90: 640, wname: 'Grimoire de Lisa',
-      look: { hair: '#7b4b3a', hairD: '#5a3426', eye: '#5ac86a', outfit: '#8d4ab0', outfitD: '#6a3488', accent: '#e6c4ff', legs: '#3a2a46', shoes: '#4a2a5a', style: 'long', head: 'witch', cape: null },
-      skill: { n: 'Pointe électrique', k: 'blast', cd: 8, r: 38, mult: 2.6, el: 'electro', knock: 20 },
-      burst: { n: 'Rose de foudre', k: 'zone', cost: 80, cd: 20, r: 62, dur: 7, tick: 0.5, mult: 0.9, el: 'electro' },
+    cyno: C({
+      name: 'Cyno', title: 'Juge du désert', el: 'electro', weapon: 'polearm', rarity: 5, hp90: 13100, atk90: 1960, def90: 780, wname: 'Lance du juge',
+      look: { m: true, hair: '#f0eef2', hairD: '#b8b4c0', eye: '#e8a838', outfit: '#2a2a38', outfitD: '#16161f', accent: '#e0b455', legs: '#2a2a38', shoes: '#e0b455', style: 'spiky', head: 'headdress', cape: '#2a2a38' },
+      skill: { n: 'Lame du jugement', k: 'cone', cd: 7, r: 38, arc: 1.6, mult: 2.2, n2: 2, el: 'electro' },
+      burst: { n: 'Sentence pour les impies', k: 'zone', cost: 80, cd: 20, r: 62, dur: 7, tick: 0.5, mult: 0.9, el: 'electro' },
     }),
-    barbara: C({
-      name: 'Barbara', title: 'Idole du vent', el: 'hydro', weapon: 'catalyst', rarity: 4, hp90: 11200, atk90: 1500, def90: 560, wname: 'Chant mélodieux',
-      look: { hair: '#f1d676', hairD: '#c9ac4a', eye: '#4a9ee8', outfit: '#f6f4ee', outfitD: '#cfd4e0', accent: '#4a8fe0', legs: '#f6f4ee', shoes: '#4a8fe0', style: 'twin', head: 'ribbon', cape: null },
-      skill: { n: 'Que le spectacle commence', k: 'field', cd: 14, r: 40, dur: 15, tick: 1, mult: 0.25, heal: 0.04, el: 'hydro' },
-      burst: { n: 'Étoile brillante', k: 'zone', cost: 80, cd: 20, r: 80, dur: 0.3, tick: 0.3, mult: 0, heal: 0.9, el: 'hydro', healBurst: true },
+    xingqiu: C({
+      name: 'Xingqiu', title: 'Érudit épéiste', el: 'hydro', weapon: 'sword', rarity: 4, hp90: 10222, atk90: 1650, def90: 758, wname: 'Épée de la pluie',
+      look: { m: true, hair: '#2d4a78', hairD: '#1e3358', eye: '#5aa0e8', outfit: '#4a6fb8', outfitD: '#324f8a', accent: '#f4f0e6', legs: '#e9e6da', shoes: '#324f8a', style: 'short', head: 'none', cape: null },
+      skill: { n: 'Épées de pluie', k: 'cone', cd: 5, r: 36, arc: 1.6, mult: 2.4, n2: 2, el: 'hydro' },
+      burst: { n: 'Tempête de lames', k: 'orbit', cost: 80, cd: 20, dur: 10, r: 36, mult: 1.0, tickRate: 0.4, el: 'hydro' },
     }),
-    xiangling: C({
-      name: 'Xiangling', title: 'Chef du Wanmin', el: 'pyro', weapon: 'polearm', rarity: 4, hp90: 10900, atk90: 1680, def90: 650, wname: 'Lance de cuisine',
-      look: { hair: '#3a2a2a', hairD: '#241818', eye: '#5a3a2a', outfit: '#d9483a', outfitD: '#a8302a', accent: '#f2c75a', legs: '#2a2020', shoes: '#4a2a1a', style: 'twin', head: 'none', cape: null },
-      skill: { n: 'Guoba attaque !', k: 'summon', cd: 12, dur: 7, every: 1.2, mult: 1.1, range: 90, el: 'pyro', name: 'Guoba' },
-      burst: { n: 'Tornade de feu', k: 'orbit', cost: 80, cd: 20, dur: 10, r: 38, mult: 1.1, tickRate: 0.4, el: 'pyro' },
+    thoma: C({
+      name: 'Thoma', title: 'Intendant dévoué', el: 'pyro', weapon: 'polearm', rarity: 4, hp90: 10600, atk90: 1620, def90: 740, wname: 'Lance du foyer',
+      look: { m: true, hair: '#c8602a', hairD: '#963e18', eye: '#d8a838', outfit: '#b83a30', outfitD: '#8a2820', accent: '#f2e6c0', legs: '#3a3030', shoes: '#5a3a2a', style: 'spiky', head: 'headband', cape: null },
+      skill: { n: 'Écran du brasier', k: 'shield', cd: 15, r: 34, mult: 2.0, absorb: 0.18, dur: 8, el: 'pyro' },
+      burst: { n: 'Flamme du foyer', k: 'nova', cost: 80, cd: 20, r: 58, mult: 3.0, hits: 1, el: 'pyro', knock: 30 },
     }),
-    fischl: C({
-      name: 'Fischl', title: 'Prinzessin der Verurteilung', el: 'electro', weapon: 'bow', rarity: 4, hp90: 9900, atk90: 1700, def90: 600, wname: 'Arc du prince noir',
-      look: { hair: '#f2e6a6', hairD: '#c9b878', eye: '#a06ae8', outfit: '#25252f', outfitD: '#17171f', accent: '#9a63e0', legs: '#3a3046', shoes: '#9a63e0', style: 'twin', head: 'eyepatch', cape: '#25252f' },
-      skill: { n: 'Nachtflügel d’Oz', k: 'summon', cd: 25, dur: 10, every: 1, mult: 0.9, range: 110, el: 'electro', name: 'Oz', bird: true },
-      burst: { n: 'Chant de la Nuit', k: 'nova', cost: 60, cd: 15, r: 60, mult: 2.8, hits: 1, el: 'electro' },
+    sethos: C({
+      name: 'Sethos', title: 'Gardien des sables', el: 'electro', weapon: 'bow', rarity: 4, hp90: 9800, atk90: 1700, def90: 640, wname: 'Arc des sables',
+      look: { m: true, hair: '#2a2a3a', hairD: '#16161f', eye: '#c07dff', outfit: '#cfa84a', outfitD: '#a8822c', accent: '#6a3fb8', legs: '#e9d8b0', shoes: '#6a3fb8', style: 'short', head: 'headband', cape: null },
+      skill: { n: 'Faucon des sables', k: 'summon', cd: 15, dur: 10, every: 1, mult: 0.9, range: 110, el: 'electro', name: 'Faucon', bird: true },
+      burst: { n: 'Éclair de Khemenu', k: 'nova', cost: 60, cd: 15, r: 60, mult: 2.8, hits: 1, el: 'electro' },
     }),
     bennett: C({
       name: 'Bennett', title: 'Aventurier malchanceux', el: 'pyro', weapon: 'sword', rarity: 4, hp90: 12400, atk90: 1550, def90: 780, wname: 'Lame de l’explorateur',
-      look: { hair: '#6a3b2a', hairD: '#4a2819', eye: '#8a5a3a', outfit: '#d9483a', outfitD: '#a8302a', accent: '#f4f0e6', legs: '#4a3a30', shoes: '#4a3a30', style: 'spiky', head: 'none', cape: null },
+      look: { m: true, hair: '#6a3b2a', hairD: '#4a2819', eye: '#8a5a3a', outfit: '#d9483a', outfitD: '#a8302a', accent: '#f4f0e6', legs: '#4a3a30', shoes: '#4a3a30', style: 'spiky', head: 'none', cape: null },
       skill: { n: 'Surcharge de passion', k: 'blast', cd: 5, r: 34, mult: 2.2, el: 'pyro', knock: 36 },
       burst: { n: 'Cercle fantastique', k: 'zone', cost: 60, cd: 15, r: 56, dur: 12, tick: 1, mult: 0, heal: 0.03, buff: 0.45, infuse: 'pyro', el: 'pyro' },
     }),
-    sucrose: C({
-      name: 'Sucrose', title: 'Alchimiste', el: 'anemo', weapon: 'catalyst', rarity: 4, hp90: 9244, atk90: 1550, def90: 700, wname: 'Traité de l’alchimie',
-      look: { hair: '#a9e8cb', hairD: '#7cbf9f', eye: '#e8b04a', outfit: '#f1efe6', outfitD: '#cfd0c2', accent: '#5ec99a', legs: '#f1efe6', shoes: '#6a4a3a', style: 'bob', head: 'none', cape: null },
-      skill: { n: 'Rafale de vent', k: 'vortex', cd: 8, r: 30, dur: 1, mult: 3.0, pull: 100, dist: 30, el: 'anemo' },
-      burst: { n: 'Chef-d’œuvre : Gelée instable', k: 'zone', cost: 80, cd: 20, r: 52, dur: 6, tick: 0.5, mult: 0.8, pull: 60, el: 'anemo' },
+    kazuha: C({
+      name: 'Kazuha', title: 'Vagabond de l’érable', el: 'anemo', weapon: 'sword', rarity: 5, hp90: 13348, atk90: 1890, def90: 800, wname: 'Lame de l’érable',
+      look: { m: true, hair: '#d8e0e8', hairD: '#a8b0bc', hairTip: '#c8453a', eye: '#d8453a', outfit: '#8a2e2e', outfitD: '#5a1a1a', accent: '#f2d27a', legs: '#2a2a30', shoes: '#3a2a2a', style: 'pony', head: 'none', cape: '#c8453a' },
+      skill: { n: 'Tourbillon d’érable', k: 'vortex', cd: 6, r: 32, dur: 1.2, mult: 3.0, pull: 110, dist: 34, el: 'anemo' },
+      burst: { n: 'Éclat des feuilles', k: 'zone', cost: 60, cd: 15, r: 62, dur: 8, tick: 0.5, mult: 0.9, pull: 130, el: 'anemo', swirlInfuse: true },
     }),
     diona: C({
       name: 'Diona', title: 'Barmaid chat', el: 'cryo', weapon: 'bow', rarity: 4, hp90: 9570, atk90: 1500, def90: 600, wname: 'Arc à la cime',
@@ -88,7 +88,7 @@
     }),
     razor: C({
       name: 'Razor', title: 'Garçon-loup', el: 'electro', weapon: 'claymore', rarity: 4, hp90: 11800, atk90: 1760, def90: 690, wname: 'Pourfendeur de loup',
-      look: { hair: '#c5c8d6', hairD: '#8d90a2', eye: '#f0c64a', outfit: '#3d3d4c', outfitD: '#28283a', accent: '#e8e8f0', legs: '#2a2a38', shoes: '#4a3a30', style: 'spiky', head: 'none', cape: null },
+      look: { m: true, hair: '#c5c8d6', hairD: '#8d90a2', eye: '#f0c64a', outfit: '#3d3d4c', outfitD: '#28283a', accent: '#e8e8f0', legs: '#2a2a38', shoes: '#4a3a30', style: 'spiky', head: 'none', cape: null },
       skill: { n: 'Griffe de foudre', k: 'blast', cd: 6, r: 34, mult: 3.2, el: 'electro', knock: 16, energyBonus: 3 },
       burst: { n: 'Lupus Fulguris', k: 'stance', cost: 40, cd: 20, dur: 15, el: 'electro', mult: 1.25 },
     }),
@@ -100,19 +100,19 @@
     }),
     venti: C({
       name: 'Venti', title: 'Barde de Mondstadt', el: 'anemo', weapon: 'bow', rarity: 5, hp90: 13200, atk90: 1980, def90: 700, wname: 'Arc du ciel',
-      look: { hair: '#27323f', hairD: '#161c26', hairTip: '#5cd0c4', eye: '#5ad0c0', outfit: '#f3f0e6', outfitD: '#cfcab8', accent: '#3f8a5a', legs: '#f3f0e6', shoes: '#3f8a5a', style: 'braid', head: 'beret', cape: '#3f8a5a' },
+      look: { m: true, hair: '#27323f', hairD: '#161c26', hairTip: '#5cd0c4', eye: '#5ad0c0', outfit: '#f3f0e6', outfitD: '#cfcab8', accent: '#3f8a5a', legs: '#f3f0e6', shoes: '#3f8a5a', style: 'braid', head: 'beret', cape: '#3f8a5a' },
       skill: { n: 'Sonate céleste', k: 'vortex', cd: 6, r: 32, dur: 1.2, mult: 3.0, pull: 110, dist: 40, el: 'anemo' },
       burst: { n: 'Ode du vent', k: 'zone', cost: 60, cd: 15, r: 62, dur: 8, tick: 0.5, mult: 0.9, pull: 130, el: 'anemo', swirlInfuse: true },
     }),
     tartaglia: C({
       name: 'Tartaglia', title: 'Onzième des Fatui', el: 'hydro', weapon: 'bow', rarity: 5, hp90: 14000, atk90: 2000, def90: 780, wname: 'Arc des profondeurs',
-      look: { hair: '#e8742c', hairD: '#b8501a', eye: '#4a8fe8', outfit: '#35364a', outfitD: '#222232', accent: '#d03a3a', legs: '#2a2a3a', shoes: '#d03a3a', style: 'spiky', head: 'mask', cape: null },
+      look: { m: true, hair: '#e8742c', hairD: '#b8501a', eye: '#4a8fe8', outfit: '#35364a', outfitD: '#222232', accent: '#d03a3a', legs: '#2a2a3a', shoes: '#d03a3a', style: 'spiky', head: 'mask', cape: null },
       skill: { n: 'Legs de l’abysse', k: 'stance', cd: 6, dur: 30, el: 'hydro', mult: 1.45, melee: true, cdStart: true },
       burst: { n: 'Dévastation totale', k: 'nova', cost: 60, cd: 15, r: 56, mult: 3.9, hits: 1, el: 'hydro', knock: 40 },
     }),
     diluc: C({
       name: 'Diluc', title: 'Chevalier des ténèbres', el: 'pyro', weapon: 'claymore', rarity: 5, hp90: 12980, atk90: 2020, def90: 784, wname: 'Pourfendeur de l’aube',
-      look: { hair: '#a8302f', hairD: '#7a1f20', eye: '#d84a3a', outfit: '#25252a', outfitD: '#16161a', accent: '#d9483a', legs: '#2a2a30', shoes: '#16161a', style: 'pony', head: 'none', cape: '#25252a' },
+      look: { m: true, hair: '#a8302f', hairD: '#7a1f20', eye: '#d84a3a', outfit: '#25252a', outfitD: '#16161a', accent: '#d9483a', legs: '#2a2a30', shoes: '#16161a', style: 'pony', head: 'none', cape: '#25252a' },
       skill: { n: 'Lame d’aube', k: 'cone', cd: 10, r: 38, arc: 1.5, mult: 1.9, n2: 3, el: 'pyro' },
       burst: { n: 'Aube', k: 'nova', cost: 40, cd: 12, r: 60, mult: 4.2, hits: 1, el: 'pyro', knock: 36, infuse: true },
     }),
@@ -122,17 +122,17 @@
       skill: { n: 'Lame de la tempête', k: 'vortex', cd: 6, r: 30, dur: 1, mult: 3.2, pull: 90, dist: 36, el: 'anemo' },
       burst: { n: 'Éclat de Dandelion', k: 'zone', cost: 80, cd: 20, r: 62, dur: 10, tick: 1, mult: 0.8, heal: 0.06, el: 'anemo' },
     }),
-    mona: C({
-      name: 'Mona', title: 'Astrologue', el: 'hydro', weapon: 'catalyst', rarity: 5, hp90: 10409, atk90: 1850, def90: 653, wname: 'Traité de l’astrologie',
-      look: { hair: '#2a2c4e', hairD: '#181a34', eye: '#7a8ae8', outfit: '#25348a', outfitD: '#18226a', accent: '#e8c24a', legs: '#5a3a8a', shoes: '#e8c24a', style: 'twin', head: 'witch', cape: '#25348a' },
-      skill: { n: 'Reflet de l’illusion', k: 'decoy', cd: 12, dur: 5, r: 38, mult: 1.9, el: 'hydro', name: 'Mirage' },
-      burst: { n: 'Chute des étoiles', k: 'nova', cost: 60, cd: 15, r: 70, mult: 4.6, hits: 1, el: 'hydro', freeze: true },
+    neuvillette: C({
+      name: 'Neuvillette', title: 'Grand juge', el: 'hydro', weapon: 'catalyst', rarity: 5, hp90: 14695, atk90: 1900, def90: 740, wname: 'Registre du tribunal',
+      look: { m: true, hair: '#e8eef4', hairD: '#9fb0c8', hairTip: '#5aa0e8', eye: '#8ac8e8', outfit: '#f2f0f4', outfitD: '#c0c4d2', accent: '#3a5a9a', legs: '#3a4a7a', shoes: '#2a3a6a', style: 'pony', head: 'none', cape: '#3a5a9a' },
+      skill: { n: 'Marée du juge', k: 'blast', cd: 8, r: 40, mult: 2.8, el: 'hydro', knock: 20 },
+      burst: { n: 'Jugement des flots', k: 'nova', cost: 70, cd: 18, r: 70, mult: 4.5, hits: 1, el: 'hydro', knock: 30 },
     }),
-    qiqi: C({
-      name: 'Qiqi', title: 'Zombie du Bubu', el: 'cryo', weapon: 'sword', rarity: 5, hp90: 12368, atk90: 1700, def90: 787, wname: 'Épée du sommeil éternel',
-      look: { hair: '#b9a3e8', hairD: '#8a74be', eye: '#a07ae8', outfit: '#e9ecf6', outfitD: '#bcc2d6', accent: '#6a7ae0', legs: '#6a7ae0', shoes: '#4a4a8a', style: 'bob', head: 'ribbon', cape: null },
-      skill: { n: 'Art adepte : Héraut du givre', k: 'heal', cd: 15, r: 44, mult: 1.9, healPct: 0.12, el: 'cryo' },
-      burst: { n: 'Art adepte : Préservation', k: 'nova', cost: 80, cd: 20, r: 58, mult: 3.4, hits: 1, el: 'cryo', healPct: 0.2 },
+    wriothesley: C({
+      name: 'Wriothesley', title: 'Duc de la forteresse', el: 'cryo', weapon: 'catalyst', rarity: 5, hp90: 13103, atk90: 1920, def90: 790, wname: 'Gantelets de givre',
+      look: { m: true, hair: '#1e1e2a', hairD: '#0e0e16', eye: '#8ac8e8', outfit: '#2a2e3a', outfitD: '#171a22', accent: '#d8dde8', legs: '#2a2e3a', shoes: '#171a22', style: 'short', head: 'none', cape: '#5a5e6a' },
+      skill: { n: 'Chaînes de givre', k: 'heal', cd: 12, r: 44, mult: 2.2, healPct: 0.1, el: 'cryo' },
+      burst: { n: 'Tribunal de glace', k: 'nova', cost: 60, cd: 15, r: 60, mult: 3.8, hits: 1, el: 'cryo', healPct: 0.12 },
     }),
   };
   G.CHAR_ORDER = Object.keys(G.CHARS);
@@ -207,9 +207,9 @@
 
   // ---------- Vœux ----------
   G.BANNERS = [
-    { id: 'event', name: 'Chant du vent', sub: 'Venti · Barde de Mondstadt', featured5: 'venti', featured4: ['diona', 'sucrose', 'fischl'] },
+    { id: 'event', name: 'Chant du vent', sub: 'Venti · Barde de Mondstadt', featured5: 'venti', featured4: ['diona', 'thoma', 'sethos'] },
     { id: 'standard', name: 'Vœu des voyageurs', sub: 'Tous les personnages de Mondstadt', featured5: null, featured4: [] },
   ];
-  G.POOL5 = ['keqing', 'diluc', 'jean', 'mona', 'qiqi'];
-  G.POOL4 = ['amber', 'kaeya', 'lisa', 'barbara', 'xiangling', 'fischl', 'bennett', 'sucrose', 'diona', 'razor'];
+  G.POOL5 = ['keqing', 'diluc', 'jean', 'cyno', 'lyney', 'kazuha', 'neuvillette', 'wriothesley'];
+  G.POOL4 = ['kaeya', 'xingqiu', 'thoma', 'sethos', 'bennett', 'diona', 'razor'];
 })();

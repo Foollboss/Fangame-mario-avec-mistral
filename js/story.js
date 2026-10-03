@@ -64,10 +64,11 @@
   //  PNJ
   // =====================================================================
   const bpx = (tx) => tx * TS + TS / 2;
+  const AMBER_LOOK = { hair: '#8d4b2b', hairD: '#6a3320', eye: '#4a8ad8', outfit: '#d9483a', outfitD: '#a8302a', accent: '#f4f0e6', legs: '#f4f0e6', shoes: '#6a3a2a', style: 'pony', head: 'ribbon', cape: null };
   Story.npcDefs = function () {
     const L = (id) => G.CHARS[id].look;
     return [
-      { id: 'amber', name: 'Amber', role: 'quest', x: bpx(60), y: 64 * TS, look: L('amber'), dir: 'd', still: true },
+      { id: 'amber', name: 'Amber', role: 'quest', x: bpx(60), y: 64 * TS, look: AMBER_LOOK, dir: 'd', still: true },
       { id: 'katheryne', name: 'Katheryne', role: 'guild', x: bpx(151), y: 33 * TS + 6, look: { hair: '#e0a85a', hairD: '#b07a38', eye: '#4a9ee8', outfit: '#2f4a8a', outfitD: '#1e3366', accent: '#f4e6a0', legs: '#f4f0e6', shoes: '#2f4a8a', style: 'pony', head: 'ribbon', cape: null }, dir: 'd', still: true },
       { id: 'jean', name: 'Jean', role: 'quest', x: bpx(141), y: 27 * TS + 8, look: L('jean'), dir: 'd', still: true },
       { id: 'kaeya', name: 'Kaeya', role: 'chat', x: bpx(120), y: 43 * TS + 6, look: L('kaeya'), dir: 'd', still: true },

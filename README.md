@@ -21,7 +21,7 @@ Trois façons de démarrer :
 
 | Mode | Description |
 | --- | --- |
-| **Nouvelle aventure** | Rang d'aventure 1, équipe niveau 1 (Voyageur, Amber, Kaeya, Lisa). Prologue de Mondstadt. |
+| **Nouvelle aventure** | Rang d'aventure 1, équipe niveau 1 (Voyageur, Kaeya, Xingqiu, Thoma). Prologue de Mondstadt. |
 | **Continuer** | Reprend la sauvegarde locale (automatique toutes les 45 s et en quittant l'onglet ; manuelle depuis une Statue des Sept ou le menu). |
 | **Voyageur confirmé** | Rang 60, équipe **Keqing · Venti · Tartaglia · Diona niveau 90**, exactement comme sur la capture. |
 
@@ -71,7 +71,7 @@ Le bouton Retour d'Android ferme le menu ouvert, ou quitte depuis l'écran titre
 **Combat**
 - **18 personnages** jouables, chacun avec son sprite, son arme (épée, pourfendeur, arme d'hast, arc, catalyseur),
   une **compétence (E)** et un **déchaînement (Q)** : Keqing (stylet + téléportation), Venti (vortex), Tartaglia (mode mêlée Hydro),
-  Diona (bouclier cryo), Amber, Kaeya, Lisa, Barbara, Xiangling, Fischl, Bennett, Sucrose, Razor, Diluc, Jean, Mona, Qiqi, Voyageur.
+  Diona (bouclier cryo), Kaeya, Xingqiu, Thoma, Sethos, Bennett, Razor, Diluc, Jean, Cyno, Lyney, Kazuha, Neuvillette, Wriothesley, Voyageur.
 - **Éléments** Pyro / Hydro / Électro / Cryo / Anémo avec auras et **réactions** : Vaporisation, Fonte, Surcharge,
   Électrocution, Superconduction, Gel + Brisure, Diffusion.
 - Boucliers élémentaires des mages de l'Abysse (à briser avec l'élément opposé), garde frontale du Mitachurl,

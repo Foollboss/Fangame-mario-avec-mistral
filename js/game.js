@@ -43,14 +43,14 @@
     const give = (id, lv) => (S.chars[id] = { id, level: lv, exp: 0, hp: 0, energy: 0, cdE: 0, cdQ: 0, c: 0 });
     if (vet) {
       ['keqing', 'venti', 'tartaglia', 'diona'].forEach((id) => give(id, 90));
-      ['aether', 'amber', 'kaeya', 'lisa', 'barbara', 'xiangling', 'fischl', 'bennett', 'sucrose', 'razor', 'diluc', 'jean', 'mona', 'qiqi'].forEach((id, i) => give(id, 80 + (i % 3) * 5));
+      ['aether', 'kaeya', 'xingqiu', 'thoma', 'sethos', 'bennett', 'razor', 'diluc', 'jean', 'cyno', 'lyney', 'kazuha', 'neuvillette', 'wriothesley'].forEach((id, i) => give(id, 80 + (i % 3) * 5));
       S.party = ['keqing', 'venti', 'tartaglia', 'diona'];
       S.active = 0;
       Object.assign(S.inv, { mora: 1245300, primo: 3200, fate: 21, book3: 18, book2: 40, book1: 60, bread: 8, meal: 6, apple: 12, stardust: 400, starglitter: 120 });
       S.arExp = 0;
     } else {
-      ['aether', 'amber', 'kaeya', 'lisa'].forEach((id) => give(id, 1));
-      S.party = ['aether', 'amber', 'kaeya', 'lisa'];
+      ['aether', 'kaeya', 'xingqiu', 'thoma'].forEach((id) => give(id, 1));
+      S.party = ['aether', 'kaeya', 'xingqiu', 'thoma'];
       S.active = 0;
       Object.assign(S.inv, { mora: 2000, primo: 1600, fate: 5, apple: 3, bread: 1, book1: 3 });
     }

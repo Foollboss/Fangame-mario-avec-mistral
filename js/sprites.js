@@ -542,7 +542,7 @@
     const hy = 5 + bob;
     if (dir === 'l') {
       pxr(ctx, cx - 5, hy + 1, 10, 9, skin); pxr(ctx, cx - 4, hy, 8, 1, skin); pxr(ctx, cx - 4, hy + 10, 7, 1, skin);
-      pxr(ctx, cx - 5, hy + 8, 2, 1, '#f2a79a'); // joue
+      if (L.m) pxr(ctx, cx - 4, hy + 4, 3, 1, L.hairD); else pxr(ctx, cx - 5, hy + 8, 2, 1, '#f2a79a'); // sourcil / joue
       pxr(ctx, cx - 3, hy + 5, 2, 3, '#2a2638'); pxr(ctx, cx - 3, hy + 5, 1, 1, '#fff'); pxr(ctx, cx - 2, hy + 6, 1, 2, L.eye);
     } else if (dir === 'd') {
       pxr(ctx, cx - 5, hy + 1, 10, 9, skin); pxr(ctx, cx - 4, hy, 8, 1, skin); pxr(ctx, cx - 4, hy + 10, 8, 1, skin);
@@ -550,7 +550,7 @@
       pxr(ctx, cx - 4, hy + 5, 2, 3, '#2a2638'); pxr(ctx, cx + 2, hy + 5, 2, 3, '#2a2638');
       pxr(ctx, cx - 4, hy + 6, 2, 2, L.eye); pxr(ctx, cx + 2, hy + 6, 2, 2, L.eye);
       pxr(ctx, cx - 4, hy + 5, 1, 1, '#fff'); pxr(ctx, cx + 2, hy + 5, 1, 1, '#fff');
-      pxr(ctx, cx - 5, hy + 8, 2, 1, '#f2a79a'); pxr(ctx, cx + 3, hy + 8, 2, 1, '#f2a79a');
+      if (L.m) { pxr(ctx, cx - 5, hy + 4, 4, 1, L.hairD); pxr(ctx, cx + 1, hy + 4, 4, 1, L.hairD); } else { pxr(ctx, cx - 5, hy + 8, 2, 1, '#f2a79a'); pxr(ctx, cx + 3, hy + 8, 2, 1, '#f2a79a'); }
     } else {
       pxr(ctx, cx - 5, hy + 1, 10, 9, skin);
     }
@@ -586,6 +586,18 @@
     if (L.head === 'cathat') { pxr(ctx, cx - 7, hy - 2, 14, 2, L.cape); pxr(ctx, cx - 5, hy - 5, 10, 4, L.cape); pxr(ctx, cx - 5, hy - 3, 10, 1, '#5aa8e8'); pxr(ctx, cx - 7, hy - 5, 3, 3, L.hair); pxr(ctx, cx + 4, hy - 5, 3, 3, L.hair); pxr(ctx, cx - 7, hy - 6, 2, 1, L.hairD); pxr(ctx, cx + 5, hy - 6, 2, 1, L.hairD); }
     if (L.head === 'ribbon') { pxr(ctx, cx - 7, hy - 3, 4, 3, L.outfit); pxr(ctx, cx + 3, hy - 3, 4, 3, L.outfit); pxr(ctx, cx - 1, hy - 2, 2, 2, L.accent); }
     if (L.head === 'mask' && front) { pxr(ctx, cx + (dir === 'l' ? -5 : 1), hy - 1, 5, 6, '#f4f0e6'); pxr(ctx, cx + (dir === 'l' ? -4 : 2), hy, 3, 2, '#d03a3a'); pxr(ctx, cx + (dir === 'l' ? -4 : 3), hy + 3, 2, 1, '#2a2638'); }
+    if (L.head === 'tophat') {
+      const ox = dir === 'l' ? -1 : 0;
+      pxr(ctx, cx - 7 + ox, hy - 2, 14, 2, '#17121e'); pxr(ctx, cx - 4 + ox, hy - 10, 8, 8, '#17121e');
+      pxr(ctx, cx - 4 + ox, hy - 4, 8, 2, L.accent); pxr(ctx, cx - 3 + ox, hy - 9, 1, 4, '#3a3048');
+    }
+    if (L.head === 'headband') {
+      pxr(ctx, cx - 6, hy + 1, 12, 2, L.accent);
+      if (dir === 'u') pxr(ctx, cx - 1, hy + 3, 3, 4, L.accent); else pxr(ctx, cx - 1, hy + 1, 2, 2, G.shade(L.accent, 0.5));
+    }
+    if (L.head === 'headdress') {
+      pxr(ctx, cx - 6, hy - 3, 12, 3, L.accent); pxr(ctx, cx - 7, hy - 1, 2, 8, L.accent); pxr(ctx, cx + 5, hy - 1, 2, 8, L.accent); pxr(ctx, cx - 2, hy - 5, 4, 2, L.accent);
+    }
     if (L.head === 'eyepatch' && dir === 'd') { pxr(ctx, cx - 5, hy + 4, 4, 5, '#1e1e28'); pxr(ctx, cx - 5, hy + 3, 10, 1, '#1e1e28'); }
 
     // ----- pose d'attaque : arme -----
@@ -649,7 +661,7 @@
     pxr(ctx, sx(8), sx(12), sx(3), sx(4), '#2a2638'); pxr(ctx, sx(13), sx(12), sx(3), sx(4), '#2a2638');
     pxr(ctx, sx(8), sx(13), sx(3), sx(3), L.eye); pxr(ctx, sx(13), sx(13), sx(3), sx(3), L.eye);
     pxr(ctx, sx(8), sx(12), Math.max(1, sx(1)), Math.max(1, sx(1)), '#fff'); pxr(ctx, sx(13), sx(12), Math.max(1, sx(1)), Math.max(1, sx(1)), '#fff');
-    pxr(ctx, sx(7), sx(16), sx(2), Math.max(1, sx(1)), '#f2a79a'); pxr(ctx, sx(15), sx(16), sx(2), Math.max(1, sx(1)), '#f2a79a');
+    if (L.m) { pxr(ctx, sx(7), sx(11), sx(4), Math.max(1, sx(1)), L.hairD); pxr(ctx, sx(13), sx(11), sx(4), Math.max(1, sx(1)), L.hairD); } else { pxr(ctx, sx(7), sx(16), sx(2), Math.max(1, sx(1)), '#f2a79a'); pxr(ctx, sx(15), sx(16), sx(2), Math.max(1, sx(1)), '#f2a79a'); }
     // cheveux avant
     pxr(ctx, sx(4), sx(3), sx(16), sx(6), L.hair); pxr(ctx, sx(5), sx(2), sx(14), sx(2), L.hair);
     pxr(ctx, sx(4), sx(7), sx(3), sx(9), L.hair); pxr(ctx, sx(17), sx(7), sx(3), sx(9), L.hair);
@@ -663,6 +675,9 @@
     if (L.head === 'ribbon') { pxr(ctx, sx(2), sx(2), sx(5), sx(4), L.outfit); pxr(ctx, sx(17), sx(2), sx(5), sx(4), L.outfit); }
     if (L.head === 'mask') { pxr(ctx, sx(12), sx(4), sx(7), sx(8), '#f4f0e6'); pxr(ctx, sx(14), sx(6), sx(3), sx(3), '#d03a3a'); }
     if (L.head === 'eyepatch') { pxr(ctx, sx(7), sx(10), sx(5), sx(7), '#1e1e28'); }
+    if (L.head === 'tophat') { pxr(ctx, sx(2), sx(3), sx(20), sx(2), '#17121e'); pxr(ctx, sx(6), sx(-3), sx(12), sx(7), '#17121e'); pxr(ctx, sx(6), sx(2), sx(12), sx(2), L.accent); }
+    if (L.head === 'headband') { pxr(ctx, sx(4), sx(5), sx(16), sx(2), L.accent); }
+    if (L.head === 'headdress') { pxr(ctx, sx(4), sx(2), sx(16), sx(3), L.accent); pxr(ctx, sx(2), sx(4), sx(3), sx(11), L.accent); pxr(ctx, sx(19), sx(4), sx(3), sx(11), L.accent); }
     return (S.portraits[key] = c);
   };
 

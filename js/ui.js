@@ -471,7 +471,7 @@
       const fc = G.canvas(52, 52);
       if (line.face === 'paimon') { const p = G.I.paimonHead(); px(fc.ctx, 0, 0, 52, 52, '#2b3a6a'); fc.ctx.drawImage(p, 3, 3, 46, 46); }
       else if (G.CHARS[line.face]) fc.ctx.drawImage(G.S.portrait(line.face, 24), 0, 0, 52, 52);
-      else if (line.face === 'katheryne' || line.face === 'sara') { const look = G.Story.npcDefs().find((n) => n.id === line.face).look; px(fc.ctx, 0, 0, 52, 52, '#3a4a78'); fc.ctx.drawImage(G.S.lookFrame(line.face, look, 'd', 0), 3, 1, 20, 18, 0, 4, 52, 47); }
+      else { const def = G.Story.npcDefs().find((n) => n.id === line.face); if (def) { px(fc.ctx, 0, 0, 52, 52, '#3a4a78'); fc.ctx.drawImage(G.S.lookFrame(line.face, def.look, 'd', 0), 3, 1, 20, 18, 0, 4, 52, 47); } }
       ctx.drawImage(fc, bx + 6, by - 14);
       px(ctx, bx + 5, by - 15, 54, 1, '#d3bc8e'); px(ctx, bx + 5, by - 15, 1, 55, '#d3bc8e'); px(ctx, bx + 58, by - 15, 1, 55, '#d3bc8e'); px(ctx, bx + 5, by + 39, 54, 1, '#d3bc8e');
       tx = bx + 66;
