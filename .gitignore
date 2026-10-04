@@ -1,0 +1,7 @@
+# Godot
+game/.godot/
+*.tmp
+# Builds (trop gros pour git)
+builds/
+*.blend1
+__pycache__/
