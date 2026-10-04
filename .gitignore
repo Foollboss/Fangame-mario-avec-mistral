@@ -8,3 +8,4 @@ __pycache__/
 *.keystore
 *.jks
 export_credentials.cfg
+game/android_template/

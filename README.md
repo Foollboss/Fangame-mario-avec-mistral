@@ -96,3 +96,11 @@ godot --headless --export-release "Android" ../builds/Echos_Aetheria_v7.apk
 
 Garde précieusement le fichier `aetheria_v7.keystore` et son mot de passe : Android n'accepte une
 mise à jour que si elle est signée avec la même clé.
+
+### Moteur Android allégé (APK < 30 Mo)
+
+Le moteur officiel pèse 71 Mo. `engine/custom_aetheria.py` décrit un moteur Godot 4.7.2 compilé
+sans ce que le jeu n'utilise pas (Vulkan, XR, réseau, vidéo, navigation, CSG…), testé sur Linux
+avec tous les tests du jeu. `engine/build_android_template.sh` le compile (NDK 29.0.14206865) et
+fabrique `game/android_template/android_release.apk` ; il suffit ensuite de renseigner ce fichier
+dans « Modèle personnalisé › Release » du préréglage Android avant d'exporter.
