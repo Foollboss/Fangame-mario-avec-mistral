@@ -55,6 +55,8 @@ const GLIDE_SINK: = 2.2
 var last_yaw: = 0.0
 var roll: = 0.0
 var stats: = {"reactions": 0, "damage": 0.0}
+var lunge_t: = 0.0
+var lunge_v: = 0.0
 
 func _ready() -> void :
 	collision_layer = 2
@@ -67,16 +69,16 @@ func _ready() -> void :
 	weapons_lib = load("res://assets/weapons.glb").instantiate()
 	_add_char({"name": "Kaelith", "element": "hydro", "weapon": "", "scene": "res://assets/kaelith.glb", "max_hp": 1100.0, "atk": 30.0, 
 		"energy_max": 60.0, "skill_cd_max": 6.0, "burst_cd_max": 15.0, "combo_len": 3, 
-		"gait": {"Walk": 0.9333, "Run": 4.3388, "Sprint": 5.85}})
+		"gait": {"Walk": 1.1987, "Run": 5.1522, "Sprint": 7.5681}})
 	_add_char({"name": "Lyra", "element": "electro", "weapon": "Sword_Lyra", "scene": "res://assets/lyra.glb", "max_hp": 1000.0, "atk": 34.0, 
 		"energy_max": 80.0, "skill_cd_max": 7.0, "burst_cd_max": 18.0, "combo_len": 3, 
-		"gait": {"Walk": 0.8867, "Run": 4.1219, "Sprint": 5.5575}})
+		"gait": {"Walk": 1.197, "Run": 5.2572, "Sprint": 7.8308}})
 	_add_char({"name": "Kael", "element": "pyro", "weapon": "Sword_Kael", "scene": "res://assets/kael.glb", "max_hp": 1050.0, "atk": 32.0, 
 		"energy_max": 70.0, "skill_cd_max": 8.0, "burst_cd_max": 18.0, "combo_len": 4, 
-		"gait": {"Walk": 0.9707, "Run": 4.5124, "Sprint": 6.084}})
+		"gait": {"Walk": 1.1952, "Run": 5.312, "Sprint": 7.7163}})
 	_add_char({"name": "Zahara", "element": "lava", "weapon": "Staff_Zahara", "scene": "res://assets/zahara.glb", "max_hp": 1250.0, "atk": 37.0, 
 		"energy_max": 80.0, "skill_cd_max": 9.0, "burst_cd_max": 20.0, "combo_len": 3, 
-		"gait": {"Walk": 0.9333, "Run": 4.3388, "Sprint": 5.85}})
+		"gait": {"Walk": 1.2014, "Run": 5.186, "Sprint": 7.5731}})
 	weapons_lib.free();weapons_lib = null
 	_show_active()
 	_build_glider()
@@ -136,19 +138,24 @@ func _add_char(c: Dictionary) -> void :
 	for n in ["Idle", "Walk", "Run", "Sprint", "Idle_Combat", "Glide", "Fall"]:
 		if ap.has_animation(n): ap.get_animation(n).loop_mode = Animation.LOOP_LINEAR
 	var skel: Skeleton3D = model.find_children("*", "Skeleton3D", true, false)[0]
-	var hand: = BoneAttachment3D.new();hand.bone_name = "hand.R";skel.add_child(hand)
-	var fx: = BoneAttachment3D.new();fx.bone_name = "fx";skel.add_child(fx)
+	var hand: = BoneAttachment3D.new();hand.bone_name = Bones.find(skel, "hand.R");skel.add_child(hand)
+	var fx: = BoneAttachment3D.new();fx.bone_name = Bones.find(skel, "fx");skel.add_child(fx)
 	var weapon: Node3D = null
-	if c.weapon != "" and weapons_lib and skel.find_bone("weapon.R") >= 0:
+	var trail: WeaponTrail = null
+	if c.weapon != "" and weapons_lib and Bones.idx(skel, "weapon.R") >= 0:
 		var src: = weapons_lib.get_node_or_null(c.weapon)
 		if src:
-			var sock: = BoneAttachment3D.new();sock.bone_name = "weapon.R";skel.add_child(sock)
+			var sock: = BoneAttachment3D.new();sock.bone_name = Bones.find(skel, "weapon.R");skel.add_child(sock)
 			weapon = src.duplicate();sock.add_child(weapon)
 			weapon.transform = Transform3D.IDENTITY
 			Toon.apply(weapon, true, true, 0.0025)
 			weapon.visible = false
+			var blade: = WeaponTrail.blade_extent(weapon)
+			trail = WeaponTrail.new()
+			trail.setup(sock, blade.x, blade.y, FX.element_color(c.element))
+			add_child(trail)
 	_setup_cloth(skel)
-	c.merge({"node": model, "ap": ap, "hand": hand, "fxb": fx, "skel": skel, "weapon_node": weapon, "weapon_t": 0.0, 
+	c.merge({"node": model, "ap": ap, "hand": hand, "fxb": fx, "skel": skel, "weapon_node": weapon, "weapon_t": 0.0, "trail": trail, 
 		"hp": c.max_hp, "energy": 0.0, "skill_cd": 0.0, "burst_cd": 0.0, "alive": true, "atk_speed": 1.0, 
 		"base_hp": c.max_hp, "base_atk": c.atk, "atk_buff": 0.0, "atk_buff_t": 0.0, "passive_cd": 0.0})
 	chars.append(c)
@@ -177,10 +184,10 @@ func _setup_cloth(skel: Skeleton3D) -> void :
 		sb.set_stiffness(i, 1.6);sb.set_drag(i, 0.55);sb.set_gravity(i, 0.25);sb.set_radius(i, 0.03)
 	for side in ["L", "R"]:
 		for b in ["thigh", "shin"]:
-			var bi: = skel.find_bone("%s.%s" % [b, side])
+			var bi: = Bones.idx(skel, "%s.%s" % [b, side])
 			if bi < 0: continue
 			var cap: = SpringBoneCollisionCapsule3D.new()
-			cap.bone_name = "%s.%s" % [b, side]
+			cap.bone_name = Bones.find(skel, "%s.%s" % [b, side])
 			cap.radius = 0.11 if b == "thigh" else 0.08
 			cap.height = 0.5
 			cap.position_offset = Vector3(0, 0.22, 0)
@@ -264,6 +271,8 @@ func _hit(e: Enemy, mult: float, elem: String, from: = Vector3.INF, power: = 1.0
 	if c.name == "Kael" and inferno_t > 0.0: dmg *= 1.25
 	e.take_hit(dmg, elem, from, power)
 	stats.damage += dmg
+	if not e.is_object and main and main.has_method("hitstop"):
+		main.hitstop(0.035 + 0.03 * clampf(power, 0.0, 1.5), 0.06)
 	if elem == "electro" and lyra_passive_cd <= 0.0 and not e.is_object:
 		lyra_passive_cd = 0.8
 		for o in chars: o.energy = minf(o.energy_max, o.energy + 1.0)
@@ -287,6 +296,11 @@ func do_attack() -> void :
 	combo_timer = 1.1
 	var spd: float = c.atk_speed
 	_show_weapon(c)
+	# petit pas en avant pendant le coup, sauf si l'ennemi est déjà au contact
+	var close: bool = tgt != null and global_position.distance_to(tgt.global_position) < 1.4 + tgt.hit_radius
+	if c.name != "Kaelith" and not close and is_on_floor():
+		var finisher: bool = combo == int(c.combo_len)
+		get_tree().create_timer(0.06, false).timeout.connect(_lunge.bind(4.5 if finisher else 3.0, 0.14))
 	match c.name:
 		"Kaelith":
 			_play("Attack%d" % combo, 0.05, spd * 1.1)
@@ -316,6 +330,9 @@ func do_attack() -> void :
 			var t_hit: float = [0.0, 0.36, 0.36, 0.42][combo]
 			get_tree().create_timer(t_hit / spd, false).timeout.connect(_zahara_strike.bind(mult, combo))
 			_sfx("slam" if combo == 3 else "thud", -3.0)
+
+func _lunge(v: float, dur: float) -> void :
+	lunge_v = v;lunge_t = dur
 
 func _kaelith_blade(tgt: Enemy, mult: float, step: int) -> void :
 	if ch().name != "Kaelith": return
@@ -968,6 +985,11 @@ func _physics_process(delta: float) -> void :
 			o.weapon_t -= delta
 			if o.weapon_t <= 0.0: _hide_weapon(o)
 	switch_cd = maxf(0.0, switch_cd - delta)
+	var striking: bool = attack_lock > 0.04 and (cur_anim.begins_with("Attack") or cur_anim == "Skill" or cur_anim == "Burst")
+	for i in chars.size():
+		var o: Dictionary = chars[i]
+		if o.trail:
+			o.trail.emitting = i == active and striking and o.weapon_node != null and o.weapon_node.visible
 	cast_t = maxf(0.0, cast_t - delta)
 	iframe = maxf(0.0, iframe - delta)
 	lyra_passive_cd = maxf(0.0, lyra_passive_cd - delta)
@@ -1011,6 +1033,9 @@ func _physics_process(delta: float) -> void :
 		attack_lock -= delta
 		spd *= 0.15
 	var hv: = want.normalized() * spd
+	if lunge_t > 0.0:
+		lunge_t -= delta
+		hv += facing_dir() * lunge_v
 	if dash_t > 0.0:
 		dash_t -= delta
 		hv = dash_dir * 15.0

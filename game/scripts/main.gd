@@ -153,6 +153,14 @@ func _ready() -> void :
 		start_game(false)
 		_gait_test()
 		return
+	if "--combattest" in args:
+		autotest = true
+		start_game(false)
+		await _wait(1.0)
+		await _combat_test()
+		print("COMBATTEST done")
+		get_tree().quit()
+		return
 	if "--kittest" in args:
 		autotest = true
 		start_game(false)
@@ -853,6 +861,16 @@ func _unlock_waypoint(i: int, silent: = false) -> void :
 func shake(a: float) -> void :
 	if rig: rig.shake(a)
 
+var _hitstop_on: = false
+## Micro-gel à l'impact : le jeu ralentit une fraction de seconde pour donner du poids aux coups.
+func hitstop(dur: float, scale: = 0.06) -> void :
+	if _hitstop_on or autotest or paused: return
+	_hitstop_on = true
+	Engine.time_scale = scale
+	get_tree().create_timer(dur, true, false, true).timeout.connect( func():
+		Engine.time_scale = 1.0
+		_hitstop_on = false)
+
 func burst_cutin(name: String) -> void :
 	ui.burst_cutin(name);shake(0.2)
 
@@ -1333,6 +1351,31 @@ func _place(p: Vector3, look_at_p: Vector3, dist: = 5.6, pitch: = -0.32) -> void
 	rig.pitch = pitch;rig.distance = dist
 	rig.global_position = q + Vector3(0, 1.45, 0)
 
+
+## Captures des 4 héros en plein combat (vérifie animations, traînées d'arme, effets).
+func _combat_test() -> void :
+	party.test_invuln = true
+	daynight.paused = true;daynight.hour = 10.5;daynight.apply()
+	_place(_near(camps[0].center, 7.0), camps[0].center, 4.6, -0.22)
+	await _wait(1.2)
+	for i in 4:
+		party.switch_cd = 0.0;party.attack_lock = 0.0;party.cast_t = 0.0
+		party.switch_to(i); await _wait(0.6)
+		var nm: String = party.ch().name.to_lower()
+		for k in int(party.ch().combo_len):
+			party.attack_lock = 0.0
+			party.do_attack(); await _wait(0.12)
+			if k == 0 or k == int(party.ch().combo_len) - 1: await snap("c_%s_atk%d" % [nm, k + 1])
+			await _wait(0.25)
+		await _wait(0.4)
+		party.chars[i].skill_cd = 0.0
+		party.do_skill(); await _wait(0.45)
+		await snap("c_%s_skill" % nm)
+		await _wait(0.8)
+		party.chars[i].energy = party.chars[i].energy_max;party.chars[i].burst_cd = 0.0
+		party.do_burst(); await _wait(1.0)
+		await snap("c_%s_burst" % nm)
+		await _wait(1.0)
 
 func _new_heroes_test() -> void :
 	_place(_near(camps[1].center, 8.0), camps[1].center, 6.0, -0.3)
