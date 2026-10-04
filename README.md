@@ -6,6 +6,21 @@ quatre héros — **Kaelith** (Hydro, catalyseur), **Lyra** (Électro, épée), 
 
 > Le nom du dépôt vient d'un ancien projet ; le jeu actuel est *Échos d'Aetheria*.
 
+## Version 7.1 : escalade, nage et Anémoculus
+
+- **Escalade** : pousse contre un mur, une falaise, un toit, une tour ou un pilier pour t'y accrocher.
+  Saut = bond vers le haut (coûte de l'endurance), esquive = lâcher prise ; arrivé en haut, le héros
+  se hisse tout seul. Grimper consomme de l'endurance ; à zéro, on tombe.
+- **Nage** dans la mer, le lac et le marais : nage normale, nage rapide en maintenant l'esquive (plus
+  gourmande en endurance). Si l'endurance tombe à zéro dans l'eau, on est ramené sur la rive.
+- **44 Anémoculus** cachés en hauteur (toits du village, moulin, phare, ruines, aiguilles rocheuses,
+  sommets, statues) ou au-dessus de l'eau ; un petit tintement signale ceux qui sont tout proches.
+- **Statues d'Aetheria** : « Interagir » près d'une statue ouvre l'offrande. 8 niveaux de résonance
+  (3, 4, 4, 5, 5, 6, 6 et 7 Anémoculus) ; chaque niveau donne **+15 d'endurance maximale** (jusqu'à 220),
+  de l'expérience et des éclats.
+- Nouvelles animations Blender : `Climb`, `Climb_Idle`, `Swim`, `Swim_Idle` ; nouveaux décors `Oculus`
+  et `Spire` (aiguille rocheuse escaladable).
+
 ## Version 7.0 : ce qui a changé
 
 - **Animations refaites dans Blender** (`blender/`) : marche, course, sprint, saut, chute, planeur,
@@ -30,10 +45,10 @@ quatre héros — **Kaelith** (Hydro, catalyseur), **Lyra** (Électro, épée), 
 | Se déplacer | ZQSD / WASD / flèches |
 | Attaque | Clic gauche ou J |
 | Compétence / Déchaînement | E / Q ou R |
-| Saut, planeur | Espace |
-| Sprint, esquive | Maj ou clic droit |
+| Saut, planeur, bond en escalade | Espace |
+| Sprint, esquive, lâcher prise, nage rapide | Maj ou clic droit |
 | Changer de héros | 1 – 4 |
-| Interagir | F |
+| Interagir (PNJ, coffres, offrande aux statues) | F |
 | Carte / Quêtes / Heure / Manger | M / L / N / H |
 | Zoom caméra | Molette |
 | Menu | Échap |
@@ -78,6 +93,9 @@ godot --script res://tools/anim_sheet.gd -- --char=kael --anims=Walk,Run,Attack1
 godot --script res://tools/props_sheet.gd -- --out=/tmp/decors
 godot -- --menutest --shots=/tmp/menus      # captures de tous les menus
 godot -- --combattest --shots=/tmp/combat   # captures des 4 héros en combat
+godot -- --climbtest --shots=/tmp/escalade  # escalade (maison, phare, aiguille, planeur)
+godot -- --swimtest --shots=/tmp/nage       # nage (lac, mer, noyade, sortie de l'eau)
+godot -- --oculustest --shots=/tmp/oculus   # Anémoculus, offrande, sauvegarde
 ```
 
 ## Exporter le jeu
@@ -91,7 +109,7 @@ godot --headless --export-release "Windows" ../builds/Echos_Aetheria.exe
 GODOT_ANDROID_KEYSTORE_RELEASE_PATH=/chemin/aetheria_v7.keystore \
 GODOT_ANDROID_KEYSTORE_RELEASE_USER=aetheria \
 GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD=******** \
-godot --headless --export-release "Android" ../builds/Echos_Aetheria_v7.apk
+godot --headless --export-release "Android" ../builds/Echos_Aetheria_v7.1.apk
 ```
 
 Garde précieusement le fichier `aetheria_v7.keystore` et son mot de passe : Android n'accepte une

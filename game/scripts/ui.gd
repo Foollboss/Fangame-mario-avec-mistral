@@ -635,7 +635,7 @@ func _layout() -> void :
 func _input(event: InputEvent) -> void :
 	if not touch: return
 	if dlg_open or (map_ui and map_ui.open) or (pause and pause.visible) or (title and title.visible): return
-	if (time_menu and time_menu.visible) or (quest_log and quest_log.visible): return
+	if (time_menu and time_menu.visible) or (quest_log and quest_log.visible) or (statue_menu and statue_menu.visible): return
 	var vs: = get_viewport().get_visible_rect().size
 	if event is InputEventScreenTouch:
 		if event.pressed:
@@ -1101,6 +1101,7 @@ func open_sub(which: String) -> void :
 
 ## Menu d'offrande d'une Statue d'Aetheria (ouvert avec « Interagir » près d'une statue).
 func show_statue(on: bool) -> void :
+	joy_index = -1;joy_vec = Vector2.ZERO;cam_index = -1
 	if on:
 		statue_menu.open();release_touch()
 	else:

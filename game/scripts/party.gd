@@ -1155,6 +1155,7 @@ func _physics_process(delta: float) -> void :
 
 func _update_catalyst(delta: float) -> void :
 	if catalyst == null or not catalyst.is_inside_tree(): return
+	catalyst.visible = not busy_moving()
 	var t: = Time.get_ticks_msec() / 1000.0
 	cat_attack = maxf(0.0, cat_attack - delta)
 	var rest: = Vector3(-0.55, 1.2 + sin(t * 2.0) * 0.06, 0.25)
@@ -1210,11 +1211,12 @@ func _try_climb(want: Vector3, mag: float, delta: float) -> void :
 	if hit.is_empty() or (hit.normal as Vector3).y > CLIMB_WALL_Y:
 		climb_push = 0.0;return
 	climb_push += delta
-	if is_on_floor() and not gliding and climb_push < 0.12: return
+	if is_on_floor() and not gliding and climb_push < 0.15: return
 	_start_climb(hit.normal)
 
 func _start_climb(n: Vector3) -> void :
 	if gliding: stop_glide()
+	_hide_weapon(ch())
 	climbing = true;climb_n = n.normalized();climb_push = 0.0;climb_jump_t = 0.0
 	velocity = Vector3.ZERO;combo = 0;lunge_t = 0.0
 	_face_towards( - Vector3(n.x, 0, n.z), true)
@@ -1344,6 +1346,7 @@ func _check_water() -> void :
 func _start_swim(wy: float) -> void :
 	swimming = true;water_y = wy
 	if gliding: stop_glide()
+	_hide_weapon(ch())
 	combo = 0;lunge_t = 0.0;dash_t = 0.0;land_lock = 0.0
 	var k: = clampf( - velocity.y / 10.0, 0.25, 1.5)
 	var p: = Vector3(global_position.x, wy + 0.05, global_position.z)

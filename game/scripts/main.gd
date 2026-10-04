@@ -2316,6 +2316,11 @@ func _climb_test() -> void :
 	await _drive(sb, 5.0, func(): return party.climbing)
 	print("CLIMBTEST attach_spire climbing=%s -> %s" % [party.climbing, _ok(party.climbing)])
 	party.stamina = party.stamina_max
+	await _drive(sb, 2.2, Callable(), true)
+	party.input_vec = Vector2(0, 1)
+	rig.yaw += 0.75;rig.pitch = -0.05;rig.distance = 5.0
+	await _wait(0.5)
+	await snap("climb_spire")
 	var g1: = oculi_got
 	await _drive(sb, 16.0, func(): return not party.climbing and not party.vaulting and party.is_on_floor() and party.global_position.y > sp.y - 1.5, true)
 	await _wait(0.3)

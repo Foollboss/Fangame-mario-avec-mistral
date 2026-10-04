@@ -41,9 +41,7 @@ func setup(u: UI, m: Node) -> void :
 	xp_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE;card.add_child(xp_bar)
 	xp_l = GStyle.label("0 / 150", 14, Color(GStyle.CREAM, 0.75));xp_l.position = Vector2(152, 164);card.add_child(xp_l)
 	var dv: = GStyle.Divider.new(392.0);dv.position = Vector2(24, 200);card.add_child(dv)
-	var sig: = GStyle.label("« Un monde, mille éléments, une seule aventure. »", 15, Color(GStyle.CREAM, 0.7))
-	sig.position = Vector2(24, 220);sig.size = Vector2(392, 22);sig.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER;card.add_child(sig)
-	stats_box = VBoxContainer.new();stats_box.position = Vector2(20, 256);stats_box.size = Vector2(400, 300)
+	stats_box = VBoxContainer.new();stats_box.position = Vector2(20, 220);stats_box.size = Vector2(400, 340)
 	stats_box.add_theme_constant_override("separation", 2);card.add_child(stats_box)
 
 	# --- grille d'icônes
