@@ -232,6 +232,12 @@ static func slider(minv: float, maxv: float, val: float, step: = 0.01) -> HSlide
 	s.add_theme_stylebox_override("slider", track)
 	var fill: = sb(GOLD, 3);fill.content_margin_top = 3;fill.content_margin_bottom = 3
 	s.add_theme_stylebox_override("grabber_area", fill);s.add_theme_stylebox_override("grabber_area_highlight", fill)
+	# le tactile n'émule pas la souris dans ce projet : on gère le doigt nous-mêmes
+	s.gui_input.connect( func(ev: InputEvent):
+		if (ev is InputEventScreenTouch and ev.pressed) or ev is InputEventScreenDrag:
+			var k: = clampf(ev.position.x / maxf(s.size.x, 1.0), 0.0, 1.0)
+			s.value = lerpf(s.min_value, s.max_value, k)
+			s.accept_event())
 	return s
 
 

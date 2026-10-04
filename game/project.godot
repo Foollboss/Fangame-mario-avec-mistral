@@ -11,6 +11,7 @@ config_version=5
 [application]
 
 config/name="Échos d'Aetheria"
+config/version="7.0"
 config/description="Action-RPG élémentaire : Kaelith (Hydro), Lyra (Électro), Kael (Feu) et Zahara (Lave)"
 run/main_scene="res://scenes/main.tscn"
 config/quit_on_go_back=false

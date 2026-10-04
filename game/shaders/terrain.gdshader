@@ -77,6 +77,7 @@ void fragment() {
 	col *= 1.0 - snow * 0.12;
 	col = mix(col, col * vec3(0.80, 0.88, 1.0), snow * (1.0 - n2) * 0.5);
 	col += vec3(0.5) * snow * step(0.93, vnoise(wpos.xz * 7.0)) * 0.4;
+	col = mix(col, mix(vec3(dot(col, vec3(0.3, 0.59, 0.11))), col, 0.86) * vec3(0.95, 0.97, 1.0), grass);
 	ALBEDO = col;
 	ROUGHNESS = 0.62;
 

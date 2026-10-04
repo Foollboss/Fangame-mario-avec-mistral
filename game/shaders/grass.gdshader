@@ -88,6 +88,8 @@ void fragment() {
 	vec3 c = mix(base, mix(g_deep, g_sun, patch), grade);
 	c *= mix(0.72, 1.18, tipk);
 	c = mix(c, c * vec3(1.16, 1.10, 0.66), tipk * tipk * 0.5);     // sun-bleached tips
+	// verts moins acides, plus profonds (prairies peintes)
+	c = mix(vec3(dot(c, vec3(0.3, 0.59, 0.11))), c, 0.86) * vec3(0.95, 0.97, 1.0);
 	ALBEDO = c;
 	// light every blade like the ground it grows from (both faces), so the meadow reads as one soft surface
 	NORMAL = normalize((VIEW_MATRIX * vec4(0.0, 1.0, 0.0, 0.0)).xyz);

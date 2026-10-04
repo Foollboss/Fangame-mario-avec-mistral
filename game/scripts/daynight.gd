@@ -155,7 +155,7 @@ func apply() -> void :
 	sm.set_shader_parameter("cloud_shade", c.call(13))
 	world.sun.shadow_opacity = lerpf(0.72, 0.5, night)
 
-	world.env.adjustment_saturation = lerpf(1.06, 0.82, night)
+	world.env.adjustment_saturation = lerpf(1.2, 0.9, night)
 	world.env.adjustment_brightness = lerpf(1.0, 0.96, night)
 	if world.bloom_mat: world.bloom_mat.set_shader_parameter("night", clampf((night - 0.15) / 0.6, 0.0, 1.0))
 	if fireflies:

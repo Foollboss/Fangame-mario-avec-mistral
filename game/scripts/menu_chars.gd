@@ -145,15 +145,17 @@ func _model_for(who: String) -> Node3D:
 	for n in ["Idle", "Idle_Combat"]:
 		if ap.has_animation(n): ap.get_animation(n).loop_mode = Animation.LOOP_LINEAR
 	_cache[who] = m
+	# tous les modèles restent dans la scène (masqués) : pas de nœuds orphelins à libérer à la fermeture
+	stage.add_child(m)
 	return m
 
 func show_hero(i: int) -> void :
 	sel = i
 	var who: String = HeroData.ORDER[i]
 	var d: Dictionary = HeroData.HEROES[who]
-	if model and model.get_parent(): stage.remove_child(model)
+	for k in _cache: (_cache[k] as Node3D).visible = false
 	model = _model_for(who)
-	stage.add_child(model)
+	model.visible = true
 	model_ap = model.find_children("*", "AnimationPlayer", true, false)[0]
 	model_ap.play("Idle_Combat" if who != "kaelith" else "Idle")
 	rot_y = 0.35

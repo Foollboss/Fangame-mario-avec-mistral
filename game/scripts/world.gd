@@ -540,18 +540,20 @@ func _environment() -> void :
 	env.ambient_light_color = Color(0.62, 0.7, 0.88)
 	env.ambient_light_energy = 0.5
 	env.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
-	env.tonemap_mode = Environment.TONE_MAPPER_LINEAR
-	env.tonemap_exposure = 1.0
+	# rendu « anime » : hautes lumières adoucies (filmique), halo doux sur les zones claires
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.tonemap_exposure = 1.06
+	env.tonemap_white = 4.0
 
 	env.glow_enabled = true
-	env.glow_intensity = 0.55
-	env.glow_strength = 1.0
-	env.glow_bloom = 0.04
-	env.glow_hdr_threshold = 0.92
+	env.glow_intensity = 0.6
+	env.glow_strength = 1.05
+	env.glow_bloom = 0.06
+	env.glow_hdr_threshold = 0.85
 	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
 	env.adjustment_enabled = true
-	env.adjustment_saturation = 1.06
-	env.adjustment_contrast = 1.04
+	env.adjustment_saturation = 1.2
+	env.adjustment_contrast = 1.07
 
 	env.fog_enabled = true
 	env.fog_light_color = Color(0.72, 0.86, 1.0)

@@ -5,7 +5,8 @@ extends Node3D
 var target: Node3D
 var yaw: = 0.0
 var pitch: = -0.32
-var distance: = 5.6
+var distance: = 6.0
+var _cur_dist: = 6.0
 var arm: SpringArm3D
 var camera: Camera3D
 var shake_amt: = 0.0
@@ -20,7 +21,7 @@ func _ready() -> void :
 	var sph: = SphereShape3D.new();sph.radius = 0.25
 	arm.shape = sph
 	camera = Camera3D.new()
-	camera.fov = 62.0
+	camera.fov = 54.0
 	camera.far = 900.0
 	arm.add_child(camera)
 
@@ -34,13 +35,18 @@ func shake(a: float) -> void :
 func _unhandled_input(event: InputEvent) -> void :
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		rotate_by(event.relative.x, event.relative.y)
+	elif event is InputEventMouseButton and event.pressed and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		# molette : zoom caméra
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP: distance = clampf(distance - 0.6, 2.6, 10.0)
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN: distance = clampf(distance + 0.6, 2.6, 10.0)
 
 func _process(delta: float) -> void :
 	if target:
 		var tp: = target.global_position + Vector3(0, 1.45, 0)
 		global_position = global_position.lerp(tp, clampf(12.0 * delta, 0.0, 1.0))
 	rotation = Vector3(pitch, yaw, 0)
-	arm.spring_length = distance
+	_cur_dist = lerpf(_cur_dist, distance, clampf(10.0 * delta, 0.0, 1.0))
+	arm.spring_length = _cur_dist
 	if shake_amt > 0.0:
 		shake_amt = maxf(0.0, shake_amt - delta * 1.5)
 		camera.h_offset = randf_range(-1, 1) * shake_amt * 0.4

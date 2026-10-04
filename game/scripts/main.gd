@@ -1354,7 +1354,8 @@ func _on_back() -> void :
 	if not playing:
 		get_tree().quit();return
 	save_game()
-	if ui.victory.visible: ui._close_victory()
+	if ui.sub_menu: ui.close_sub()
+	elif ui.victory.visible: ui._close_victory()
 	elif ui.dlg_open: ui.dialogue_next()
 	elif ui.map_ui.open: ui.map_ui.toggle()
 	elif ui.time_menu.visible: ui.show_time_menu(false)
@@ -1391,6 +1392,9 @@ func _place(p: Vector3, look_at_p: Vector3, dist: = 5.6, pitch: = -0.32) -> void
 
 
 ## Captures de tous les menus (vérification de l'interface).
+func _mt_stop(tag: String) -> bool:
+	return ("--mt_stop=" + tag) in OS.get_cmdline_user_args()
+
 func _menu_test() -> void :
 	rank = 7;xp = 220;shards = 340;food = 3;crystals_got = 5;party.apply_rank(rank)
 	daynight.paused = true;daynight.hour = 10.0;daynight.apply()
@@ -1399,17 +1403,21 @@ func _menu_test() -> void :
 	await snap("m00_hud")
 	toggle_pause(); await _wait(0.5)
 	await snap("m01_menu")
+	if _mt_stop("m01_menu"): return
 	ui.open_sub("chars"); await _wait(0.8)
 	await snap("m02_chars_attr")
 	ui.char_menu.tabs.select(1); await _wait(0.3)
 	await snap("m03_chars_talents")
 	ui.char_menu.show_hero(3);ui.char_menu.tabs.select(2); await _wait(0.6)
 	await snap("m04_chars_zahara")
+	if _mt_stop("m04_chars_zahara"): return
 	ui.close_sub(); await _wait(0.2)
 	ui.open_sub("bag"); await _wait(0.5)
 	await snap("m05_bag")
+	if _mt_stop("m05_bag"): return
 	ui.close_sub();ui.open_sub("settings"); await _wait(0.5)
 	await snap("m06_settings")
+	if _mt_stop("m06_settings"): return
 	ui.close_sub()
 	toggle_pause(); await _wait(0.3)
 	ui.show_quest_log(true); await _wait(0.4)
@@ -1420,10 +1428,12 @@ func _menu_test() -> void :
 	ui.show_time_menu(false)
 	ui.map_ui.toggle(); await _wait(0.5)
 	await snap("m09_map")
+	if _mt_stop("m09_map"): return
 	ui.map_ui.toggle()
 	var d0: Dictionary = quests.talk("elder")
 	ui.start_dialogue(d0.lines, Callable()); await _wait(1.6)
 	await snap("m10_dialogue")
+	if _mt_stop("m10_dialogue"): return
 	while ui.dlg_open:
 		ui.dialogue_next(true); await _wait(0.05)
 	ui.show_title(true); await _wait(0.6)

@@ -22,7 +22,7 @@ func setup(npc_id: String, shown_name: String, model_name: String, col: Color, l
 		body = b.duplicate();body.position = Vector3.ZERO;add_child(body)
 	if h:
 		head = h.duplicate();add_child(head)
-	Toon.apply(self, false, false, 0.006)
+	Toon.apply(self, true, true, 0.007)
 	name_label = Label3D.new();name_label.text = shown_name;name_label.font_size = 34;name_label.pixel_size = 0.008
 	name_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED;name_label.modulate = col;name_label.outline_size = 9
 	name_label.outline_modulate = Color(0.04, 0.05, 0.12, 0.85);name_label.no_depth_test = false
