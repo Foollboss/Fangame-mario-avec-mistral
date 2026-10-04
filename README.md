@@ -99,8 +99,8 @@ mise à jour que si elle est signée avec la même clé.
 
 ### Moteur Android allégé (optionnel)
 
-Par défaut, l'APK utilise le moteur Godot officiel (environ 42 Mo). Pour un APK plus léger
-(environ 32 Mo), `engine/custom_aetheria.py` décrit un moteur Godot 4.7.2 compilé sans ce que le
+Par défaut, l'APK utilise le moteur Godot officiel (environ 44 Mo). Pour un APK plus léger
+(environ 37 Mo), `engine/custom_aetheria.py` décrit un moteur Godot 4.7.2 compilé sans ce que le
 jeu n'utilise pas (Vulkan, XR, réseau, vidéo, navigation, CSG…), testé sur Linux avec tous les tests
 du jeu mais pas sur téléphone. `engine/build_android_template.sh` le compile (NDK 29.0.14206865) et
 fabrique `game/android_template/android_release.apk` ; il suffit ensuite de renseigner ce fichier
