@@ -161,6 +161,14 @@ func _ready() -> void :
 		print("COMBATTEST done")
 		get_tree().quit()
 		return
+	if "--menutest" in args:
+		autotest = true
+		start_game(false)
+		await _wait(1.0)
+		await _menu_test()
+		print("MENUTEST done")
+		get_tree().quit()
+		return
 	if "--kittest" in args:
 		autotest = true
 		start_game(false)
@@ -711,11 +719,11 @@ func give_xp(n: int, _why: = "") -> void :
 
 func add_shards(n: int) -> void :
 	shards += n
-	ui.message("+%d Éclats d'Aether" % n, 1.6, Color(0.7, 0.9, 1.0))
+	ui.toast("Éclats d'Aether ×%d" % n, null, Color(0.85, 0.93, 1.0))
 
 func add_food(n: int) -> void :
 	food += n
-	ui.message("+%d Tarte aux pommes solaires" % n, 1.8, Color(1.0, 0.8, 0.5))
+	ui.toast("Tarte aux pommes solaires ×%d" % n, ui.icons.get("ic_pie"), Color(1.0, 0.88, 0.65))
 
 func notify(text: String) -> void :
 	ui.message(text, 3.0, Color(1.0, 0.88, 0.5))
@@ -985,6 +993,11 @@ func toggle_pause() -> void :
 func pause_action(what: String) -> void :
 	match what:
 		"resume": toggle_pause()
+		"chars", "settings", "bag": ui.open_sub(what)
+		"quests":
+			toggle_pause();ui.show_quest_log(true)
+		"time":
+			toggle_pause();ui.show_time_menu(true)
 		"map":
 			toggle_pause();ui.map_ui.toggle()
 		"save":
@@ -999,11 +1012,36 @@ const QUALITY_NAMES: = ["Performance", "Équilibrée", "Élevée"]
 const SETTINGS_PATH: = "user://settings.cfg"
 var quality: = 2
 
+var settings: = {"sens": 1.0, "music": 0.8, "sfx": 0.9, "fps": true, "full": false}
+
 func load_quality() -> void :
 	var cf: = ConfigFile.new()
 	var q: = 2
-	if cf.load(SETTINGS_PATH) == OK: q = int(cf.get_value("video", "quality", 2))
+	if OS.has_feature("mobile"): q = 1
+	if cf.load(SETTINGS_PATH) == OK:
+		q = int(cf.get_value("video", "quality", q))
+		for k in settings.keys():
+			settings[k] = cf.get_value("prefs", k, settings[k])
 	apply_quality(q, false)
+	apply_settings(false)
+
+## Applique les préférences (caméra, volumes, FPS) et les enregistre si demandé.
+func apply_settings(store: bool) -> void :
+	if rig: rig.sensitivity = 0.0032 * float(settings.sens)
+	if audio:
+		var mv: float = settings.music
+		var sv: float = settings.sfx
+		audio.music_vol = -80.0 if mv <= 0.01 else -9.0 + linear_to_db(mv)
+		audio.sfx_vol = -80.0 if sv <= 0.01 else -3.0 + linear_to_db(sv)
+		var cur: AudioStreamPlayer = audio.music_a
+		if cur and cur.playing: cur.volume_db = audio.music_vol
+	if ui and ui.fps_label: ui.fps_label.visible = bool(settings.fps)
+	if store:
+		var cf: = ConfigFile.new()
+		cf.load(SETTINGS_PATH)
+		cf.set_value("video", "quality", quality)
+		for k in settings.keys(): cf.set_value("prefs", k, settings[k])
+		cf.save(SETTINGS_PATH)
 
 func apply_quality(q: int, store: bool) -> void :
 	quality = clampi(q, 0, 2)
@@ -1027,7 +1065,7 @@ func apply_quality(q: int, store: bool) -> void :
 		gi.visibility_range_end = v.y * k
 	if ui: ui.set_quality_label(QUALITY_NAMES[quality])
 	if store:
-		var cf: = ConfigFile.new();cf.set_value("video", "quality", quality);cf.save(SETTINGS_PATH)
+		apply_settings(true)
 		ui.message("Graphismes : " + QUALITY_NAMES[quality], 1.4, Color(0.75, 0.9, 1.0))
 
 
@@ -1227,7 +1265,7 @@ func _world_update(delta: float) -> void :
 		if not c.got and pp.distance_to(node.position - Vector3(0, 1.0, 0)) < 1.6:
 			c.got = true;node.visible = false;crystals_got += 1;shards += 5
 			FX.particles(node.position, Color(0.5, 0.85, 1.0), 24, 4.0, 0.7, 0.08)
-			ui.message("Cristal d'Aether  %d / %d" % [crystals_got, crystals.size()], 1.4, Color(0.7, 0.9, 1.0))
+			ui.toast("Cristal d'Aether  %d / %d" % [crystals_got, crystals.size()], null, Color(0.7, 0.9, 1.0))
 			audio.play("pickup")
 			give_xp(10)
 			quests.on_crystal(crystals_got)
@@ -1351,6 +1389,45 @@ func _place(p: Vector3, look_at_p: Vector3, dist: = 5.6, pitch: = -0.32) -> void
 	rig.pitch = pitch;rig.distance = dist
 	rig.global_position = q + Vector3(0, 1.45, 0)
 
+
+## Captures de tous les menus (vérification de l'interface).
+func _menu_test() -> void :
+	rank = 7;xp = 220;shards = 340;food = 3;crystals_got = 5;party.apply_rank(rank)
+	daynight.paused = true;daynight.hour = 10.0;daynight.apply()
+	_place(world.spawn_pos, world.village, 5.6, -0.3)
+	await _wait(1.0)
+	await snap("m00_hud")
+	toggle_pause(); await _wait(0.5)
+	await snap("m01_menu")
+	ui.open_sub("chars"); await _wait(0.8)
+	await snap("m02_chars_attr")
+	ui.char_menu.tabs.select(1); await _wait(0.3)
+	await snap("m03_chars_talents")
+	ui.char_menu.show_hero(3);ui.char_menu.tabs.select(2); await _wait(0.6)
+	await snap("m04_chars_zahara")
+	ui.close_sub(); await _wait(0.2)
+	ui.open_sub("bag"); await _wait(0.5)
+	await snap("m05_bag")
+	ui.close_sub();ui.open_sub("settings"); await _wait(0.5)
+	await snap("m06_settings")
+	ui.close_sub()
+	toggle_pause(); await _wait(0.3)
+	ui.show_quest_log(true); await _wait(0.4)
+	await snap("m07_quests")
+	ui.show_quest_log(false)
+	ui.show_time_menu(true); await _wait(0.4)
+	await snap("m08_time")
+	ui.show_time_menu(false)
+	ui.map_ui.toggle(); await _wait(0.5)
+	await snap("m09_map")
+	ui.map_ui.toggle()
+	var d0: Dictionary = quests.talk("elder")
+	ui.start_dialogue(d0.lines, Callable()); await _wait(1.6)
+	await snap("m10_dialogue")
+	while ui.dlg_open:
+		ui.dialogue_next(true); await _wait(0.05)
+	ui.show_title(true); await _wait(0.6)
+	await snap("m11_title")
 
 ## Captures des 4 héros en plein combat (vérifie animations, traînées d'arme, effets).
 func _combat_test() -> void :

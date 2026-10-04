@@ -190,6 +190,9 @@ static func float_text(pos: Vector3, text: String, col: Color, size: = 64, rise:
 	l.no_depth_test = true
 	l.fixed_size = false
 	add(l, pos + Vector3(randf_range(-0.3, 0.3), 0, randf_range(-0.3, 0.3)))
+	# petit « pop » d'apparition, comme les chiffres de dégâts des action-RPG
+	l.scale = Vector3.ONE * 1.55
+	l.create_tween().tween_property(l, "scale", Vector3.ONE, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	var tw: = l.create_tween().set_parallel(true)
 	tw.tween_property(l, "position:y", l.position.y + rise, life).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tw.tween_property(l, "modulate:a", 0.0, life * 0.5).set_delay(life * 0.5)

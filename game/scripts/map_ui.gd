@@ -12,7 +12,7 @@ var mini_range: = 70.0
 var big: Control
 var big_map: TextureRect
 var big_overlay: Control
-var big_title: Label
+var big_title: Control
 var confirm: Panel
 var confirm_label: Label
 var pending_wp: = -1
@@ -66,29 +66,32 @@ func setup(m: Node) -> void :
 	big = Control.new();big.set_anchors_preset(Control.PRESET_FULL_RECT);big.visible = false
 	big.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(big)
-	var bg: = ColorRect.new();bg.color = Color(0.03, 0.05, 0.12, 0.92);bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE;big.add_child(bg)
+	big.add_child(GStyle.backdrop(false))
+	var frame: = Panel.new();frame.name = "Frame";frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.add_theme_stylebox_override("panel", GStyle.sb(Color(0.93, 0.89, 0.8, 1.0), 6, GStyle.GOLD_DEEP, 3))
+	big.add_child(frame)
 	big_map = TextureRect.new();big_map.texture = map_tex;big_map.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	big_map.stretch_mode = TextureRect.STRETCH_SCALE;big_map.mouse_filter = Control.MOUSE_FILTER_STOP
 	big_map.gui_input.connect(_on_big_input)
 	big.add_child(big_map)
 	big_overlay = Control.new();big_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE;big_overlay.draw.connect(_draw_big)
 	big.add_child(big_overlay)
-	big_title = main.ui._label("Île d'Aetheria", 34, Color(1, 0.92, 0.7));big.add_child(big_title)
-	var legend: Label = main.ui._label("◆ Téléporteur (touche pour voyager)   ● Statue   ▲ Camp   ⬢ Sceau   ✦ Domaine   × Boss   ★ Quête   ■ Coffre", 17, Color(0.9, 0.93, 1.0))
+	big_title = GStyle.Header.new("Île d'Aetheria", "Carte du monde");big_title.size = Vector2(300, 70);big.add_child(big_title)
+	var legend: Label = GStyle.label("◆ Téléporteur (touche pour voyager)\n● Statue d'Aetheria\n▲ Camp de monstres\n⬢ Sceau\n✦ Domaine\n× Boss\n★ Quête suivie\n■ Coffre", 16, GStyle.CREAM)
+	legend.add_theme_constant_override("line_spacing", 8)
 	legend.name = "Legend";big.add_child(legend)
-	var close: = Button.new();close.text = "  Fermer (M)  ";close.add_theme_font_size_override("font_size", 24)
+	var close: = GStyle.Pill.new("Fermer (M)", "✕", false, 190.0);close.glyph_col = Color(0.6, 0.8, 1.0)
 	close.name = "Close";close.pressed.connect(toggle);big.add_child(close)
-	confirm = Panel.new();confirm.size = Vector2(480, 150);confirm.visible = false
-	confirm.add_theme_stylebox_override("panel", main.ui._style(Color(0.06, 0.08, 0.18, 0.96), 14, Color(1, 0.85, 0.5), 2))
+	confirm = Panel.new();confirm.size = Vector2(520, 190);confirm.visible = false
+	confirm.add_theme_stylebox_override("panel", GStyle.sb(Color(0.1, 0.12, 0.18, 0.97), 14, Color(GStyle.GOLD, 0.6), 2))
 	big.add_child(confirm)
-	confirm_label = main.ui._label("", 24, Color(1, 0.95, 0.85));confirm_label.position = Vector2(20, 16);confirm_label.size = Vector2(440, 60)
+	confirm_label = GStyle.label("", 22, GStyle.CREAM);confirm_label.position = Vector2(20, 22);confirm_label.size = Vector2(480, 70)
 	confirm_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER;confirm_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	confirm.add_child(confirm_label)
-	var yes: = Button.new();yes.text = "  Voyager  ";yes.add_theme_font_size_override("font_size", 24);yes.position = Vector2(60, 90)
-	yes.pressed.connect(_do_teleport);confirm.add_child(yes)
-	var no: = Button.new();no.text = "  Annuler  ";no.add_theme_font_size_override("font_size", 24);no.position = Vector2(280, 90)
+	var no: = GStyle.Pill.new("Annuler", "✕", false, 220.0);no.glyph_col = Color(0.6, 0.8, 1.0);no.position = Vector2(30, 112)
 	no.pressed.connect(_cancel_confirm);confirm.add_child(no)
+	var yes: = GStyle.Pill.new("Voyager", "○", true, 220.0);yes.position = Vector2(270, 112)
+	yes.pressed.connect(_do_teleport);confirm.add_child(yes)
 
 func _cancel_confirm() -> void :
 	confirm.visible = false
@@ -96,12 +99,14 @@ func _cancel_confirm() -> void :
 
 func layout(vs: Vector2) -> void :
 	if big_map == null: return
-	var s: = minf(vs.y - 120.0, vs.x - 80.0)
-	big_map.size = Vector2(s, s);big_map.position = Vector2((vs.x - s) * 0.5, 70)
+	var s: = minf(vs.y - 80.0, vs.x - 80.0)
+	big_map.size = Vector2(s, s);big_map.position = Vector2((vs.x - s) * 0.5, (vs.y - s) * 0.5)
 	big_overlay.size = big_map.size;big_overlay.position = big_map.position
-	big_title.position = Vector2(vs.x * 0.5 - 130, 16)
-	var legend: Label = big.get_node("Legend");legend.position = Vector2(30, vs.y - 42)
-	var close: Button = big.get_node("Close");close.position = Vector2(vs.x - 210, 16)
+	big_title.position = Vector2(40, 24)
+	var frame: Panel = big.get_node("Frame");frame.position = big_map.position - Vector2(8, 8);frame.size = big_map.size + Vector2(16, 16)
+	var legend: Label = big.get_node("Legend");legend.position = Vector2(40, 130)
+	legend.visible = big_map.position.x > 300.0
+	var close: Button = big.get_node("Close");close.position = Vector2(vs.x - 220, vs.y - 74)
 	confirm.position = (vs - confirm.size) * 0.5
 
 func toggle() -> void :

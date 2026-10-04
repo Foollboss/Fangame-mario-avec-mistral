@@ -130,12 +130,20 @@ func _label(text: String, size: int, col: = Color.WHITE) -> Label:
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return l
 
-func _button(text: String, size: int, bg: Color, fg: Color) -> Button:
-	var b: = Button.new();b.text = text;b.add_theme_font_size_override("font_size", size)
-	b.add_theme_stylebox_override("normal", _style(bg, 22));b.add_theme_stylebox_override("hover", _style(bg.lightened(0.15), 22))
-	b.add_theme_stylebox_override("pressed", _style(bg.darkened(0.15), 22));b.add_theme_stylebox_override("focus", _style(bg.lightened(0.1), 22))
-	b.add_theme_color_override("font_color", fg);b.add_theme_color_override("font_hover_color", fg)
-	b.add_theme_color_override("font_pressed_color", fg);b.add_theme_color_override("font_focus_color", fg)
+func _button(text: String, size: int, bg: Color, _fg: Color) -> Button:
+	# boutons-pilules crème (le bouton principal, doré à l'origine, reçoit un liseré doré)
+	var primary: = bg.r > 0.8 and bg.g > 0.6
+	var b: = Button.new();b.text = text;b.add_theme_font_size_override("font_size", mini(size, 22))
+	var n: = GStyle.sb(GStyle.CREAM_HI if primary else GStyle.CREAM, 24, GStyle.GOLD if primary else Color(0, 0, 0, 0), 2 if primary else 0)
+	var h: = GStyle.sb(GStyle.CREAM_HI, 24, Color(1, 1, 1, 0.95), 3)
+	var p: = GStyle.sb(GStyle.CREAM_DIM, 24)
+	for st in [n, h, p]:
+		st.content_margin_left = 18;st.content_margin_right = 18;st.content_margin_top = 6;st.content_margin_bottom = 6
+	b.add_theme_stylebox_override("normal", n);b.add_theme_stylebox_override("hover", h)
+	b.add_theme_stylebox_override("pressed", p);b.add_theme_stylebox_override("focus", h)
+	for k in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+		b.add_theme_color_override(k, GStyle.INK)
+	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	return b
 
 
@@ -425,13 +433,13 @@ func _build_hud() -> void :
 	banner.modulate.a = 0.0;hud.add_child(banner)
 
 	lvl_label = _label("Niv. 1", 17, Color(1, 1, 1, 0.95));hud.add_child(lvl_label)
-	hp_bar = ProgressBar.new();hp_bar.size = Vector2(380, 13);hp_bar.show_percentage = false
-	hp_bar.add_theme_stylebox_override("background", _style(Color(0.03, 0.04, 0.08, 0.6), 6, Color(1, 1, 1, 0.35), 1))
-	hp_bar.add_theme_stylebox_override("fill", _style(Color(0.47, 0.86, 0.32), 6))
+	hp_bar = ProgressBar.new();hp_bar.size = Vector2(360, 9);hp_bar.show_percentage = false
+	hp_bar.add_theme_stylebox_override("background", _style(Color(0.02, 0.03, 0.06, 0.62), 5, Color(0.0, 0.0, 0.0, 0.55), 1))
+	hp_bar.add_theme_stylebox_override("fill", _style(Color(0.55, 0.88, 0.33), 5))
 	hp_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE;hud.add_child(hp_bar)
-	hp_label = _label("", 15, Color(1, 1, 1));hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hp_label.size = Vector2(380, 18);hud.add_child(hp_label)
-	xp_bg = ColorRect.new();xp_bg.color = Color(0.03, 0.04, 0.08, 0.5);xp_bg.size = Vector2(380, 3)
+	hp_label = _label("", 14, Color(1, 1, 1));hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hp_label.size = Vector2(360, 18);hud.add_child(hp_label)
+	xp_bg = ColorRect.new();xp_bg.color = Color(0.03, 0.04, 0.08, 0.45);xp_bg.size = Vector2(360, 2)
 	xp_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE;hud.add_child(xp_bg)
 	xp_fill = ColorRect.new();xp_fill.color = Color(0.98, 0.82, 0.38);xp_fill.size = Vector2(0, 3)
 	xp_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE;xp_bg.add_child(xp_fill)
@@ -545,9 +553,8 @@ func _layout() -> void :
 	if victory and victory.has_node("Continue"):
 		var cb: Button = victory.get_node("Continue")
 		cb.position = Vector2(vs.x * 0.5 - cb.size.x * 0.5, vs.y - 140)
-	if pause:
-		var pb: Control = pause.get_node("Box")
-		pb.position = (vs - pb.size) * 0.5
+	for mnu in [paimon, char_menu, settings_menu, bag_menu]:
+		if mnu: mnu.layout(vs)
 	if time_menu:
 		var tb: Control = time_menu.get_node("Box");tb.position = (vs - tb.size) * 0.5
 	if quest_log:
@@ -569,10 +576,10 @@ func _layout() -> void :
 	banner.size = Vector2(bw, 60);banner.position = Vector2((vs.x - bw) * 0.5, vs.y * 0.1)
 
 	var cx: = vs.x * 0.5
-	hp_bar.position = Vector2(cx - 190, vs.y - 46)
-	hp_label.position = Vector2(cx - 190, vs.y - 49)
-	xp_bg.position = Vector2(cx - 190, vs.y - 29)
-	lvl_label.position = Vector2(cx - 252, vs.y - 52)
+	hp_bar.position = Vector2(cx - 180, vs.y - 36)
+	hp_label.position = Vector2(cx - 180, vs.y - 58)
+	xp_bg.position = Vector2(cx - 180, vs.y - 23)
+	lvl_label.position = Vector2(cx - 240, vs.y - 45)
 	stam_wheel.position = Vector2(cx + 62, vs.y * 0.5 - 32)
 	boss_box.position = Vector2(cx - 280, 22)
 
@@ -648,7 +655,8 @@ func _input(event: InputEvent) -> void :
 
 func _process(_d: float) -> void :
 	if main and main.paused and Engine.get_process_frames() != main.pause_frame and Input.is_action_just_pressed("pause"):
-		main.toggle_pause()
+		if sub_menu: close_sub()
+		else: main.toggle_pause()
 
 func _over_minimap(p: Vector2) -> bool:
 	return p.distance_to(map_ui.mini.position + map_ui.mini.size * 0.5) < map_ui.mini_size * 0.5 + 6.0
@@ -688,8 +696,8 @@ func refresh(party: Party) -> void :
 	hp_label.text = "%d / %d" % [int(c.hp), int(c.max_hp)]
 	lvl_label.text = "Niv. %d" % main.rank
 	var hp_low: bool = c.hp < c.max_hp * 0.3
-	(hp_bar.get_theme_stylebox("fill") as StyleBoxFlat).bg_color = Color(0.95, 0.35, 0.3) if hp_low else Color(0.47, 0.86, 0.32)
-	xp_fill.size.x = 380.0 * clampf(float(main.xp) / maxf(1.0, float(main.xp_needed())), 0.0, 1.0)
+	(hp_bar.get_theme_stylebox("fill") as StyleBoxFlat).bg_color = Color(0.95, 0.35, 0.3) if hp_low else Color(0.55, 0.88, 0.33)
+	xp_fill.size.x = 360.0 * clampf(float(main.xp) / maxf(1.0, float(main.xp_needed())), 0.0, 1.0)
 	stam_wheel.value = party.stamina
 	var show_st: bool = party.stamina < 99.5
 	stam_wheel.modulate.a = move_toward(stam_wheel.modulate.a, 1.0 if show_st else 0.0, dt * 4.0)
@@ -769,11 +777,10 @@ func _fmt_hour(h: float) -> String:
 func _build_time_menu() -> void :
 	time_menu = Control.new();time_menu.set_anchors_preset(Control.PRESET_FULL_RECT);time_menu.visible = false
 	time_menu.mouse_filter = Control.MOUSE_FILTER_STOP;root.add_child(time_menu)
-	var bg: = ColorRect.new();bg.color = Color(0.02, 0.03, 0.1, 0.6);bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE;time_menu.add_child(bg)
+	time_menu.add_child(GStyle.backdrop(true, 0.85))
 	var box: = Control.new();box.name = "Box";box.size = Vector2(760, 470);time_menu.add_child(box)
-	var t: = _label("Heure du jour", 34, Color(1, 0.9, 0.65));t.position = Vector2(0, 0);t.size = Vector2(760, 44)
-	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER;box.add_child(t)
+	var t: = GStyle.Header.new("Heure du jour", "Fais avancer le temps jusqu'à l'heure choisie");t.position = Vector2(0, -20);t.size = Vector2(760, 70)
+	box.add_child(t)
 	dial = Dial.new();dial.size = Vector2(300, 300);dial.position = Vector2(30, 70);box.add_child(dial)
 	var now: = _label("", 20, Color(0.92, 0.95, 1.0));now.name = "Now";now.position = Vector2(0, 384);now.size = Vector2(360, 26)
 	now.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER;box.add_child(now)
@@ -811,10 +818,9 @@ func _confirm_time() -> void :
 func _build_quest_log() -> void :
 	quest_log = Control.new();quest_log.set_anchors_preset(Control.PRESET_FULL_RECT);quest_log.visible = false
 	quest_log.mouse_filter = Control.MOUSE_FILTER_STOP;root.add_child(quest_log)
-	var bg: = ColorRect.new();bg.color = Color(0.02, 0.03, 0.1, 0.72);bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE;quest_log.add_child(bg)
+	quest_log.add_child(GStyle.backdrop(true, 0.9))
 	var box: = Control.new();box.name = "Box";box.size = Vector2(760, 520);quest_log.add_child(box)
-	var t: = _label("Quêtes", 34, Color(1, 0.9, 0.65));t.size = Vector2(760, 44);t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var t: = GStyle.Header.new("Journal des quêtes", "Quêtes en cours • Contrats de la Guilde");t.position = Vector2(0, -24);t.size = Vector2(760, 70)
 	box.add_child(t)
 	var scroll: = ScrollContainer.new();scroll.position = Vector2(0, 58);scroll.size = Vector2(760, 400)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED;box.add_child(scroll)
@@ -834,7 +840,7 @@ func show_quest_log(on: bool) -> void :
 			quest_list.add_child(_label("Aucune quête en cours. Parle aux villageois !", 22, Color(0.9, 0.92, 1.0)))
 		for id in ids:
 			var row: = PanelContainer.new()
-			var sb: = _style(Color(0.08, 0.1, 0.22, 0.85), 12, Color(1.0, 0.85, 0.5, 0.8) if id == main.quests.tracked else Color(1, 1, 1, 0.15), 2)
+			var sb: = GStyle.sb(Color(0.09, 0.1, 0.16, 0.82), 12, Color(GStyle.GOLD, 0.85) if id == main.quests.tracked else Color(1, 1, 1, 0.12), 2)
 			sb.content_margin_left = 16;sb.content_margin_right = 16;sb.content_margin_top = 8;sb.content_margin_bottom = 8
 			row.add_theme_stylebox_override("panel", sb)
 			var hb: = HBoxContainer.new();hb.add_theme_constant_override("separation", 12);row.add_child(hb)
@@ -911,6 +917,35 @@ func show_banner(text: String, col: = Color(1, 0.96, 0.85)) -> void :
 	_banner_tw.tween_interval(2.0)
 	_banner_tw.tween_property(banner, "modulate:a", 0.0, 0.8)
 
+var toast_box: VBoxContainer
+
+## Fil des objets obtenus (à gauche de l'écran, comme dans les action-RPG).
+func toast(text: String, icon_tex: Texture2D = null, col: = Color(1, 1, 1)) -> void :
+	if toast_box == null:
+		toast_box = VBoxContainer.new();toast_box.add_theme_constant_override("separation", 6)
+		toast_box.mouse_filter = Control.MOUSE_FILTER_IGNORE;hud.add_child(toast_box)
+	var vs: = get_viewport().get_visible_rect().size
+	toast_box.position = Vector2(18, vs.y * 0.46)
+	var p: = PanelContainer.new();p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var st: = GStyle.sb(Color(0.05, 0.06, 0.1, 0.55), 18);st.content_margin_left = 8;st.content_margin_right = 18
+	st.content_margin_top = 4;st.content_margin_bottom = 4;p.add_theme_stylebox_override("panel", st)
+	var h: = HBoxContainer.new();h.add_theme_constant_override("separation", 8);p.add_child(h)
+	if icon_tex:
+		var ic: = TextureRect.new();ic.texture = icon_tex;ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		ic.custom_minimum_size = Vector2(28, 28);ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED;h.add_child(ic)
+	else:
+		var dot: = GStyle.label("◆", 16, GStyle.GOLD);h.add_child(dot)
+	h.add_child(GStyle.label(text, 18, col, 3))
+	toast_box.add_child(p)
+	while toast_box.get_child_count() > 5:
+		toast_box.get_child(0).queue_free();toast_box.remove_child(toast_box.get_child(0))
+	p.modulate.a = 0.0
+	var tw: = p.create_tween()
+	tw.tween_property(p, "modulate:a", 1.0, 0.2)
+	tw.tween_interval(2.6)
+	tw.tween_property(p, "modulate:a", 0.0, 0.5)
+	tw.tween_callback(p.queue_free)
+
 func flash_hit() -> void :
 	hit_rect.color.a = 0.55
 	var tw: = hit_rect.create_tween();tw.tween_property(hit_rect, "color:a", 0.0, 0.35)
@@ -952,6 +987,16 @@ func _build_dialog() -> void :
 	dlg_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	dlg_text.autowrap_mode = TextServer.AUTOWRAP_WORD;dlg_panel.add_child(dlg_text)
 	dlg_arrow = _label("▼", 22, Color(1, 0.9, 0.6));dlg_panel.add_child(dlg_arrow)
+	var skip: = Button.new();skip.text = "Passer  ▸▸";skip.flat = true;skip.name = "Skip"
+	skip.add_theme_font_size_override("font_size", 18)
+	for k in ["font_color", "font_focus_color"]: skip.add_theme_color_override(k, Color(GStyle.CREAM, 0.85))
+	skip.add_theme_color_override("font_hover_color", GStyle.GOLD_HI)
+	skip.anchor_left = 1.0;skip.anchor_right = 1.0;skip.offset_left = -170;skip.offset_right = -30;skip.offset_top = 22;skip.offset_bottom = 56
+	skip.pressed.connect( func():
+		var guard: = 0
+		while dlg_open and guard < 200:
+			guard += 1;dialogue_next(true);dialogue_next(true))
+	dialog.add_child(skip)
 
 func start_dialogue(lines: Array, after: Callable) -> void :
 	if lines.is_empty(): return
@@ -1001,80 +1046,106 @@ func _on_dialog_input(ev: InputEvent) -> void :
 		dialogue_next()
 
 
-func _build_pause() -> void :
-	pause = Control.new();pause.set_anchors_preset(Control.PRESET_FULL_RECT);pause.visible = false
-	pause.mouse_filter = Control.MOUSE_FILTER_STOP;root.add_child(pause)
-	var bg: = ColorRect.new();bg.color = Color(0.02, 0.03, 0.1, 0.7);bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE;pause.add_child(bg)
-	var box: = VBoxContainer.new();box.name = "Box";box.add_theme_constant_override("separation", 16);box.size = Vector2(420, 420)
-	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	pause.add_child(box)
-	var t: = _label("Pause", 44, Color(1, 0.9, 0.65));t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER;box.add_child(t)
-	for spec in [["Reprendre", "resume"], ["Carte de l'île", "map"], ["Graphismes : Élevée", "quality"], ["Sauvegarder", "save"], ["Quitter le jeu", "quit"]]:
-		var b: = _button("  %s  " % spec[0], 28, Color(0.95, 0.78, 0.35) if spec[1] == "resume" else Color(0.16, 0.2, 0.36), Color(0.1, 0.08, 0.18) if spec[1] == "resume" else Color(0.95, 0.95, 1.0))
-		b.custom_minimum_size = Vector2(420, 60)
-		if spec[1] == "quality": b.name = "Quality"
-		b.pressed.connect(main_pause_action.bind(spec[1]))
-		box.add_child(b)
-	var stats: = _label("", 18, Color(0.85, 0.9, 1.0));stats.name = "Stats";stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(stats)
-	if not touch:
-		var keys: = _label("ZQSD bouger • Clic attaque • E compétence • A/R déchaînement • Espace saut / planeur • Maj sprint\n1-4 personnages • F interagir • H manger • M carte • L quêtes • N heure • T quête suivie", 15, Color(1, 1, 1, 0.7))
-		keys.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER;box.add_child(keys)
+var paimon: PaimonMenu
+var char_menu: CharMenu
+var settings_menu: SettingsMenu
+var bag_menu: BagMenu
+var sub_menu: Control
 
-func set_quality_label(q: String) -> void :
-	if pause and pause.has_node("Box/Quality"):
-		(pause.get_node("Box/Quality") as Button).text = "  Graphismes : %s  " % q
+func _build_pause() -> void :
+	paimon = PaimonMenu.new();paimon.name = "Paimon";root.add_child(paimon);paimon.setup(self, main)
+	paimon.action.connect(main_pause_action)
+	pause = paimon
+	char_menu = CharMenu.new();char_menu.name = "Chars";root.add_child(char_menu);char_menu.setup(self, main)
+	settings_menu = SettingsMenu.new();settings_menu.name = "Settings";root.add_child(settings_menu);settings_menu.setup(self, main)
+	bag_menu = BagMenu.new();bag_menu.name = "Bag";root.add_child(bag_menu);bag_menu.setup(self, main)
+	for mnu in [char_menu, settings_menu, bag_menu]:
+		mnu.closed.connect(close_sub)
+
+## Ouvre un sous-menu (personnages, inventaire, paramètres) par-dessus le menu principal.
+func open_sub(which: String) -> void :
+	var m: Control = {"chars": char_menu, "settings": settings_menu, "bag": bag_menu}.get(which)
+	if m == null: return
+	if sub_menu: sub_menu.close()
+	paimon.visible = false
+	sub_menu = m
+	m.open()
+
+func close_sub() -> void :
+	if sub_menu: sub_menu.close()
+	sub_menu = null
+	if main.paused: paimon.open()
+
+func set_quality_label(_q: String) -> void :
+	if settings_menu and settings_menu.visible: settings_menu._refresh()
 
 func main_pause_action(what: String) -> void :
 	main.pause_action(what)
 
-func show_pause(on: bool, stats_text: = "") -> void :
-	pause.visible = on
-	(pause.get_node("Box/Stats") as Label).text = stats_text
-	if on: release_touch()
+func show_pause(on: bool, _stats_text: = "") -> void :
+	hud.visible = not on and not dlg_open
+	if on:
+		paimon.open()
+		release_touch()
+	else:
+		if sub_menu: sub_menu.close()
+		sub_menu = null
+		paimon.close()
 
+
+var title_btns: VBoxContainer
+var title_hint: Label
 
 func _build_title() -> void :
 	title = Control.new();title.set_anchors_preset(Control.PRESET_FULL_RECT);root.add_child(title)
-	var bg: = ColorRect.new();bg.color = Color(0.02, 0.04, 0.12, 0.78);bg.set_anchors_preset(Control.PRESET_FULL_RECT);title.add_child(bg)
+	# voile : ciel lumineux en haut, bas assombri pour lire les boutons
+	var grad: = Gradient.new()
+	grad.set_color(0, Color(1.0, 0.98, 0.94, 0.18));grad.set_color(1, Color(0.02, 0.04, 0.1, 0.78))
+	grad.add_point(0.45, Color(0.6, 0.75, 0.95, 0.05))
+	var gt: = GradientTexture2D.new();gt.gradient = grad;gt.fill_from = Vector2(0, 0);gt.fill_to = Vector2(0, 1);gt.width = 4;gt.height = 256
+	var veil: = TextureRect.new();veil.texture = gt;veil.expand_mode = TextureRect.EXPAND_IGNORE_SIZE;veil.stretch_mode = TextureRect.STRETCH_SCALE
+	veil.set_anchors_preset(Control.PRESET_FULL_RECT);veil.mouse_filter = Control.MOUSE_FILTER_IGNORE;title.add_child(veil)
 	var box: = Control.new();box.size = Vector2(1160, 680);title.add_child(box);title_box = box
-	var emblem: = TextureRect.new();emblem.texture = load("res://ui/emblem.png");emblem.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	emblem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED;emblem.size = Vector2(470, 470);emblem.position = Vector2(20, 105)
-	box.add_child(emblem)
-	var col: = VBoxContainer.new();col.position = Vector2(520, 10);col.size = Vector2(620, 660);col.alignment = BoxContainer.ALIGNMENT_CENTER
-	col.add_theme_constant_override("separation", 12);box.add_child(col)
-	var logo: = TextureRect.new();logo.texture = load("res://ui/logo.png");logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED;logo.custom_minimum_size = Vector2(340, 260);col.add_child(logo)
-	var heroes: = HBoxContainer.new();heroes.alignment = BoxContainer.ALIGNMENT_CENTER;heroes.add_theme_constant_override("separation", 20)
-	for who in PARTY_IDS:
-		var t: = TextureRect.new();t.texture = icons[who + "_portrait"];t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED;t.custom_minimum_size = Vector2(84, 84);heroes.add_child(t)
-	col.add_child(heroes)
-	var sub: = _label("Kaelith, le Voyageur des Ondes  •  Lyra, l'Éclair des Hautes Terres\nKael, le Porte-Flamme d'Azhara  •  Zahara, la Gardienne de la Lave", 17, Color(0.85, 0.9, 1))
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(sub)
-	continue_btn = _button("  Continuer l'aventure  ", 28, Color(0.95, 0.78, 0.35), Color(0.12, 0.1, 0.2))
-	continue_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER;continue_btn.custom_minimum_size = Vector2(420, 56)
+	var logo: = GStyle.Logo.new();logo.position = Vector2(200, 40);logo.size = Vector2(760, 300);box.add_child(logo)
+	title_btns = VBoxContainer.new();title_btns.position = Vector2(400, 372);title_btns.size = Vector2(360, 260)
+	title_btns.add_theme_constant_override("separation", 12);box.add_child(title_btns)
+	continue_btn = GStyle.Pill.new("Continuer l'aventure", "○", true, 360.0)
 	continue_btn.pressed.connect( func(): main.start_game(true))
-	col.add_child(continue_btn)
-	var play: = _button("  Nouvelle partie  ", 28, Color(0.95, 0.78, 0.35), Color(0.12, 0.1, 0.2))
-	play.name = "New";play.size_flags_horizontal = Control.SIZE_SHRINK_CENTER;play.custom_minimum_size = Vector2(420, 56)
+	title_btns.add_child(continue_btn)
+	var play: = GStyle.Pill.new("Nouvelle partie", "✦", false, 360.0);play.name = "New"
 	play.pressed.connect( func(): main.start_game(false))
-	col.add_child(play)
-	var goal: = _label("Explore l'île d'Aetheria, aide les villageois, réveille les Sceaux et affronte le Gardien Givré !", 17, Color(1, 0.92, 0.7))
-	goal.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER;goal.autowrap_mode = TextServer.AUTOWRAP_WORD;goal.custom_minimum_size = Vector2(600, 50)
-	col.add_child(goal)
+	title_btns.add_child(play)
+	var sets: = GStyle.Pill.new("Paramètres", "⚙", false, 360.0);sets.glyph_col = GStyle.CREAM
+	sets.pressed.connect( func(): title.visible = false;sub_menu = settings_menu;settings_menu.open())
+	title_btns.add_child(sets)
+	if not OS.has_feature("web"):
+		var quit: = GStyle.Pill.new("Quitter", "✕", false, 360.0);quit.glyph_col = Color(0.6, 0.8, 1.0)
+		quit.pressed.connect( func(): get_tree().quit())
+		title_btns.add_child(quit)
+	var heroes: = HBoxContainer.new();heroes.position = Vector2(856, 600);heroes.add_theme_constant_override("separation", 10)
+	for who in PARTY_IDS:
+		var pic: = _portrait(who, 64.0);pic.custom_minimum_size = Vector2(64, 64);heroes.add_child(pic)
+	box.add_child(heroes)
+	var ver: = GStyle.label("Version 7.0  •  Godot 4.7 + Blender", 15, Color(1, 1, 1, 0.65), 3);ver.position = Vector2(0, 652);box.add_child(ver)
 	title.visible = false
+	settings_menu_closed_title.call_deferred()
+
+func settings_menu_closed_title() -> void :
+	if settings_menu:
+		settings_menu.closed.connect( func():
+			if not main.playing:
+				title.visible = true)
 
 func show_title(has_save: bool) -> void :
 	title.visible = true;hud.visible = false
 	continue_btn.visible = has_save
-	var nb: Button = title_box.find_child("New", true, false)
+	var nb: GStyle.Pill = title_box.find_child("New", true, false)
 	if nb:
-		var st: StyleBoxFlat = _style(Color(0.16, 0.2, 0.36) if has_save else Color(0.95, 0.78, 0.35), 22)
-		nb.add_theme_stylebox_override("normal", st)
-		nb.add_theme_color_override("font_color", Color(0.95, 0.95, 1.0) if has_save else Color(0.12, 0.1, 0.2))
+		nb.glyph = "○" if not has_save else "✦"
+		nb.add_theme_stylebox_override("normal", GStyle.sb(GStyle.CREAM_HI if not has_save else GStyle.CREAM, 26))
+		(nb.get_theme_stylebox("normal") as StyleBoxFlat).content_margin_left = 58
+	title.modulate.a = 0.0
+	title.create_tween().tween_property(title, "modulate:a", 1.0, 0.8)
 
 func hide_title() -> void :
 	title.visible = false;hud.visible = true
