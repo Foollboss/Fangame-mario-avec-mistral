@@ -634,6 +634,111 @@ def kaelith_burst(st):
 
 
 # ----------------------------------------------------------------------------
+# Escalade et nage
+# ----------------------------------------------------------------------------
+def _cyc_dir(pts, phase):
+    """Interpolation cyclique (Catmull-Rom) d'une suite de directions, puis normalisation."""
+    n = len(pts)
+    x = (phase % 1.0) * n
+    i = int(x) % n
+    u = x - int(x)
+    p0, p1, p2, p3 = pts[(i - 1) % n], pts[i], pts[(i + 1) % n], pts[(i + 2) % n]
+    out = []
+    for c in range(3):
+        a, b, cc, d = p0[c], p1[c], p2[c], p3[c]
+        out.append(0.5 * ((2 * b) + (-a + cc) * u + (2 * a - 5 * b + 4 * cc - d) * u * u + (-a + 3 * b - 3 * cc + d) * u ** 3))
+    return nz(tuple(out))
+
+
+def climb(phase, st, idle_k=0.0):
+    """Escalade : le mur est devant (≈ 0.4 longueur de jambe). Bras et jambes en diagonale."""
+    k = 1.0 - idle_k
+    c = cyc(phase) * k
+    sR = c          # bras droit haut quand c = 1
+    sL = -c
+    ch = {
+        "armframe": "root",
+        "hips_off": (0.0, 0.02, -0.1 + 0.035 * syc(phase, 2) * k), "hips": (8.0, 4.0 * c, 4.0 * c),
+        "spine": (3.0, -3.0 * c, 0.0), "chest": (3.0, -3.0 * c, -2.0 * c), "neck": (-10.0, 0.0, 0.0), "head": (-16.0, 8.0 * c, 0.0),
+        "shL": (0, 0, 6.0 * max(0.0, sL)), "shR": (0, 0, -6.0 * max(0.0, sR)),
+        "footL.p": (0.06, 0.26, 0.26 + 0.17 * (-c) + 0.05 * idle_k), "footL.pitch": 25.0, "footL.yaw": 6.0, "footL.pivot": "ankle", "footL.toe": 12.0,
+        "footR.p": (0.06, 0.26, 0.26 + 0.17 * c - 0.05 * idle_k), "footR.pitch": 25.0, "footR.yaw": 6.0, "footR.pivot": "ankle", "footR.toe": 12.0,
+    }
+    for s, sg in (("R", sR), ("L", sL)):
+        side = 1 if s == "L" else -1
+        el = 48.0 + 26.0 * sg + (8.0 if (s == "R") else -6.0) * idle_k
+        ch["arm%s.up" % s] = az(side * 22.0, el)
+        ch["arm%s.fore" % s] = az(side * 8.0, min(el + 28.0, 89.0))
+        ch["arm%s.hand" % s] = az(0.0, 88.0)
+        ch["arm%s.curl" % s] = 55.0
+    return ch
+
+
+def climb_idle(phase, st):
+    ch = climb(0.0, st, idle_k=1.0)
+    b = syc(phase)
+    hl, hf, hu = ch["hips_off"]
+    ch["hips_off"] = (hl, hf, hu + 0.008 * b)
+    ch["head"] = (-14.0 + 2.0 * b, 18.0 * syc(phase, 1, 0.3), 0.0)
+    return ch
+
+
+def swim(phase, st):
+    """Crawl : corps à l'horizontale, bras en moulinet, battements de jambes."""
+    roll = 16.0 * syc(phase)
+    # trajectoire d'un bras (repère du personnage) : entrée devant, traction sous le corps, poussée, retour aérien
+    stroke_up = [az(-8, 4), down(-1, 55, 6), down(-1, -40, 16), az(-70, 48)]
+    stroke_fore = [az(-4, 0), down(-1, 20, 2), down(-1, -70, 10), az(-25, 8)]
+    ch = {
+        "armframe": "root",
+        "hips_off": (0.0, 0.0, -0.12), "hips": (72.0, 0.0, roll),
+        "spine": (4.0, 0.0, 0.0), "chest": (4.0, 0.0, roll * 0.3), "neck": (-28.0, 0.0, 0.0),
+        "head": (-34.0, -8.0 * syc(phase), -roll * 0.6),
+        "shL": (0, 0, 0), "shR": (0, 0, 0),
+    }
+    for s, off in (("R", 0.0), ("L", 0.5)):
+        # trajectoires définies pour le bras droit ; miroir gauche/droite pour l'autre bras
+        up = stroke_up if s == "R" else [(-v[0], v[1], v[2]) for v in stroke_up]
+        fo = stroke_fore if s == "R" else [(-v[0], v[1], v[2]) for v in stroke_fore]
+        ph = phase + off
+        ch["arm%s.up" % s] = _cyc_dir(up, ph)
+        ch["arm%s.fore" % s] = _cyc_dir(fo, ph)
+        ch["arm%s.curl" % s] = 12.0
+    for s, off in (("L", 0.0), ("R", 0.5)):
+        kick = syc(phase * 3.0 + off)
+        ch["foot%s.p" % s] = (0.03, -0.92, 0.74 + 0.08 * kick)
+        ch["foot%s.pitch" % s] = 135.0
+        ch["foot%s.toe" % s] = 140.0
+        ch["foot%s.yaw" % s] = 0.0
+        ch["foot%s.pivot" % s] = "ankle"
+    return ch
+
+
+def swim_idle(phase, st):
+    """Nage sur place : bras qui godillent, jambes en « batteur »."""
+    b = syc(phase)
+    ch = {
+        "armframe": "root",
+        "hips_off": (0.0, 0.0, -0.04 + 0.02 * b), "hips": (10.0, 0.0, 0.0), "spine": (2.0, 0.0, 0.0), "chest": (-2.0, 0.0, 0.0),
+        "neck": (-4.0, 0.0, 0.0), "head": (-6.0, 10.0 * syc(phase, 1, 0.3), 0.0), "shL": (0, 0, 0), "shR": (0, 0, 0),
+    }
+    for s in ("L", "R"):
+        side = 1 if s == "L" else -1
+        ch["arm%s.up" % s] = down(side, 28.0 + 6.0 * b, 58.0 + 10.0 * b)
+        ch["arm%s.fore" % s] = down(side, 62.0 + 8.0 * b, 70.0 - 10.0 * b)
+        ch["arm%s.curl" % s] = 10.0
+    for s, off in (("L", 0.0), ("R", 0.5)):
+        side = 1 if s == "L" else -1
+        a = TAU * (phase + off)
+        ch["foot%s.p" % s] = (0.07 + 0.05 * math.cos(a), 0.06 * math.sin(a), 0.2 + 0.08 * math.sin(a))
+        ch["foot%s.pitch" % s] = 40.0
+        ch["foot%s.toe" % s] = 40.0
+        ch["foot%s.yaw" % s] = 10.0
+        ch["foot%s.pivot" % s] = "ankle"
+    return ch
+
+
+# ----------------------------------------------------------------------------
 # Assemblage par personnage
 # ----------------------------------------------------------------------------
 HITS = {
@@ -661,6 +766,10 @@ def build(char, LL):
     cyclic("Idle_Combat", 2.0, idle_combat)
     cyclic("Fall", 1.0, fall)
     cyclic("Glide", 2.0, glide)
+    cyclic("Climb", 1.0, climb)
+    cyclic("Climb_Idle", 2.4, climb_idle)
+    cyclic("Swim", 1.3, swim)
+    cyclic("Swim_Idle", 1.8, swim_idle)
     track("Jump", jump(st))
     track("Land", land(st))
     track("Dash", dash(st))

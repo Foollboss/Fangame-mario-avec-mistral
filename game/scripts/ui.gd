@@ -386,7 +386,7 @@ func _build_hud() -> void :
 	hud = Control.new();hud.set_anchors_preset(Control.PRESET_FULL_RECT);hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(hud)
 	circle_shader = Shader.new();circle_shader.code = CIRCLE_SHADER
-	for k in ["map", "book", "clock", "gear", "sword", "jump", "dash", "talk", "pie", "quest", "el_hydro", "el_electro", "el_pyro", "el_lava", "el_cryo"]:
+	for k in ["map", "book", "clock", "gear", "sword", "jump", "dash", "talk", "pie", "quest", "oculus", "el_hydro", "el_electro", "el_pyro", "el_lava", "el_cryo"]:
 		icons["ic_" + k] = load("res://ui/icons/%s.png" % k)
 	hit_rect = ColorRect.new();hit_rect.color = Color(1, 0.1, 0.1, 0.0);hit_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	hit_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE;hud.add_child(hit_rect)
@@ -450,6 +450,9 @@ func _build_hud() -> void :
 	stam_wheel.fill_mode = TextureProgressBar.FILL_COUNTER_CLOCKWISE;stam_wheel.nine_patch_stretch = true
 	stam_wheel.max_value = 100.0;stam_wheel.size = Vector2(46, 46);stam_wheel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hud.add_child(stam_wheel)
+	ctx_hint = _label("", 16, Color(1, 1, 1, 0.9));ctx_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ctx_hint.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.08, 0.85));ctx_hint.add_theme_constant_override("outline_size", 5)
+	ctx_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE;hud.add_child(ctx_hint)
 
 	for i in PARTY_IDS.size():
 		var row: = Control.new();row.custom_minimum_size = Vector2(ROW_W, ROW_H);row.size = Vector2(ROW_W, ROW_H)
@@ -553,8 +556,10 @@ func _layout() -> void :
 	if victory and victory.has_node("Continue"):
 		var cb: Button = victory.get_node("Continue")
 		cb.position = Vector2(vs.x * 0.5 - cb.size.x * 0.5, vs.y - 140)
-	for mnu in [paimon, char_menu, settings_menu, bag_menu]:
+	for mnu in [paimon, char_menu, settings_menu, bag_menu, statue_menu]:
 		if mnu: mnu.layout(vs)
+	if ctx_hint:
+		ctx_hint.size = Vector2(640, 26);ctx_hint.position = Vector2(vs.x * 0.5 - 320, vs.y - (250 if touch else 96))
 	if time_menu:
 		var tb: Control = time_menu.get_node("Box");tb.position = (vs - tb.size) * 0.5
 	if quest_log:
@@ -698,10 +703,18 @@ func refresh(party: Party) -> void :
 	var hp_low: bool = c.hp < c.max_hp * 0.3
 	(hp_bar.get_theme_stylebox("fill") as StyleBoxFlat).bg_color = Color(0.95, 0.35, 0.3) if hp_low else Color(0.55, 0.88, 0.33)
 	xp_fill.size.x = 360.0 * clampf(float(main.xp) / maxf(1.0, float(main.xp_needed())), 0.0, 1.0)
+	stam_wheel.max_value = party.stamina_max
 	stam_wheel.value = party.stamina
-	var show_st: bool = party.stamina < 99.5
+	var show_st: bool = party.stamina < party.stamina_max - 0.5 or party.climbing or party.swimming
+	var hint: = ""
+	if party.climbing:
+		hint = "Saut : bond  •  Esquive : lâcher prise" if touch else "Espace : bond  •  Maj : lâcher prise"
+	elif party.swimming:
+		hint = "Maintenir Esquive : nage rapide" if touch else "Maintenir Maj : nage rapide"
+	ctx_hint.text = hint
+	ctx_hint.modulate.a = move_toward(ctx_hint.modulate.a, 1.0 if hint != "" else 0.0, dt * 4.0)
 	stam_wheel.modulate.a = move_toward(stam_wheel.modulate.a, 1.0 if show_st else 0.0, dt * 4.0)
-	stam_wheel.tint_progress = Color(0.98, 0.88, 0.32) if party.stamina > 25.0 else Color(1.0, 0.45, 0.3)
+	stam_wheel.tint_progress = Color(0.98, 0.88, 0.32) if party.stamina > 25.0 else Color(1.0, 0.45, 0.3).lerp(Color(1, 0.85, 0.8), 0.5 + 0.5 * sin(_t * 10.0))
 	skill_icon.texture = icons[who + "_skill"];burst_icon.texture = icons[who + "_burst"]
 	skill_cd.value = c.skill_cd / c.skill_cd_max
 	burst_cd.value = c.burst_cd / c.burst_cd_max
@@ -946,6 +959,17 @@ func toast(text: String, icon_tex: Texture2D = null, col: = Color(1, 1, 1)) -> v
 	tw.tween_property(p, "modulate:a", 0.0, 0.5)
 	tw.tween_callback(p.queue_free)
 
+var fade_rect: ColorRect
+## Fondu au noir bref (noyade, téléportation…) : montée, pause, descente.
+func fade_flash(t_in: float, hold: float, t_out: float) -> void :
+	if fade_rect == null:
+		fade_rect = ColorRect.new();fade_rect.color = Color(0.02, 0.03, 0.06, 0.0);fade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE;root.add_child(fade_rect)
+	var tw: = fade_rect.create_tween()
+	tw.tween_property(fade_rect, "color:a", 1.0, t_in)
+	tw.tween_interval(hold)
+	tw.tween_property(fade_rect, "color:a", 0.0, t_out)
+
 func flash_hit() -> void :
 	hit_rect.color.a = 0.55
 	var tw: = hit_rect.create_tween();tw.tween_property(hit_rect, "color:a", 0.0, 0.35)
@@ -1051,6 +1075,8 @@ var char_menu: CharMenu
 var settings_menu: SettingsMenu
 var bag_menu: BagMenu
 var sub_menu: Control
+var statue_menu: StatueMenu
+var ctx_hint: Label
 
 func _build_pause() -> void :
 	paimon = PaimonMenu.new();paimon.name = "Paimon";root.add_child(paimon);paimon.setup(self, main)
@@ -1061,6 +1087,8 @@ func _build_pause() -> void :
 	bag_menu = BagMenu.new();bag_menu.name = "Bag";root.add_child(bag_menu);bag_menu.setup(self, main)
 	for mnu in [char_menu, settings_menu, bag_menu]:
 		mnu.closed.connect(close_sub)
+	statue_menu = StatueMenu.new();statue_menu.name = "Statue";root.add_child(statue_menu);statue_menu.setup(self, main)
+	statue_menu.closed.connect( func(): show_statue(false))
 
 ## Ouvre un sous-menu (personnages, inventaire, paramètres) par-dessus le menu principal.
 func open_sub(which: String) -> void :
@@ -1070,6 +1098,15 @@ func open_sub(which: String) -> void :
 	paimon.visible = false
 	sub_menu = m
 	m.open()
+
+## Menu d'offrande d'une Statue d'Aetheria (ouvert avec « Interagir » près d'une statue).
+func show_statue(on: bool) -> void :
+	if on:
+		statue_menu.open();release_touch()
+	else:
+		statue_menu.close()
+	hud.visible = not on and not dlg_open
+	main.set_menu_mouse(on)
 
 func close_sub() -> void :
 	if sub_menu: sub_menu.close()

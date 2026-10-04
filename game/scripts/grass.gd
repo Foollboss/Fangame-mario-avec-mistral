@@ -53,6 +53,11 @@ func setup(w: World, tgt: Node3D) -> void :
 		elif shape is SphereShape3D:
 			var r2: float = (shape as SphereShape3D).radius * 0.85
 			ext = Vector2(r2, r2)
+		elif shape is ConvexPolygonShape3D and cs.rotation.y == 0.0:
+			var bb: = AABB()
+			for v in (shape as ConvexPolygonShape3D).points: bb = bb.expand(v)
+			if bb.position.y > 1.0: continue
+			ext = Vector2(maxf( - bb.position.x, bb.end.x), maxf( - bb.position.z, bb.end.z)) * 0.8
 		else:
 			continue
 		var x0: = int((c.x - ext.x + World.HALF) * px); var z0: = int((c.z - ext.y + World.HALF) * px)

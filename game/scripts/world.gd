@@ -114,6 +114,12 @@ var chest_spots: Array[Vector3] = []
 var crystal_spots: Array[Vector3] = []
 var apple_spots: Array[Vector3] = []
 var roam_spots: Array = []
+## Anémoculus : sommets d'édifices, toits, aiguilles rocheuses, plans d'eau…
+var oculus_spots: Array[Vector3] = []
+var house_ridges: Array[Vector3] = []
+var climb_tops: Array[Vector3] = []
+var spire_tops: Array[Vector3] = []
+var _spire_xz: Array[Vector3] = []
 
 
 var hmap: = PackedFloat32Array()
@@ -483,6 +489,15 @@ func is_land(x: float, z: float, min_h: = 1.2) -> bool:
 	if h < SWAMP_Y + 0.25 and Vector2(x - swamp_center().x, z - swamp_center().z).length() < swamp_radius(): return false
 	return true
 
+## Niveau de l'eau en (x, z) : lac, marais ou mer ; -INF hors du monde ouvert (domaines).
+func water_level_at(x: float, z: float) -> float:
+	if absf(x) > 1250.0 or absf(z) > 1250.0: return - INF
+	var h: = height_at(x, z)
+	if absf(x - lake.x) < 42.0 and absf(z - lake.z) < 42.0 and h < LAKE_Y: return LAKE_Y
+	var sc: = swamp_center()
+	if h < SWAMP_Y and Vector2(x - sc.x, z - sc.z).length() < swamp_radius(): return SWAMP_Y
+	return SEA_Y
+
 func swamp_center() -> Vector3:
 	return REGIONS.marais.pos
 
@@ -523,10 +538,12 @@ func build() -> void :
 	_camp_decor()
 	_lava()
 	_region_sites()
+	_pick_spots()
+	_spires()
 	_scatter()
 	_sky_islands()
 	_night_blooms()
-	_pick_spots()
+	_pick_oculi()
 	_flush_multimeshes()
 
 func _environment() -> void :
@@ -803,6 +820,30 @@ func cyl_collider(base: Vector3, radius: float, height: float) -> void :
 	cs.shape = cy;cs.position = base + Vector3(0, height * 0.5, 0);solid.add_child(cs)
 
 
+## Enveloppe convexe (tronc de cône) : sans surplomb, pour pouvoir l'escalader proprement.
+func hull_collider(base: Vector3, rings: Array, segs: = 12) -> void :
+	var pts: = PackedVector3Array()
+	for rg in rings:
+		var r: float = rg[0]; var y: float = rg[1]
+		if r <= 0.01:
+			pts.append(Vector3(0, y, 0));continue
+		for k in segs:
+			var a: = TAU * k / segs
+			pts.append(Vector3(cos(a) * r, y, sin(a) * r))
+	var sh: = ConvexPolygonShape3D.new();sh.points = pts
+	var cs: = CollisionShape3D.new();cs.shape = sh;cs.position = base;solid.add_child(cs)
+
+## Maison : murs, toit à deux pans escaladable, cheminée et faîtage plat où l'on peut se tenir.
+func _house_collider(p: Vector3, yaw: float) -> void :
+	box_collider(p + Vector3(0, 2.9, 0), Vector3(5.4, 5.8, 4.6), yaw)
+	var sh: = ConvexPolygonShape3D.new()
+	sh.points = PackedVector3Array([Vector3(-2.75, 5.78, -2.3), Vector3(2.75, 5.78, -2.3), Vector3(-2.75, 5.78, 2.3), 
+		Vector3(2.75, 5.78, 2.3), Vector3(-2.75, 8.45, 0), Vector3(2.75, 8.45, 0)])
+	var cs: = CollisionShape3D.new();cs.shape = sh;cs.position = p;cs.rotation.y = yaw;solid.add_child(cs)
+	box_collider(p + Vector3(0, 8.4, 0), Vector3(5.6, 0.16, 0.5), yaw)
+	box_collider(p + Basis(Vector3.UP, yaw) * Vector3(1.5, 7.4, -0.9), Vector3(0.62, 2.6, 0.62), yaw)
+	house_ridges.append(p + Vector3(0, 8.48, 0))
+
 func mm_add(mesh_name: String, xf: Transform3D, col: = Color.WHITE, small: = false, far: = false) -> void :
 	var cs: = 40.0 if small else 100.0
 	var key: = "%s|%d|%d" % [mesh_name, int(floor(xf.origin.x / cs)), int(floor(xf.origin.z / cs))]
@@ -921,7 +962,7 @@ func _scatter() -> void :
 	while n < 1500 and tries < 30000:
 		tries += 1
 		var p: = _rand_land(1.9, 46.0, 0.72)
-		if p == Vector3.INF or _near_poi(p) or on_path(p.x, p.z): continue
+		if p == Vector3.INF or _near_poi(p) or on_path(p.x, p.z) or _near_spire(p, 4.0): continue
 		var b: = biome_at(p.x, p.z)
 		if b != "marais" and p.y < 3.2: continue
 		if lava_at(p): continue
@@ -954,7 +995,7 @@ func _scatter() -> void :
 
 	for k in 320:
 		var p: = _rand_land(1.9, 60.0, 0.55)
-		if p == Vector3.INF or _near_poi(p, -4.0) or on_path(p.x, p.z) or lava_at(p): continue
+		if p == Vector3.INF or _near_poi(p, -4.0) or on_path(p.x, p.z) or lava_at(p) or _near_spire(p, 2.0): continue
 		var s: = rng.randf_range(0.5, 2.0)
 		var b: = biome_at(p.x, p.z)
 		var rc: = {"prairie": Color(0.62, 0.6, 0.58), "automne": Color(0.66, 0.56, 0.48), "cerisiers": Color(0.7, 0.64, 0.66), 
@@ -971,7 +1012,7 @@ func _scatter() -> void :
 
 	for k in 760:
 		var p: = _rand_land(2.2, 40.0, 0.7)
-		if p == Vector3.INF or _near_poi(p, -6.0) or on_path(p.x, p.z): continue
+		if p == Vector3.INF or _near_poi(p, -6.0) or on_path(p.x, p.z) or _near_spire(p, 0.5): continue
 		var b: = biome_at(p.x, p.z)
 		if b == "braise" and rng.randf() < 0.75: continue
 		var cols: Array = FOLIAGE[b]
@@ -1030,7 +1071,7 @@ func _village() -> void :
 		var yaw: = atan2(v.x - p.x, v.z - p.z)
 		var roof: Color = ROOFS[k % ROOFS.size()]
 		decor("House", p, yaw, 1.0, roof)
-		box_collider(p + Vector3(0, 2.4, 0), Vector3(5.4, 4.8, 4.6), yaw)
+		_house_collider(p, yaw)
 
 		var side: = Vector3(cos(yaw), 0, - sin(yaw))
 		var fwd: = Vector3(sin(yaw), 0, cos(yaw))
@@ -1054,7 +1095,8 @@ func _village() -> void :
 
 	var wp: = snap(v + Vector3(-34, 0, 4), -0.3)
 	decor("WindmillBase", wp, PI * 0.5, 1.0, Color(0.7, 0.28, 0.22), true)
-	cyl_collider(wp, 2.0, 8.0)
+	hull_collider(wp, [[2.0, 0.0], [1.9, 1.0], [1.85, 7.4], [0.5, 9.6]], 8)
+	climb_tops.append(wp + Vector3(0, 9.9, 0))
 	windmill_blades = Node3D.new();add_child(windmill_blades)
 	windmill_blades.position = wp + Vector3(2.3, 6.2, 0);windmill_blades.rotation.y = PI * 0.5
 	var bl: = make_prop("WindmillBlades");windmill_blades.add_child(bl)
@@ -1101,7 +1143,8 @@ func _dock() -> void :
 func _lighthouse_site() -> void :
 	var p: = snap(lighthouse, -0.2)
 	decor("Lighthouse", p, 0.8, 1.0, Color.WHITE, true)
-	cyl_collider(p, 2.0, 16.0)
+	hull_collider(p, [[2.1, 0.0], [1.5, 13.3], [1.2, 15.0], [0.6, 16.0]])
+	climb_tops.append(p + Vector3(0, 16.0, 0))
 	light_house_lamp = OmniLight3D.new();light_house_lamp.light_color = Color(1.0, 0.85, 0.5);light_house_lamp.omni_range = 18.0
 	light_house_lamp.light_energy = 0.0;light_house_lamp.position = p + Vector3(0, 14.2, 0);add_child(light_house_lamp)
 
@@ -1113,13 +1156,17 @@ func _ruins() -> void :
 		var p: = snap(c + Vector3(cos(a), 0, sin(a)) * 16.0, -0.1)
 		var broken: = k % 3 != 0
 		decor("PillarBroken" if broken else "Pillar", p, rng.randf() * TAU, 1.1)
-		cyl_collider(p, 0.5, 4.0)
+		var ph: = 3.69 if broken else 5.33
+		hull_collider(p, [[0.6, 0.0], [0.62, ph]], 10)
+		if k == 0 or k == 6: climb_tops.append(p + Vector3(0, ph, 0))
 	for k in 2:
 		var a: = PI * 0.5 + k * PI
 		var p: = snap(c + Vector3(cos(a), 0, sin(a)) * 24.0, -0.1)
 		decor("Arch", p, a + PI * 0.5, 1.1, Color.WHITE, true)
 		var side: = Vector3( - sin(a), 0, cos(a))
-		cyl_collider(p + side * 2.4, 0.5, 5.0);cyl_collider(p - side * 2.4, 0.5, 5.0)
+		cyl_collider(p + side * 2.4, 0.62, 5.62);cyl_collider(p - side * 2.4, 0.62, 5.62)
+		box_collider(p + Vector3(0, 5.92, 0), Vector3(6.4, 0.6, 1.26), a + PI * 0.5)
+		if k == 0: climb_tops.append(p + side * 1.2 + Vector3(0, 6.22, 0))
 
 	for k in 14:
 		var a: = rng.randf() * TAU; var r: = rng.randf_range(24.0, 48.0)
@@ -1136,12 +1183,14 @@ func _summit_arena() -> void :
 		var a: = TAU * k / 12.0
 		var p: = snap(summit + Vector3(cos(a), 0, sin(a)) * 17.0, -0.2)
 		decor("PillarBroken" if k % 2 == 0 else "Pillar", p, rng.randf() * TAU, 1.2, Color.WHITE, true)
-		cyl_collider(p, 0.55, 4.5)
+		var ph: = 4.03 if k % 2 == 0 else 5.82
+		hull_collider(p, [[0.65, 0.0], [0.68, ph]], 10)
+		if k == 3 or k == 9: climb_tops.append(p + Vector3(0, ph, 0))
 
 func _statues() -> void :
 	for s in statues:
 		decor("Statue", s, 0.0, 1.0, Color.WHITE, true)
-		cyl_collider(s, 1.2, 2.0)
+		cyl_collider(s, 1.2, 2.0);cyl_collider(s, 0.7, 4.0)
 		var l: = OmniLight3D.new();l.light_color = Color(0.5, 0.8, 1.0);l.light_energy = 0.6;l.omni_range = 6
 		add_child(l);l.position = s + Vector3(0, 3.2, 0)
 
@@ -1467,3 +1516,141 @@ func _pick_spots() -> void :
 					if (q.pos as Vector3).distance_to(p) < 35.0: ok3 = false
 				if ok3: roam_spots.append({"pos": p, "biome": key})
 	rng = old
+
+
+# ----------------------------------------------------------------------------
+# Aiguilles rocheuses et Anémoculus
+# ----------------------------------------------------------------------------
+const SPIRE_BIOMES: = ["prairie", "automne", "cerisiers", "plateau", "pic", "marais", "braise", "orage", "prairie", "cerisiers", "automne"]
+const SPIRE_ROCK: = {"prairie": Color(0.66, 0.64, 0.6), "automne": Color(0.7, 0.6, 0.52), "cerisiers": Color(0.74, 0.68, 0.7), 
+	"plateau": Color(0.6, 0.66, 0.74), "pic": Color(0.66, 0.68, 0.72), "marais": Color(0.5, 0.55, 0.46), 
+	"braise": Color(0.36, 0.31, 0.3), "orage": Color(0.55, 0.52, 0.64)}
+
+func _near_spire(p: Vector3, extra: float) -> bool:
+	for q in _spire_xz:
+		if Vector2(p.x - q.x, p.z - q.z).length() < q.y + extra: return true
+	return false
+
+func _spot_taken(p: Vector3, dist: float) -> bool:
+	for l in [chest_spots, crystal_spots, apple_spots]:
+		for q in l:
+			if Vector2(p.x - q.x, p.z - q.z).length() < dist: return true
+	for rs in roam_spots:
+		if Vector2(p.x - rs.pos.x, p.z - rs.pos.z).length() < dist: return true
+	return false
+
+## Grandes aiguilles de roche à escalader, une ou deux par région (graine fixe : même monde à chaque partie).
+func _spires() -> void :
+	var m: Mesh = prop_meshes.get("Spire")
+	if m == null: return
+	var hull: PackedVector3Array = (m.create_convex_shape(true, true) as ConvexPolygonShape3D).points
+	var top_y: = 0.0
+	for v in hull: top_y = maxf(top_y, v.y)
+	var r: = RandomNumberGenerator.new();r.seed = 913
+	for b in SPIRE_BIOMES:
+		for tries in 900:
+			var a: = r.randf() * TAU; var rad: = sqrt(r.randf()) * 470.0
+			var p: = Vector3(cos(a) * rad, 0, sin(a) * rad);p.y = height_at(p.x, p.z)
+			if biome_at(p.x, p.z) != b or p.y < 3.0 or p.y > 44.0 or not is_land(p.x, p.z, 3.0): continue
+			if normal_at(p.x, p.z).y < 0.82 or on_path(p.x, p.z) or lava_at(p) or _near_poi(p, 8.0) or _spot_taken(p, 9.0): continue
+			var far: = true
+			for q in _spire_xz:
+				if Vector2(q.x - p.x, q.z - p.z).length() < 75.0: far = false
+			if not far: continue
+			var sc: = r.randf_range(0.85, 1.25)
+			var yaw: = r.randf() * TAU
+			var base: = p - Vector3(0, 0.3, 0)
+			var bas: = Basis(Vector3.UP, yaw).scaled(Vector3.ONE * sc)
+			mm_add("Spire", Transform3D(bas, base), SPIRE_ROCK[b])
+			var pts: = PackedVector3Array()
+			for v in hull: pts.append(bas * v)
+			var sh: = ConvexPolygonShape3D.new();sh.points = pts
+			var cs: = CollisionShape3D.new();cs.shape = sh;cs.position = base;solid.add_child(cs)
+			_spire_xz.append(Vector3(p.x, 2.6 * sc, p.z))
+			spire_tops.append(base + Vector3(0, top_y * sc, 0))
+			break
+
+## Emplacements des Anémoculus (graine fixe : l'index sert à la sauvegarde, ne pas réordonner).
+func _pick_oculi() -> void :
+	var r: = RandomNumberGenerator.new();r.seed = 4242
+	for k in [0, 2, 3, 5, 6, 7]:
+		if k < house_ridges.size(): oculus_spots.append(house_ridges[k] + Vector3(0, 0.95, 0))
+	for t in climb_tops: oculus_spots.append(t + Vector3(0, 1.0, 0))
+	for t in spire_tops: oculus_spots.append(t + Vector3(0, 1.1, 0))
+	# en plein ciel, à côté d'une aiguille : il faut planer depuis le sommet
+	for k in 3:
+		if spire_tops.is_empty(): break
+		var t: Vector3 = spire_tops[(k * 4 + 1) % spire_tops.size()]
+		var a: = r.randf() * TAU
+		oculus_spots.append(t + Vector3(cos(a) * 8.0, -2.6, sin(a) * 8.0))
+	# sur l'eau : lac, mer près du ponton et du phare
+	oculus_spots.append(Vector3(lake.x + 6.0, LAKE_Y + 0.85, lake.z - 4.0))
+	oculus_spots.append(Vector3(lake.x - 14.0, LAKE_Y + 0.85, lake.z + 10.0))
+	oculus_spots.append(Vector3(dock_pos.x - 6.0, SEA_Y + 0.85, dock_pos.z - 14.0))
+	var lh_out: = Vector3(lighthouse.x, 0, lighthouse.z).normalized()
+	var sea_p: = Vector3(lighthouse.x, 0, lighthouse.z) + lh_out * 10.0
+	for k in 60:
+		if height_at(sea_p.x, sea_p.z) < -1.5: break
+		sea_p += lh_out * 2.0
+	oculus_spots.append(Vector3(sea_p.x, SEA_Y + 0.85, sea_p.z))
+	# marais : au-dessus des eaux les plus profondes
+	var sc: = swamp_center()
+	var deep: Array = []
+	for tries in 900:
+		var a: = r.randf() * TAU; var rad: = sqrt(r.randf()) * swamp_radius() * 0.9
+		var q: = sc + Vector3(cos(a) * rad, 0, sin(a) * rad);q.y = height_at(q.x, q.z)
+		if q.y < SWAMP_Y - 0.3: deep.append(q)
+	deep.sort_custom( func(a, b): return a.y < b.y)
+	var got: = 0
+	for q in deep:
+		if got >= 2: break
+		var ok: = true
+		for o in oculus_spots:
+			if Vector2(o.x - q.x, o.z - q.z).length() < 50.0: ok = false
+		if ok:
+			oculus_spots.append(Vector3(q.x, maxf(SWAMP_Y + 0.85, q.y + 1.3), q.z));got += 1
+	# sur la tête de deux statues lointaines
+	for k in [2, 4]:
+		if k < statues.size(): oculus_spots.append(statues[k] + Vector3(0, 5.0, 0))
+	# sommet du Pic Givré
+	oculus_spots.append(summit + Vector3(0, 2.2, 0))
+	# points culminants de chaque région
+	for b in ["prairie", "automne", "cerisiers", "plateau", "marais", "braise", "orage"]:
+		var best: = Vector3.INF
+		for tries in 700:
+			var a: = r.randf() * TAU; var rad: = sqrt(r.randf()) * 480.0
+			var q: = Vector3(cos(a) * rad, 0, sin(a) * rad);q.y = height_at(q.x, q.z)
+			if biome_at(q.x, q.z) != b or not is_land(q.x, q.z, 3.0) or lava_at(q) or _near_poi(q, -6.0) or _near_spire(q, 1.0): continue
+			var ok: = true
+			for o in oculus_spots:
+				if o.distance_to(q) < 40.0: ok = false
+			if ok and (best == Vector3.INF or q.y > best.y): best = q
+		if best != Vector3.INF: oculus_spots.append(best + Vector3(0, 1.4, 0))
+	# haut des pentes les plus raides (falaises)
+	var cand: Array = []
+	for j in range(2, N - 2, 2):
+		for i in range(2, N - 2, 2):
+			var x: = - HALF + i * STEP; var z: = - HALF + j * STEP
+			var nn: = normal_at(x, z)
+			if nn.y > 0.62 or height_at(x, z) < 3.0: continue
+			var up: = Vector3( - nn.x, 0, - nn.z).normalized()
+			var q: = Vector3(x, 0, z)
+			for k in 8:
+				var q2: = q + up * 1.5
+				if height_at(q2.x, q2.z) <= height_at(q.x, q.z) + 0.05: break
+				q = q2
+			q.y = height_at(q.x, q.z)
+			if lava_at(q) or _near_spire(q, 1.0): continue
+			cand.append(q)
+	cand.sort_custom( func(a, b): return a.y > b.y)
+	var n: = 0
+	var used: = {}
+	for q in cand:
+		if n >= 4: break
+		var b: = biome_at(q.x, q.z)
+		if used.has(b): continue
+		var ok: = true
+		for o in oculus_spots:
+			if o.distance_to(q) < 55.0: ok = false
+		if ok:
+			oculus_spots.append(q + Vector3(0, 1.3, 0));n += 1;used[b] = true

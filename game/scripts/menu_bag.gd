@@ -21,6 +21,7 @@ const H: = 720.0
 const ITEMS: = {
 	"shards": {"name": "Éclats d'Aether", "stars": 4, "desc": "Fragments cristallisés de l'énergie qui irrigue l'île. Obtenus en libérant les camps et en vainquant les boss."},
 	"crystals": {"name": "Cristaux d'Aether", "stars": 3, "desc": "Cristaux bleutés dispersés dans la nature. Chacun rapporte 5 éclats et un peu d'expérience."},
+	"oculi": {"name": "Anémoculus", "stars": 4, "desc": "Œil de cristal où souffle le vent d'Aetheria. On les trouve en hauteur, sur les toits, au sommet des aiguilles rocheuses ou au-dessus de l'eau. Offre-les aux Statues d'Aetheria pour augmenter l'endurance maximale."},
 	"food": {"name": "Tarte aux pommes solaires", "stars": 3, "desc": "Spécialité du Chef Tino. Rend 35 % de ses PV max au héros actif (touche H en exploration)."},
 	"map": {"name": "Carte au trésor", "stars": 4, "desc": "Une vieille carte annotée : elle révèle l'emplacement des coffres sur la carte de l'île."},
 }
@@ -107,6 +108,7 @@ func _count(id: String) -> int:
 	match id:
 		"shards": return int(main.shards)
 		"crystals": return int(main.crystals_got)
+		"oculi": return int(main.oculi_in_hand())
 		"food": return int(main.food)
 		"map": return 1 if main.treasure_map else 0
 	return 0
@@ -115,6 +117,7 @@ func _icon(id: String) -> Texture2D:
 	match id:
 		"food": return ui.icons.get("ic_pie")
 		"map": return ui.icons.get("ic_map")
+		"oculi": return ui.icons.get("ic_oculus")
 	return null
 
 func open() -> void :

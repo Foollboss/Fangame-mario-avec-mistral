@@ -58,6 +58,8 @@ def M():
         "cloth_white": material("cloth_white", (0.96, 0.94, 0.88)),
         "orange": material("orange", (1.0, 0.6, 0.15), rough=0.5),
         "sail": material("sail", (0.95, 0.92, 0.84)),
+        "oculus_core": material("oculus_core", (0.45, 1.0, 0.82), emit=(0.35, 1.0, 0.75), emit_strength=2.5, rough=0.2),
+        "oculus_wing": material("oculus_wing", (0.75, 1.0, 0.92), emit=(0.55, 1.0, 0.85), emit_strength=1.2, rough=0.3),
     }
 
 
@@ -437,6 +439,37 @@ def windmill_base():
     return b.finish(uv_scale=2.0)
 
 
+def spire(name="Spire", seed=21):
+    """Aiguille rocheuse escaladable (~10 m) : blocs empilés, chapeau de mousse."""
+    b = Builder(name, [MT["tint_rock"], MT["tint_moss"]])
+    rng = random.Random(seed)
+    z = -0.6
+    layers = [(2.5, 3.0), (2.2, 2.8), (2.0, 2.6), (1.8, 2.4)]
+    for k, (r, h) in enumerate(layers):
+        g = 0.86 + 0.05 * k
+        b.sphere("tint_rock", (rng.uniform(-0.15, 0.15), rng.uniform(-0.15, 0.15), z + h * 0.5), r,
+                 scale=(1.0, 0.94, h * 0.62 / r), subdiv=2, jitter=0.16, smooth=False, col=(g, g, g))
+        z += h * 0.92
+    b.sphere("tint_rock", (0.0, 0.0, z + 0.1), 1.7, scale=(1.0, 0.96, 0.3), subdiv=2, jitter=0.08, smooth=False)
+    b.sphere("tint_moss", (0.0, 0.0, z + 0.34), 1.55, scale=(1.0, 0.96, 0.18), subdiv=2, jitter=0.1, smooth=True)
+    return b.finish(uv_scale=2.5)
+
+
+def oculus():
+    """Anémoculus : cristal-œil turquoise à quatre ailettes, dans un anneau doré."""
+    b = Builder("Oculus", [MT["oculus_core"], MT["oculus_wing"], MT["gold"]])
+    b.cyl("oculus_core", (0, 0, -0.26), 0.0, 0.17, 0.26, segs=8, smooth=False)
+    b.cyl("oculus_core", (0, 0, 0.0), 0.17, 0.0, 0.3, segs=8, smooth=False)
+    b.sphere("oculus_wing", (0, -0.05, 0.02), 0.07, subdiv=1)
+    for k in range(4):
+        a = k * math.tau / 4 + math.pi / 4
+        x, y = math.cos(a), math.sin(a)
+        b.sphere("oculus_wing", (x * 0.26, 0.0, y * 0.26), 0.12, scale=(1.0, 0.25, 0.45), rot=(0, -a, 0), subdiv=1, smooth=False)
+    b.cyl("gold", (0, 0.035, 0), 0.31, 0.31, 0.03, segs=24, rot=(math.pi / 2, 0, 0), caps=False)
+    b.cyl("gold", (0, -0.035, 0), 0.33, 0.33, 0.03, segs=24, rot=(math.pi / 2, 0, 0), caps=False)
+    return b.finish(uv_scale=0.5)
+
+
 def build():
     reset()
     global MT
@@ -459,6 +492,8 @@ def build():
     well()
     stall()
     windmill_base()
+    oculus()
+    spire()
     bpy.ops.export_scene.gltf(filepath=OUT, export_format="GLB", use_selection=False, export_apply=True,
                               export_vertex_color="ACTIVE", export_all_vertex_colors=True,
                               export_animations=False, export_yup=True)

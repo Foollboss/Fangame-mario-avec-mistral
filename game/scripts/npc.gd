@@ -32,6 +32,7 @@ func setup(npc_id: String, shown_name: String, model_name: String, col: Color, l
 	marker.modulate = Color(1.0, 0.82, 0.3);marker.visible = false;add_child(marker)
 	var col_body: = StaticBody3D.new(); var cs: = CollisionShape3D.new(); var cap: = CapsuleShape3D.new()
 	cap.radius = 0.35;cap.height = 1.7;cs.shape = cap;cs.position.y = 0.85;col_body.add_child(cs);add_child(col_body)
+	col_body.set_meta("no_climb", true)
 
 
 func recolor(cloth: Color, cloth2: Color, hair: Color) -> void :

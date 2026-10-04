@@ -92,6 +92,7 @@ func open() -> void :
 	var rows: = [
 		["Éclats d'Aether", str(main.shards)],
 		["Cristaux d'Aether", "%d / %d" % [main.crystals_got, main.crystals.size()]],
+		["Anémoculus  (endurance %d)" % int(main.party.stamina_max), "%d / %d" % [main.oculi_got, main.oculi.size()]],
 		["Coffres ouverts", "%d / %d" % [opened, world_chests.size()]],
 		["Téléporteurs activés", "%d / %d" % [main.wp_unlocked.size(), main.wp_nodes.size()]],
 		["Réactions élémentaires", str(main.reactions)],

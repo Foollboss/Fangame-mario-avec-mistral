@@ -6,6 +6,8 @@
    "Attack2": 0.52,
    "Attack3": 0.62,
    "Burst": 1.73,
+   "Climb": 1.0,
+   "Climb_Idle": 2.4,
    "Dash": 0.5,
    "Fall": 1.0,
    "Glide": 2.0,
@@ -17,6 +19,8 @@
    "Run": 0.5667,
    "Skill": 1.13,
    "Sprint": 0.5,
+   "Swim": 1.3,
+   "Swim_Idle": 1.8,
    "Walk": 1.0667
   },
   "gait": {
@@ -32,6 +36,8 @@
    "Attack2": 0.82,
    "Attack3": 1.0,
    "Burst": 1.73,
+   "Climb": 1.0,
+   "Climb_Idle": 2.4,
    "Dash": 0.5,
    "Fall": 1.0,
    "Glide": 2.0,
@@ -43,6 +49,8 @@
    "Run": 0.6667,
    "Skill": 1.36,
    "Sprint": 0.6,
+   "Swim": 1.3,
+   "Swim_Idle": 1.8,
    "Walk": 1.2333
   },
   "gait": {
@@ -58,6 +66,8 @@
    "Attack2": 0.49,
    "Attack3": 0.64,
    "Burst": 1.73,
+   "Climb": 1.0,
+   "Climb_Idle": 2.4,
    "Dash": 0.5,
    "Fall": 1.0,
    "Glide": 2.0,
@@ -69,6 +79,8 @@
    "Run": 0.6333,
    "Skill": 1.13,
    "Sprint": 0.5667,
+   "Swim": 1.3,
+   "Swim_Idle": 1.8,
    "Walk": 1.1667
   },
   "gait": {
@@ -78,7 +90,30 @@
   }
  },
  "kael": {
-  "LL": 1.0624,
+  "LL": 1.062395453453064,
+  "anims": {
+   "Attack1": 0.55,
+   "Attack2": 0.55,
+   "Attack3": 0.68,
+   "Attack4": 0.87,
+   "Burst": 1.73,
+   "Climb": 1.0,
+   "Climb_Idle": 2.4,
+   "Dash": 0.5,
+   "Fall": 1.0,
+   "Glide": 2.0,
+   "Hit": 0.5,
+   "Idle": 3.2,
+   "Idle_Combat": 2.0,
+   "Jump": 0.66,
+   "Land": 0.56,
+   "Run": 0.7,
+   "Skill": 1.13,
+   "Sprint": 0.6333,
+   "Swim": 1.3,
+   "Swim_Idle": 1.8,
+   "Walk": 1.3333
+  },
   "gait": {
    "Walk": 1.1952,
    "Run": 5.312,

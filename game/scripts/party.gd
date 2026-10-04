@@ -58,6 +58,36 @@ var stats: = {"reactions": 0, "damage": 0.0}
 var lunge_t: = 0.0
 var lunge_v: = 0.0
 
+# --- Endurance, escalade et nage ---
+var stamina_max: = 100.0
+var climbing: = false
+var climb_n: = Vector3.BACK
+var climb_cd: = 0.0
+var climb_push: = 0.0
+var climb_jump_t: = 0.0
+var vaulting: = false
+var vault_t: = 0.0
+var vault_from: = Vector3.ZERO
+var vault_to: = Vector3.ZERO
+var swimming: = false
+var water_y: = 0.0
+var swim_fx_t: = 0.0
+var safe_pos: = Vector3.INF
+var safe_t: = 0.0
+var sea_warn_t: = 0.0
+var frozen_t: = 0.0
+const CLIMB_SPEED: = 1.5
+const CLIMB_DRAIN: = 9.0
+const CLIMB_JUMP_COST: = 22.0
+const CLIMB_WALL_Y: = 0.69
+const VAULT_TIME: = 0.45
+const SWIM_SPEED: = 2.6
+const SWIM_FAST: = 4.8
+const SWIM_ENTER: = 1.3
+const SWIM_EXIT: = 1.12
+const SWIM_ROOT: = 1.1
+const SEA_LIMIT: = 420.0
+
 func _ready() -> void :
 	collision_layer = 2
 	collision_mask = 1 | 4
@@ -135,7 +165,7 @@ func _add_char(c: Dictionary) -> void :
 	for mi in model.find_children("*", "MeshInstance3D", true, false):
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	var ap: AnimationPlayer = model.find_children("*", "AnimationPlayer", true, false)[0]
-	for n in ["Idle", "Walk", "Run", "Sprint", "Idle_Combat", "Glide", "Fall"]:
+	for n in ["Idle", "Walk", "Run", "Sprint", "Idle_Combat", "Glide", "Fall", "Climb", "Climb_Idle", "Swim", "Swim_Idle"]:
 		if ap.has_animation(n): ap.get_animation(n).loop_mode = Animation.LOOP_LINEAR
 	var skel: Skeleton3D = model.find_children("*", "Skeleton3D", true, false)[0]
 	var hand: = BoneAttachment3D.new();hand.bone_name = Bones.find(skel, "hand.R");skel.add_child(hand)
@@ -286,8 +316,12 @@ func _hand_pos() -> Vector3:
 	return ch().hand.global_position
 
 
+## Vrai quand le héros grimpe, se hisse ou nage : ni attaque ni compétence possibles.
+func busy_moving() -> bool:
+	return climbing or vaulting or swimming
+
 func do_attack() -> void :
-	if not is_active() or attack_lock > 0.12 or dash_t > 0.0: return
+	if not is_active() or attack_lock > 0.12 or dash_t > 0.0 or busy_moving(): return
 	var c: = ch()
 	var reach: = {"Kaelith": 16.0, "Lyra": 7.0, "Kael": 7.0, "Zahara": 8.0}.get(c.name, 7.0) as float
 	var tgt: = nearest_enemy(reach, 200.0)
@@ -481,7 +515,7 @@ func _lava_shard(from: Vector3, dir: Vector3, mult: float) -> void :
 
 func do_skill() -> void :
 	var c: = ch()
-	if not is_active() or c.skill_cd > 0.0 or attack_lock > 0.2: return
+	if not is_active() or c.skill_cd > 0.0 or attack_lock > 0.2 or busy_moving(): return
 	c.skill_cd = c.skill_cd_max
 	combo = 0
 	var tgt: = nearest_enemy(12.0)
@@ -678,7 +712,7 @@ func _lyra_discharge() -> void :
 
 func do_burst() -> void :
 	var c: = ch()
-	if not is_active() or c.burst_cd > 0.0 or c.energy < c.energy_max: return
+	if not is_active() or c.burst_cd > 0.0 or c.energy < c.energy_max or busy_moving(): return
 	c.energy = 0.0
 	c.burst_cd = c.burst_cd_max
 	combo = 0
@@ -868,6 +902,9 @@ func _storm_update(delta: float) -> void :
 
 func do_jump() -> void :
 	if not is_active(): return
+	if climbing:
+		_climb_jump();return
+	if swimming or vaulting: return
 	if gliding:
 		stop_glide();return
 	if is_on_floor():
@@ -904,6 +941,9 @@ func stop_glide() -> void :
 	visual.rotation.x = 0.0
 
 func do_dash() -> void :
+	if climbing:
+		_end_climb(Vector3(climb_n.x, 0, climb_n.z).normalized() * 2.5);return
+	if swimming or vaulting: return
 	if not is_active() or dash_t > 0.0 or stamina < 18.0 or attack_lock > 0.3: return
 	stamina -= 18.0
 	dash_t = 0.22;iframe = maxf(iframe, 0.3)
@@ -942,6 +982,7 @@ func take_damage(amount: float, elem: String, from: Vector3) -> void :
 	FX.float_text(global_position + Vector3(0, 1.9, 0), str(int(dmg)), Color(1, 0.35, 0.35), 50)
 	_sfx("hurt", -2.0)
 	if gliding: stop_glide()
+	if climbing: _end_climb(Vector3(climb_n.x, 0, climb_n.z).normalized() * 3.0)
 	if main: main.on_player_hit()
 	var push: = global_position - from;push.y = 0
 	velocity += push.normalized() * 5.0 + Vector3(0, 3, 0)
@@ -1000,6 +1041,17 @@ func _physics_process(delta: float) -> void :
 	if dead_t > 0.0:
 		dead_t -= delta
 		if dead_t <= 0.0 and main: main.respawn_party()
+	if frozen_t > 0.0:
+		frozen_t -= delta;velocity = Vector3.ZERO
+		return
+	climb_cd = maxf(0.0, climb_cd - delta)
+	sea_warn_t = maxf(0.0, sea_warn_t - delta)
+	if vaulting:
+		_vault_update(delta);_update_catalyst(delta);return
+	if climbing:
+		_climb_update(delta);_update_catalyst(delta);return
+	if swimming:
+		_swim_update(delta);_update_catalyst(delta);return
 	var was_air: = not is_on_floor()
 	if was_air:
 		air_t += delta
@@ -1025,7 +1077,7 @@ func _physics_process(delta: float) -> void :
 		loco = ""
 		if mag <= 0.05: want = facing_dir()
 	elif not (sprint_held and mag > 0.05) and is_on_floor():
-		stamina = minf(100.0, stamina + 28.0 * delta)
+		stamina = minf(stamina_max, stamina + 28.0 * delta)
 	if land_lock > 0.0:
 		land_lock -= delta
 		spd *= 0.35
@@ -1043,6 +1095,13 @@ func _physics_process(delta: float) -> void :
 	velocity.z = lerpf(velocity.z, hv.z, 12.0 * delta)
 	if (mag > 0.05 or gliding) and attack_lock <= 0.0: _face_towards(want, false, delta * (0.5 if gliding else 1.0))
 	move_and_slide()
+	visual.position.y = lerpf(visual.position.y, 0.0, clampf(10.0 * delta, 0.0, 1.0))
+	if enabled and dead_t <= 0.0:
+		_try_climb(want, mag, delta)
+		if climbing: return
+		_check_water()
+		if swimming: return
+		_track_safe(delta)
 	if is_on_floor():
 		if was_air:
 			if gliding: stop_glide()
@@ -1117,3 +1176,260 @@ func _lean(delta: float) -> void :
 		target = clampf( - rate * hs * 0.016, -0.2, 0.2)
 	roll = lerpf(roll, target, clampf(7.0 * delta, 0.0, 1.0))
 	visual.rotation.z = roll
+
+
+# ----------------------------------------------------------------------------
+# Escalade
+# ----------------------------------------------------------------------------
+func _ray(from: Vector3, to: Vector3) -> Dictionary:
+	var q: = PhysicsRayQueryParameters3D.create(from, to, 1)
+	q.exclude = [get_rid()]
+	var hit: = get_world_3d().direct_space_state.intersect_ray(q)
+	if not hit.is_empty() and hit.collider is Object and (hit.collider as Object).has_meta("no_climb"): return {}
+	return hit
+
+## En poussant contre une paroi assez raide, le héros s'y accroche (tout de suite en l'air, après un court instant au sol).
+func _try_climb(want: Vector3, mag: float, delta: float) -> void :
+	if climb_cd > 0.0 or mag < 0.3 or stamina < 1.0 or attack_lock > 0.05 or dash_t > 0.0 or (main and main.dungeon):
+		climb_push = 0.0;return
+	var wn: = Vector3.ZERO
+	for i in get_slide_collision_count():
+		var col: = get_slide_collision(i)
+		var n: = col.get_normal()
+		var who: = col.get_collider()
+		if who is Object and ((who as Object).has_meta("no_climb") or who is Enemy): continue
+		if n.y < CLIMB_WALL_Y and n.y > -0.35:
+			wn = n;break
+	if wn == Vector3.ZERO:
+		climb_push = 0.0;return
+	var nh: = Vector3(wn.x, 0, wn.z).normalized()
+	if want.normalized().dot( - nh) < 0.45:
+		climb_push = 0.0;return
+	var chest: = global_position + Vector3(0, 1.0, 0)
+	var hit: = _ray(chest, chest - nh * 1.3)
+	if hit.is_empty() or (hit.normal as Vector3).y > CLIMB_WALL_Y:
+		climb_push = 0.0;return
+	climb_push += delta
+	if is_on_floor() and not gliding and climb_push < 0.12: return
+	_start_climb(hit.normal)
+
+func _start_climb(n: Vector3) -> void :
+	if gliding: stop_glide()
+	climbing = true;climb_n = n.normalized();climb_push = 0.0;climb_jump_t = 0.0
+	velocity = Vector3.ZERO;combo = 0;lunge_t = 0.0
+	_face_towards( - Vector3(n.x, 0, n.z), true)
+	_play("Climb_Idle", 0.12, 1.0)
+	_sfx("step", -8.0)
+
+func _end_climb(push: = Vector3.ZERO) -> void :
+	climbing = false;climb_jump_t = 0.0
+	climb_cd = 0.45
+	velocity = push
+	air_t = 0.0;fall_speed = 0.0
+	cur_anim = ""
+
+## Saut d'escalade : bond rapide dans la direction voulue (coûte de l'endurance).
+func _climb_jump() -> void :
+	if climb_jump_t > 0.0: return
+	if stamina < CLIMB_JUMP_COST:
+		_end_climb(Vector3(climb_n.x, 0, climb_n.z).normalized() * 2.0);return
+	stamina -= CLIMB_JUMP_COST
+	climb_jump_t = 0.32
+	_sfx("jump", -6.0)
+	FX.particles(global_position + Vector3(0, 0.8, 0) - Vector3(climb_n.x, 0, climb_n.z) * 0.3, Color(0.85, 0.8, 0.7), 8, 1.8, 0.4, 0.06, -4.0)
+
+func _climb_update(delta: float) -> void :
+	var nh: = Vector3(climb_n.x, 0, climb_n.z)
+	nh = nh.normalized() if nh.length() > 0.05 else - facing_dir()
+	var up_t: = (Vector3.UP - climb_n * climb_n.y).normalized()
+	var right: = ( - nh).cross(Vector3.UP).normalized()
+	var iv: = input_vec if (enabled and dead_t <= 0.0) else Vector2.ZERO
+	var move: = up_t * iv.y + right * iv.x
+	if move.length() > 1.0: move = move.normalized()
+	var spd: = CLIMB_SPEED
+	if climb_jump_t > 0.0:
+		climb_jump_t -= delta
+		move = (up_t * maxf(iv.y, 0.35) + right * iv.x).normalized()
+		spd = 6.2
+	var moving: = move.length() > 0.12
+	if moving and climb_jump_t <= 0.0:
+		stamina = maxf(0.0, stamina - CLIMB_DRAIN * delta)
+	if stamina <= 0.0:
+		FX.float_text(global_position + Vector3(0, 2.0, 0), "Endurance épuisée", Color(1.0, 0.7, 0.45), 36, 1.0, 1.0)
+		_end_climb(nh * 1.5);return
+	if iv.y < -0.3 and is_on_floor():
+		_end_climb();return
+	var chest: = global_position + Vector3(0, 1.0, 0)
+	var head: = global_position + Vector3(0, 1.65, 0)
+	var hc: = _ray(chest, chest - nh * 1.4)
+	var vel: = move * spd
+	if hc.is_empty():
+		var feet: = global_position + Vector3(0, 0.3, 0)
+		if _ray(feet, feet - nh * 1.4).is_empty():
+			_end_climb();return
+		# le buste dépasse le haut de la paroi : se hisser si le dessus est praticable, sinon rester accroché
+		if _try_vault(nh): return
+		vel.y = minf(vel.y, 0.0)
+		vel -= nh * 1.2
+	else:
+		var n: Vector3 = hc.normal
+		if n.y > 0.74 and is_on_floor():
+			_end_climb();return
+		if n.y < 0.8: climb_n = climb_n.slerp(n, clampf(12.0 * delta, 0.0, 1.0)).normalized()
+		var want_d: = 0.34 + 0.68 * maxf(n.y, 0.0)
+		var dist: = (chest - (hc.position as Vector3)).dot(n)
+		vel += - n * clampf((dist - want_d) * 10.0, -2.0, 4.0)
+		if move.dot(up_t) > 0.2 and _ray(head, head - nh * 1.4).is_empty() and _try_vault(nh): return
+	velocity = vel
+	move_and_slide()
+	_face_towards( - nh, false, delta)
+	var lean: = clampf(asin(clampf(climb_n.y, -0.3, 0.75)), -0.15, 0.75)
+	visual.rotation.x = lerpf(visual.rotation.x, lean, clampf(8.0 * delta, 0.0, 1.0))
+	visual.position.y = lerpf(visual.position.y, 0.0, clampf(10.0 * delta, 0.0, 1.0))
+	visual.rotation.z = lerpf(visual.rotation.z, 0.0, clampf(8.0 * delta, 0.0, 1.0));roll = visual.rotation.z
+	if climb_jump_t > 0.0:
+		_play("Climb", 0.08, 2.6)
+	elif moving:
+		_play("Climb", 0.2, clampf(spd * move.length() / 1.1, 0.6, 2.4))
+		step_t -= delta * 2.0
+		if step_t <= 0.0:
+			step_t = 0.9;_sfx("step", -16.0)
+	else:
+		_play("Climb_Idle", 0.25, 1.0)
+
+## Arrivé au bord : se hisser sur le dessus s'il est assez plat et qu'il y a la place de se tenir debout.
+func _try_vault(nh: Vector3) -> bool:
+	var top: = Vector3.INF
+	for reach: float in [0.5, 0.8, 1.1]:
+		var probe: = global_position + Vector3(0, 2.4, 0) - nh * reach
+		var hit: = _ray(probe, probe - Vector3(0, 2.8, 0))
+		if hit.is_empty() or (hit.normal as Vector3).y < 0.72: continue
+		var q: Vector3 = hit.position
+		if not _ray(q + Vector3(0, 0.15, 0), q + Vector3(0, 1.7, 0)).is_empty(): continue
+		top = q;break
+	if top == Vector3.INF: return false
+	climbing = false;vaulting = true;vault_t = 0.0
+	vault_from = global_position;vault_to = top + Vector3(0, 0.03, 0)
+	velocity = Vector3.ZERO
+	_play("Climb", 0.08, 2.4)
+	_sfx("jump", -8.0)
+	return true
+
+func _vault_update(delta: float) -> void :
+	vault_t += delta
+	var k: = clampf(vault_t / VAULT_TIME, 0.0, 1.0)
+	var p: = vault_from.lerp(vault_to, smoothstep(0.3, 1.0, k))
+	p.y = lerpf(vault_from.y, vault_to.y, smoothstep(0.0, 0.6, k)) + sin(k * PI) * 0.15
+	global_position = p
+	velocity = Vector3.ZERO
+	visual.rotation.x = lerpf(visual.rotation.x, 0.25 * sin(k * PI), clampf(12.0 * delta, 0.0, 1.0))
+	if k > 0.55 and cur_anim != "Land": _play("Land", 0.12, 1.2)
+	if k >= 1.0:
+		vaulting = false;climb_cd = 0.3;land_lock = 0.12
+		air_t = 0.0;fall_speed = 0.0
+		apply_floor_snap()
+
+
+# ----------------------------------------------------------------------------
+# Nage
+# ----------------------------------------------------------------------------
+func _check_water() -> void :
+	if main == null or main.dungeon: return
+	var wy: float = main.world.water_level_at(global_position.x, global_position.z)
+	if wy == - INF: return
+	var ground: float = main.world.height_at(global_position.x, global_position.z)
+	if wy - ground > SWIM_ENTER and global_position.y < wy - 0.9:
+		_start_swim(wy)
+
+func _start_swim(wy: float) -> void :
+	swimming = true;water_y = wy
+	if gliding: stop_glide()
+	combo = 0;lunge_t = 0.0;dash_t = 0.0;land_lock = 0.0
+	var k: = clampf( - velocity.y / 10.0, 0.25, 1.5)
+	var p: = Vector3(global_position.x, wy + 0.05, global_position.z)
+	FX.ring(p, Color(0.88, 0.96, 1.0), 0.3, 0.8 + 1.6 * k, 0.55, 0.12, 0.7)
+	FX.particles(p + Vector3(0, 0.1, 0), Color(0.82, 0.93, 1.0), int(8 + 16 * k), 2.0 + 2.5 * k, 0.55, 0.07, -9.0)
+	_sfx("splash", -8.0 + 4.0 * k)
+	velocity.y *= 0.2
+	_play("Swim_Idle", 0.2, 1.0)
+
+func _end_swim() -> void :
+	swimming = false
+	cur_anim = ""
+	air_t = 0.0;fall_speed = 0.0
+
+func _swim_update(delta: float) -> void :
+	var wy: float = main.world.water_level_at(global_position.x, global_position.z) if main else - INF
+	if wy == - INF:
+		_end_swim();return
+	water_y = wy
+	var ground: float = main.world.height_at(global_position.x, global_position.z)
+	if wy - ground < SWIM_EXIT:
+		_end_swim();return
+	var dirs: = _cam_basis_dirs()
+	var want: Vector3 = (dirs[0] * input_vec.y + dirs[1] * input_vec.x) if (enabled and dead_t <= 0.0) else Vector3.ZERO
+	var mag: = minf(want.length(), 1.0)
+	var fast: = sprint_held and mag > 0.05 and stamina > 0.0
+	var spd: = 0.0
+	if mag > 0.05: spd = SWIM_FAST if fast else (SWIM_SPEED if mag >= 0.55 else SWIM_SPEED * 0.55)
+	stamina = maxf(0.0, stamina - (16.0 if fast else (3.0 if mag > 0.05 else 1.5)) * delta)
+	if stamina <= 0.0:
+		_drown();return
+	# on ne s'éloigne pas trop au large
+	var flat: = Vector3(global_position.x, 0, global_position.z)
+	if flat.length() > SEA_LIMIT and want.dot(flat) > 0.0:
+		var out: = flat.normalized()
+		want -= out * want.dot(out)
+		if sea_warn_t <= 0.0 and main:
+			sea_warn_t = 6.0
+			main.ui.message("Le large est trop dangereux, faites demi-tour.", 2.0, Color(0.75, 0.9, 1.0))
+	var hv: = want.normalized() * spd if want.length() > 0.01 else Vector3.ZERO
+	velocity.x = lerpf(velocity.x, hv.x, clampf(4.0 * delta, 0.0, 1.0))
+	velocity.z = lerpf(velocity.z, hv.z, clampf(4.0 * delta, 0.0, 1.0))
+	velocity.y = clampf((wy - SWIM_ROOT - global_position.y) * 5.0, -5.0, 3.0)
+	if mag > 0.05: _face_towards(want, false, delta * 0.7)
+	move_and_slide()
+	# sortir de l'eau en grimpant sur une berge raide ou un mur
+	_try_climb(want, mag, delta)
+	if climbing:
+		swimming = false;return
+	var hs: = Vector2(velocity.x, velocity.z).length()
+	var stroke: = hs > 0.6
+	visual.position.y = lerpf(visual.position.y, 0.25 if stroke else -0.22, clampf(4.0 * delta, 0.0, 1.0))
+	visual.rotation.x = lerpf(visual.rotation.x, 0.0, clampf(8.0 * delta, 0.0, 1.0))
+	visual.rotation.z = lerpf(visual.rotation.z, 0.0, clampf(8.0 * delta, 0.0, 1.0));roll = visual.rotation.z
+	if stroke: _play("Swim", 0.3, clampf(hs / 2.2, 0.6, 2.2))
+	else: _play("Swim_Idle", 0.3, 1.0)
+	swim_fx_t -= delta
+	if swim_fx_t <= 0.0:
+		swim_fx_t = (0.22 if fast else 0.4) if stroke else 0.9
+		var p: = Vector3(global_position.x, wy + 0.04, global_position.z)
+		FX.ring(p, Color(0.9, 0.97, 1.0), 0.35, 1.1 if stroke else 0.9, 0.8, 0.07, 0.45)
+		if stroke:
+			FX.particles(p + facing_dir() * 0.5 + Vector3(0, 0.1, 0), Color(0.88, 0.95, 1.0), 6 if fast else 3, 1.6, 0.4, 0.05, -7.0)
+			_sfx("water", -18.0 if not fast else -13.0)
+
+## Plus d'endurance dans l'eau : le héros est ramené sur la terre ferme.
+func _drown() -> void :
+	swimming = false
+	var p: = Vector3(global_position.x, water_y + 0.1, global_position.z)
+	FX.particles(p, Color(0.85, 0.95, 1.0), 20, 2.5, 0.7, 0.07, 1.5)
+	_sfx("splash", -4.0)
+	if main: main.on_drown()
+
+func _track_safe(delta: float) -> void :
+	safe_t -= delta
+	if safe_t > 0.0 or not is_on_floor() or main == null or main.dungeon: return
+	safe_t = 0.4
+	var p: = global_position
+	var w = main.world
+	if w.lava_at(p) or not w.is_land(p.x, p.z, 1.0): return
+	if w.water_level_at(p.x, p.z) - w.height_at(p.x, p.z) > 0.4: return
+	safe_pos = p
+
+## Arrête net escalade / nage / planeur (téléportation, réapparition, entrée dans un domaine).
+func reset_motion() -> void :
+	climbing = false;vaulting = false;swimming = false;climb_jump_t = 0.0;climb_cd = 0.3
+	stop_glide()
+	visual.position = Vector3.ZERO;visual.rotation.x = 0.0
+	cur_anim = ""

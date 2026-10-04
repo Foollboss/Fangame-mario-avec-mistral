@@ -32,6 +32,15 @@ var dungeon: Dungeon
 var lava_t: = 0.0
 var storm_t: = 0.0
 var crystals_got: = 0
+## Anémoculus : trouvés, offerts aux statues, niveau de résonance (= bonus d'endurance)
+var oculi: Array = []
+var oculi_got: = 0
+var oculi_offered: = 0
+var statue_level: = 0
+var oculus_hint: = false
+var resonance_t: = 0.0
+const OCULUS_LEVELS: = [3, 4, 4, 5, 5, 6, 6, 7]
+const STAMINA_PER_LEVEL: = 15.0
 var shards: = 0
 var food: = 0
 var rank: = 1
@@ -136,6 +145,7 @@ func _ready() -> void :
 	_spawn_waypoints()
 	_spawn_chests()
 	_spawn_crystals()
+	_spawn_oculi()
 	_spawn_apples()
 	_spawn_cat()
 	for a in args:
@@ -262,6 +272,18 @@ func _ready() -> void :
 			await snap(f[0])
 		get_tree().quit()
 		return
+	for t in ["climbtest", "swimtest", "oculustest"]:
+		if "--" + t in args:
+			autotest = true
+			start_game(false)
+			await _wait(1.0)
+			match t:
+				"climbtest": await _climb_test()
+				"swimtest": await _swim_test()
+				"oculustest": await _oculus_test()
+			print(t.to_upper() + " done")
+			get_tree().quit()
+			return
 	if "--questtest" in args:
 		autotest = true
 		start_game(false)
@@ -313,6 +335,10 @@ func start_game(load_save: bool) -> void :
 
 func _new_game() -> void :
 	rank = 1;xp = 0;shards = 0;food = 0;crystals_got = 0;treasure_map = false
+	oculi_got = 0;oculi_offered = 0;statue_level = 0;oculus_hint = false
+	for o in oculi:
+		o.got = false;(o.node as Node3D).visible = true
+	apply_stamina_level()
 	domain_clears = {}
 	for id in world_bosses: world_bosses[id].kills = 0
 	quests.reset()
@@ -320,6 +346,7 @@ func _new_game() -> void :
 	party.apply_rank(1)
 	party.revive_all()
 	party.global_position = world.spawn_pos
+	party.safe_pos = world.spawn_pos
 	rig.yaw = PI
 	_unlock_waypoint(0, true)
 
@@ -410,7 +437,7 @@ func enter_domain(id: String) -> void :
 		ui.message("Rang d'aventure %d requis pour entrer dans ce domaine (tu es rang %d)." % [int(dm.rank), rank], 2.8, Color(1.0, 0.6, 0.5))
 		audio.play("click", -4.0)
 		return
-	party.stop_glide()
+	party.reset_motion()
 	dungeon = Dungeon.new()
 	dungeon.name = "Domain_" + id
 	add_child(dungeon)
@@ -433,6 +460,7 @@ func leave_domain(cleared: bool) -> void :
 	daynight.override_hour(-1.0)
 	var p: Vector3 = dm.pos
 	var out: = - p;out.y = 0;out = out.normalized()
+	party.reset_motion()
 	party.global_position = world.snap(p + out * 5.0, 0.6);party.velocity = Vector3.ZERO
 	rig.global_position = party.global_position + Vector3(0, 1.45, 0)
 	rig.yaw = atan2(out.x, out.z)
@@ -618,6 +646,103 @@ func _spawn_crystals() -> void :
 		add_child(mi);mi.position = p
 		_view_range(mi, 110.0)
 		crystals.append({"node": mi, "got": false})
+
+var _oc_halo: Material
+func _spawn_oculi() -> void :
+	_oc_halo = FX.mat_emit(Color(0.45, 1.0, 0.8), 1.4, 0.18)
+	var halo_mesh: = SphereMesh.new();halo_mesh.radius = 0.5;halo_mesh.height = 1.0;halo_mesh.radial_segments = 16;halo_mesh.rings = 8
+	for p in world.oculus_spots:
+		var n: = Node3D.new();n.name = "Oculus%d" % oculi.size();add_child(n);n.position = p
+		var mi: = world.make_prop("Oculus");mi.scale = Vector3.ONE * 1.3;n.add_child(mi)
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var h: = MeshInstance3D.new();h.mesh = halo_mesh;h.material_override = _oc_halo;n.add_child(h)
+		h.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_view_range(n, 90.0)
+		oculi.append({"node": n, "mesh": mi, "got": false, "pos": p})
+
+func oculi_in_hand() -> int:
+	return oculi_got - oculi_offered
+
+## Anémoculus déjà offerts pour le niveau en cours.
+func statue_progress() -> int:
+	var spent: = 0
+	for k in mini(statue_level, OCULUS_LEVELS.size()): spent += int(OCULUS_LEVELS[k])
+	return oculi_offered - spent
+
+func statue_reward(level: int) -> Dictionary:
+	return {"xp": 60 + 20 * level, "shards": 30 + 10 * level}
+
+## Endurance maximale = 100 + 15 par niveau de résonance des statues.
+func apply_stamina_level() -> void :
+	party.stamina_max = 100.0 + STAMINA_PER_LEVEL * statue_level
+	party.stamina = minf(party.stamina, party.stamina_max)
+
+## Offre tous les Anémoculus utiles ; renvoie le nombre de niveaux gagnés.
+func offer_oculi() -> int:
+	var gained: = 0
+	while statue_level < OCULUS_LEVELS.size() and oculi_in_hand() > 0:
+		var need: int = int(OCULUS_LEVELS[statue_level]) - statue_progress()
+		var k: = mini(need, oculi_in_hand())
+		oculi_offered += k
+		if k < need: break
+		statue_level += 1;gained += 1
+		var rw: = statue_reward(statue_level)
+		shards += int(rw.shards)
+		give_xp(int(rw.xp))
+	apply_stamina_level()
+	if gained > 0:
+		party.stamina = party.stamina_max
+		var s: = _nearest(world.statues)
+		if s != Vector3.INF:
+			FX.column(s, Color(0.5, 1.0, 0.82), 1.6, 9.0, 1.4)
+			FX.particles(s + Vector3(0, 3.0, 0), Color(0.6, 1.0, 0.85), 50, 6.0, 1.2, 0.1, -2.0)
+		FX.sphere(party.global_position + Vector3(0, 1.0, 0), Color(0.6, 1.0, 0.85), 0.3, 2.2, 0.5, 0.5)
+		ui.show_banner("Endurance maximale augmentée : %d" % int(party.stamina_max), Color(0.65, 1.0, 0.85))
+		if statue_level >= OCULUS_LEVELS.size():
+			ui.message("La Statue d'Aetheria a atteint sa résonance maximale !", 3.0, Color(0.7, 1.0, 0.88))
+	save_game()
+	return gained
+
+func _collect_oculus(o: Dictionary) -> void :
+	o.got = true;oculi_got += 1
+	var n: Node3D = o.node
+	var q: Vector3 = n.position
+	FX.particles(q, Color(0.55, 1.0, 0.85), 28, 3.5, 0.8, 0.08, 0.0)
+	FX.sphere(q, Color(0.55, 1.0, 0.85), 0.2, 1.5, 0.35, 0.5)
+	var tw: = n.create_tween()
+	tw.tween_method( func(k: float):
+		n.position = q.lerp(party.global_position + Vector3(0, 1.1, 0), k)
+		n.scale = Vector3.ONE * (1.0 - k * 0.85), 0.0, 1.0, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_callback( func():
+		n.visible = false;n.position = q;n.scale = Vector3.ONE
+		FX.particles(party.global_position + Vector3(0, 1.1, 0), Color(0.6, 1.0, 0.85), 14, 2.0, 0.5, 0.06, 1.0))
+	audio.play("pickup", -1.0)
+	audio.play("orb", -6.0)
+	ui.toast("Anémoculus  %d / %d" % [oculi_got, oculi.size()], ui.icons.get("ic_oculus"), Color(0.62, 1.0, 0.86))
+	give_xp(15)
+	if not oculus_hint:
+		oculus_hint = true
+		ui.message("Un Anémoculus ! Offre-les à une Statue d'Aetheria pour augmenter ton endurance.", 3.6, Color(0.7, 1.0, 0.88))
+	save_game()
+
+func nearest_oculus_dist() -> float:
+	var best: = INF
+	for o in oculi:
+		if not o.got: best = minf(best, party.global_position.distance_to(o.pos))
+	return best
+
+## Endurance épuisée dans l'eau : fondu au noir puis retour sur la dernière terre ferme.
+func on_drown() -> void :
+	party.frozen_t = 0.5
+	ui.fade_flash(0.3, 0.2, 0.45)
+	ui.message("Plus d'endurance… tu regagnes la rive.", 2.4, Color(0.75, 0.9, 1.0))
+	get_tree().create_timer(0.32, false).timeout.connect( func():
+		var p: Vector3 = party.safe_pos if party.safe_pos != Vector3.INF else world.statue_pos + Vector3(0, 0.6, 5.0)
+		party.reset_motion()
+		party.global_position = p + Vector3(0, 0.4, 0)
+		party.velocity = Vector3.ZERO
+		party.stamina = party.stamina_max * 0.5
+		rig.global_position = party.global_position + Vector3(0, 1.45, 0))
 
 func _spawn_apples() -> void :
 	var m: = StandardMaterial3D.new();m.albedo_color = Color(1.0, 0.45, 0.2);m.emission_enabled = true
@@ -834,7 +959,7 @@ func on_party_down() -> void :
 
 func respawn_party(full: = true) -> void :
 	if full: party.revive_all()
-	party.stop_glide()
+	party.reset_motion()
 	if dungeon:
 
 		leave_domain(false)
@@ -845,7 +970,7 @@ func respawn_party(full: = true) -> void :
 
 func teleport(i: int) -> void :
 	var p: Vector3 = world.waypoints[i].pos
-	party.stop_glide()
+	party.reset_motion()
 	party.global_position = p + Vector3(0, 0.6, 3.0)
 	party.velocity = Vector3.ZERO
 	rig.global_position = party.global_position + Vector3(0, 1.45, 0)
@@ -908,6 +1033,10 @@ func _find_interaction() -> Dictionary:
 			return {"kind": "apple", "ref": a, "verb": "Cueillir", "what": "la pomme solaire"}
 	if cat_node and cat_node.visible and not cat_found and cat_node.global_position.distance_to(p) < 2.4:
 		return {"kind": "cat", "verb": "Caresser", "what": "Minou"}
+	if not party.busy_moving():
+		for s in world.statues:
+			if Vector2(p.x - s.x, p.z - s.z).length() < 4.8 and absf(p.y - s.y) < 2.5:
+				return {"kind": "statue", "verb": "Offrir à", "what": "la Statue d'Aetheria"}
 	return {}
 
 func interact() -> void :
@@ -918,6 +1047,9 @@ func interact() -> void :
 		"apple": _pick_apple(interact_target.ref)
 		"cat": _find_cat()
 		"domain": enter_domain(interact_target.id)
+		"statue":
+			party.input_vec = Vector2.ZERO
+			ui.show_statue(true)
 		"dungeon":
 			if dungeon: dungeon.interact(interact_target)
 	interact_target = {}
@@ -1081,7 +1213,7 @@ func save_game() -> void :
 	var wb: = {}
 	for id in world_bosses: wb[id] = world_bosses[id].kills
 	var d: = {
-		"version": 3, "rank": rank, "xp": xp, "shards": shards, "food": food, "treasure_map": treasure_map, 
+		"version": 4, "rank": rank, "xp": xp, "shards": shards, "food": food, "treasure_map": treasure_map, 
 		"reactions": reactions, "kills": kills, "t_play": t_play, "boss_done": boss_done, 
 		"hour": daynight.saved_hour if daynight.saved_hour >= 0.0 else daynight.hour, 
 		"pos": [pos.x, pos.y, pos.z], "active": party.active, 
@@ -1091,6 +1223,8 @@ func save_game() -> void :
 		"chests": chests.filter( func(c): return not c.get("reward", false)).map( func(c): return c.opened), 
 		"boss_chest": _boss_chest_state(), 
 		"crystals": crystals.map( func(c): return c.got), "apples": apples.map( func(a): return a.got), 
+		"oculi": oculi.map( func(o): return o.got), "oculi_offered": oculi_offered, "statue_level": statue_level, 
+		"oculus_hint": oculus_hint, 
 		"seals": seals.map( func(s): return s.active), "waypoints": wp_unlocked.keys(), 
 		"cat_found": cat_found, "cat_returned": cat_returned, "quests": quests.save_state(), 
 	}
@@ -1147,6 +1281,18 @@ func load_game() -> bool:
 			crystals[i].got = true
 			(crystals[i].node as Node3D).visible = false
 			crystals_got += 1
+	var oc: Array = d.get("oculi", [])
+	oculi_got = 0
+	for i in mini(oc.size(), oculi.size()):
+		if bool(oc[i]):
+			oculi[i].got = true
+			(oculi[i].node as Node3D).visible = false
+			oculi_got += 1
+	statue_level = clampi(int(d.get("statue_level", 0)), 0, OCULUS_LEVELS.size())
+	oculi_offered = clampi(int(d.get("oculi_offered", 0)), 0, oculi_got)
+	oculus_hint = bool(d.get("oculus_hint", oculi_got > 0))
+	apply_stamina_level()
+	party.stamina = party.stamina_max
 	var ap: Array = d.get("apples", [])
 	for i in mini(ap.size(), apples.size()):
 		if bool(ap[i]):
@@ -1178,6 +1324,7 @@ func load_game() -> bool:
 	if pos.size() == 3:
 		party.global_position = Vector3(float(pos[0]), float(pos[1]) + 0.5, float(pos[2]))
 		if party.global_position.x > World.DUNGEON_X: party.global_position = world.spawn_pos
+		party.safe_pos = party.global_position
 		rig.global_position = party.global_position + Vector3(0, 1.45, 0)
 	_on_quests_changed()
 	return true
@@ -1194,6 +1341,12 @@ func _process(delta: float) -> void :
 		(w.crystal as Node3D).position.y = 3.6 + sin(t * 1.5) * 0.12
 	for a in apples:
 		if not a.got: (a.node as Node3D).rotation.y = t
+	for i in oculi.size():
+		var o: Dictionary = oculi[i]
+		if o.got: continue
+		var on: Node3D = o.node
+		on.rotation.y = t * 1.8 + i
+		on.position.y = (o.pos as Vector3).y + sin(t * 2.2 + i) * 0.12
 	if world.windmill_blades: world.windmill_blades.get_child(0).rotation.z += delta * 0.7
 	if not playing:
 		rig.yaw += delta * 0.06
@@ -1210,6 +1363,9 @@ func _process(delta: float) -> void :
 				ui.dialogue_next()
 		elif ui.victory.visible:
 			party.input_vec = Vector2.ZERO
+		elif ui.statue_menu.visible:
+			party.input_vec = Vector2.ZERO;party.sprint_held = false
+			if Input.is_action_just_pressed("pause") or Input.is_action_just_pressed("interact"): ui.show_statue(false)
 		elif ui.map_ui.open:
 			party.input_vec = Vector2.ZERO;party.sprint_held = false
 			if Input.is_action_just_pressed("map") or Input.is_action_just_pressed("pause"): ui.map_ui.toggle()
@@ -1269,6 +1425,23 @@ func _world_update(delta: float) -> void :
 			audio.play("pickup")
 			give_xp(10)
 			quests.on_crystal(crystals_got)
+
+	if not dungeon:
+		var sa: = pp + Vector3(0, 0.3, 0); var sb: = pp + Vector3(0, 1.45, 0)
+		for o in oculi:
+			if o.got: continue
+			var q: Vector3 = (o.node as Node3D).position
+			if absf(q.x - pp.x) > 3.0 or absf(q.z - pp.z) > 3.0: continue
+			if Geometry3D.get_closest_point_to_segment(q, sa, sb).distance_to(q) < 1.35:
+				_collect_oculus(o)
+		# un tintement doux quand un Anémoculus est tout proche
+		resonance_t -= delta
+		if resonance_t <= 0.0:
+			resonance_t = 3.0
+			var d: = nearest_oculus_dist()
+			if d < 22.0:
+				audio.play("blip", -20.0 + (22.0 - d) * 0.5, 0.02)
+				resonance_t = lerpf(1.2, 3.0, d / 22.0)
 
 	for i in wp_nodes.size():
 		if not wp_unlocked.has(i) and pp.distance_to(world.waypoints[i].pos) < 6.0:
@@ -2050,3 +2223,305 @@ func _autotest() -> void :
 	print("AUTOTEST rank=%d xp=%d kills=%d reactions=%d seals=%d camps=%d shards=%d" % [rank, xp, kills, reactions, seals_active_count(), camps_cleared_count(), shards])
 	print("AUTOTEST done")
 	get_tree().quit()
+
+
+# ----------------------------------------------------------------------------
+# Tests : escalade, nage, Anémoculus
+# ----------------------------------------------------------------------------
+func _ok(cond: bool) -> String:
+	return "ok" if cond else "FAIL"
+
+## Pousse le héros vers `target` (caméra derrière lui) pendant au plus `t` secondes, s'arrête si `until` est vrai.
+func _drive(target: Vector3, t: float, until: Callable = Callable(), climb_up: = false) -> void :
+	var left: = t
+	while left > 0.0:
+		if until.is_valid() and until.call(): break
+		var to: = target - party.global_position;to.y = 0
+		if party.climbing and climb_up:
+			party.input_vec = Vector2(0, 1)
+		elif to.length() > 0.05:
+			rig.yaw = atan2( - to.x, - to.z)
+			party.input_vec = Vector2(0, 1)
+		await get_tree().physics_frame
+		left -= get_physics_process_delta_time()
+	party.input_vec = Vector2.ZERO
+
+func _side_cam(p: Vector3, dist: = 9.0, pitch: = -0.15) -> void :
+	rig.distance = dist;rig.pitch = pitch
+	rig.global_position = p + Vector3(0, 1.45, 0)
+
+func _climb_test() -> void :
+	party.test_invuln = true
+	# 1) mur d'une maison du village
+	var ridge: Vector3 = world.house_ridges[1]
+	var hc: = Vector3(ridge.x, 0, ridge.z)
+	var out: = world.village - hc;out.y = 0;out = out.normalized()
+	var start: = world.snap(hc + out * 6.0, 0.4)
+	_place(start, hc, 7.0, -0.2)
+	await _wait(0.5)
+	var y0: = party.global_position.y
+	await _drive(hc, 4.0, func(): return party.climbing)
+	print("CLIMBTEST attach_house climbing=%s -> %s" % [party.climbing, _ok(party.climbing)])
+	await _drive(hc, 1.2, Callable(), true)
+	rig.yaw += 0.9
+	await _wait(0.1)
+	await snap("climb_wall")
+	var st0: = party.stamina
+	await _drive(hc, 9.0, func(): return not party.climbing and not party.vaulting and party.is_on_floor() and party.global_position.y > y0 + 6.0, true)
+	await _wait(0.6)
+	var top_y: = party.global_position.y
+	print("CLIMBTEST house_top y=%.2f ridge=%.2f stamina_used=%.1f on_floor=%s -> %s" % [top_y, ridge.y, st0 - party.stamina, party.is_on_floor(), 
+		_ok(top_y > ridge.y - 1.2 and party.is_on_floor())])
+	_side_cam(party.global_position, 8.0, -0.35)
+	await _wait(0.4)
+	await snap("climb_roof")
+	# 2) saut d'escalade et lâcher prise sur le phare
+	var lh: Vector3 = world.lighthouse
+	var lo: = Vector3(lh.x, 0, lh.z).normalized() * -1.0
+	_place(world.snap(lh + lo * 6.0, 0.4), lh, 7.0, -0.2)
+	await _wait(0.4)
+	await _drive(lh, 4.0, func(): return party.climbing)
+	await _drive(lh, 1.5, Callable(), true)
+	var ya: = party.global_position.y
+	party.stamina = party.stamina_max
+	party.do_jump()
+	await _wait(0.4)
+	var jumped: = party.global_position.y - ya
+	print("CLIMBTEST climb_jump dy=%.2f climbing=%s -> %s" % [jumped, party.climbing, _ok(jumped > 1.3 and party.climbing)])
+	party.stamina = party.stamina_max
+	await _drive(lh, 16.0, func(): return not party.climbing and not party.vaulting and party.global_position.y > 14.0 and party.is_on_floor(), true)
+	await _wait(0.5)
+	print("CLIMBTEST lighthouse_top y=%.2f (sol %.2f) -> %s" % [party.global_position.y, lh.y, _ok(party.global_position.y > lh.y + 15.0)])
+	_side_cam(party.global_position, 9.0, -0.5)
+	await _wait(0.4)
+	await snap("climb_lighthouse_top")
+	var got0: = oculi_got
+	await _wait(0.2)
+	print("CLIMBTEST lighthouse_oculus got=%d -> %s" % [oculi_got, _ok(oculi_got > got0 or oculi_got > 0)])
+	# lâcher prise
+	_place(world.snap(lh + lo * 6.0, 0.4), lh, 7.0, -0.2)
+	await _wait(0.3)
+	await _drive(lh, 4.0, func(): return party.climbing)
+	await _drive(lh, 1.0, Callable(), true)
+	party.do_dash()
+	await _wait(0.1)
+	print("CLIMBTEST let_go climbing=%s -> %s" % [party.climbing, _ok(not party.climbing)])
+	await _wait(1.5)
+	# 3) aiguille rocheuse (celle qui a un Anémoculus en plein ciel à côté)
+	var sp: Vector3 = world.spire_tops[1]
+	var sb: = Vector3(sp.x, 0, sp.z)
+	var so: = world.village - sb;so.y = 0;so = so.normalized()
+	_place(world.snap(sb + so * 7.0, 0.4), sb, 8.0, -0.2)
+	await _wait(0.4)
+	await _drive(sb, 5.0, func(): return party.climbing)
+	print("CLIMBTEST attach_spire climbing=%s -> %s" % [party.climbing, _ok(party.climbing)])
+	party.stamina = party.stamina_max
+	var g1: = oculi_got
+	await _drive(sb, 16.0, func(): return not party.climbing and not party.vaulting and party.is_on_floor() and party.global_position.y > sp.y - 1.5, true)
+	await _wait(0.3)
+	await _drive(sb, 1.5, func(): return oculi_got > g1)
+	await _wait(0.3)
+	print("CLIMBTEST spire_top y=%.2f top=%.2f oculus=%s stamina=%.0f -> %s" % [party.global_position.y, sp.y, oculi_got > g1, party.stamina, 
+		_ok(party.global_position.y > sp.y - 1.5 and oculi_got > g1)])
+	_side_cam(party.global_position, 10.0, -0.35)
+	await _wait(0.4)
+	await snap("climb_spire_top")
+	# planer depuis le sommet vers l'Anémoculus en plein ciel
+	var fl: Vector3 = Vector3.INF
+	for o in oculi:
+		if not o.got and Vector2(o.pos.x - sp.x, o.pos.z - sp.z).length() < 10.0 and o.pos.y < sp.y: fl = o.pos
+	if fl != Vector3.INF:
+		var g2: = oculi_got
+		var dir: = fl - party.global_position;dir.y = 0
+		rig.yaw = atan2( - dir.x, - dir.z)
+		party.input_vec = Vector2(0, 1)
+		await _wait(0.3)
+		party.do_jump()
+		await _wait(0.3)
+		party.do_jump()
+		await _drive(fl, 4.0, func(): return oculi_got > g2)
+		print("CLIMBTEST glide_oculus got=%s gliding=%s -> %s" % [oculi_got > g2, party.gliding, _ok(oculi_got > g2)])
+	# 4) épuisement : on tombe
+	_place(world.snap(sb + so * 7.0, 0.4), sb, 8.0, -0.2)
+	await _wait(0.4)
+	await _drive(sb, 5.0, func(): return party.climbing)
+	party.stamina = 4.0
+	await _drive(sb, 2.0, func(): return not party.climbing, true)
+	print("CLIMBTEST exhausted climbing=%s -> %s" % [party.climbing, _ok(not party.climbing)])
+	await _wait(1.5)
+	# 5) le village n'est pas un mur : un PNJ ne s'escalade pas
+	var elder: Vector3 = npc_pos("elder")
+	_place(world.snap(elder + Vector3(0, 0, 3.0), 0.4), elder, 6.0)
+	await _wait(0.3)
+	await _drive(elder, 1.5)
+	print("CLIMBTEST npc_not_climbable climbing=%s -> %s" % [party.climbing, _ok(not party.climbing)])
+
+func _swim_test() -> void :
+	party.test_invuln = true
+	var lk: Vector3 = world.lake
+	# trouver la rive : depuis le centre vers l'extérieur
+	var shore: = lk
+	for k in 60:
+		var q: = lk + Vector3(1, 0, 0.4).normalized() * (10.0 + k)
+		if world.height_at(q.x, q.z) > World.LAKE_Y + 0.3:
+			shore = q;break
+	_place(world.snap(shore + (shore - lk).normalized() * 3.0, 0.4), lk, 6.0, -0.3)
+	await _wait(0.5)
+	await _drive(lk, 10.0, func(): return party.swimming)
+	print("SWIMTEST enter swimming=%s y=%.2f water=%.2f -> %s" % [party.swimming, party.global_position.y, World.LAKE_Y, _ok(party.swimming)])
+	await _drive(lk, 1.5)
+	party.input_vec = Vector2(0, 1)
+	rig.yaw += 1.2
+	await _wait(0.3)
+	await snap("swim_crawl")
+	party.input_vec = Vector2.ZERO
+	await _wait(1.2)
+	await snap("swim_idle")
+	var dy: = party.global_position.y - (World.LAKE_Y - Party.SWIM_ROOT)
+	print("SWIMTEST float dy=%.2f -> %s" % [dy, _ok(absf(dy) < 0.2)])
+	# Anémoculus du lac
+	var target: = Vector3.INF
+	for o in oculi:
+		if not o.got and Vector2(o.pos.x - lk.x, o.pos.z - lk.z).length() < 30.0 and absf(o.pos.y - World.LAKE_Y - 0.85) < 0.1: target = o.pos;break
+	var g0: = oculi_got
+	party.stamina = party.stamina_max
+	await _drive(target, 25.0, func(): return oculi_got > g0)
+	print("SWIMTEST lake_oculus got=%s -> %s" % [oculi_got > g0, _ok(oculi_got > g0)])
+	# nage rapide : consomme de l'endurance
+	party.stamina = party.stamina_max
+	party.sprint_held = true
+	var p0: = party.global_position
+	await _drive(lk + Vector3(-15, 0, 10), 1.5)
+	var fast_d: = Vector2(party.global_position.x - p0.x, party.global_position.z - p0.z).length()
+	print("SWIMTEST fast dist=%.2f stamina=%.0f -> %s" % [fast_d, party.stamina, _ok(fast_d > 4.0 and party.stamina < party.stamina_max - 15.0)])
+	# noyade : retour sur la rive
+	party.stamina = 3.0
+	await _drive(lk, 3.0, func(): return not party.swimming)
+	party.sprint_held = false
+	await _wait(1.2)
+	var land_h: = world.height_at(party.global_position.x, party.global_position.z)
+	print("SWIMTEST drown swimming=%s back_on_land=%s pos=%s -> %s" % [party.swimming, land_h > World.LAKE_Y, party.global_position, _ok(not party.swimming and land_h > World.LAKE_Y - 0.2)])
+	# sortir de l'eau à pied
+	_place(world.snap(shore + (shore - lk).normalized() * 3.0, 0.4), lk, 6.0)
+	await _wait(0.3)
+	await _drive(lk, 10.0, func(): return party.swimming)
+	await _drive(shore + (shore - lk).normalized() * 6.0, 8.0, func(): return not party.swimming)
+	await _wait(0.6)
+	print("SWIMTEST exit swimming=%s on_floor=%s -> %s" % [party.swimming, party.is_on_floor(), _ok(not party.swimming)])
+	# mer, près du ponton
+	var dk: Vector3 = world.dock_pos
+	_place(world.snap(dk + Vector3(-8, 0, 12), 0.4), dk + Vector3(-8, 0, -20), 6.0)
+	await _wait(0.3)
+	await _drive(dk + Vector3(-8, 0, -30), 12.0, func(): return party.swimming)
+	print("SWIMTEST sea swimming=%s y=%.2f -> %s" % [party.swimming, party.global_position.y, _ok(party.swimming)])
+	await _drive(dk + Vector3(-8, 0, -30), 1.0)
+	_side_cam(party.global_position, 7.0, -0.3)
+	await _wait(0.6)
+	await snap("swim_sea")
+
+func _oculus_test() -> void :
+	party.test_invuln = true
+	print("OCULUSTEST count=%d need=%d -> %s" % [oculi.size(), OCULUS_LEVELS.reduce( func(a, b): return a + b, 0), _ok(oculi.size() >= 40)])
+	var space: = get_world_3d().direct_space_state
+	var bad: = 0
+	for i in oculi.size():
+		var p: Vector3 = oculi[i].pos
+		var qp: = PhysicsPointQueryParameters3D.new();qp.position = p;qp.collision_mask = 1
+		var inside: = not space.intersect_point(qp, 1).is_empty()
+		var rq: = PhysicsRayQueryParameters3D.create(p, p - Vector3(0, 6.0, 0), 1)
+		var hit: = space.intersect_ray(rq)
+		var below: = 99.0 if hit.is_empty() else p.y - (hit.position as Vector3).y
+		var wy: = world.water_level_at(p.x, p.z)
+		var on_water: = wy > -INF and absf(p.y - wy - 0.85) < 0.05 and wy - world.height_at(p.x, p.z) > 1.3
+		var gliding_spot: = false
+		for t in world.spire_tops:
+			if Vector2(t.x - p.x, t.z - p.z).length() < 12.0 and p.y < t.y: gliding_spot = true
+		var ok: = not inside and (below < 2.4 or on_water or gliding_spot)
+		if not ok: bad += 1
+		print("  oculus %2d pos=(%.0f, %.1f, %.0f) inside=%s below=%.1f water=%s %s" % [i, p.x, p.y, p.z, inside, below, on_water, "" if ok else "<- BAD"])
+	print("OCULUSTEST placement bad=%d -> %s" % [bad, _ok(bad == 0)])
+	# vue d'un Anémoculus sur un toit : le héros se tient sur le faîtage, un peu à l'écart
+	var o0: Vector3 = oculi[0].pos
+	var r0: Vector3 = world.house_ridges[0]
+	party.global_position = r0 + (world.house_ridges[1] - r0).normalized() * 0.0 + Vector3(0, 0.1, 0)
+	party.reset_motion()
+	var hx: = Basis(Vector3.UP, atan2(world.village.x - r0.x, world.village.z - r0.z)) * Vector3(2.4, 0, 0)
+	party.global_position = r0 + hx + Vector3(0, 0.1, 0)
+	await _wait(0.3)
+	var lk: = o0 - party.global_position;lk.y = 0
+	rig.yaw = atan2( - lk.x, - lk.z) + 0.5;rig.pitch = -0.2;rig.distance = 4.0
+	party.visual.rotation.y = atan2(lk.x, lk.z)
+	await _wait(0.8)
+	await snap("oculus_roof")
+	# collecte
+	for k in 9:
+		var o: Dictionary = oculi[k + 6]
+		party.global_position = (o.node as Node3D).position - Vector3(0, 1.0, 0)
+		party.velocity = Vector3.ZERO
+		await get_tree().physics_frame
+		await _wait(0.12)
+	await _wait(0.3)
+	print("OCULUSTEST collect got=%d in_hand=%d -> %s" % [oculi_got, oculi_in_hand(), _ok(oculi_got == 9)])
+	await snap("oculus_toast")
+	# statue : interaction, menu, offrande
+	var s: Vector3 = world.statues[0]
+	_place(world.snap(s + Vector3(0, 0, 4.0), 0.4), s, 6.0)
+	await _wait(0.5)
+	interact_target = _find_interaction()
+	print("OCULUSTEST statue_prompt kind=%s -> %s" % [interact_target.get("kind", ""), _ok(interact_target.get("kind", "") == "statue")])
+	interact()
+	await _wait(0.5)
+	await snap("statue_menu")
+	var m0: = party.stamina_max
+	ui.statue_menu._offer()
+	await _wait(0.8)
+	await snap("statue_menu_offered")
+	print("OCULUSTEST offer level=%d offered=%d in_hand=%d stamina_max %.0f->%.0f -> %s" % [statue_level, oculi_offered, oculi_in_hand(), m0, party.stamina_max, 
+		_ok(statue_level == 2 and oculi_offered == 9 and oculi_in_hand() == 0 and party.stamina_max == 130.0 and statue_progress() == 2)])
+	ui.show_statue(false)
+	await _wait(0.3)
+	print("OCULUSTEST menu_closed enabled=%s -> %s" % [party.enabled, _ok(party.enabled and not ui.statue_menu.visible)])
+	# l'endurance max sert vraiment : sprint plus long
+	party.stamina = party.stamina_max
+	print("OCULUSTEST stamina_full=%.0f wheel_max=%.0f -> %s" % [party.stamina, ui.stam_wheel.max_value, _ok(ui.stam_wheel.max_value == 130.0)])
+	# sauvegarde / chargement
+	var bak: = ""
+	if FileAccess.file_exists(SAVE_PATH): bak = FileAccess.get_file_as_string(SAVE_PATH)
+	allow_save_in_test = true
+	save_game()
+	oculi_got = 0;oculi_offered = 0;statue_level = 0;apply_stamina_level()
+	var loaded: = load_game()
+	print("OCULUSTEST save_load loaded=%s got=%d offered=%d level=%d max=%.0f hidden=%s -> %s" % [loaded, oculi_got, oculi_offered, statue_level, party.stamina_max, 
+		not (oculi[6].node as Node3D).visible, _ok(loaded and oculi_got == 9 and oculi_offered == 9 and statue_level == 2 and party.stamina_max == 130.0)])
+	# ancienne sauvegarde (v3) : valeurs par défaut
+	var d: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
+	for k in ["oculi", "oculi_offered", "statue_level", "oculus_hint"]: d.erase(k)
+	d["version"] = 3
+	var f: = FileAccess.open(SAVE_PATH, FileAccess.WRITE);f.store_string(JSON.stringify(d));f.close()
+	loaded = load_game()
+	print("OCULUSTEST old_save loaded=%s got=%d level=%d max=%.0f visible=%s -> %s" % [loaded, oculi_got, statue_level, party.stamina_max, (oculi[6].node as Node3D).visible, 
+		_ok(loaded and oculi_got == 0 and statue_level == 0 and party.stamina_max == 100.0 and (oculi[6].node as Node3D).visible)])
+	if bak != "":
+		f = FileAccess.open(SAVE_PATH, FileAccess.WRITE);f.store_string(bak);f.close()
+	else:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+	allow_save_in_test = false
+	# inventaire
+	oculi_got = 5;oculi_offered = 0
+	toggle_pause()
+	await _wait(0.3)
+	ui.open_sub("bag")
+	await _wait(0.4)
+	ui.bag_menu._pick("oculi")
+	await _wait(0.2)
+	await snap("bag_oculi")
+	ui.close_sub()
+	toggle_pause()
+	# panorama des aiguilles
+	var sp: Vector3 = world.spire_tops[8]
+	party.global_position = world.snap(sp + Vector3(16, 0, 10), 0.4)
+	rig.global_position = party.global_position + Vector3(0, 1.45, 0)
+	var to: = sp - party.global_position;to.y = 0
+	rig.yaw = atan2( - to.x, - to.z);rig.pitch = 0.05;rig.distance = 6.0
+	await _wait(0.8)
+	await snap("spire_view")
