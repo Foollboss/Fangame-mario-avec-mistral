@@ -58,3 +58,41 @@ static func apply(root: Node, with_outline: = true, rim: = true, outline_width: 
 			m.albedo_color = m.albedo_color * Color(0.93, 0.93, 0.95)
 			if with_outline: m.next_pass = ol
 			mi.set_surface_override_material(s, m)
+
+
+const CHAR_SHADER: = preload("res://shaders/toon_char.gdshader")
+const OUTLINE_SHADER: = preload("res://shaders/toon_outline.gdshader")
+
+## Cel-shading des héros (shader toon_char + contour coloré).
+static func apply_char(root: Node, outline_width: = 0.0045, rim: = 0.55) -> void :
+	for mi in root.find_children("*", "MeshInstance3D", true, false):
+		var mesh: Mesh = mi.mesh
+		if mesh == null: continue
+		for s in mesh.get_surface_count():
+			var src: Material = mi.get_active_material(s)
+			var col: = Color.WHITE
+			var tex: Texture2D = null
+			var emit: = Color.BLACK
+			var emit_e: = 0.0
+			if src is BaseMaterial3D:
+				col = src.albedo_color
+				tex = src.albedo_texture
+				if src.emission_enabled:
+					emit = src.emission;emit_e = src.emission_energy_multiplier
+			var m: = ShaderMaterial.new();m.shader = CHAR_SHADER
+			if src: m.resource_name = src.resource_name
+			m.set_shader_parameter("albedo", col)
+			m.set_shader_parameter("has_tex", tex != null)
+			if tex: m.set_shader_parameter("albedo_tex", tex)
+			m.set_shader_parameter("rim_amount", rim)
+			if emit_e > 0.0:
+				m.set_shader_parameter("emission_col", emit);m.set_shader_parameter("emission_energy", emit_e)
+			if outline_width > 0.0:
+				var o: = ShaderMaterial.new();o.shader = OUTLINE_SHADER
+				o.set_shader_parameter("albedo", col)
+				o.set_shader_parameter("has_tex", tex != null)
+				if tex: o.set_shader_parameter("albedo_tex", tex)
+				o.set_shader_parameter("width", outline_width)
+				m.next_pass = o
+			mi.set_surface_override_material(s, m)
+

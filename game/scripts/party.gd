@@ -131,7 +131,7 @@ func _sfx(n: String, vol: = 0.0) -> void :
 func _add_char(c: Dictionary) -> void :
 	var model: Node3D = load(c.scene).instantiate()
 	visual.add_child(model)
-	Toon.apply(model, true, true, 0.0045)
+	Toon.apply_char(model, 0.0042)
 	for mi in model.find_children("*", "MeshInstance3D", true, false):
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	var ap: AnimationPlayer = model.find_children("*", "AnimationPlayer", true, false)[0]
@@ -148,7 +148,7 @@ func _add_char(c: Dictionary) -> void :
 			var sock: = BoneAttachment3D.new();sock.bone_name = Bones.find(skel, "weapon.R");skel.add_child(sock)
 			weapon = src.duplicate();sock.add_child(weapon)
 			weapon.transform = Transform3D.IDENTITY
-			Toon.apply(weapon, true, true, 0.0025)
+			Toon.apply_char(weapon, 0.0022, 0.7)
 			weapon.visible = false
 			var blade: = WeaponTrail.blade_extent(weapon)
 			trail = WeaponTrail.new()

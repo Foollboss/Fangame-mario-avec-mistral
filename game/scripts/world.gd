@@ -722,7 +722,8 @@ const SWAYING: = {"tint_leaves": [0.12, 4.0], "tint_needles": [0.08, 5.0], "tint
 func _load_props() -> void :
 	var scene: Node3D = load("res://assets/props.glb").instantiate()
 
-	for extra in ["res://assets/chest.glb", "res://assets/props_v6.glb"]:
+	# props_genshin.glb (généré par blender/build_props.py) remplace les décors du même nom
+	for extra in ["res://assets/chest.glb", "res://assets/props_v6.glb", "res://assets/props_genshin.glb"]:
 		var extra_scene: Node3D = load(extra).instantiate()
 		for c in extra_scene.get_children():
 			var old: = scene.get_node_or_null(NodePath(c.name))
@@ -740,6 +741,9 @@ func _load_props() -> void :
 			if SWAYING.has(mname) and mname.begins_with("tint"):
 				var sm: = ShaderMaterial.new();sm.shader = fol_shader
 				sm.set_shader_parameter("sway", SWAYING[mname][0]);sm.set_shader_parameter("sway_height", SWAYING[mname][1])
+				if src is BaseMaterial3D and (src as BaseMaterial3D).albedo_texture:
+					sm.set_shader_parameter("leaf_tex", (src as BaseMaterial3D).albedo_texture)
+					sm.set_shader_parameter("use_leaf_tex", true)
 				if mname in ["tint_leaves", "tint_needles", "tint_bush"]:
 					if mname != "tint_bush": sm.set_shader_parameter("near_fade", 1.0)
 

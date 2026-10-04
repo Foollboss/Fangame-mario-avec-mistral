@@ -12,6 +12,8 @@ uniform vec3 crown_center = vec3(0.0);
 uniform float crown_radius = 0.0;  // 0 = no crown shaping (grass, petals...)
 uniform vec2 crown_y = vec2(0.0, 1.0);
 uniform float grade = 1.0;
+uniform sampler2D leaf_tex : source_color, filter_linear_mipmap, repeat_disable;
+uniform bool use_leaf_tex = false;   // atlas : touffes opaques à gauche, cartes de feuilles détourées à droite
 
 varying vec3 tint;
 varying float hgrad;
@@ -40,6 +42,11 @@ void fragment() {
 		if (fade < dith) discard;
 	}
 	vec3 c = base_tint * tint;
+	if (use_leaf_tex) {
+		vec4 lt = texture(leaf_tex, UV);
+		if (lt.a < 0.5) discard;
+		c *= lt.rgb;
+	}
 	// same anime grading as the terrain: greens pulled towards yellow-green
 	float gw = smoothstep(0.0, 0.2, c.g - c.r) * smoothstep(-0.05, 0.12, c.g - c.b) * grade;
 	c = mix(c, vec3(c.g * 0.42 + c.r * 0.1, c.g * 0.82, c.b * 0.55), gw);
