@@ -82,6 +82,21 @@ var domains: Array = [
 	{"id": "celeste", "name": "Sanctuaire Céleste", "pos": Vector3(-270, 0, -312), "rank": 18}, 
 ]
 
+## Villages des autres îles (centre, couleurs, PNJ placés par main.gd)
+const NEW_VILLAGES: = [
+	{"id": "jonc", "name": "Joncbourg", "sub": "Village des pêcheurs du Marais", "pos": Vector3(-156, 0, 156), "min_h": 2.9,
+		"roofs": [Color(0.22, 0.52, 0.45), Color(0.35, 0.55, 0.3), Color(0.25, 0.42, 0.55)], "banner": Color(0.3, 0.7, 0.55), "center": "well"},
+	{"id": "forge", "name": "Forgeval", "sub": "Village des forgerons des Terres de Braise", "pos": Vector3(150, 0, 174), "min_h": 5.6,
+		"roofs": [Color(0.5, 0.18, 0.12), Color(0.28, 0.24, 0.26), Color(0.62, 0.32, 0.12)], "banner": Color(0.9, 0.35, 0.12), "center": "forge"},
+	{"id": "vent", "name": "Hautevent", "sub": "Village des guetteurs des Falaises de l'Orage", "pos": Vector3(-172, 0, -180), "min_h": 16.0,
+		"roofs": [Color(0.45, 0.35, 0.72), Color(0.3, 0.38, 0.62), Color(0.55, 0.42, 0.78)], "banner": Color(0.6, 0.45, 1.0), "center": "windmill"},
+]
+var villages: Array = []
+var cook_spots: Array[Vector3] = []
+var windmills: Array[Node3D] = []
+var beacon_spots: Array[Vector3] = []
+var updraft_spots: Array[Vector3] = []
+
 var boss_spots: = {
 	"roi_slime": Vector3(-238, 0, 278), 
 	"colosse": Vector3(252, 0, 261), 
@@ -152,6 +167,7 @@ var lava_pool_mat: ShaderMaterial
 var lava_streams: Array = []
 var portal_mats: Array = []
 var _mm: = {}
+var mm_nodes: = {}
 var _flatten: Array = []
 
 func _init() -> void :
@@ -265,6 +281,7 @@ func _setup_flatten() -> void :
 	for w in waypoints: _add_flat(w.pos, 3.5, 7.0, 2.5)
 	for c in camps: _add_flat(c.pos, 9.0, 15.0, 2.5)
 	_add_flat(lighthouse, 7.0, 12.0, 3.0)
+	for v in NEW_VILLAGES: _add_flat(v.pos, 27.0, 40.0, float(v.min_h))
 
 	var top: = raw_height(mountain.x, mountain.z)
 	_flatten.append([Vector2(mountain.x, mountain.z), 15.0, 22.0, top - 3.0])
@@ -463,6 +480,8 @@ func biome_at(x: float, z: float) -> String:
 
 func region_name(p: Vector3) -> String:
 	if Vector2(p.x - village.x, p.z - village.z).length() < 45.0: return BIOME_NAMES["village"]
+	var vv: = village_at(p, 34.0)
+	if not vv.is_empty(): return String(vv.name)
 	var b: = biome_at(p.x, p.z)
 	if height_at(p.x, p.z) < 2.6 and b != "marais": return BIOME_NAMES["plage"]
 	return BIOME_NAMES[b]
@@ -530,6 +549,7 @@ func build() -> void :
 	canopies = StaticBody3D.new();canopies.name = "Canopies";add_child(canopies)
 	canopies.collision_layer = 1 << 7;canopies.collision_mask = 0
 	_village()
+	for v in NEW_VILLAGES: _build_village(v)
 	_dock()
 	_lighthouse_site()
 	_ruins()
@@ -544,7 +564,11 @@ func build() -> void :
 	_sky_islands()
 	_night_blooms()
 	_pick_oculi()
+	_pick_gather()
+	_pick_beacons()
+	_updrafts()
 	_flush_multimeshes()
+	_build_fruits()
 
 func _environment() -> void :
 	env = Environment.new()
@@ -844,13 +868,14 @@ func _house_collider(p: Vector3, yaw: float) -> void :
 	box_collider(p + Basis(Vector3.UP, yaw) * Vector3(1.5, 7.4, -0.9), Vector3(0.62, 2.6, 0.62), yaw)
 	house_ridges.append(p + Vector3(0, 8.48, 0))
 
-func mm_add(mesh_name: String, xf: Transform3D, col: = Color.WHITE, small: = false, far: = false) -> void :
+func mm_add(mesh_name: String, xf: Transform3D, col: = Color.WHITE, small: = false, far: = false) -> Array:
 	var cs: = 40.0 if small else 100.0
 	var key: = "%s|%d|%d" % [mesh_name, int(floor(xf.origin.x / cs)), int(floor(xf.origin.z / cs))]
 	if far: key = mesh_name + "|far"
 	if not _mm.has(key):
 		_mm[key] = {"mesh": mesh_name, "xf": [], "col": [], "small": small, "far": far}
 	_mm[key].xf.append(xf);_mm[key].col.append(col.srgb_to_linear())
+	return [key, _mm[key].xf.size() - 1]
 
 const NEAR_LOD: = ["TreeRound", "TreeRound2", "TreeApple", "TreePine"]
 const FAR_LOD: = ["TreeRoundFar", "TreePineFar"]
@@ -869,6 +894,7 @@ func _flush_multimeshes() -> void :
 		for i in e.xf.size():
 			mm.set_instance_transform(i, e.xf[i]);mm.set_instance_color(i, e.col[i])
 		var mmi: = MultiMeshInstance3D.new();mmi.multimesh = mm;mmi.name = key.replace("|", "_")
+		mm_nodes[key] = mm
 		if e.small:
 			mmi.visibility_range_end = 60.0;mmi.visibility_range_end_margin = 6.0
 			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -962,7 +988,7 @@ func _scatter() -> void :
 	while n < 1500 and tries < 30000:
 		tries += 1
 		var p: = _rand_land(1.9, 46.0, 0.72)
-		if p == Vector3.INF or _near_poi(p) or on_path(p.x, p.z) or _near_spire(p, 4.0): continue
+		if p == Vector3.INF or _near_poi(p) or on_path(p.x, p.z) or _near_spire(p, 4.0) or _near_village(p, 6.0): continue
 		var b: = biome_at(p.x, p.z)
 		if b != "marais" and p.y < 3.2: continue
 		if lava_at(p): continue
@@ -982,7 +1008,8 @@ func _scatter() -> void :
 			mesh = "DeadTree"
 		var s: = rng.randf_range(0.85, 1.35)
 		var txf: = Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * s), p - Vector3(0, 0.15, 0))
-		mm_add(mesh, txf, col)
+		var ref: Array = mm_add(mesh, txf, col)
+		_register_tree(p, s, mesh, ref, txf, b)
 		if mesh in ["TreePine", "TreeRound", "TreeRound2", "Mangrove"]:
 			mm_add("TreePineFar" if mesh == "TreePine" else "TreeRoundFar", txf, col)
 		cyl_collider(p, 0.35 * s, 3.0)
@@ -995,7 +1022,7 @@ func _scatter() -> void :
 
 	for k in 320:
 		var p: = _rand_land(1.9, 60.0, 0.55)
-		if p == Vector3.INF or _near_poi(p, -4.0) or on_path(p.x, p.z) or lava_at(p) or _near_spire(p, 2.0): continue
+		if p == Vector3.INF or _near_poi(p, -4.0) or on_path(p.x, p.z) or lava_at(p) or _near_spire(p, 2.0) or _near_village(p, 2.0): continue
 		var s: = rng.randf_range(0.5, 2.0)
 		var b: = biome_at(p.x, p.z)
 		var rc: = {"prairie": Color(0.62, 0.6, 0.58), "automne": Color(0.66, 0.56, 0.48), "cerisiers": Color(0.7, 0.64, 0.66), 
@@ -1012,7 +1039,7 @@ func _scatter() -> void :
 
 	for k in 760:
 		var p: = _rand_land(2.2, 40.0, 0.7)
-		if p == Vector3.INF or _near_poi(p, -6.0) or on_path(p.x, p.z) or _near_spire(p, 0.5): continue
+		if p == Vector3.INF or _near_poi(p, -6.0) or on_path(p.x, p.z) or _near_spire(p, 0.5) or _near_village(p, 0.0): continue
 		var b: = biome_at(p.x, p.z)
 		if b == "braise" and rng.randf() < 0.75: continue
 		var cols: Array = FOLIAGE[b]
@@ -1100,11 +1127,17 @@ func _village() -> void :
 	windmill_blades = Node3D.new();add_child(windmill_blades)
 	windmill_blades.position = wp + Vector3(2.3, 6.2, 0);windmill_blades.rotation.y = PI * 0.5
 	var bl: = make_prop("WindmillBlades");windmill_blades.add_child(bl)
+	windmills.append(windmill_blades)
+	cook_spots.append(snap(v + Vector3(5.5, 0, 6.5)))
+	decor("CookPot", cook_spots[0], 0.4)
+	_cook_light(cook_spots[0])
 
 	for k in 6:
 		var a: = TAU * k / 6.0
 		var tp: = snap(orchard + Vector3(cos(a), 0, sin(a)) * 7.0, -0.1)
-		mm_add("TreeApple", Transform3D(Basis(Vector3.UP, rng.randf() * TAU), tp), Color(0.32, 0.62, 0.26))
+		var oxf: = Transform3D(Basis(Vector3.UP, rng.randf() * TAU), tp)
+		var oref: Array = mm_add("TreeApple", oxf, Color(0.32, 0.62, 0.26))
+		_register_tree(tp, 1.0, "TreeApple", oref, oxf, "verger")
 		mm_add("TreeRoundFar", Transform3D(Basis.IDENTITY, tp), Color(0.32, 0.62, 0.26))
 		cyl_collider(tp, 0.35, 3.0)
 	for k in 10:
@@ -1119,6 +1152,7 @@ func _village() -> void :
 		"scholar": snap(v + Vector3(-12, 0, 6)), 
 		"keeper": snap(lighthouse + Vector3(0, 0, 6)), 
 		"guild": snap(v + Vector3(13.5, 0, -6.0)), 
+		"grocer": snap(v + Vector3(-10.0, 0, -8.6)), 
 	}
 
 	decor("Banner", snap(v + Vector3(15.6, 0, -8.2)), -0.6, 1.0, Color(0.75, 0.25, 0.2))
@@ -1654,3 +1688,301 @@ func _pick_oculi() -> void :
 			if o.distance_to(q) < 55.0: ok = false
 		if ok:
 			oculus_spots.append(q + Vector3(0, 1.3, 0));n += 1;used[b] = true
+
+
+# ----------------------------------------------------------------------------
+# Arbres fruitiers (on les frappe pour faire tomber les fruits) et plantes à cueillir
+# ----------------------------------------------------------------------------
+const FRUIT_COLORS: = {"pomme": Color(0.86, 0.16, 0.14), "soleillette": Color(1.0, 0.58, 0.12), "cerise": Color(0.92, 0.24, 0.42), "baie_givre": Color(0.35, 0.58, 1.0)}
+const GATHER_KINDS: = {"menthe": "Mint", "champignon": "MushroomPick", "lotus": "LotusPlant", "piment": "ChiliPlant", "lys_vent": "WindLily"}
+var trees: Array = []
+var _tree_grid: = {}
+var fruit_mm: = {}
+var _fruit_slots: = {}
+var regrowing: Array = []
+var gather_spots: Array = []
+var _frng: = RandomNumberGenerator.new()
+
+func _register_tree(p: Vector3, s: float, mesh: String, ref: Array, xf: Transform3D, biome: String) -> void :
+	if trees.is_empty(): _frng.seed = 1234
+	var fruit: = ""
+	var roll: = _frng.randf()
+	match biome:
+		"verger": fruit = "pomme"
+		"prairie": if mesh != "TreePine" and roll < 0.32: fruit = "soleillette"
+		"automne": if mesh != "TreePine" and roll < 0.22: fruit = "pomme"
+		"cerisiers": if mesh != "TreePine" and roll < 0.4: fruit = "cerise"
+		"plateau", "pic", "orage": if mesh == "TreePine" and roll < 0.16: fruit = "baie_givre"
+	var pine: = mesh == "TreePine"
+	var t: = {"p": p, "s": s, "key": ref[0], "idx": ref[1], "xf": xf, "fruit": fruit, "ripe": fruit != "", "regrow": 0.0, 
+		"crown": p + Vector3(0, (3.4 if pine else 4.2) * s, 0), "cr": (1.7 if pine else 2.1) * s, "pine": pine, "slots": []}
+	var i: = trees.size()
+	trees.append(t)
+	var cell: = Vector2i(int(floor(p.x / 10.0)), int(floor(p.z / 10.0)))
+	if not _tree_grid.has(cell): _tree_grid[cell] = []
+	_tree_grid[cell].append(i)
+
+## Indices des arbres dont le tronc est à moins de r de p.
+func trees_near(p: Vector3, r: float) -> Array:
+	var out: = []
+	var c0: = Vector2i(int(floor((p.x - r) / 10.0)), int(floor((p.z - r) / 10.0)))
+	var c1: = Vector2i(int(floor((p.x + r) / 10.0)), int(floor((p.z + r) / 10.0)))
+	for cx in range(c0.x, c1.x + 1):
+		for cz in range(c0.y, c1.y + 1):
+			for i in _tree_grid.get(Vector2i(cx, cz), []):
+				var t: Dictionary = trees[i]
+				if Vector2(t.p.x - p.x, t.p.z - p.z).length() < r: out.append(i)
+	return out
+
+## Fruits visibles dans les couronnes (une MultiMesh par sorte de fruit).
+func _build_fruits() -> void :
+	var per: = {}
+	for i in trees.size():
+		var t: Dictionary = trees[i]
+		if t.fruit == "": continue
+		if not per.has(t.fruit): per[t.fruit] = []
+		var n: = 4 if t.fruit != "baie_givre" else 5
+		for k in n:
+			var a: = TAU * k / n + _frng.randf() * 0.6
+			var off: Vector3
+			if t.pine:
+				off = Vector3(cos(a) * t.cr * 0.75, - t.cr * 0.55 + _frng.randf() * t.cr * 0.4, sin(a) * t.cr * 0.75)
+			else:
+				off = Vector3(cos(a) * t.cr * 0.86, - t.cr * 0.35 + _frng.randf() * t.cr * 0.4, sin(a) * t.cr * 0.86)
+			t.slots.append([t.fruit, per[t.fruit].size()])
+			per[t.fruit].append(Transform3D(Basis.IDENTITY, t.crown + off))
+	for f in per:
+		var sm: = SphereMesh.new();sm.radius = 0.17 if f != "baie_givre" else 0.12;sm.height = sm.radius * 2.0
+		sm.radial_segments = 10;sm.rings = 6
+		var m: = Toon.material(FRUIT_COLORS[f])
+		m.emission_enabled = true;m.emission = FRUIT_COLORS[f];m.emission_energy_multiplier = 0.25
+		sm.material = m
+		var mm: = MultiMesh.new();mm.transform_format = MultiMesh.TRANSFORM_3D;mm.mesh = sm
+		mm.instance_count = per[f].size()
+		for k in per[f].size(): mm.set_instance_transform(k, per[f][k])
+		var mmi: = MultiMeshInstance3D.new();mmi.multimesh = mm;mmi.name = "Fruits_" + f
+		mmi.visibility_range_end = 80.0;mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(mmi)
+		fruit_mm[f] = mm
+		_fruit_slots[f] = per[f]
+
+## Secoue un arbre (instance de MultiMesh) ; renvoie les positions des fruits qui tombent.
+func shake_tree(i: int, dir: Vector3) -> Array:
+	var t: Dictionary = trees[i]
+	var mm: MultiMesh = mm_nodes.get(t.key)
+	if mm and t.idx < mm.instance_count:
+		var base: Transform3D = t.xf
+		var axis: = Vector3.UP.cross(dir.normalized()).normalized()
+		if axis.length() < 0.1: axis = Vector3.RIGHT
+		create_tween().tween_method( func(k: float):
+			var ang: = sin(k * PI * 5.0) * (1.0 - k) * 0.07
+			mm.set_instance_transform(t.idx, Transform3D(Basis(axis, ang) * base.basis, base.origin)), 0.0, 1.0, 0.7)
+	var drops: = []
+	if t.ripe:
+		t.ripe = false;t.regrow = 240.0;regrowing.append(i)
+		for sl in t.slots:
+			var f: String = sl[0]; var k: int = sl[1]
+			var xf: Transform3D = _fruit_slots[f][k]
+			drops.append(xf.origin)
+			(fruit_mm[f] as MultiMesh).set_instance_transform(k, Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * 0.001), xf.origin))
+	return drops
+
+func tick_trees(delta: float) -> void :
+	for n in range(regrowing.size() - 1, -1, -1):
+		var t: Dictionary = trees[regrowing[n]]
+		t.regrow -= delta
+		if t.regrow <= 0.0:
+			t.ripe = true;regrowing.remove_at(n)
+			for sl in t.slots:
+				(fruit_mm[sl[0]] as MultiMesh).set_instance_transform(sl[1], _fruit_slots[sl[0]][sl[1]])
+
+## Arbre fruitier mûr le plus proche portant ce fruit.
+func nearest_fruit_tree(p: Vector3, fruit: String) -> Vector3:
+	var best: = Vector3.INF; var bd: = INF
+	for t in trees:
+		if t.fruit == fruit and t.ripe:
+			var d: float = p.distance_to(t.p)
+			if d < bd: bd = d;best = t.p
+	return best
+
+## Plantes à cueillir (graine fixe).
+func _pick_gather() -> void :
+	var r: = RandomNumberGenerator.new();r.seed = 555
+	var plan: = [["menthe", ["prairie", "cerisiers"], 24], ["champignon", ["automne", "marais"], 22], ["piment", ["braise"], 18], 
+		["lys_vent", ["orage"], 16], ["lotus", ["marais"], 18]]
+	for pl in plan:
+		var kind: String = pl[0]; var biomes: Array = pl[1]; var want: int = pl[2]
+		var got: = 0
+		for tries in 6000:
+			if got >= want: break
+			var p: Vector3
+			if kind == "lotus":
+				var sc: = swamp_center()
+				var a: = r.randf() * TAU; var rad: = sqrt(r.randf()) * swamp_radius()
+				p = sc + Vector3(cos(a) * rad, 0, sin(a) * rad);p.y = height_at(p.x, p.z)
+				if p.y < SWAMP_Y - 0.35 or p.y > SWAMP_Y + 0.4: continue
+				p.y = maxf(p.y, SWAMP_Y + 0.02)
+			else:
+				var a2: = r.randf() * TAU; var rad2: = sqrt(r.randf()) * 480.0
+				p = Vector3(cos(a2) * rad2, 0, sin(a2) * rad2);p.y = height_at(p.x, p.z)
+				if not biome_at(p.x, p.z) in biomes or not is_land(p.x, p.z, 2.2) or normal_at(p.x, p.z).y < 0.8: continue
+				if lava_at(p) or on_path(p.x, p.z) or _near_spire(p, 2.0): continue
+			if _near_poi(p, -6.0) or _near_village(p, -6.0): continue
+			var ok: = true
+			for g in gather_spots:
+				if g.kind == kind and (g.pos as Vector3).distance_to(p) < 14.0: ok = false
+			if not ok: continue
+			gather_spots.append({"kind": kind, "pos": p})
+			got += 1
+	# quelques lys des vents au sommet des aiguilles rocheuses de l'Orage
+	for t in spire_tops:
+		if biome_at(t.x, t.z) == "orage": gather_spots.append({"kind": "lys_vent", "pos": t + Vector3(0.9, 0, 0.6)})
+
+
+# ----------------------------------------------------------------------------
+# Villages des autres îles
+# ----------------------------------------------------------------------------
+func _near_village(p: Vector3, extra: float) -> bool:
+	for v in NEW_VILLAGES:
+		if Vector2(p.x - v.pos.x, p.z - v.pos.z).length() < 32.0 + extra: return true
+	return false
+
+func _cook_light(p: Vector3) -> void :
+	var l: = OmniLight3D.new();l.light_color = Color(1.0, 0.6, 0.25);l.light_energy = 1.2;l.omni_range = 5.0
+	l.shadow_enabled = false;l.position = p + Vector3(0, 0.8, 0);add_child(l)
+
+## Maisons en cercle autour d'une place, deux étals (épicerie et cuisinier), marmite, lanternes,
+## bannières et panneau. Les emplacements des PNJ sont mis dans npc_spots (« <village>_<rôle> »).
+func _build_village(v: Dictionary) -> void :
+	var c: = snap(v.pos)
+	var info: = {"id": v.id, "name": v.name, "sub": v.sub, "pos": c}
+	var r3: = RandomNumberGenerator.new();r3.seed = hash(v.id)
+	# l'entrée du village regarde vers le centre de l'île
+	var entry: = atan2( - c.x, - c.z)
+	var avoid: Array = []
+	for s in statues: avoid.append(s)
+	for w in waypoints: avoid.append(w.pos)
+	var n: = 0
+	for k in 7:
+		var a: = entry + 0.85 + k * (TAU - 1.7) / 6.0
+		var r: = 20.5 + (k % 2) * 3.0
+		var dir: = Vector3(sin(a), 0, cos(a))
+		var p: = snap(c + dir * r, -0.1)
+		var bad: = false
+		for q in avoid:
+			if Vector2(q.x - p.x, q.z - p.z).length() < 9.5: bad = true
+		if bad or n >= 6: continue
+		var yaw: = atan2(c.x - p.x, c.z - p.z)
+		decor("House", p, yaw, 1.0, v.roofs[n % v.roofs.size()])
+		_house_collider(p, yaw)
+		var side: = Vector3(cos(yaw), 0, - sin(yaw))
+		var fwd: = Vector3(sin(yaw), 0, cos(yaw))
+		var lp: = snap(p + fwd * 3.2 + side * 1.9)
+		decor("Lantern", lp, yaw)
+		if n % 2 == 0: _lantern_light(lp + Vector3(0.42 * cos(yaw), 2.05, -0.42 * sin(yaw)))
+		if n % 3 == 0: decor("Barrel", snap(p + fwd * 2.8 - side * 2.4), r3.randf() * TAU)
+		if n % 3 == 1: decor("Crate", snap(p + fwd * 2.6 - side * 2.6), r3.randf() * TAU, 0.9)
+		n += 1
+	# place centrale
+	var ef: = Vector3(sin(entry), 0, cos(entry))
+	var es: = Vector3(cos(entry), 0, - sin(entry))
+	match String(v.center):
+		"well":
+			decor("Well", c, 0.3, 1.0, Color(0.35, 0.55, 0.45));cyl_collider(c, 1.05, 2.0)
+		"forge":
+			var fp: = snap(c - ef * 2.0)
+			decor("Forge", fp, entry);box_collider(fp + Vector3(0, 1.0, 0), Vector3(3.2, 2.0, 2.6), entry)
+			cyl_collider(fp + Basis(Vector3.UP, entry) * Vector3(0.6, 0, -0.4), 0.55, 5.2)
+			var gl: = OmniLight3D.new();gl.light_color = Color(1.0, 0.45, 0.15);gl.light_energy = 2.0;gl.omni_range = 7.0
+			gl.shadow_enabled = false;gl.position = fp + ef * 1.6 + Vector3(0, 1.0, 0);add_child(gl)
+			info["forge"] = fp
+		"windmill":
+			var wp: = snap(c - ef * 3.0, -0.3)
+			decor("WindmillBase", wp, entry + PI * 0.5, 1.0, Color(0.5, 0.42, 0.8), true)
+			hull_collider(wp, [[2.0, 0.0], [1.9, 1.0], [1.85, 7.4], [0.5, 9.6]], 8)
+			var wb: = Node3D.new();add_child(wb)
+			wb.position = wp + Basis(Vector3.UP, entry + PI * 0.5) * Vector3(2.3, 6.2, 0);wb.rotation.y = entry + PI * 0.5
+			wb.add_child(make_prop("WindmillBlades"));windmills.append(wb)
+	# étals : épicerie à gauche, cuisinier à droite (en regardant depuis l'entrée)
+	var shop_p: = snap(c + ef * 7.0 - es * 5.5)
+	var cook_p: = snap(c + ef * 7.0 + es * 5.5)
+	decor("Stall", shop_p, entry + PI, 1.0, v.banner.lightened(0.15))
+	box_collider(shop_p + Vector3(0, 0.5, 0), Vector3(2.7, 1.0, 1.3), entry + PI)
+	decor("Stall", cook_p, entry + PI, 1.0, Color(0.95, 0.85, 0.4))
+	box_collider(cook_p + Vector3(0, 0.5, 0), Vector3(2.7, 1.0, 1.3), entry + PI)
+	var pot: = snap(cook_p + ef * 3.4 + es * 1.2)
+	decor("CookPot", pot, r3.randf() * TAU);cook_spots.append(pot);_cook_light(pot)
+	for k in 6:
+		var a2: = TAU * k / 6.0 + 0.2
+		var lp2: = snap(c + Vector3(cos(a2), 0, sin(a2)) * 12.0)
+		decor("Lantern", lp2, - a2)
+		if k % 2 == 0: _lantern_light(lp2 + Vector3(0, 2.1, 0))
+	for k in 2:
+		decor("Banner", snap(c + ef * 15.5 + es * (k * 2.0 - 1.0) * 3.2), entry, 1.0, v.banner)
+	var sign: = snap(c + ef * 18.0 + es * 4.5)
+	decor("Signpost", sign, entry + PI * 0.5)
+	var lbl: = Label3D.new();lbl.text = v.name;lbl.font_size = 64;lbl.pixel_size = 0.01;lbl.modulate = Color(1.0, 0.95, 0.8)
+	lbl.outline_size = 10;lbl.outline_modulate = Color(0.1, 0.06, 0.03);lbl.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+	lbl.position = sign + Vector3(0, 2.4, 0);lbl.visibility_range_end = 45.0;add_child(lbl)
+	npc_spots[v.id + "_chief"] = snap(c - ef * 6.0 + es * 4.0)
+	npc_spots[v.id + "_grocer"] = snap(shop_p + ef * 1.5)
+	npc_spots[v.id + "_cook"] = snap(cook_p + ef * 1.5)
+	npc_spots[v.id + "_extra"] = snap(c + es * 7.5 - ef * 1.0)
+	info["entry"] = entry
+	villages.append(info)
+
+func village_at(p: Vector3, r: = 30.0) -> Dictionary:
+	for v in villages:
+		if Vector2(p.x - v.pos.x, p.z - v.pos.z).length() < r: return v
+	return {}
+
+
+## Feux de vigie (quête de Hautevent) : sommet d'une aiguille de l'Orage, plus haut point de l'Orage, moulin de Hautevent.
+func _pick_beacons() -> void :
+	for t in spire_tops:
+		if biome_at(t.x, t.z) == "orage":
+			beacon_spots.append(t + Vector3(-0.7, 0, -0.6));break
+	var r: = RandomNumberGenerator.new();r.seed = 99
+	var best: = Vector3.INF
+	for k in 900:
+		var a: = r.randf() * TAU; var rad: = sqrt(r.randf()) * 480.0
+		var q: = Vector3(cos(a) * rad, 0, sin(a) * rad);q.y = height_at(q.x, q.z)
+		if biome_at(q.x, q.z) != "orage" or _near_spire(q, 3.0) or _near_poi(q, -8.0): continue
+		if best == Vector3.INF or q.y > best.y: best = q
+	if best != Vector3.INF: beacon_spots.append(best)
+	for v in villages:
+		if v.id == "vent":
+			var e: float = v.entry
+			var wp: Vector3 = snap((v.pos as Vector3) - Vector3(sin(e), 0, cos(e)) * 3.0, -0.3)
+			beacon_spots.append(wp + Vector3(0, 9.6, 0))
+
+
+## Courants ascendants : colonnes de vent au pied des aiguilles et sur les falaises (on y monte en planeur).
+func _updrafts() -> void :
+	var r: = RandomNumberGenerator.new();r.seed = 321
+	for t in spire_tops:
+		var a: = r.randf() * TAU
+		var p: = snap(Vector3(t.x, 0, t.z) + Vector3(cos(a), 0, sin(a)) * 7.5)
+		if p.y < SEA_Y + 0.5: continue
+		updraft_spots.append(p)
+	for v in villages:
+		if v.id == "vent":
+			var e: float = v.entry
+			updraft_spots.append(snap((v.pos as Vector3) + Vector3(cos(e), 0, - sin(e)) * 14.0))
+	var mat: = StandardMaterial3D.new();mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color(0.85, 0.95, 1.0, 0.1);mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	for p in updraft_spots:
+		var n: = Node3D.new();add_child(n);n.position = p
+		var cm: = CylinderMesh.new();cm.top_radius = 2.6;cm.bottom_radius = 2.0;cm.height = 26.0;cm.cap_top = false;cm.cap_bottom = false
+		var mi: = MeshInstance3D.new();mi.mesh = cm;mi.material_override = mat;mi.position = Vector3(0, 13.0, 0)
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF;n.add_child(mi)
+		var pt: = CPUParticles3D.new();pt.amount = 40;pt.lifetime = 3.0;pt.emission_shape = CPUParticles3D.EMISSION_SHAPE_RING
+		pt.emission_ring_axis = Vector3.UP;pt.emission_ring_radius = 2.0;pt.emission_ring_inner_radius = 0.5;pt.emission_ring_height = 0.5
+		pt.direction = Vector3.UP;pt.spread = 8.0;pt.initial_velocity_min = 6.0;pt.initial_velocity_max = 10.0;pt.gravity = Vector3.ZERO
+		pt.particle_flag_align_y = true
+		var bm: = BoxMesh.new();bm.size = Vector3(0.04, 0.6, 0.04);pt.mesh = bm
+		pt.material_override = FX.mat_emit(Color(0.92, 0.97, 1.0), 1.5, 0.7)
+		pt.visibility_aabb = AABB(Vector3(-4, 0, -4), Vector3(8, 32, 8))
+		n.add_child(pt)
+		for mm in [mi, pt]: (mm as GeometryInstance3D).visibility_range_end = 160.0

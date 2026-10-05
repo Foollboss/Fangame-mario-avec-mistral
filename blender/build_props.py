@@ -60,6 +60,22 @@ def M():
         "sail": material("sail", (0.95, 0.92, 0.84)),
         "oculus_core": material("oculus_core", (0.45, 1.0, 0.82), emit=(0.35, 1.0, 0.75), emit_strength=2.5, rough=0.2),
         "oculus_wing": material("oculus_wing", (0.75, 1.0, 0.92), emit=(0.55, 1.0, 0.85), emit_strength=1.2, rough=0.3),
+        "mint": material("mint", (0.36, 0.76, 0.42)),
+        "mint_dark": material("mint_dark", (0.22, 0.55, 0.3)),
+        "mush_cap": material("mush_cap", (0.86, 0.24, 0.18)),
+        "mush_stem": material("mush_stem", (0.95, 0.9, 0.78)),
+        "lotus_pad": material("lotus_pad", (0.3, 0.6, 0.32)),
+        "lotus_petal": material("lotus_petal", (1.0, 0.72, 0.84), emit=(1.0, 0.6, 0.8), emit_strength=0.15),
+        "lotus_pod": material("lotus_pod", (0.62, 0.8, 0.45)),
+        "chili": material("chili", (0.9, 0.18, 0.1), emit=(1.0, 0.35, 0.1), emit_strength=0.35, rough=0.4),
+        "chili_leaf": material("chili_leaf", (0.25, 0.45, 0.2)),
+        "lily": material("lily", (0.95, 0.92, 1.0), emit=(0.75, 0.8, 1.0), emit_strength=0.35),
+        "lily_heart": material("lily_heart", (1.0, 0.85, 0.4), emit=(1.0, 0.8, 0.3), emit_strength=0.6),
+        "fire": material("fire", (1.0, 0.42, 0.08), emit=(1.0, 0.35, 0.05), emit_strength=1.4, rough=0.5),
+        "fire_core": material("fire_core", (1.0, 0.8, 0.3), emit=(1.0, 0.7, 0.2), emit_strength=1.8, rough=0.5),
+        "soup": material("soup", (0.95, 0.6, 0.25), emit=(1.0, 0.55, 0.2), emit_strength=0.25, rough=0.3),
+        "forge_glow": material("forge_glow", (1.0, 0.45, 0.12), emit=(1.0, 0.4, 0.1), emit_strength=3.5),
+        "sign_wood": material("sign_wood", (0.68, 0.5, 0.32), "wood"),
     }
 
 
@@ -439,6 +455,129 @@ def windmill_base():
     return b.finish(uv_scale=2.0)
 
 
+# ----------------------------------------------------------------------------
+# Cueillette, cuisine et villages
+# ----------------------------------------------------------------------------
+def mint():
+    b = Builder("Mint", [MT["mint"], MT["mint_dark"]])
+    rng = random.Random(31)
+    for k in range(9):
+        a = k * math.tau / 9 + rng.random() * 0.4
+        r = 0.08 + rng.random() * 0.12
+        h = 0.18 + rng.random() * 0.16
+        x, y = math.cos(a) * r, math.sin(a) * r
+        b.cyl("mint_dark", (x, y, 0), 0.012, 0.01, h, segs=4, smooth=False)
+        for j in range(2):
+            la = a + (j - 0.5) * 1.6
+            b.sphere("mint", (x + math.cos(la) * 0.06, y + math.sin(la) * 0.06, h - 0.02 + j * 0.04), 0.07,
+                     scale=(1.6, 0.8, 0.22), rot=(0.3, 0, la), subdiv=1, smooth=False)
+        b.sphere("mint", (x, y, h + 0.05), 0.05, scale=(1.0, 1.0, 1.3), subdiv=1, smooth=False)
+    return b.finish(uv_scale=0.5)
+
+
+def mushroom_pick():
+    b = Builder("MushroomPick", [MT["mush_cap"], MT["mush_stem"]])
+    for (x, y, s) in ((0, 0, 1.0), (0.2, 0.12, 0.7), (-0.16, 0.15, 0.6)):
+        b.cyl("mush_stem", (x, y, 0), 0.07 * s, 0.055 * s, 0.26 * s, segs=8)
+        b.sphere("mush_cap", (x, y, 0.27 * s), 0.17 * s, scale=(1, 1, 0.62), subdiv=2, flat_bottom=0.24 * s)
+        for k in range(4):
+            a = k * math.tau / 4 + x * 5
+            b.sphere("mush_stem", (x + math.cos(a) * 0.1 * s, y + math.sin(a) * 0.1 * s, 0.33 * s), 0.025 * s, subdiv=1)
+    return b.finish(uv_scale=0.5)
+
+
+def lotus_plant():
+    b = Builder("LotusPlant", [MT["lotus_pad"], MT["lotus_petal"], MT["lotus_pod"], MT["lily_heart"]])
+    for (x, y, s) in ((0.0, 0.0, 1.0), (0.42, 0.2, 0.6), (-0.35, 0.28, 0.5)):
+        b.cyl("lotus_pad", (x, y, 0.0), 0.32 * s, 0.32 * s, 0.02, segs=14, smooth=False)
+    b.cyl("lotus_pod", (0, 0, 0.0), 0.02, 0.02, 0.35, segs=5)
+    for k in range(8):
+        a = k * math.tau / 8
+        b.sphere("lotus_petal", (math.cos(a) * 0.1, math.sin(a) * 0.1, 0.42), 0.08, scale=(1.5, 0.7, 0.45),
+                 rot=(0, -0.7, a), subdiv=1, smooth=False)
+    b.cyl("lotus_pod", (0, 0, 0.42), 0.05, 0.08, 0.08, segs=8, smooth=False)
+    b.cyl("lily_heart", (0, 0, 0.5), 0.08, 0.08, 0.01, segs=8)
+    b.cyl("lotus_pod", (0.42, 0.2, 0.0), 0.015, 0.015, 0.45, segs=4)
+    b.cyl("lotus_pod", (0.42, 0.2, 0.45), 0.04, 0.09, 0.09, segs=8, smooth=False)
+    return b.finish(uv_scale=0.5)
+
+
+def chili_plant():
+    b = Builder("ChiliPlant", [MT["chili_leaf"], MT["chili"], MT["stem"]])
+    rng = random.Random(41)
+    b.cyl("stem", (0, 0, 0), 0.025, 0.015, 0.35, segs=5)
+    for k in range(7):
+        a = k * math.tau / 7
+        b.sphere("chili_leaf", (math.cos(a) * 0.14, math.sin(a) * 0.14, 0.32 + rng.random() * 0.08), 0.1,
+                 scale=(1.6, 0.7, 0.3), rot=(0.2, 0, a), subdiv=1, smooth=False)
+    for k in range(5):
+        a = k * math.tau / 5 + 0.3
+        x, y = math.cos(a) * 0.12, math.sin(a) * 0.12
+        b.cyl("chili", (x, y, 0.3), 0.035, 0.008, -0.16, segs=6, rot=(0.25 * math.sin(a), 0.25 * math.cos(a), 0))
+    return b.finish(uv_scale=0.5)
+
+
+def wind_lily():
+    b = Builder("WindLily", [MT["stem"], MT["lily"], MT["lily_heart"]])
+    for (x, y, h) in ((0, 0, 0.55), (0.14, 0.08, 0.42), (-0.12, 0.1, 0.36)):
+        b.cyl("stem", (x, y, 0), 0.012, 0.01, h, segs=4, smooth=False)
+        b.sphere("stem", (x + 0.05, y, h * 0.4), 0.05, scale=(1.8, 0.5, 0.2), rot=(0, -0.6, 0), subdiv=1)
+        for k in range(6):
+            a = k * math.tau / 6
+            b.sphere("lily", (x + math.cos(a) * 0.06, y + math.sin(a) * 0.06, h + 0.03), 0.06, scale=(1.7, 0.6, 0.35),
+                     rot=(0, -0.45, a), subdiv=1, smooth=False)
+        b.sphere("lily_heart", (x, y, h + 0.05), 0.025, subdiv=1)
+    return b.finish(uv_scale=0.5)
+
+
+def cookpot():
+    """Marmite de cuisine : feu de camp, trépied et chaudron."""
+    b = Builder("CookPot", [MT["wellstone"], MT["timber"], MT["iron"], MT["fire"], MT["fire_core"], MT["soup"]])
+    for k in range(9):
+        a = k * math.tau / 9
+        b.sphere("wellstone", (math.cos(a) * 0.62, math.sin(a) * 0.62, 0.08), 0.17, scale=(1.2, 1.0, 0.7), subdiv=1, jitter=0.25, smooth=False)
+    for k in range(3):
+        a = k * math.tau / 3 + 0.3
+        b.cyl("timber", (math.cos(a) * 0.3, math.sin(a) * 0.3, 0.1), 0.06, 0.06, 0.7, segs=6, rot=(math.pi / 2, 0, a + math.pi / 2))
+    b.cone("fire", (0, 0, 0.12), 0.32, 0.55, segs=7)
+    for k in range(4):
+        a = k * math.tau / 4
+        b.cone("fire", (math.cos(a) * 0.14, math.sin(a) * 0.14, 0.12), 0.13, 0.4, segs=5)
+    b.cone("fire_core", (0, 0, 0.12), 0.16, 0.36, segs=6)
+    for k in range(3):
+        a = k * math.tau / 3
+        b.cyl("iron", (math.cos(a) * 0.75, math.sin(a) * 0.75, 0), 0.03, 0.03, 1.55, segs=5,
+              rot=(math.sin(a) * 0.45, -math.cos(a) * 0.45, 0))
+    b.cyl("iron", (0, 0, 1.0), 0.015, 0.015, 0.4, segs=4)
+    b.sphere("iron", (0, 0, 0.82), 0.36, scale=(1, 1, 0.78), subdiv=2, flat_bottom=0.64)
+    b.cyl("iron", (0, 0, 0.96), 0.33, 0.33, 0.05, segs=16)
+    b.cyl("soup", (0, 0, 0.99), 0.3, 0.3, 0.02, segs=16)
+    return b.finish(uv_scale=1.0)
+
+
+def forge():
+    """Grande forge de Forgeval : four de pierre rougeoyant, cheminée et enclume."""
+    b = Builder("Forge", [MT["footing"], MT["forge_glow"], MT["iron"], MT["timber"], MT["tint_roof"]])
+    b.box("footing", (0, 0, 1.0), (3.2, 2.6, 2.0), bevel=0.06)
+    b.box("forge_glow", (0, -1.31, 0.9), (1.4, 0.04, 1.0))
+    b.box("footing", (0, -1.36, 1.55), (1.8, 0.2, 0.3))
+    b.cyl("footing", (0.6, 0.4, 2.0), 0.55, 0.42, 3.2, segs=8, smooth=False)
+    b.cyl("iron", (0.6, 0.4, 5.15), 0.5, 0.5, 0.12, segs=8, smooth=False)
+    b.box("iron", (-1.0, -2.6, 0.55), (0.9, 0.42, 0.18))
+    b.box("iron", (-1.0, -2.6, 0.3), (0.32, 0.26, 0.5))
+    b.box("timber", (-1.0, -2.6, 0.05), (0.7, 0.5, 0.1))
+    b.roof("tint_roof", (0, -0.2, 2.0), 3.6, 3.2, 0.9, thick=0.1, overhang=0.25)
+    return b.finish(uv_scale=1.0)
+
+
+def signpost():
+    b = Builder("Signpost", [MT["sign_wood"], MT["timber"]])
+    b.box("timber", (0, 0, 1.0), (0.14, 0.14, 2.0))
+    b.box("sign_wood", (0.35, 0, 1.6), (1.1, 0.08, 0.36), bevel=0.02)
+    b.box("sign_wood", (-0.3, 0, 1.15), (0.9, 0.08, 0.3), bevel=0.02)
+    return b.finish(uv_scale=1.0)
+
+
 def spire(name="Spire", seed=21):
     """Aiguille rocheuse escaladable (~10 m) : blocs empilés, chapeau de mousse."""
     b = Builder(name, [MT["tint_rock"], MT["tint_moss"]])
@@ -494,6 +633,14 @@ def build():
     windmill_base()
     oculus()
     spire()
+    mint()
+    mushroom_pick()
+    lotus_plant()
+    chili_plant()
+    wind_lily()
+    cookpot()
+    forge()
+    signpost()
     bpy.ops.export_scene.gltf(filepath=OUT, export_format="GLB", use_selection=False, export_apply=True,
                               export_vertex_color="ACTIVE", export_all_vertex_colors=True,
                               export_animations=False, export_yup=True)

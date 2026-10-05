@@ -739,6 +739,57 @@ def swim_idle(phase, st):
 
 
 # ----------------------------------------------------------------------------
+# Gestes de cinématique : parler, saluer, victoire
+# ----------------------------------------------------------------------------
+def talk(phase, st):
+    """Conversation : la main droite accompagne la parole, petits hochements de tête."""
+    ch = idle(phase, st)
+    g = syc(phase, 2.0)
+    g2 = syc(phase, 1.0, 0.25)
+    ch["head"] = (2.0 + 4.0 * syc(phase, 3.0), 10.0 * g2, 2.0 * g)
+    ch["chest"] = (-1.0, 5.0 * g2, 0.5)
+    ch["armR.up"] = down(-1, 22.0 + 8.0 * g, 16.0)
+    ch["armR.fore"] = az(-30.0 + 18.0 * g2, 8.0 + 14.0 * g)
+    ch["armR.hand"] = az(-15.0, 25.0 + 10.0 * g)
+    ch["armR.curl"] = 14.0
+    ch["armL.up"] = down(1, 10.0 + 4.0 * g2, 12.0)
+    ch["armL.fore"] = down(1, 38.0 + 6.0 * g2, 4.0)
+    return ch
+
+
+def wave(phase, st):
+    """Salut de la main droite levée."""
+    ch = idle(phase, st)
+    w = syc(phase, 2.0)
+    ch["armframe"] = "root"
+    ch["armR.up"] = az(-62.0, 50.0)
+    ch["armR.fore"] = az(-35.0 + 30.0 * w, 80.0)
+    ch["armR.hand"] = az(-30.0 + 35.0 * w, 84.0)
+    ch["armR.curl"] = 4.0
+    ch["head"] = (-3.0, -8.0, -5.0 + 2.0 * w)
+    ch["chest"] = (-2.0, -4.0, -3.0)
+    return ch
+
+
+def victory(phase, st):
+    """Pose de victoire : poing levé, léger rebond."""
+    ch = idle(phase, st)
+    b = syc(phase, 2.0)
+    ch["armframe"] = "root"
+    ch["hips_off"] = (0.0, 0.0, -0.02 + 0.015 * b)
+    ch["chest"] = (-6.0, 6.0, -2.0)
+    ch["head"] = (-8.0, 6.0, -4.0)
+    ch["armR.up"] = az(-28.0, 68.0 + 4.0 * b)
+    ch["armR.fore"] = az(-12.0, 86.0)
+    ch["armR.hand"] = az(-10.0, 88.0)
+    ch["armR.curl"] = 92.0
+    ch["armL.up"] = down(1, -12.0, 42.0)
+    ch["armL.fore"] = az(150.0, -35.0)
+    ch["armL.curl"] = 60.0
+    return ch
+
+
+# ----------------------------------------------------------------------------
 # Assemblage par personnage
 # ----------------------------------------------------------------------------
 HITS = {
@@ -770,6 +821,9 @@ def build(char, LL):
     cyclic("Climb_Idle", 2.4, climb_idle)
     cyclic("Swim", 1.3, swim)
     cyclic("Swim_Idle", 1.8, swim_idle)
+    cyclic("Talk", 3.0, talk)
+    cyclic("Wave", 1.4, wave)
+    cyclic("Victory", 2.0, victory)
     track("Jump", jump(st))
     track("Land", land(st))
     track("Dash", dash(st))

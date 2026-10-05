@@ -58,6 +58,12 @@ var boss: Enemy
 var chest: Dictionary = {}
 var exit_portal: Node3D
 var _mat_cache: = {}
+## Éléments de quête dans le domaine : reliques à ramasser et PNJ d'évènement (Basile, l'Esprit céleste)
+var relics: Array = []
+var quest_id: = ""
+var event_npc: Node3D
+var event_name: = ""
+var cage: Array = []
 
 func setup(m: Node, domain_id: String) -> void :
 	main = m;id = domain_id;def = DEFS[id]
@@ -65,6 +71,7 @@ func setup(m: Node, domain_id: String) -> void :
 	position = Vector3(def.x, 0.0, 0.0)
 	body = StaticBody3D.new();body.collision_layer = 1;body.collision_mask = 0;add_child(body)
 	_build()
+	_spawn_quest_bits()
 
 func entry_pos() -> Vector3:
 	return to_global(Vector3(0, 0.6, -5.0))
@@ -300,6 +307,31 @@ func _on_totem_lit(_t: Totem) -> void :
 	main.ui.message("%s  %d / %d" % [def.puzzle.split(" (")[0], lit_count, totems.size()], 1.6, Color(1.0, 0.9, 0.6))
 	main.audio.play("waypoint", -6.0)
 
+func _play_event() -> void :
+	var lines: = []
+	if event_name == "basile_free":
+		for b in cage:
+			if is_instance_valid(b):
+				b.create_tween().tween_property(b, "position:y", -3.5, 0.8).set_trans(Tween.TRANS_QUAD)
+		for c in body.get_children():
+			if c is CollisionShape3D and (c as CollisionShape3D).position.distance_to(event_npc.position + Vector3(0, 1.4, 0)) < 1.4:
+				(c as CollisionShape3D).set_deferred("disabled", true)
+		main.audio.play("chest", -2.0)
+		lines = [["Basile l'explorateur", Color(0.95, 0.85, 0.6), "Enfin ! Ces gobelins m'avaient mis en cage pour « garder leur trésor »… Moi !"],
+			["Basile l'explorateur", Color(0.95, 0.85, 0.6), "Vous avez retrouvé mes pages ? Lise doit être morte d'inquiétude. Je rentre à Joncbourg !"],
+			[main.quests.SPEAKERS["kaelith"], main.quests.COLORS["kaelith"], "Rapportons le carnet à Lise. Elle sera soulagée."]]
+	else:
+		lines = [["Esprit céleste", Color(0.7, 0.9, 1.0), "…Les trois notes… Vous les avez réunies."],
+			["Esprit céleste", Color(0.7, 0.9, 1.0), "Le chant du Sanctuaire veillait sur les vents d'Aetheria. Portez-le à Aeris : elle saura le faire vivre."],
+			[main.quests.SPEAKERS["lyra"], main.quests.COLORS["lyra"], "Un esprit qui parle… Hautevent ne va pas me croire."]]
+	main.party.enabled = false;main.party.input_vec = Vector2.ZERO
+	main.ui.start_dialogue(lines, func():
+		main.quests.on_event(event_name)
+		if is_instance_valid(event_npc):
+			FX.column(event_npc.global_position, Color(0.7, 0.9, 1.0), 1.0, 4.0, 1.0)
+			event_npc.create_tween().tween_property(event_npc, "scale", Vector3.ONE * 0.01, 0.6)
+		event_name = "")
+
 func _finish() -> void :
 
 	var zc: float = ROOMS[2][0]
@@ -309,6 +341,9 @@ func _finish() -> void :
 	chest = {"node": node, "lid": node.get_meta("lid"), "opened": false}
 	FX.column(cpos, Color(1, 0.85, 0.4), 0.8, 4.0, 1.2)
 	exit_portal = _portal(Vector3(0, 0, zc + 15.0), "exit")
+	if event_npc and is_instance_valid(event_npc) and not event_npc.visible:
+		event_npc.visible = true
+		FX.column(event_npc.global_position, Color(0.7, 0.9, 1.0), 1.2, 6.0, 1.4)
 	for m in mobs:
 		if is_instance_valid(m) and m.alive: m.take_hit(10000000.0, "", Vector3.INF)
 	main.on_domain_cleared(id)
@@ -324,7 +359,87 @@ func objective() -> String:
 	return ""
 
 
+# ----------------------------------------------------------------------------
+# Quêtes dans les domaines
+# ----------------------------------------------------------------------------
+func _quest_here() -> String:
+	for qid in QuestData.ORDER:
+		if not main.quests.is_active(qid): continue
+		for stp in QuestData.DEFS[qid].steps:
+			if stp.get("domain", "") == id: return qid
+	return ""
+
+func _spawn_quest_bits() -> void :
+	quest_id = _quest_here()
+	if quest_id == "": return
+	var steps: Array = QuestData.DEFS[quest_id].steps
+	var cur: int = main.quests.step(quest_id)
+	for si in steps.size():
+		var stp: Dictionary = steps[si]
+		if stp.get("domain", "") != id: continue
+		if stp.do == "relics" and si == cur:
+			for i in QuestData.DOMAIN_RELICS.size():
+				if i in main.quests.q[quest_id].got: continue
+				_spawn_relic(i, String(stp.item))
+		if stp.do == "event" and si >= cur:
+			event_name = stp.event
+			_spawn_event_npc()
+
+func _spawn_relic(i: int, item: String) -> void :
+	var n: = Node3D.new();add_child(n);n.position = QuestData.DOMAIN_RELICS[i] + Vector3(0, 1.1, 0)
+	var sp: = Sprite3D.new();sp.texture = Items.icon(item);sp.pixel_size = 0.0065;sp.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	sp.shaded = false;sp.no_depth_test = false;n.add_child(sp)
+	var l: = OmniLight3D.new();l.light_color = def.accent.lightened(0.3);l.light_energy = 1.4;l.omni_range = 4.0;l.shadow_enabled = false
+	n.add_child(l)
+	var ring: = MeshInstance3D.new(); var tm: = TorusMesh.new();tm.inner_radius = 0.55;tm.outer_radius = 0.62;ring.mesh = tm
+	ring.material_override = FX.mat_emit(def.accent.lightened(0.35), 2.0, 0.8);ring.position = Vector3(0, -1.05, 0);n.add_child(ring)
+	relics.append({"node": n, "i": i, "item": item})
+	var tw: = n.create_tween().set_loops()
+	tw.tween_property(sp, "position:y", 0.15, 1.0).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(sp, "position:y", -0.05, 1.0).set_trans(Tween.TRANS_SINE)
+
+func _spawn_event_npc() -> void :
+	var lib: Node3D = load("res://assets/npc.glb").instantiate()
+	var npc: = NPC.new();add_child(npc)
+	if event_name == "basile_free":
+		npc.setup("basile", "Basile l'explorateur", "NPC_Keeper", Color(0.95, 0.85, 0.6), lib)
+		npc.recolor(Color(0.45, 0.35, 0.22), Color(0.85, 0.78, 0.6), Color(0.6, 0.35, 0.18))
+		npc.position = Vector3(-13.0, 0, 96.0);npc.rotation.y = PI * 0.5
+		for k in 8:
+			var a: = TAU * k / 8.0
+			var bar: = _box(npc.position + Vector3(cos(a) * 1.15, 1.4, sin(a) * 1.15), Vector3(0.12, 2.8, 0.12), Color(0.2, 0.2, 0.24), true)
+			cage.append(bar)
+		var top: = _box(npc.position + Vector3(0, 2.85, 0), Vector3(2.6, 0.14, 2.6), Color(0.25, 0.22, 0.2), false)
+		cage.append(top)
+	else:
+		npc.setup("esprit", "Esprit céleste", "NPC_Elder", Color(0.7, 0.9, 1.0), lib)
+		npc.recolor(Color(0.6, 0.8, 1.0), Color(0.9, 0.95, 1.0), Color(0.95, 0.98, 1.0))
+		npc.position = Vector3(0, 0.4, 99.0);npc.rotation.y = PI
+		var gl: = OmniLight3D.new();gl.light_color = Color(0.6, 0.85, 1.0);gl.light_energy = 2.0;gl.omni_range = 6.0
+		gl.position = Vector3(0, 1.5, 0);gl.shadow_enabled = false;npc.add_child(gl)
+		npc.visible = false
+	lib.free()
+	npc.target = main.party
+	event_npc = npc
+
+## Destination de la flèche de quête dans le domaine.
+func quest_target() -> Vector3:
+	for r in relics:
+		if is_instance_valid(r.node): return (r.node as Node3D).global_position
+	if event_npc: return event_npc.global_position
+	return Vector3.INF
+
+func _event_ready() -> bool:
+	if event_npc == null or quest_id == "": return false
+	var stp: Dictionary = main.quests._step(quest_id)
+	return stp.get("do", "") == "event" and stp.event == event_name and state == "done"
+
 func find_interaction(p: Vector3) -> Dictionary:
+	for r in relics:
+		if (r.node as Node3D).global_position.distance_to(p + Vector3(0, 1.1, 0)) < 2.4:
+			return {"kind": "dungeon", "verb": "Ramasser :", "what": Items.name_of(r.item), "action": "relic", "ref": r}
+	if _event_ready() and event_npc.visible and event_npc.global_position.distance_to(p) < 3.0:
+		return {"kind": "dungeon", "verb": "Libérer" if event_name == "basile_free" else "Parler à", "what": "Basile" if event_name == "basile_free" else "l'Esprit céleste", "action": "event"}
 	if not chest.is_empty() and not chest.opened and (chest.node as Node3D).global_position.distance_to(p) < 2.6:
 		return {"kind": "dungeon", "what": "le coffre du domaine", "verb": "Ouvrir", "action": "chest"}
 	for n in get_children():
@@ -335,6 +450,18 @@ func find_interaction(p: Vector3) -> Dictionary:
 
 func interact(t: Dictionary) -> void :
 	match String(t.get("action", "")):
+		"relic":
+			var r: Dictionary = t.ref
+			relics.erase(r)
+			var n: Node3D = r.node
+			FX.particles(n.global_position, def.accent.lightened(0.3), 24, 3.5, 0.8, 0.08, 0.0)
+			FX.sphere(n.global_position, def.accent.lightened(0.4), 0.2, 1.6, 0.4, 0.5)
+			n.queue_free()
+			main.audio.play("pickup")
+			main.quests.on_relic(quest_id, int(r.i))
+			main.add_item(String(r.item), 1)
+		"event":
+			_play_event()
 		"chest":
 			if chest.opened: return
 			chest.opened = true
@@ -343,6 +470,7 @@ func interact(t: Dictionary) -> void :
 			var first: = int(main.domain_clears.get(id, 0)) <= 1
 			var gain: = int((80 if first else 30) * (1.0 + (float(def.lvl) - 12.0) / 20.0))
 			main.add_shards(gain)
+			main.add_mora(int(gain * 12))
 			main.add_food(1 if not first else 2)
 			main.audio.play("chest")
 			FX.particles((chest.node as Node3D).global_position + Vector3(0, 0.9, 0), Color(1, 0.88, 0.45), 40, 5.0, 1.0, 0.1, -4.0)

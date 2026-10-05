@@ -52,7 +52,7 @@ func setup(u: UI, m: Node) -> void :
 	full_chk.toggled.connect( func(on):
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if on else DisplayServer.WINDOW_MODE_WINDOWED)
 		_apply())
-	var keys: = GStyle.label("ZQSD / WASD : bouger  •  Clic : attaque  •  E : compétence  •  Q / R : déchaînement\nEspace : saut / planeur  •  Maj : sprint / esquive  •  1-4 : héros  •  F : interagir\nM : carte  •  L : quêtes  •  N : heure  •  H : manger  •  Molette : zoom  •  Échap : menu",
+	var keys: = GStyle.label("ZQSD / WASD : bouger  •  Clic : attaque  •  E : compétence  •  Q / R : déchaînement\nEspace : saut / planeur  •  Maj : sprint / esquive  •  1-4 : héros  •  F : interagir\nM : carte  •  L : quêtes  •  N : heure  •  H : sac à provisions  •  V : vision élémentaire  •  Échap : menu",
 		15, Color(GStyle.CREAM, 0.7))
 	keys.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER;keys.position = Vector2(250, 574);keys.size = Vector2(780, 70)
 	box.add_child(keys)

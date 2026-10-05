@@ -172,7 +172,13 @@ func _markers(full: bool) -> Array:
 	for id in main.world_bosses:
 		var alive_b: bool = is_instance_valid(main.world_bosses[id].node)
 		out.append([w.boss_spots[id], "boss", Color(1.0, 0.35, 0.3) if alive_b else Color(0.55, 0.5, 0.5), "", -1])
+	for cp in w.cook_spots:
+		out.append([cp, "cook", Color(1.0, 0.7, 0.35), "", -1])
+	for sid in Shops.DEFS:
+		var sp: Vector3 = main.npc_pos(Shops.DEFS[sid].owner)
+		if sp != Vector3.INF: out.append([sp, "shop", Color(1.0, 0.86, 0.4), "", -1])
 	if full:
+		for vv in w.villages: out.append([(vv.pos as Vector3) + Vector3(0, 0, -30), "text", Color(1.0, 0.95, 0.8), vv.name, -1])
 		out.append([w.village, "text", Color(1, 1, 1), "Brise-Marée", -1])
 		out.append([w.lake, "text", Color(0.8, 0.92, 1), "Lac Miroir", -1])
 		out.append([w.summit, "text", Color(0.92, 0.96, 1), "Pic Givré", -1])
@@ -215,6 +221,19 @@ func _icon(ci: CanvasItem, c: Vector2, kind: String, col: Color, s: float) -> vo
 				c + Vector2(0, - s * 0.9), c + Vector2(s * 0.2, - s * 0.35), c + Vector2(s * 0.5, - s * 0.8), c + Vector2(s * 0.75, - s * 0.15), 
 				c + Vector2(s * 0.6, s * 0.7), c + Vector2( - s * 0.6, s * 0.7)])
 			ci.draw_colored_polygon(_scale(sk, c, 1.25), dark);ci.draw_colored_polygon(sk, col)
+		"shop":
+			ci.draw_circle(c, s * 0.7, dark);ci.draw_circle(c, s * 0.52, col)
+			ci.draw_circle(c, s * 0.24, col.darkened(0.35))
+		"cook":
+			ci.draw_circle(c, s * 0.7, dark)
+			var pot: = PackedVector2Array()
+			for k in 9:
+				var a2: = PI * k / 8.0
+				pot.append(c + Vector2(cos(a2) * s * 0.5, sin(a2) * s * 0.45))
+			pot.append(c + Vector2( - s * 0.5, - s * 0.05))
+			ci.draw_colored_polygon(pot, col)
+			ci.draw_line(c + Vector2( - s * 0.15, - s * 0.25), c + Vector2( - s * 0.05, - s * 0.55), col, 2.0)
+			ci.draw_line(c + Vector2(s * 0.15, - s * 0.25), c + Vector2(s * 0.25, - s * 0.55), col, 2.0)
 		"quest":
 			var st: = PackedVector2Array()
 			for k in 10:

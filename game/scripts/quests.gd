@@ -57,8 +57,8 @@ func _init() -> void :
 
 func reset() -> void :
 	q = {}
-	for id in ORDER:
-		q[id] = {"state": "locked", "step": 0, "count": 0}
+	for id in ORDER + QuestData.ORDER:
+		q[id] = {"state": "locked", "step": 0, "count": 0, "got": []}
 	q["main"].state = "available"
 	tracked = "main"
 
@@ -82,10 +82,16 @@ func _unlock_sides() -> void :
 
 
 func title(id: String) -> String:
+	if QuestData.DEFS.has(id): return QuestData.DEFS[id].title
 	return DEFS[id].title if DEFS.has(id) else ""
+
+func qtype(id: String) -> String:
+	if QuestData.DEFS.has(id): return QuestData.DEFS[id].type
+	return DEFS[id].type if DEFS.has(id) else "side"
 
 func objective(id: String) -> String:
 	if not q.has(id): return ""
+	if QuestData.DEFS.has(id): return _gen_objective(id)
 	var s: int = q[id].step
 	var c: int = q[id].count
 	match id:
@@ -119,6 +125,7 @@ func objective(id: String) -> String:
 
 func target(id: String) -> Vector3:
 	if not q.has(id): return Vector3.INF
+	if QuestData.DEFS.has(id): return _gen_target(id)
 	var s: int = q[id].step
 	match id:
 		"main":
@@ -145,11 +152,12 @@ func target(id: String) -> Vector3:
 
 func active_list() -> Array:
 	var out: = []
-	for id in ORDER:
+	for id in ORDER + QuestData.ORDER:
 		if is_active(id): out.append(id)
 	return out
 
 func ensure_tracked() -> void :
+	refresh_new()
 
 	if tracked == "main" and q["main"].state == "available": return
 	if not is_active(tracked):
@@ -158,6 +166,12 @@ func ensure_tracked() -> void :
 
 
 func npc_marker(npc: String) -> String:
+	var gm: = _gen_marker(npc)
+	if gm == "?": return gm
+	var om: = _old_marker(npc)
+	return om if om != "" else gm
+
+func _old_marker(npc: String) -> String:
 	if npc == "guild":
 		for id in GUILD:
 			if q[id].state == "active" and q[id].step == 1: return "?"
@@ -169,7 +183,7 @@ func npc_marker(npc: String) -> String:
 		if q["letter"].state == "available": return "!"
 	if npc == "keeper" and is_active("letter"): return "?"
 	for id in ORDER:
-		if DEFS[id].giver != npc or id == "main" or id == "letter" or id in GUILD: continue
+		if not DEFS.has(id) or DEFS[id].giver != npc or id == "main" or id == "letter" or id in GUILD: continue
 		if q[id].state == "available": return "!"
 		if q[id].state == "active" and q[id].step == 1: return "?"
 	return ""
@@ -190,6 +204,7 @@ func on_seal(active_count: int) -> void :
 			q["main"].step = 4
 			main.notify("Les trois Sceaux sont réveillés… Le Gardien Givré s'agite au sommet !")
 			main.spawn_boss()
+			main.play_cine("gardien")
 		changed.emit()
 
 func on_boss_defeated() -> void :
@@ -198,6 +213,15 @@ func on_boss_defeated() -> void :
 		q["main"].step = 5
 		main.notify("Le Gardien Givré est vaincu ! Retourne voir l'Ancienne Maëlys.")
 		changed.emit()
+
+func on_kill_at(p: Vector3) -> void :
+	var b: = main.world.biome_at(p.x, p.z) as String
+	for id in QuestData.ORDER:
+		var st: = _step(id)
+		if st.get("do", "") == "kill" and st.region == b:
+			q[id].count += 1
+			if q[id].count >= int(st.n): _advance(id)
+			else: changed.emit()
 
 func on_kill() -> void :
 	if is_active("hunt") and q["hunt"].step == 0:
@@ -263,6 +287,33 @@ func on_domain(_d: String) -> void :
 func on_world_boss(_b: String) -> void :
 	for id in GUILD: _guild_progress(id)
 
+## Appelé quand l'inventaire change (quêtes de collecte).
+func on_items_changed() -> void :
+	if q.is_empty(): return
+	for id in QuestData.ORDER:
+		var stp: = _step(id)
+		if stp.get("do", "") in ["collect", "relics"] and main.item_count(stp.item) >= int(stp.n):
+			_advance(id)
+			return
+	changed.emit()
+
+func on_gather(_kind: String) -> void :
+	pass
+
+func on_tree_shaken(_fruit: String) -> void :
+	pass
+
+func on_cook(dish: String, n: int) -> void :
+	for id in QuestData.ORDER:
+		var stp: = _step(id)
+		if stp.get("do", "") == "cook" and (String(stp.item) == "" or stp.item == dish):
+			q[id].count += n
+			if q[id].count >= int(stp.n): _advance(id)
+			else: changed.emit()
+
+func on_bought(_id: String, _n: int) -> void :
+	pass
+
 func on_cat() -> void :
 	if is_active("cat") and q["cat"].step == 0:
 		q["cat"].step = 1
@@ -271,10 +322,19 @@ func on_cat() -> void :
 
 
 func _l(who: String, text: String) -> Array:
-	return [SPEAKERS[who], COLORS[who], text]
+	if SPEAKERS.has(who): return [SPEAKERS[who], COLORS[who], text]
+	return [main.npc_name(who), main.npc_color(who), text]
 
 
 func talk(npc: String) -> Dictionary:
+	var old: = _old_talk(npc)
+	if (old.after as Callable).is_valid(): return old
+	var g: = _gen_talk(npc)
+	if not g.is_empty(): return g
+	if (old.lines as Array).is_empty(): return {"lines": _idle(npc), "after": Callable()}
+	return old
+
+func _old_talk(npc: String) -> Dictionary:
 	var lines: = []
 	var after: = Callable()
 	match npc:
@@ -458,13 +518,192 @@ func _guild_talk() -> Dictionary:
 func save_state() -> Dictionary:
 	return {"q": q.duplicate(true), "tracked": tracked}
 
+# ----------------------------------------------------------------------------
+# Moteur générique (quêtes de QuestData)
+# ----------------------------------------------------------------------------
+func _step(id: String) -> Dictionary:
+	if not QuestData.DEFS.has(id) or not is_active(id): return {}
+	var steps: Array = QuestData.DEFS[id].steps
+	var i: int = q[id].step
+	return steps[i] if i < steps.size() else {}
+
+## Débloque les nouvelles quêtes dont les conditions sont remplies.
+func refresh_new() -> void :
+	if q.is_empty() or main == null: return
+	for id in QuestData.ORDER:
+		if q[id].state != "locked": continue
+		var r: Dictionary = QuestData.DEFS[id].get("req", {})
+		var ok: = true
+		if r.has("main"):
+			var ms: String = q["main"].state
+			ok = ok and (ms == "done" or (ms in ["active", "ready"] and int(q["main"].step) >= int(r.main)))
+		if r.has("rank"): ok = ok and int(main.rank) >= int(r.rank)
+		if r.has("quest"): ok = ok and st(String(r.quest)) == "done"
+		if ok: q[id].state = "available"
+
+func _lines(arr: Array) -> Array:
+	var out: = []
+	for l in arr: out.append(_l(String(l[0]), String(l[1])))
+	return out
+
+func _gen_objective(id: String) -> String:
+	var e: Dictionary = q[id]
+	var steps: Array = QuestData.DEFS[id].steps
+	if e.state == "done": return "Quête terminée"
+	if e.state == "available": return "Parle à %s" % main.npc_name(QuestData.DEFS[id].giver)
+	var stp: Dictionary = steps[mini(int(e.step), steps.size() - 1)]
+	var o: String = stp.obj
+	match String(stp.do):
+		"collect", "relics":
+			return "%s (%d/%d)" % [o, mini(main.item_count(stp.item), int(stp.n)), int(stp.n)]
+		"kill", "cook", "beacons":
+			return "%s (%d/%d)" % [o, mini(int(e.count), int(stp.n)), int(stp.n)]
+		"deliver":
+			if main.item_count(stp.item) < int(stp.n):
+				return "%s (%d/%d)" % [o, main.item_count(stp.item), int(stp.n)]
+	return o
+
+func _gen_target(id: String) -> Vector3:
+	var stp: = _step(id)
+	if stp.is_empty(): return Vector3.INF
+	var pp: Vector3 = main.party.global_position
+	match String(stp.do):
+		"talk", "deliver": return main.npc_pos(stp.npc)
+		"collect": return main.item_source(String(stp.item), pp)
+		"kill": return main.world.snap((main.world.REGIONS[stp.region].pos as Vector3) * 0.85)
+		"cook": return main.nearest_cook_pos(pp)
+		"beacons": return main.next_beacon_pos(id)
+		"relics", "event":
+			if main.dungeon and main.dungeon.id == String(stp.domain): return main.dungeon.quest_target()
+			return main.domain_def(String(stp.domain)).get("pos", Vector3.INF)
+	return Vector3.INF
+
+func _gen_marker(npc: String) -> String:
+	for id in QuestData.ORDER:
+		var stp: = _step(id)
+		if stp.get("npc", "") == npc and (stp.do == "talk" or (stp.do == "deliver" and main.item_count(stp.item) >= int(stp.n))): return "?"
+	for id in QuestData.ORDER:
+		if q[id].state == "available" and QuestData.DEFS[id].giver == npc: return "!"
+	return ""
+
+func _gen_talk(npc: String) -> Dictionary:
+	# étape en cours qui concerne ce PNJ
+	for id in QuestData.ORDER:
+		var stp: = _step(id)
+		if stp.get("npc", "") != npc: continue
+		if stp.do == "talk":
+			return {"lines": _lines(stp.lines), "after": func(): _advance(id)}
+		if stp.do == "deliver":
+			if main.item_count(stp.item) >= int(stp.n):
+				return {"lines": _lines(stp.lines), "after": func():
+					main.remove_item(String(stp.item), int(stp.n))
+					_advance(id)}
+			return {"lines": [_l(npc, "Il m'en faut encore : %s (%d/%d)." % [Items.name_of(stp.item), main.item_count(stp.item), int(stp.n)])], "after": Callable()}
+	# nouvelle quête proposée
+	for id in QuestData.ORDER:
+		if q[id].state == "available" and QuestData.DEFS[id].giver == npc:
+			var d: Dictionary = QuestData.DEFS[id]
+			return {"lines": _lines(d.start), "after": func(): _start(id)}
+	# rappel de l'objectif
+	for id in QuestData.ORDER:
+		if is_active(id) and QuestData.DEFS[id].giver == npc:
+			return {"lines": [_l(npc, "Alors, où en êtes-vous ? %s." % _gen_objective(id))], "after": Callable()}
+	return {}
+
+func _start(id: String) -> void :
+	var d: Dictionary = QuestData.DEFS[id]
+	q[id].state = "active";q[id].step = 0;q[id].count = 0;q[id].got = []
+	tracked = id
+	var sr: Dictionary = d.get("start_reward", {})
+	if sr.has("recipe"): main.learn_recipe(String(sr.recipe))
+	main.ui.show_banner("Nouvelle quête : %s" % d.title, Color(1.0, 0.88, 0.55) if d.type != "main" else Color(1.0, 0.8, 0.4))
+	main.audio.play("quest", -4.0)
+	_check_auto(id)
+	changed.emit()
+
+func _advance(id: String) -> void :
+	var d: Dictionary = QuestData.DEFS[id]
+	q[id].step += 1;q[id].count = 0
+	if q[id].step >= (d.steps as Array).size():
+		_complete(id)
+	else:
+		main.notify("%s : %s" % [d.title, _gen_objective(id)])
+		_check_auto(id)
+	changed.emit()
+
+## Étapes déjà remplies au moment où elles commencent (objets déjà en poche…).
+func _check_auto(id: String) -> void :
+	var stp: = _step(id)
+	if stp.is_empty(): return
+	if stp.do in ["collect", "relics"] and main.item_count(stp.item) >= int(stp.n):
+		_advance(id)
+
+func _complete(id: String) -> void :
+	var d: Dictionary = QuestData.DEFS[id]
+	q[id].state = "done"
+	var r: Dictionary = d.get("reward", {})
+	main.ui.show_banner("Quête terminée : %s" % d.title, Color(1.0, 0.88, 0.5))
+	main.audio.play("levelup", -3.0)
+	if r.has("xp"): main.give_xp(int(r.xp), "Quête")
+	if r.has("mora"): main.add_mora(int(r.mora))
+	if r.has("shards"): main.add_shards(int(r.shards))
+	for it in r.get("items", {}): main.add_item(String(it), int(r.items[it]))
+	if r.has("recipe"): main.learn_recipe(String(r.recipe))
+	if r.has("cine"): main.play_cine(String(r.cine))
+	refresh_new()
+	ensure_tracked()
+
+func on_event(ev: String) -> void :
+	for id in QuestData.ORDER:
+		var stp: = _step(id)
+		if stp.get("do", "") == "event" and stp.event == ev: _advance(id)
+
+## Feu de vigie allumé (index dans la liste des feux).
+func on_beacon(i: int) -> void :
+	for id in QuestData.ORDER:
+		var stp: = _step(id)
+		if stp.get("do", "") == "beacons" and not i in q[id].got:
+			q[id].got.append(i);q[id].count = (q[id].got as Array).size()
+			if q[id].count >= int(stp.n): _advance(id)
+			else: changed.emit()
+
+## Relique ramassée dans un domaine (on retient son index pour ne pas la refaire apparaître).
+func on_relic(id: String, i: int) -> void :
+	if q.has(id) and not i in q[id].got: q[id].got.append(i)
+
+func relic_step(domain: String) -> Array:
+	for id in QuestData.ORDER:
+		var stp: = _step(id)
+		if stp.get("domain", "") == domain: return [id, stp]
+	return []
+
+const IDLE: = {
+	"grocer": "Des fruits frais, des œufs, de la farine… Tout ce qu'il faut pour une bonne marmite !",
+	"j_chief": "Le marais a ses humeurs, mais Joncbourg tient bon depuis trois cents ans.",
+	"j_grocer": "Le poisson du jour est arrivé ! Le lotus aussi, si vous cuisinez.",
+	"j_cook": "Une soupe, ça réchauffe les pêcheurs comme les aventuriers.",
+	"j_herb": "Le lotus soigne, la menthe rafraîchit… et le champignon rouge ? On ne le mange pas !",
+	"f_chief": "Le fer se travaille chaud. Les gens aussi.",
+	"f_grocer": "Piments, viande, farine : la halle ne ferme jamais, même quand le volcan tousse.",
+	"f_cook": "Plus c'est épicé, plus on frappe fort. C'est scientifique.",
+	"f_kid": "Un jour, je forgerai une épée aussi belle que celle de Lyra !",
+	"h_chief": "Écoutez le vent : il connaît tous les chemins de l'île.",
+	"h_grocer": "Des lys, des baies givrées… Tout ce que le vent apporte, je le vends !",
+	"h_cook": "Asseyez-vous, mes petits, il reste de la galette.",
+	"h_scout": "D'ici, on voit jusqu'au phare d'Aldo quand le temps est clair.",
+}
+
+func _idle(npc: String) -> Array:
+	return [_l(npc, IDLE.get(npc, "Belle journée, n'est-ce pas ?"))]
+
 func load_state(d: Dictionary) -> void :
 	reset()
 	var src: Dictionary = d.get("q", {})
 	for id in src:
 		if q.has(id):
 			var e: Dictionary = src[id]
-			q[id] = {"state": String(e.get("state", "locked")), "step": int(e.get("step", 0)), "count": int(e.get("count", 0))}
+			q[id] = {"state": String(e.get("state", "locked")), "step": int(e.get("step", 0)), "count": int(e.get("count", 0)), 
+				"got": (e.get("got", []) as Array).map( func(x): return int(x))}
 	tracked = String(d.get("tracked", "main"))
 	ensure_tracked()
 	refresh_guild(false)

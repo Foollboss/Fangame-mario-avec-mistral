@@ -6,6 +6,8 @@ var sock: Node3D
 var base_y: = 0.1
 var tip_y: = 0.7
 var col: = Color.WHITE
+## palette de dégradé (récent -> ancien) ; vide = couleur unique
+var pal: Array = []
 var emitting: = false
 var life: = 0.14
 var _pts: Array = []
@@ -68,6 +70,9 @@ func _process(_d: float) -> void :
 			var a: Vector3 = _cr(p0[1], p1[1], p2[1], p3[1], t)
 			var b: Vector3 = _cr(p0[2], p1[2], p2[2], p3[2], t)
 			var hot: = col.lerp(Color.WHITE, 0.55 * f)
+			if not pal.is_empty():
+				var u: = 1.0 - f
+				hot = (pal[0] as Color).lerp(pal[1], clampf(u * 3.0, 0.0, 1.0)) if u < 0.33 else ((pal[1] as Color).lerp(pal[2], (u - 0.33) * 3.0) if u < 0.66 else (pal[2] as Color).lerp(pal[3], (u - 0.66) * 3.0))
 			_im.surface_set_color(Color(col.r, col.g, col.b, 0.0))
 			_im.surface_add_vertex(a)
 			_im.surface_set_color(Color(hot.r, hot.g, hot.b, 0.85 * f * f))

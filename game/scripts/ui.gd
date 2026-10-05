@@ -386,7 +386,7 @@ func _build_hud() -> void :
 	hud = Control.new();hud.set_anchors_preset(Control.PRESET_FULL_RECT);hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(hud)
 	circle_shader = Shader.new();circle_shader.code = CIRCLE_SHADER
-	for k in ["map", "book", "clock", "gear", "sword", "jump", "dash", "talk", "pie", "quest", "oculus", "el_hydro", "el_electro", "el_pyro", "el_lava", "el_cryo"]:
+	for k in ["map", "book", "clock", "gear", "sword", "jump", "dash", "talk", "pie", "quest", "oculus", "eye", "el_hydro", "el_electro", "el_pyro", "el_lava", "el_cryo"]:
 		icons["ic_" + k] = load("res://ui/icons/%s.png" % k)
 	hit_rect = ColorRect.new();hit_rect.color = Color(1, 0.1, 0.1, 0.0);hit_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	hit_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE;hud.add_child(hit_rect)
@@ -490,6 +490,9 @@ func _build_hud() -> void :
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER;l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER;hud.add_child(l)
 	food_disc = _disc(icons.ic_pie, 52.0);food_disc.icon_scale = 0.6;food_disc.icon_mod = Color(1.0, 0.86, 0.6)
 	food_label = _label("", 15, Color(1.0, 0.9, 0.7));hud.add_child(food_label)
+	food_disc.clickable(toggle_foodbag)
+	buff_box = HBoxContainer.new();buff_box.add_theme_constant_override("separation", 6);buff_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud.add_child(buff_box)
 	if not touch:
 		for k in ["E", "Q", "H"]:
 			var kc: = _keycap("A" if k == "Q" else k);hud.add_child(kc);keycaps[k] = kc
@@ -525,14 +528,14 @@ func _build_touch() -> void :
 	var ki: = TextureRect.new();ki.texture = icons.ic_talk;ki.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	ki.size = Vector2(22, 22);ki.position = Vector2(13, 12);ki.modulate = Color(0.12, 0.12, 0.18);ki.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	prompt.add_child(ki)
-	for spec in [["attack", 132, "ic_sword"], ["skill", 96, ""], ["burst", 104, ""], ["jump", 84, "ic_jump"], ["sprint", 84, "ic_dash"], 
+	for spec in [["attack", 132, "ic_sword"], ["skill", 96, ""], ["burst", 104, ""], ["jump", 84, "ic_jump"], ["sprint", 84, "ic_dash"], ["sight", 60, "ic_eye"], 
 					["interact", 0, ""], ["food", 64, "ic_pie"], ["pause", 50, ""], ["map", 50, ""], ["time_menu", 50, ""], 
 					["quest_log", 50, ""], ["switch1", 0, ""], ["switch2", 0, ""], ["switch3", 0, ""], ["switch4", 0, ""]]:
 		var b: = TouchBtn.new()
 		b.action = spec[0]
 		var sz: float = spec[1]
 		if sz > 0:
-			b.texture_normal = tex.btn if spec[0] in ["attack", "jump", "sprint", "food"] else tex.clear
+			b.texture_normal = tex.btn if spec[0] in ["attack", "jump", "sprint", "food", "sight"] else tex.clear
 			b.scale = Vector2.ONE * sz / 128.0
 			b.radius = 64.0
 			if spec[2] != "":
@@ -556,7 +559,7 @@ func _layout() -> void :
 	if victory and victory.has_node("Continue"):
 		var cb: Button = victory.get_node("Continue")
 		cb.position = Vector2(vs.x * 0.5 - cb.size.x * 0.5, vs.y - 140)
-	for mnu in [paimon, char_menu, settings_menu, bag_menu, statue_menu]:
+	for mnu in [paimon, char_menu, settings_menu, bag_menu, statue_menu, shop_menu, cook_menu]:
 		if mnu: mnu.layout(vs)
 	if ctx_hint:
 		ctx_hint.size = Vector2(640, 26);ctx_hint.position = Vector2(vs.x * 0.5 - 320, vs.y - (250 if touch else 96))
@@ -611,6 +614,9 @@ func _layout() -> void :
 	burst_lbl.position = burst_pos;burst_lbl.size = Vector2(bsz, bsz)
 	burst_ring.position = burst_pos - Vector2(7, 7);burst_ring.size = Vector2(bsz + 14, bsz + 14)
 	food_disc.position = Vector2(vs.x - 290, vs.y - 86)
+	if buff_box: buff_box.position = Vector2(vs.x * 0.5 - 180, vs.y - 100)
+	if foodbag:
+		foodbag.position = Vector2(vs.x - foodbag.size.x - 24, vs.y - foodbag.size.y - (300 if touch else 112))
 	food_label.position = food_disc.position + Vector2(36, 34)
 	if keycaps.has("E"):
 		(keycaps.E as Label).position = skill_pos + Vector2(ssz * 0.5 - 9, ssz + 4)
@@ -624,7 +630,7 @@ func _layout() -> void :
 		joy_knob.position = joy_center - joy_knob.size * 0.5
 		var place: = {"attack": Vector2(vs.x - 236, vs.y - 236), "skill": skill_pos, "burst": burst_pos, 
 			"jump": Vector2(vs.x - 124, vs.y - 330), "sprint": Vector2(vs.x - 116, vs.y - 112), 
-			"food": Vector2(vs.x - 500, vs.y - 92), 
+			"food": Vector2(vs.x - 500, vs.y - 92), "sight": Vector2(vs.x - 96, vs.y - 420), 
 			"pause": top_icons.menu.position, "map": top_icons.map.position, "time_menu": top_icons.time.position, 
 			"quest_log": top_icons.quests.position}
 		for k in place: buttons[k].position = place[k]
@@ -635,7 +641,8 @@ func _layout() -> void :
 func _input(event: InputEvent) -> void :
 	if not touch: return
 	if dlg_open or (map_ui and map_ui.open) or (pause and pause.visible) or (title and title.visible): return
-	if (time_menu and time_menu.visible) or (quest_log and quest_log.visible) or (statue_menu and statue_menu.visible): return
+	if foodbag and foodbag.visible: return
+	if (time_menu and time_menu.visible) or (quest_log and quest_log.visible) or (statue_menu and overlay_open()): return
 	var vs: = get_viewport().get_visible_rect().size
 	if event is InputEventScreenTouch:
 		if event.pressed:
@@ -742,12 +749,15 @@ func refresh(party: Party) -> void :
 		pm.set_shader_parameter("ring_col", Color(1.0, 0.86, 0.5, 1.0) if act else Color(1, 1, 1, 0.45))
 		(r.pic as TextureRect).modulate = Color(1, 1, 1) if o.alive else Color(0.45, 0.4, 0.4)
 		r.row.modulate.a = 1.0 if o.alive else 0.7
-	food_disc.visible = not touch and main.food > 0
-	food_label.text = ("×%d" % main.food) if main.food > 0 and not touch else ""
-	if keycaps.has("H"): (keycaps.H as Label).visible = main.food > 0
+	var nf: int = main.food_total()
+	food_disc.visible = not touch and nf > 0
+	food_label.text = ("×%d" % nf) if nf > 0 and not touch else ""
+	if keycaps.has("H"): (keycaps.H as Label).visible = nf > 0
 	if touch and buttons.has("food"):
-		buttons["food"].visible = main.food > 0
-		var fl: Label = buttons["food"].get_node("L");fl.text = "×%d" % main.food
+		buttons["food"].visible = nf > 0
+		var fl: Label = buttons["food"].get_node("L");fl.text = "×%d" % nf
+	_refresh_buffs(party)
+	_update_sight(dt)
 	if Engine.get_frames_drawn() % 20 == 0:
 		var fps: = Engine.get_frames_per_second()
 		fps_label.text = "%d FPS" % fps
@@ -858,7 +868,8 @@ func show_quest_log(on: bool) -> void :
 			row.add_theme_stylebox_override("panel", sb)
 			var hb: = HBoxContainer.new();hb.add_theme_constant_override("separation", 12);row.add_child(hb)
 			var tx: = VBoxContainer.new();tx.size_flags_horizontal = Control.SIZE_EXPAND_FILL;hb.add_child(tx)
-			var tl: = _label(("★ " if id == "main" else "◆ ") + main.quests.title(id), 21, Color(1.0, 0.85, 0.4) if id == "main" else Color(0.6, 0.88, 1.0))
+			var is_main: bool = main.quests.qtype(id) == "main"
+			var tl: = _label(("★ " if is_main else "◆ ") + main.quests.title(id), 21, Color(1.0, 0.85, 0.4) if is_main else Color(0.6, 0.88, 1.0))
 			tx.add_child(tl)
 			var ob: = _label(main.quests.objective(id), 17, Color(0.95, 0.95, 1.0));ob.autowrap_mode = TextServer.AUTOWRAP_WORD
 			ob.custom_minimum_size = Vector2(520, 0);tx.add_child(ob)
@@ -868,6 +879,18 @@ func show_quest_log(on: bool) -> void :
 			quest_list.add_child(row)
 
 		var qs: Quests = main.quests
+		var avail: = []
+		for nid in QuestData.ORDER:
+			if qs.st(nid) == "available": avail.append(nid)
+		if not avail.is_empty():
+			quest_list.add_child(_label("Quêtes disponibles (va parler au personnage)", 20, Color(0.75, 1.0, 0.7)))
+			for nid in avail:
+				var giver: String = QuestData.DEFS[nid].giver
+				var vv: Dictionary = main.world.village_at(main.npc_pos(giver), 40.0)
+				var where: = String(vv.name) if not vv.is_empty() else "Brise-Marée"
+				var ra: = _label("◆ %s  —  %s (%s)" % [qs.title(nid), main.npc_name(giver), where], 17, Color(0.85, 0.95, 0.85))
+				ra.autowrap_mode = TextServer.AUTOWRAP_WORD;ra.custom_minimum_size = Vector2(720, 0)
+				quest_list.add_child(ra)
 		if qs.st("main") != "available":
 			var head: = _label("Guilde des aventuriers — Isaure, à Brise-Marée", 20, Color(1.0, 0.72, 0.45))
 			quest_list.add_child(head)
@@ -959,6 +982,151 @@ func toast(text: String, icon_tex: Texture2D = null, col: = Color(1, 1, 1)) -> v
 	tw.tween_property(p, "modulate:a", 0.0, 0.5)
 	tw.tween_callback(p.queue_free)
 
+var buff_box: HBoxContainer
+var _buff_sig: = ""
+## Petites icônes des plats actifs (bonus d'ATQ, d'endurance, de défense) au-dessus des PV.
+func _refresh_buffs(party: Party) -> void :
+	var sig: = ""
+	for k in party.food_buffs: sig += "%s:%d " % [party.food_buffs[k].id, int(party.food_buffs[k].t)]
+	if sig == _buff_sig: return
+	_buff_sig = sig
+	for c in buff_box.get_children(): c.queue_free()
+	for k in party.food_buffs:
+		var b: Dictionary = party.food_buffs[k]
+		var h: = HBoxContainer.new();h.add_theme_constant_override("separation", 2);h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var ic: = TextureRect.new();ic.texture = Items.icon(String(b.id));ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		ic.custom_minimum_size = Vector2(28, 28);ic.mouse_filter = Control.MOUSE_FILTER_IGNORE;h.add_child(ic)
+		var t: = int(b.t)
+		h.add_child(GStyle.label("%d:%02d" % [t / 60, t % 60], 14, Color(1.0, 0.92, 0.7), 3))
+		buff_box.add_child(h)
+
+# ----------------------------------------------------------------------------
+# Sac à provisions : manger un plat sans ouvrir l'inventaire (touche H / bouton)
+# ----------------------------------------------------------------------------
+var foodbag: Panel
+var fb_grid: GridContainer
+var fb_hint: Label
+
+func _build_foodbag() -> void :
+	foodbag = Panel.new();foodbag.size = Vector2(470, 330);foodbag.visible = false
+	foodbag.add_theme_stylebox_override("panel", GStyle.sb(Color(0.07, 0.08, 0.13, 0.9), 18, Color(GStyle.GOLD, 0.35), 2))
+	root.add_child(foodbag)
+	var t: = GStyle.label("Sac à provisions", 22, GStyle.CREAM_HI, 3);t.position = Vector2(20, 12);foodbag.add_child(t)
+	var x: = GStyle.Pill.new("", "✕", false, 52.0);x.position = Vector2(406, 8);x.glyph_col = Color(0.6, 0.8, 1.0)
+	x.pressed.connect(toggle_foodbag);foodbag.add_child(x)
+	var dv: = GStyle.Divider.new(430.0);dv.position = Vector2(20, 60);foodbag.add_child(dv)
+	var sc: = ScrollContainer.new();sc.position = Vector2(20, 80);sc.size = Vector2(440, 196)
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED;foodbag.add_child(sc)
+	fb_grid = GridContainer.new();fb_grid.columns = 5;fb_grid.add_theme_constant_override("h_separation", 8)
+	fb_grid.add_theme_constant_override("v_separation", 8);sc.add_child(fb_grid)
+	fb_hint = GStyle.label("", 15, Color(GStyle.CREAM, 0.8));fb_hint.position = Vector2(20, 284);fb_hint.size = Vector2(430, 40)
+	fb_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART;foodbag.add_child(fb_hint)
+
+func toggle_foodbag() -> void :
+	if foodbag == null: _build_foodbag();_layout()
+	if not foodbag.visible and (dlg_open or main.paused or not main.playing): return
+	foodbag.visible = not foodbag.visible
+	if foodbag.visible:
+		_fill_foodbag()
+		release_touch()
+		fb_hint.text = "Touche un plat pour le manger." if touch else "Clique sur un plat pour le manger  •  H : fermer"
+	main.set_menu_mouse(foodbag.visible)
+
+func _fill_foodbag() -> void :
+	for c in fb_grid.get_children(): c.queue_free()
+	var ids: Array = []
+	for id in Items.foods():
+		if main.item_count(id) > 0: ids.append(id)
+	if ids.is_empty():
+		var l: = GStyle.label("Aucun plat. Cuisine à une marmite ou achète-en chez un cuisinier.", 17, Color(GStyle.CREAM, 0.7))
+		l.custom_minimum_size = Vector2(420, 60);l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART;fb_grid.add_child(l)
+		return
+	for id in ids:
+		var card: = BagMenu.ItemCard.new(id, Items.stars_of(id), main.item_count(id), Items.icon(id))
+		card.custom_minimum_size = Vector2(80, 98)
+		card.picked.connect( func(i: String):
+			if main.eat(i):
+				fb_hint.text = "%s : %s" % [Items.name_of(i), Items.effect_text(i)]
+			else:
+				fb_hint.text = "%s ne servirait à rien pour l'instant." % Items.name_of(i)
+			_fill_foodbag())
+		card.mouse_entered.connect( func(): fb_hint.text = "%s — %s" % [Items.name_of(id), Items.effect_text(id)])
+		fb_grid.add_child(card)
+
+# ----------------------------------------------------------------------------
+# Vision élémentaire (touche V maintenue, ou bouton œil sur mobile) : le monde se décolore
+# et les objets intéressants proches s'illuminent.
+# ----------------------------------------------------------------------------
+const SIGHT_SHADER: = """
+shader_type canvas_item;
+uniform sampler2D screen_tex : hint_screen_texture, filter_linear_mipmap;
+uniform float amount = 0.0;
+void fragment() {
+	vec3 c = texture(screen_tex, SCREEN_UV).rgb;
+	float g = dot(c, vec3(0.3, 0.59, 0.11));
+	vec3 tint = vec3(g * 0.5, g * 0.62, g * 0.85);
+	float vig = smoothstep(0.85, 0.25, length(SCREEN_UV - 0.5));
+	vec3 o = mix(c, tint, amount * 0.88) * mix(1.0, 0.45 + 0.55 * vig, amount);
+	COLOR = vec4(o, 1.0);
+}
+"""
+var sight_rect: ColorRect
+var sight_marks: Control
+var sight_on: = false
+var sight_amt: = 0.0
+var sight_touch_t: = 0.0
+var _sight_list: Array = []
+var _sight_scan: = 0.0
+
+class SightMarks extends Control:
+	var ui: UI
+	func _draw() -> void :
+		var cam: = get_viewport().get_camera_3d()
+		if cam == null or ui.sight_amt < 0.05: return
+		var t: = Time.get_ticks_msec() / 1000.0
+		for e in ui._sight_list:
+			var p: Vector3 = e[0]
+			if cam.is_position_behind(p): continue
+			var sp: = cam.unproject_position(p)
+			var col: Color = {"oculus": Color(0.45, 1.0, 0.82), "chest": Color(1.0, 0.82, 0.35), "plant": Color(0.6, 1.0, 0.45),
+				"fruit": Color(1.0, 0.62, 0.25), "crystal": Color(0.5, 0.75, 1.0), "beacon": Color(1.0, 0.55, 0.25), "relic": Color(1.0, 0.9, 0.5)}.get(e[1], Color.WHITE)
+			var d: = cam.global_position.distance_to(p)
+			var r: = clampf(26.0 - d * 0.35, 9.0, 22.0) * (1.0 + 0.12 * sin(t * 5.0 + p.x))
+			col.a = ui.sight_amt
+			for k in 3: draw_circle(sp, r * (1.6 - k * 0.25), Color(col.r, col.g, col.b, 0.08 * ui.sight_amt), true, -1.0, true)
+			GStyle.diamond(self, sp, r * 0.55, col)
+			draw_arc(sp, r, 0, TAU, 32, col, 2.0, true)
+
+func _build_sight() -> void :
+	sight_rect = ColorRect.new();sight_rect.set_anchors_preset(Control.PRESET_FULL_RECT);sight_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sh: = Shader.new();sh.code = SIGHT_SHADER
+	var m: = ShaderMaterial.new();m.shader = sh;sight_rect.material = m;sight_rect.visible = false
+	root.add_child(sight_rect);root.move_child(sight_rect, 0)
+	sight_marks = SightMarks.new();sight_marks.ui = self;sight_marks.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sight_marks.mouse_filter = Control.MOUSE_FILTER_IGNORE;root.add_child(sight_marks);root.move_child(sight_marks, 1)
+
+func set_sight(on: bool) -> void :
+	if on and not sight_on: main.audio.play("orb", -8.0)
+	sight_on = on
+
+func _update_sight(dt: float) -> void :
+	if sight_rect == null: _build_sight()
+	if touch:
+		sight_touch_t = maxf(0.0, sight_touch_t - dt)
+		sight_on = sight_touch_t > 0.0
+	var want: = 1.0 if sight_on and main.playing and not main.cinematic else 0.0
+	sight_amt = move_toward(sight_amt, want, dt * 3.0)
+	sight_rect.visible = sight_amt > 0.01
+	(sight_rect.material as ShaderMaterial).set_shader_parameter("amount", sight_amt)
+	if sight_amt > 0.01:
+		_sight_scan -= dt
+		if _sight_scan <= 0.0:
+			_sight_scan = 0.4
+			_sight_list = main.sight_targets(45.0)
+		sight_marks.queue_redraw()
+	elif not _sight_list.is_empty():
+		_sight_list = [];sight_marks.queue_redraw()
+
 var fade_rect: ColorRect
 ## Fondu au noir bref (noyade, téléportation…) : montée, pause, descente.
 func fade_flash(t_in: float, hold: float, t_out: float) -> void :
@@ -1022,9 +1190,16 @@ func _build_dialog() -> void :
 			guard += 1;dialogue_next(true);dialogue_next(true))
 	dialog.add_child(skip)
 
-func start_dialogue(lines: Array, after: Callable) -> void :
+## Choix de réponse affichés sur la dernière réplique : [[texte, Callable, pictogramme?], ...]
+var dlg_choices: Array = []
+var choice_box: VBoxContainer
+
+func start_dialogue(lines: Array, after: Callable, choices: Array = []) -> void :
 	if lines.is_empty(): return
-	dlg_lines = lines;dlg_index = 0;dlg_after = after;dlg_open = true
+	dlg_lines = lines;dlg_index = 0;dlg_after = after;dlg_open = true;dlg_choices = choices
+	if choice_box == null:
+		choice_box = VBoxContainer.new();choice_box.add_theme_constant_override("separation", 10);dialog.add_child(choice_box)
+	choice_box.visible = false
 	dialog.visible = true
 	hud.visible = false
 	release_touch()
@@ -1036,10 +1211,42 @@ func _show_line() -> void :
 	dlg_name.add_theme_color_override("font_color", l[1])
 	dlg_text.text = l[2]
 	dlg_text.visible_ratio = 0.0
+	dlg_arrow.visible = true
 	if _dlg_tw: _dlg_tw.kill()
 	_dlg_tw = dlg_text.create_tween()
 	_dlg_tw.tween_property(dlg_text, "visible_ratio", 1.0, clampf((l[2] as String).length() / 70.0, 0.25, 1.4))
 	if main.audio: main.audio.play("blip", -8.0)
+	if dlg_index == dlg_lines.size() - 1 and not dlg_choices.is_empty(): _show_choices()
+
+func choices_shown() -> bool:
+	return choice_box != null and choice_box.visible
+
+func _show_choices() -> void :
+	for c in choice_box.get_children(): c.queue_free()
+	for i in dlg_choices.size():
+		var c: Array = dlg_choices[i]
+		var b: = GStyle.Pill.new(String(c[0]), String(c[2]) if c.size() > 2 else "◆", i == 0, 330.0)
+		b.pressed.connect(choose.bind(i))
+		choice_box.add_child(b)
+	var vs: = get_viewport().get_visible_rect().size
+	choice_box.position = Vector2(vs.x * 0.62, vs.y * 0.5 - dlg_choices.size() * 31.0)
+	choice_box.visible = true
+	dlg_arrow.visible = false
+
+## Sélectionne un choix : ferme le dialogue puis lance l'action choisie.
+func choose(i: int) -> void :
+	if not dlg_open or i >= dlg_choices.size(): return
+	var act: Callable = dlg_choices[i][1]
+	dlg_choices = []
+	choice_box.visible = false
+	dlg_open = false
+	dialog.visible = false
+	hud.visible = true
+	var cb: = dlg_after
+	dlg_after = Callable()
+	if cb.is_valid(): cb.call()
+	main.on_dialogue_closed()
+	if act.is_valid(): act.call()
 
 var _dlg_tw: Tween
 var _dlg_ms: = -1000
@@ -1053,6 +1260,7 @@ func dialogue_next(force: = false) -> void :
 		if _dlg_tw: _dlg_tw.kill()
 		dlg_text.visible_ratio = 1.0
 		return
+	if not dlg_choices.is_empty() and dlg_index >= dlg_lines.size() - 1: return
 	dlg_index += 1
 	if dlg_index >= dlg_lines.size():
 		dlg_open = false
@@ -1076,6 +1284,8 @@ var settings_menu: SettingsMenu
 var bag_menu: BagMenu
 var sub_menu: Control
 var statue_menu: StatueMenu
+var shop_menu: ShopMenu
+var cook_menu: CookMenu
 var ctx_hint: Label
 
 func _build_pause() -> void :
@@ -1089,6 +1299,10 @@ func _build_pause() -> void :
 		mnu.closed.connect(close_sub)
 	statue_menu = StatueMenu.new();statue_menu.name = "Statue";root.add_child(statue_menu);statue_menu.setup(self, main)
 	statue_menu.closed.connect( func(): show_statue(false))
+	shop_menu = ShopMenu.new();shop_menu.name = "Shop";root.add_child(shop_menu);shop_menu.setup(self, main)
+	shop_menu.closed.connect( func(): show_overlay(shop_menu, false))
+	cook_menu = CookMenu.new();cook_menu.name = "Cook";root.add_child(cook_menu);cook_menu.setup(self, main)
+	cook_menu.closed.connect( func(): show_overlay(cook_menu, false))
 
 ## Ouvre un sous-menu (personnages, inventaire, paramètres) par-dessus le menu principal.
 func open_sub(which: String) -> void :
@@ -1098,6 +1312,21 @@ func open_sub(which: String) -> void :
 	paimon.visible = false
 	sub_menu = m
 	m.open()
+
+## Ouvre / ferme un menu plein écran de l'exploration (boutique, cuisine…).
+func show_overlay(m: Control, on: bool, arg = null) -> void :
+	joy_index = -1;joy_vec = Vector2.ZERO;cam_index = -1
+	if on:
+		if arg != null: m.call("open", arg)
+		else: m.call("open")
+		release_touch()
+	else:
+		m.call("close")
+	hud.visible = not on and not dlg_open
+	main.set_menu_mouse(on)
+
+func overlay_open() -> bool:
+	return statue_menu.visible or shop_menu.visible or cook_menu.visible or (foodbag != null and foodbag.visible)
 
 ## Menu d'offrande d'une Statue d'Aetheria (ouvert avec « Interagir » près d'une statue).
 func show_statue(on: bool) -> void :

@@ -29,6 +29,13 @@ func rotate_by(dx: float, dy: float) -> void :
 	yaw -= dx * sensitivity
 	pitch = clampf(pitch - dy * sensitivity, -1.2, 0.45)
 
+## Replace la caméra derrière le héros (fin de cinématique).
+func snap_behind() -> void :
+	if target == null: return
+	if target is Party: yaw = (target as Party).visual.rotation.y + PI
+	pitch = -0.28
+	global_position = target.global_position + Vector3(0, 1.45, 0)
+
 func shake(a: float) -> void :
 	shake_amt = maxf(shake_amt, a)
 

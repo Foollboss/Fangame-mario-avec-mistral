@@ -42,7 +42,18 @@ var resonance_t: = 0.0
 const OCULUS_LEVELS: = [3, 4, 4, 5, 5, 6, 6, 7]
 const STAMINA_PER_LEVEL: = 15.0
 var shards: = 0
-var food: = 0
+## Inventaire : identifiant d'objet -> quantité (voir Items.DEFS), Mora, recettes connues
+var inv: = {}
+var mora: = 0
+var recipes_known: = {}
+var recipe_mastery: = {}
+var dishes_cooked: = 0
+## compatibilité : « food » = nombre de tartes aux pommes solaires
+var food: int:
+	get:
+		return int(inv.get("tarte", 0))
+	set(value):
+		inv["tarte"] = maxi(0, value)
 var rank: = 1
 var xp: = 0
 var treasure_map: = false
@@ -59,6 +70,9 @@ var region_now: = ""
 var combat_t: = 0.0
 var interact_target: Dictionary = {}
 var paused: = false
+var cinematic: = false
+var cine: Cinematic
+var seen_cines: = {}
 
 const SAVE_PATH: = "user://aetheria_save.json"
 const MAX_RANK: = 30
@@ -106,6 +120,23 @@ const NPC_DEFS: = {
 	"scholar": ["Érudit Soren", "NPC_Scholar", Color(0.6, 1.0, 0.8)], 
 	"keeper": ["Aldo", "NPC_Keeper", Color(0.95, 0.9, 0.7)], 
 	"guild": ["Isaure, de la Guilde", "NPC_Scholar", Color(1.0, 0.72, 0.45)], 
+	"grocer": ["Mireille, l'épicière", "NPC_Cook", Color(0.95, 0.85, 0.55)], 
+}
+
+## PNJ des nouveaux villages : [nom, modèle, couleur, emplacement, [tenue, tenue 2, cheveux]]
+const VILLAGE_NPCS: = {
+	"j_chief": ["Doyenne Ondine", "NPC_Elder", Color(0.6, 1.0, 0.82), "jonc_chief", [Color(0.2, 0.5, 0.45), Color(0.85, 0.8, 0.55), Color(0.85, 0.85, 0.9)]], 
+	"j_grocer": ["Mirelle, du comptoir", "NPC_Cook", Color(0.75, 0.95, 0.85), "jonc_grocer", [Color(0.3, 0.55, 0.5), Color(0.95, 0.9, 0.8), Color(0.4, 0.25, 0.15)]], 
+	"j_cook": ["Chef Gaspard", "NPC_Keeper", Color(0.6, 0.85, 1.0), "jonc_cook", [Color(0.25, 0.4, 0.6), Color(0.9, 0.85, 0.7), Color(0.3, 0.3, 0.32)]], 
+	"j_herb": ["Herboriste Lise", "NPC_Scholar", Color(0.75, 1.0, 0.65), "jonc_extra", [Color(0.4, 0.6, 0.3), Color(0.9, 0.85, 0.6), Color(0.75, 0.45, 0.2)]], 
+	"f_chief": ["Maître Brann", "NPC_Guard", Color(1.0, 0.65, 0.4), "forge_chief", [Color(0.45, 0.2, 0.12), Color(0.3, 0.28, 0.3), Color(0.2, 0.12, 0.08)]], 
+	"f_grocer": ["Ysolde, de la halle", "NPC_Cook", Color(1.0, 0.8, 0.55), "forge_grocer", [Color(0.6, 0.3, 0.15), Color(0.95, 0.85, 0.7), Color(0.1, 0.08, 0.08)]], 
+	"f_cook": ["Chef Pyros", "NPC_Keeper", Color(1.0, 0.55, 0.35), "forge_cook", [Color(0.7, 0.2, 0.1), Color(0.95, 0.9, 0.85), Color(0.9, 0.4, 0.15)]], 
+	"f_kid": ["Cendre, l'apprentie", "NPC_Child", Color(1.0, 0.75, 0.5), "forge_extra", [Color(0.35, 0.3, 0.3), Color(0.85, 0.5, 0.2), Color(0.85, 0.3, 0.15)]], 
+	"h_chief": ["Sage Aeris", "NPC_Elder", Color(0.8, 0.75, 1.0), "vent_chief", [Color(0.4, 0.35, 0.7), Color(0.9, 0.85, 1.0), Color(0.95, 0.95, 1.0)]], 
+	"h_grocer": ["Tobias le colporteur", "NPC_Scholar", Color(0.75, 0.85, 1.0), "vent_grocer", [Color(0.3, 0.38, 0.6), Color(0.85, 0.75, 0.5), Color(0.3, 0.22, 0.15)]], 
+	"h_cook": ["Mamie Brise", "NPC_Cook", Color(0.95, 0.8, 1.0), "vent_cook", [Color(0.55, 0.42, 0.75), Color(0.95, 0.95, 0.95), Color(0.85, 0.85, 0.88)]], 
+	"h_scout": ["Sylve, la guetteuse", "NPC_Guard", Color(0.7, 0.9, 1.0), "vent_extra", [Color(0.25, 0.35, 0.55), Color(0.8, 0.85, 0.9), Color(0.75, 0.6, 0.35)]], 
 }
 
 func _ready() -> void :
@@ -127,6 +158,7 @@ func _ready() -> void :
 	rig.yaw = PI
 	party.visual.rotation.y = 0.0
 	ui = UI.new();ui.main = self;add_child(ui)
+	cine = Cinematic.new();cine.name = "Cinematic";add_child(cine);cine.setup(self)
 
 	ui.process_mode = Node.PROCESS_MODE_ALWAYS
 	audio.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -146,6 +178,8 @@ func _ready() -> void :
 	_spawn_chests()
 	_spawn_crystals()
 	_spawn_oculi()
+	_spawn_gathers()
+	_spawn_beacons()
 	_spawn_apples()
 	_spawn_cat()
 	for a in args:
@@ -272,7 +306,7 @@ func _ready() -> void :
 			await snap(f[0])
 		get_tree().quit()
 		return
-	for t in ["climbtest", "swimtest", "oculustest"]:
+	for t in ["climbtest", "swimtest", "oculustest", "v8test", "v8shots"]:
 		if "--" + t in args:
 			autotest = true
 			start_game(false)
@@ -281,6 +315,8 @@ func _ready() -> void :
 				"climbtest": await _climb_test()
 				"swimtest": await _swim_test()
 				"oculustest": await _oculus_test()
+				"v8test": await _v8_test()
+				"v8shots": await _v8_shots()
 			print(t.to_upper() + " done")
 			get_tree().quit()
 			return
@@ -305,6 +341,7 @@ func _setup_input() -> void :
 		"switch1": [KEY_1, KEY_KP_1], "switch2": [KEY_2, KEY_KP_2], "switch3": [KEY_3, KEY_KP_3], 
 		"switch4": [KEY_4, KEY_KP_4], "interact": [KEY_F], "pause": [KEY_ESCAPE], 
 		"map": [KEY_M, KEY_SEMICOLON, KEY_TAB], "food": [KEY_H], "quest_next": [KEY_T], "time_menu": [KEY_N], "quest_log": [KEY_L], 
+		"sight": [KEY_V], 
 	}
 	for action in map:
 		if not InputMap.has_action(action): InputMap.add_action(action)
@@ -324,6 +361,7 @@ func start_game(load_save: bool) -> void :
 		ui.message("Bon retour sur Aetheria !", 2.2)
 	else:
 		_new_game()
+		play_cine("prologue")
 		ui.message("Bienvenue sur l'île d'Aetheria !", 2.6)
 		get_tree().create_timer(3.0).timeout.connect( func():
 			if quests.st("main") == "available" and not ui.dlg_open:
@@ -334,7 +372,10 @@ func start_game(load_save: bool) -> void :
 	_on_quests_changed()
 
 func _new_game() -> void :
-	rank = 1;xp = 0;shards = 0;food = 0;crystals_got = 0;treasure_map = false
+	rank = 1;xp = 0;shards = 0;crystals_got = 0;treasure_map = false
+	inv = {};mora = 300;recipes_known = {};recipe_mastery = {};dishes_cooked = 0;seen_cines = {}
+	for r in Items.RECIPES:
+		if Items.RECIPES[r].known: recipes_known[r] = true
 	oculi_got = 0;oculi_offered = 0;statue_level = 0;oculus_hint = false
 	for o in oculi:
 		o.got = false;(o.node as Node3D).visible = true
@@ -418,6 +459,9 @@ func _on_world_boss_defeated(id: String, e: Enemy) -> void :
 func _update_world_bosses(delta: float) -> void :
 	for id in world_bosses:
 		var wb: Dictionary = world_bosses[id]
+		if not seen_cines.has("boss_" + id) and is_instance_valid(wb.node) and not cinematic and not dungeon \
+				and party.global_position.distance_to(world.boss_spots[id]) < 34.0:
+			play_cine("boss_" + id)
 		if wb.respawn > 0.0:
 			wb.respawn -= delta
 			if wb.respawn <= 0.0:
@@ -570,7 +614,24 @@ func _spawn_npcs() -> void :
 		n.target = party
 		_view_range(n, 55.0)
 		if id == "guild": n.recolor(Color(0.62, 0.17, 0.18), Color(0.95, 0.78, 0.4), Color(0.22, 0.14, 0.1))
+		if id == "grocer": n.recolor(Color(0.85, 0.55, 0.3), Color(0.98, 0.95, 0.88), Color(0.55, 0.3, 0.15))
 		npcs[id] = n
+	for id in VILLAGE_NPCS:
+		var d2: Array = VILLAGE_NPCS[id]
+		var n2: = NPC.new()
+		add_child(n2)
+		n2.setup(id, d2[0], d2[1], d2[2], npc_lib)
+		var p2: Vector3 = world.npc_spots.get(d2[3], world.spawn_pos)
+		n2.global_position = p2
+		var vc: Dictionary = world.village_at(p2, 40.0)
+		var look2: Vector3 = ((vc.pos as Vector3) - p2) if not vc.is_empty() else Vector3(0, 0, 1)
+		look2.y = 0
+		n2.rotation.y = atan2(look2.x, look2.z) if look2.length() > 0.1 else 0.0
+		n2.target = party
+		_view_range(n2, 55.0)
+		var cols: Array = d2[4]
+		n2.recolor(cols[0], cols[1], cols[2])
+		npcs[id] = n2
 	npc_lib.free();npc_lib = null
 
 func _spawn_seals() -> void :
@@ -744,6 +805,168 @@ func on_drown() -> void :
 		party.stamina = party.stamina_max * 0.5
 		rig.global_position = party.global_position + Vector3(0, 1.45, 0))
 
+# ----------------------------------------------------------------------------
+# Cueillette : plantes (touche F) et fruits qui tombent des arbres frappés
+# ----------------------------------------------------------------------------
+var gathers: Array = []
+var drops: Array = []
+
+func _spawn_gathers() -> void :
+	for g in world.gather_spots:
+		var mi: = world.make_prop(world.GATHER_KINDS[g.kind])
+		if mi.mesh == null: continue
+		add_child(mi);mi.position = g.pos;mi.rotation.y = randf() * TAU
+		mi.scale = Vector3.ONE * (1.6 if g.kind in ["menthe", "lys_vent", "piment"] else 1.4)
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_view_range(mi, 60.0)
+		gathers.append({"node": mi, "kind": g.kind, "pos": g.pos, "t": 0.0})
+
+func _pick_gather(g: Dictionary) -> void :
+	if g.t > 0.0: return
+	g.t = 300.0
+	var n: Node3D = g.node
+	var tw: = n.create_tween()
+	tw.tween_property(n, "scale", n.scale * 0.1, 0.18)
+	tw.tween_callback( func(): n.visible = false)
+	FX.particles((g.pos as Vector3) + Vector3(0, 0.3, 0), Color(0.75, 1.0, 0.6), 12, 2.0, 0.5, 0.05, 1.0)
+	audio.play("pickup", -4.0)
+	add_item(g.kind, 2 if g.kind in ["menthe", "champignon"] else 1)
+	quests.on_gather(g.kind)
+
+func _tick_gathers(delta: float) -> void :
+	for g in gathers:
+		if g.t > 0.0:
+			g.t -= delta
+			if g.t <= 0.0:
+				var n: Node3D = g.node;n.visible = true
+				n.scale = Vector3.ONE * (1.6 if g.kind in ["menthe", "lys_vent", "piment"] else 1.4)
+
+## Coup porté devant le héros : secoue les arbres touchés et fait tomber leurs fruits.
+func world_hit(origin: Vector3, fwd: Vector3, reach: float) -> void :
+	if dungeon: return
+	for i in world.trees_near(origin, reach + 0.6):
+		var t: Dictionary = world.trees[i]
+		var to: Vector3 = t.p - origin;to.y = 0
+		if to.length() > 0.5 and fwd.dot(to.normalized()) < 0.15: continue
+		var fruit: String = t.fruit
+		var fall: Array = world.shake_tree(i, to if to.length() > 0.1 else fwd)
+		var leaf_col: = Color(0.45, 0.75, 0.35) if not t.pine else Color(0.3, 0.55, 0.4)
+		FX.particles((t.crown as Vector3) - Vector3(0, 0.8, 0), leaf_col, 10, 2.0, 1.2, 0.07, -2.0)
+		audio.play("thud", -12.0)
+		for q in fall:
+			_drop_item(fruit, q)
+		if not fall.is_empty(): quests.on_tree_shaken(fruit)
+
+## Fruit qui tombe de l'arbre puis reste au sol quelques minutes ; ramassé en passant dessus.
+func _drop_item(id: String, from: Vector3) -> void :
+	var sm: = SphereMesh.new();sm.radius = 0.17 if id != "baie_givre" else 0.13;sm.height = sm.radius * 2.0
+	sm.radial_segments = 10;sm.rings = 6
+	var mi: = MeshInstance3D.new();mi.mesh = sm
+	var col: Color = world.FRUIT_COLORS.get(id, Color.WHITE)
+	var m: = Toon.material(col);m.emission_enabled = true;m.emission = col;m.emission_energy_multiplier = 0.5
+	mi.material_override = m;mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(mi)
+	var to: = from + Vector3(randf_range(-1.2, 1.2), 0, randf_range(-1.2, 1.2))
+	to.y = world.height_at(to.x, to.z) + sm.radius
+	mi.position = from
+	var tw: = mi.create_tween()
+	tw.tween_property(mi, "position", to, 0.55 + randf() * 0.2).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	var sparkle: = Label3D.new();sparkle.text = "✦";sparkle.font_size = 64;sparkle.pixel_size = 0.004
+	sparkle.billboard = BaseMaterial3D.BILLBOARD_ENABLED;sparkle.modulate = Color(1.0, 0.95, 0.7);sparkle.position = Vector3(0, 0.35, 0)
+	sparkle.no_depth_test = true;mi.add_child(sparkle)
+	drops.append({"node": mi, "id": id, "t": 180.0, "age": 0.0})
+
+func _tick_drops(delta: float, pp: Vector3) -> void :
+	for n in range(drops.size() - 1, -1, -1):
+		var d: Dictionary = drops[n]
+		var node: Node3D = d.node
+		d.t -= delta;d.age += delta
+		node.rotation.y += delta * 1.5
+		if d.age > 0.6 and node.position.distance_to(pp + Vector3(0, 0.3, 0)) < 1.5:
+			FX.particles(node.position, world.FRUIT_COLORS.get(d.id, Color.WHITE), 8, 2.0, 0.4, 0.05, 1.0)
+			audio.play("pickup", -6.0)
+			add_item(d.id, 1)
+			node.queue_free();drops.remove_at(n)
+		elif d.t <= 0.0:
+			node.queue_free();drops.remove_at(n)
+
+## Points d'intérêt révélés par la vision élémentaire : [position, sorte].
+func sight_targets(radius: float) -> Array:
+	var out: = []
+	var pp: = party.global_position
+	if dungeon:
+		for r in dungeon.relics: out.append([(r.node as Node3D).global_position, "relic"])
+		return out
+	for o in oculi:
+		if not o.got and pp.distance_to(o.pos) < radius: out.append([o.pos, "oculus"])
+	for ch in chests:
+		if not ch.opened and pp.distance_to((ch.node as Node3D).position) < radius: out.append([(ch.node as Node3D).position + Vector3(0, 0.8, 0), "chest"])
+	for g in gathers:
+		if g.t <= 0.0 and pp.distance_to(g.pos) < radius: out.append([(g.pos as Vector3) + Vector3(0, 0.4, 0), "plant"])
+	for t in world.trees_near(pp, radius):
+		var tr: Dictionary = world.trees[t]
+		if tr.ripe and tr.fruit != "": out.append([tr.crown, "fruit"])
+	for c in crystals:
+		if not c.got and pp.distance_to((c.node as Node3D).position) < radius: out.append([(c.node as Node3D).position, "crystal"])
+	for b in beacons:
+		if not b.lit and quests.is_active("q_vent_vigie"): out.append([(b.node as Node3D).position + Vector3(0, 0.6, 0), "beacon"])
+	return out
+
+## Courant ascendant sous le héros (planeur) : renvoie la force de portance (0 = aucune).
+func updraft_at(p: Vector3) -> float:
+	for u in world.updraft_spots:
+		var d: = Vector2(p.x - u.x, p.z - u.z).length()
+		if d < 3.4 and p.y < u.y + 30.0 and p.y > u.y - 2.0: return 1.0
+	return 0.0
+
+# ----------------------------------------------------------------------------
+# Feux de vigie (quête « Les feux de vigie »)
+# ----------------------------------------------------------------------------
+var beacons: Array = []
+
+func _spawn_beacons() -> void :
+	for i in world.beacon_spots.size():
+		var p: Vector3 = world.beacon_spots[i]
+		var n: = Node3D.new();n.name = "Beacon%d" % i;add_child(n);n.position = p
+		var bowl: = MeshInstance3D.new(); var cm: = CylinderMesh.new();cm.top_radius = 0.45;cm.bottom_radius = 0.22;cm.height = 0.45
+		bowl.mesh = cm;bowl.material_override = Toon.material(Color(0.32, 0.3, 0.34));bowl.position = Vector3(0, 0.22, 0);n.add_child(bowl)
+		var leg: = MeshInstance3D.new(); var lm: = CylinderMesh.new();lm.top_radius = 0.08;lm.bottom_radius = 0.12;lm.height = 0.5
+		leg.mesh = lm;leg.material_override = Toon.material(Color(0.25, 0.22, 0.2));leg.position = Vector3(0, -0.1, 0);n.add_child(leg)
+		_view_range(n, 140.0)
+		beacons.append({"node": n, "lit": false, "i": i})
+
+func _light_beacon(b: Dictionary, fx: = true) -> void :
+	if b.lit: return
+	b.lit = true
+	var n: Node3D = b.node
+	var fire: = CPUParticles3D.new();fire.amount = 26;fire.lifetime = 0.8;fire.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+	fire.emission_sphere_radius = 0.25;fire.direction = Vector3.UP;fire.spread = 15.0;fire.initial_velocity_min = 1.2;fire.initial_velocity_max = 2.2
+	fire.gravity = Vector3(0, 1.0, 0);fire.scale_amount_min = 0.8;fire.scale_amount_max = 1.4
+	var sm: = SphereMesh.new();sm.radius = 0.14;sm.height = 0.28;sm.radial_segments = 6;sm.rings = 3;fire.mesh = sm
+	var g: = Gradient.new();g.set_color(0, Color(1.0, 0.95, 0.55));g.add_point(0.4, Color(1.0, 0.55, 0.15));g.set_color(1, Color(0.8, 0.15, 0.05, 0.0))
+	fire.color_ramp = g;fire.material_override = FX.mat_emit(Color.WHITE, 3.0, 1.0, true)
+	var curve: = Curve.new();curve.add_point(Vector2(0, 1));curve.add_point(Vector2(1, 0.2));fire.scale_amount_curve = curve
+	fire.position = Vector3(0, 0.5, 0);n.add_child(fire)
+	var l: = OmniLight3D.new();l.light_color = Color(1.0, 0.6, 0.25);l.light_energy = 2.5;l.omni_range = 14.0;l.shadow_enabled = false
+	l.position = Vector3(0, 1.2, 0);n.add_child(l)
+	if fx:
+		FX.column(n.global_position, Color(1.0, 0.6, 0.2), 0.8, 6.0, 1.2)
+		FX.particles(n.global_position + Vector3(0, 0.8, 0), Color(1.0, 0.7, 0.3), 30, 5.0, 1.0, 0.08, -2.0)
+		audio.play("explode", -10.0)
+
+func next_beacon_pos(_qid: String) -> Vector3:
+	var best: = Vector3.INF; var bd: = INF
+	for b in beacons:
+		if not b.lit:
+			var d: float = party.global_position.distance_to((b.node as Node3D).position)
+			if d < bd: bd = d;best = (b.node as Node3D).position
+	return best
+
+func _sync_beacons() -> void :
+	var st: String = quests.st("q_vent_vigie")
+	for b in beacons:
+		if st == "done" or b.i in quests.q["q_vent_vigie"].got: _light_beacon(b, false)
+
 func _spawn_apples() -> void :
 	var m: = StandardMaterial3D.new();m.albedo_color = Color(1.0, 0.45, 0.2);m.emission_enabled = true
 	m.emission = Color(1.0, 0.55, 0.2);m.emission_energy_multiplier = 0.6;m.diffuse_mode = BaseMaterial3D.DIFFUSE_TOON
@@ -760,6 +983,54 @@ func _spawn_cat() -> void :
 	cat_node.position = world.cat_spot
 	Toon.apply(cat_node, true, false, 0.004)
 
+
+## Nom et couleur d'un personnage qui parle (héros ou PNJ), pour les sous-titres.
+func speaker_name(id: String) -> String:
+	if Quests.SPEAKERS.has(id): return String(Quests.SPEAKERS[id])
+	return npc_name(id)
+
+func speaker_color(id: String) -> Color:
+	if Quests.COLORS.has(id): return Quests.COLORS[id]
+	return npc_color(id)
+
+## Lance une cinématique (voir CineScenes) ; on_done est appelé à la fin.
+func play_cine(name: String, on_done: = Callable()) -> void :
+	var steps: Array = CineScenes.build(name, self)
+	seen_cines[name] = true
+	if steps.is_empty() or (autotest and not allow_cine_in_test):
+		if on_done.is_valid(): on_done.call()
+		return
+	cine.play(steps, on_done)
+
+var allow_cine_in_test: = false
+
+func npc_color(id: String) -> Color:
+	if NPC_DEFS.has(id): return NPC_DEFS[id][2]
+	if VILLAGE_NPCS.has(id): return VILLAGE_NPCS[id][2]
+	return Color(1, 0.9, 0.7)
+
+## Où trouver un ingrédient (pour la flèche de quête) : arbre mûr, plante ou boutique.
+func item_source(id: String, from: Vector3) -> Vector3:
+	if world.FRUIT_COLORS.has(id):
+		var t: Vector3 = world.nearest_fruit_tree(from, id)
+		if t != Vector3.INF: return t
+	var best: = Vector3.INF; var bd: = INF
+	for g in gathers:
+		if g.kind == id and g.t <= 0.0:
+			var d: float = from.distance_to(g.pos)
+			if d < bd: bd = d;best = g.pos
+	return best
+
+func nearest_cook_pos(from: Vector3) -> Vector3:
+	var best: = Vector3.INF; var bd: = INF
+	for c in world.cook_spots:
+		if from.distance_to(c) < bd: bd = from.distance_to(c);best = c
+	return best
+
+func npc_name(id: String) -> String:
+	if NPC_DEFS.has(id): return String(NPC_DEFS[id][0])
+	if VILLAGE_NPCS.has(id): return String(VILLAGE_NPCS[id][0])
+	return id
 
 func npc_pos(id: String) -> Vector3:
 	return npcs[id].global_position if npcs.has(id) else Vector3.INF
@@ -847,8 +1118,53 @@ func add_shards(n: int) -> void :
 	ui.toast("Éclats d'Aether ×%d" % n, null, Color(0.85, 0.93, 1.0))
 
 func add_food(n: int) -> void :
-	food += n
-	ui.toast("Tarte aux pommes solaires ×%d" % n, ui.icons.get("ic_pie"), Color(1.0, 0.88, 0.65))
+	add_item("tarte", n)
+
+func item_count(id: String) -> int:
+	return int(inv.get(id, 0))
+
+## Ajoute un objet à l'inventaire (avec une ligne dans le fil des objets obtenus).
+func add_item(id: String, n: = 1, show: = true) -> void :
+	if n <= 0: return
+	inv[id] = item_count(id) + n
+	if show:
+		var col: = Color(1.0, 0.88, 0.65) if Items.cat_of(id) == "food" else (Color(0.85, 1.0, 0.8) if Items.cat_of(id) == "ingredient" else Color(1.0, 0.85, 0.55))
+		ui.toast("%s ×%d" % [Items.name_of(id), n], Items.icon(id), col)
+	quests.on_items_changed()
+
+func remove_item(id: String, n: = 1) -> bool:
+	if item_count(id) < n: return false
+	inv[id] = item_count(id) - n
+	if inv[id] <= 0: inv.erase(id)
+	quests.on_items_changed()
+	return true
+
+## Nombre total de plats dans le sac.
+func food_total() -> int:
+	var n: = 0
+	for id in inv:
+		if Items.cat_of(id) == "food": n += int(inv[id])
+	return n
+
+func add_mora(n: int, show: = true) -> void :
+	if n <= 0: return
+	mora += n
+	if show: ui.toast("Mora ×%d" % n, Items.icon("mora"), Color(1.0, 0.86, 0.45))
+
+## Mange un plat du sac (effet sur l'équipe) ; renvoie vrai s'il a été consommé.
+func eat(id: String) -> bool:
+	if item_count(id) <= 0: return false
+	if not party.eat_dish(id):
+		return false
+	remove_item(id, 1)
+	return true
+
+func learn_recipe(id: String, show: = true) -> void :
+	if recipes_known.has(id): return
+	recipes_known[id] = true
+	if show:
+		ui.toast("Nouvelle recette : %s" % Items.name_of(id), Items.icon(id), Color(1.0, 0.9, 0.6))
+		audio.play("quest", -6.0)
 
 func notify(text: String) -> void :
 	ui.message(text, 3.0, Color(1.0, 0.88, 0.5))
@@ -857,6 +1173,10 @@ func notify(text: String) -> void :
 
 func story_complete() -> void :
 	ended = true
+	play_cine("fin", _show_victory_screen)
+	save_game()
+
+func _show_victory_screen() -> void :
 	get_tree().create_timer(0.6).timeout.connect( func():
 		ui.show_victory("L'île d'Aetheria est sauvée !\n\nTemps de jeu : %d min\nRang d'aventure : %d\nRéactions élémentaires : %d\nMonstres vaincus : %d\nCristaux : %d / %d\n\nL'aventure continue : Isaure, à la Guilde, a des missions\npour les aventuriers aguerris (marais, volcan, orage, domaines) !" % [
 			int(t_play) / 60, rank, reactions, kills, crystals_got, crystals.size()])
@@ -881,6 +1201,12 @@ func _on_enemy_died(e: Enemy) -> void :
 
 		give_xp(int(xp_gain.get(e.kind, 10) * (1.0 + maxf(0.0, e.level() - 4.0) * 0.12)))
 	quests.on_kill()
+	if not e.is_object and not dungeon: quests.on_kill_at(e.global_position)
+	if not e.is_object:
+		var mo: = {"slime": 25, "slime_big": 70, "goblin": 40, "archer": 40, "wisp": 55, "golem": 180}.get(e.kind, 30) as int
+		if e.is_boss: mo = 1200
+		mo = int(mo * (1.0 + maxf(0.0, e.level() - 4.0) * 0.06) * randf_range(0.85, 1.15))
+		add_mora(mo)
 	if e.kind == "boss":
 		boss_done = true
 		quests.on_boss_defeated()
@@ -1033,6 +1359,16 @@ func _find_interaction() -> Dictionary:
 			return {"kind": "apple", "ref": a, "verb": "Cueillir", "what": "la pomme solaire"}
 	if cat_node and cat_node.visible and not cat_found and cat_node.global_position.distance_to(p) < 2.4:
 		return {"kind": "cat", "verb": "Caresser", "what": "Minou"}
+	for cp in world.cook_spots:
+		if cp.distance_to(p) < 2.6:
+			return {"kind": "cook", "verb": "Cuisiner", "what": "à la marmite"}
+	for g in gathers:
+		if g.t <= 0.0 and (g.pos as Vector3).distance_to(p) < 1.9:
+			return {"kind": "gather", "ref": g, "verb": "Cueillir :", "what": Items.name_of(g.kind)}
+	if quests._step("q_vent_vigie").get("do", "") == "beacons":
+		for b in beacons:
+			if not b.lit and (b.node as Node3D).position.distance_to(p + Vector3(0, 0.9, 0)) < 2.4:
+				return {"kind": "beacon", "ref": b, "verb": "Allumer :", "what": "le feu de vigie"}
 	if not party.busy_moving():
 		for s in world.statues:
 			if Vector2(p.x - s.x, p.z - s.z).length() < 4.8 and absf(p.y - s.y) < 2.5:
@@ -1046,6 +1382,13 @@ func interact() -> void :
 		"chest": _open_chest(interact_target.ref)
 		"apple": _pick_apple(interact_target.ref)
 		"cat": _find_cat()
+		"gather": _pick_gather(interact_target.ref)
+		"beacon":
+			_light_beacon(interact_target.ref)
+			quests.on_beacon(int(interact_target.ref.i))
+		"cook":
+			party.input_vec = Vector2.ZERO
+			ui.show_overlay(ui.cook_menu, true)
 		"domain": enter_domain(interact_target.id)
 		"statue":
 			party.input_vec = Vector2.ZERO
@@ -1060,10 +1403,15 @@ func _talk(id: String) -> void :
 	n.rotation.y = atan2(to.x, to.z)
 	party._face_towards( - to, true)
 	var d: Dictionary = quests.talk(id)
+	var shop: = Shops.shop_of(id)
+	var choices: = []
+	if shop != "" and not (d.after as Callable).is_valid():
+		choices = [["Voir la boutique", func(): ui.show_overlay(ui.shop_menu, true, shop), "◎"], ["Au revoir", Callable(), "✕"]]
+		if d.lines.is_empty(): d.lines = [quests._l(id, "Bienvenue ! Jetez un œil à mes marchandises.")]
 	if d.lines.is_empty(): return
 	party.enabled = false
 	party.input_vec = Vector2.ZERO
-	ui.start_dialogue(d.lines, d.after)
+	ui.start_dialogue(d.lines, d.after, choices)
 
 func on_dialogue_closed() -> void :
 	party.enabled = true
@@ -1081,6 +1429,7 @@ func _open_chest(ch: Dictionary) -> void :
 	var p: Vector3 = (ch.node as Node3D).position
 	var gain: = 60 if ch.get("reward", false) else 40
 	shards += gain
+	add_mora(400 if ch.get("reward", false) else 250)
 	FX.particles(p + Vector3(0, 0.9, 0), Color(1, 0.88, 0.45), 40, 5.0, 1.0, 0.1, -4.0)
 	FX.flash(p + Vector3(0, 1.2, 0), Color(1, 0.85, 0.5), 4.0, 8.0, 0.6)
 	ui.message("Coffre ouvert : +%d Éclats d'Aether" % gain, 2.2, Color(1, 0.9, 0.55))
@@ -1110,6 +1459,7 @@ func _find_cat() -> void :
 
 var pause_frame: = -1
 func toggle_pause() -> void :
+	if cinematic: return
 	paused = not paused
 	pause_frame = Engine.get_process_frames()
 
@@ -1213,7 +1563,8 @@ func save_game() -> void :
 	var wb: = {}
 	for id in world_bosses: wb[id] = world_bosses[id].kills
 	var d: = {
-		"version": 4, "rank": rank, "xp": xp, "shards": shards, "food": food, "treasure_map": treasure_map, 
+		"version": 5, "rank": rank, "xp": xp, "shards": shards, "treasure_map": treasure_map, 
+		"seen_cines": seen_cines.keys(), "inv": inv, "mora": mora, "recipes": recipes_known.keys(), "mastery": recipe_mastery, "dishes_cooked": dishes_cooked, 
 		"reactions": reactions, "kills": kills, "t_play": t_play, "boss_done": boss_done, 
 		"hour": daynight.saved_hour if daynight.saved_hour >= 0.0 else daynight.hour, 
 		"pos": [pos.x, pos.y, pos.z], "active": party.active, 
@@ -1246,7 +1597,21 @@ func load_game() -> bool:
 	var d = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
 	if typeof(d) != TYPE_DICTIONARY: return false
 	_new_game()
-	rank = int(d.get("rank", 1));xp = int(d.get("xp", 0));shards = int(d.get("shards", 0));food = int(d.get("food", 0))
+	rank = int(d.get("rank", 1));xp = int(d.get("xp", 0));shards = int(d.get("shards", 0))
+	if d.has("inv") and d.inv is Dictionary:
+		inv = {}
+		for k in d.inv:
+			if Items.DEFS.has(k) and int(d.inv[k]) > 0: inv[k] = int(d.inv[k])
+	else:
+		food = int(d.get("food", 0))
+	mora = int(d.get("mora", 300));dishes_cooked = int(d.get("dishes_cooked", 0))
+	seen_cines = {}
+	for c in d.get("seen_cines", ["prologue"]): seen_cines[String(c)] = true
+	for r in d.get("recipes", []):
+		if Items.RECIPES.has(r): recipes_known[r] = true
+	var ms = d.get("mastery", {})
+	if ms is Dictionary:
+		for r in ms: recipe_mastery[r] = int(ms[r])
 	treasure_map = bool(d.get("treasure_map", false));reactions = int(d.get("reactions", 0));kills = int(d.get("kills", 0))
 	t_play = float(d.get("t_play", 0.0));daynight.hour = float(d.get("hour", 9.0));boss_done = bool(d.get("boss_done", false))
 	party.apply_rank(rank)
@@ -1307,6 +1672,7 @@ func load_game() -> bool:
 	if cat_found: cat_node.visible = false
 	if cat_returned: return_cat()
 	quests.load_state(d.get("quests", {}))
+	_sync_beacons()
 	if quests.is_active("main") and quests.step("main") == 4 and not boss_done: spawn_boss()
 
 	var bc = d.get("boss_chest", null)
@@ -1347,7 +1713,7 @@ func _process(delta: float) -> void :
 		var on: Node3D = o.node
 		on.rotation.y = t * 1.8 + i
 		on.position.y = (o.pos as Vector3).y + sin(t * 2.2 + i) * 0.12
-	if world.windmill_blades: world.windmill_blades.get_child(0).rotation.z += delta * 0.7
+	for wm in world.windmills: wm.get_child(0).rotation.z += delta * 0.7
 	if not playing:
 		rig.yaw += delta * 0.06
 		return
@@ -1355,6 +1721,10 @@ func _process(delta: float) -> void :
 		if Input.is_action_just_pressed("pause"): toggle_pause()
 		return
 	t_play += delta
+	if cinematic:
+		party.input_vec = Vector2.ZERO;party.sprint_held = false
+		_world_update(delta)
+		return
 
 	if not autotest:
 		if ui.dlg_open:
@@ -1363,6 +1733,14 @@ func _process(delta: float) -> void :
 				ui.dialogue_next()
 		elif ui.victory.visible:
 			party.input_vec = Vector2.ZERO
+		elif ui.foodbag and ui.foodbag.visible:
+			party.input_vec = Vector2.ZERO;party.sprint_held = false
+			if Input.is_action_just_pressed("food") or Input.is_action_just_pressed("pause"): ui.toggle_foodbag()
+		elif ui.shop_menu.visible or ui.cook_menu.visible:
+			party.input_vec = Vector2.ZERO;party.sprint_held = false
+			if Input.is_action_just_pressed("pause"):
+				if ui.shop_menu.visible: ui.show_overlay(ui.shop_menu, false)
+				elif not ui.cook_menu.game.running: ui.show_overlay(ui.cook_menu, false)
 		elif ui.statue_menu.visible:
 			party.input_vec = Vector2.ZERO;party.sprint_held = false
 			if Input.is_action_just_pressed("pause") or Input.is_action_just_pressed("interact"): ui.show_statue(false)
@@ -1388,7 +1766,11 @@ func _process(delta: float) -> void :
 			for k in 4:
 				if Input.is_action_just_pressed("switch%d" % (k + 1)): party.switch_to(k)
 			if Input.is_action_just_pressed("interact"): interact()
-			if Input.is_action_just_pressed("food") and food > 0 and party.eat_food(): food -= 1
+			if Input.is_action_just_pressed("food"): ui.toggle_foodbag()
+			if not ui.touch:
+				ui.set_sight(Input.is_action_pressed("sight"))
+			elif Input.is_action_just_pressed("sight"):
+				ui.sight_touch_t = 6.0 if ui.sight_touch_t <= 0.0 else 0.0
 			if Input.is_action_just_pressed("map"):
 				if dungeon: ui.message("Pas de carte à l'intérieur d'un domaine.", 1.6, Color(0.85, 0.9, 1.0))
 				else: ui.map_ui.toggle()
@@ -1447,6 +1829,10 @@ func _world_update(delta: float) -> void :
 		if not wp_unlocked.has(i) and pp.distance_to(world.waypoints[i].pos) < 6.0:
 			_unlock_waypoint(i)
 
+	if not dungeon:
+		world.tick_trees(delta)
+		_tick_gathers(delta)
+		_tick_drops(delta, pp)
 	statue_msg_cd -= delta
 	for s in world.statues:
 		if pp.distance_to(s) < 5.5:
@@ -1499,7 +1885,10 @@ func _world_update(delta: float) -> void :
 
 	var reg: = world.region_name(pp) if not dungeon else "Domaine : " + String(domain_def(dungeon.id).name)
 	if reg != region_now:
-		if region_now != "" and not autotest: ui.show_banner(reg)
+		var vv: Dictionary = world.village_at(pp, 34.0) if not dungeon else {}
+		if not vv.is_empty() and not seen_cines.has("village_" + String(vv.id)) and region_now != "" and not cinematic:
+			play_cine("village_" + String(vv.id))
+		elif region_now != "" and not autotest: ui.show_banner(reg)
 		region_now = reg
 		ui.map_ui.region.text = reg
 
@@ -2530,3 +2919,302 @@ func _oculus_test() -> void :
 	rig.yaw = atan2( - to.x, - to.z);rig.pitch = 0.05;rig.distance = 6.0
 	await _wait(0.8)
 	await snap("spire_view")
+
+
+# ----------------------------------------------------------------------------
+# Tests v8 : inventaire, fruits, cueillette, cuisine, boutique, quêtes, domaine, cinématiques
+# ----------------------------------------------------------------------------
+func _talk_now(id: String, choice: = -1) -> void :
+	interact_target = {}
+	_talk(id)
+	var guard: = 0
+	while ui.dlg_open and guard < 60:
+		guard += 1
+		if ui.choices_shown():
+			if choice >= 0: ui.choose(choice)
+			else: ui.choose(ui.dlg_choices.size() - 1)
+			break
+		ui.dialogue_next(true);ui.dialogue_next(true)
+		await get_tree().process_frame
+
+func _v8_test() -> void :
+	party.test_invuln = true
+	var d0: Dictionary = quests.talk("elder");d0.after.call()
+	await _wait(0.3)
+	# --- inventaire et plats
+	var m0: = mora
+	add_item("tarte", 2);add_item("ragout", 1);add_item("jus", 1)
+	party.ch().hp = party.ch().max_hp * 0.5
+	var ate: = eat("tarte")
+	print("V8TEST eat_tarte ok=%s hp=%.0f/%.0f left=%d -> %s" % [ate, party.ch().hp, party.ch().max_hp, item_count("tarte"), _ok(ate and item_count("tarte") == 1 and party.ch().hp > party.ch().max_hp * 0.8)])
+	eat("ragout")
+	print("V8TEST ragout atk_buff=%.0f%% atk_of=%.1f base=%.1f -> %s" % [party.buff_val("atk"), party.atk_of(party.ch()), party.ch().atk, _ok(party.buff_val("atk") == 20.0)])
+	party.stamina = 10.0;eat("jus")
+	print("V8TEST jus stamina=%.0f -> %s" % [party.stamina, _ok(party.stamina >= 69.0)])
+	print("V8TEST food_total=%d mora=%d -> %s" % [food_total(), mora, _ok(food_total() == 1 and mora == m0)])
+	# --- arbre fruitier
+	var tree_i: = -1
+	for i in world.trees.size():
+		if world.trees[i].fruit == "soleillette" and world.trees[i].ripe: tree_i = i;break
+	var t: Dictionary = world.trees[tree_i]
+	var tp: Vector3 = t.p
+	var back: = (world.spawn_pos - tp);back.y = 0;back = back.normalized()
+	_place(world.snap(tp + back * 1.6, 0.4), tp, 6.0, -0.25)
+	await _wait(0.5)
+	var c0: = item_count("soleillette")
+	party.switch_cd = 0.0;party.switch_to(1)
+	await _wait(1.2)
+	party.do_attack()
+	await _wait(0.5)
+	var dropped: = drops.size()
+	await snap("v8_fruits_tombent")
+	# ramasser : marcher sur les fruits
+	for dd in drops.duplicate():
+		party.global_position = (dd.node as Node3D).position
+		await _wait(0.25)
+	await _wait(0.3)
+	print("V8TEST tree_hit drops=%d picked=%d ripe=%s -> %s" % [dropped, item_count("soleillette") - c0, t.ripe, _ok(dropped >= 3 and item_count("soleillette") - c0 == dropped and not t.ripe)])
+	# --- cueillette
+	var g: Dictionary = {}
+	for gg in gathers:
+		if gg.kind == "menthe": g = gg;break
+	_place(world.snap((g.pos as Vector3) + Vector3(1.2, 0, 0), 0.4), g.pos, 5.0, -0.3)
+	await _wait(0.4)
+	interact_target = _find_interaction()
+	var gk: String = interact_target.get("kind", "")
+	var mc: = item_count("menthe")
+	interact()
+	print("V8TEST gather kind=%s menthe +%d -> %s" % [gk, item_count("menthe") - mc, _ok(gk == "gather" and item_count("menthe") > mc)])
+	# --- boutique (Mireille, Brise-Marée)
+	_place(world.snap(npc_pos("grocer") + Vector3(0, 0, -2.2), 0.4), npc_pos("grocer"), 5.0, -0.2)
+	await _wait(0.4)
+	await _talk_now("grocer", 0)
+	await _wait(0.4)
+	print("V8TEST shop_open visible=%s shop=%s -> %s" % [ui.shop_menu.visible, ui.shop_menu.shop_id, _ok(ui.shop_menu.visible and ui.shop_menu.shop_id == "bm_epicerie")])
+	mora = 2000
+	ui.shop_menu._pick("viande");ui.shop_menu._set_qty(4);ui.shop_menu._buy()
+	ui.shop_menu._pick("sel");ui.shop_menu._set_qty(2);ui.shop_menu._buy()
+	ui.shop_menu._pick("omelette#r");ui.shop_menu._buy()
+	print("V8TEST buy viande=%d sel=%d mora=%d omelette_known=%s -> %s" % [item_count("viande"), item_count("sel"), mora, recipes_known.has("omelette"), 
+		_ok(item_count("viande") == 4 and item_count("sel") == 2 and mora == 2000 - 180 - 30 - 500 and recipes_known.has("omelette"))])
+	ui.show_overlay(ui.shop_menu, false)
+	await _wait(0.2)
+	# --- cuisine
+	_place(world.snap(world.cook_spots[0] + Vector3(0, 0, 2.0), 0.4), world.cook_spots[0], 5.0, -0.3)
+	await _wait(0.4)
+	interact_target = _find_interaction()
+	var ck: String = interact_target.get("kind", "")
+	interact()
+	await _wait(0.4)
+	ui.cook_menu._pick("brochette")
+	var b0: = item_count("brochette")
+	ui.cook_menu._start_cook()
+	var gauge: = ui.cook_menu.game
+	var guard: = 0
+	while gauge.running and gauge.pos < (gauge.gold.x + gauge.gold.y) * 0.5 and guard < 600:
+		guard += 1;await get_tree().process_frame
+	gauge.stop()
+	await _wait(0.2)
+	print("V8TEST cook kind=%s brochette +%d mastery=%d -> %s" % [ck, item_count("brochette") - b0, int(recipe_mastery.get("brochette", 0)), _ok(ck == "cook" and item_count("brochette") - b0 == 2)])
+	await _wait(1.0)
+	ui.show_overlay(ui.cook_menu, false)
+	# --- quête « La récolte de Mireille »
+	print("V8TEST q_recolte state=%s -> %s" % [quests.st("q_recolte"), _ok(quests.st("q_recolte") == "available")])
+	_place(world.snap(npc_pos("grocer") + Vector3(0, 0, -2.2), 0.4), npc_pos("grocer"), 5.0, -0.2)
+	await _talk_now("grocer")
+	add_item("soleillette", 5)
+	var stp_after_collect: = quests.step("q_recolte")
+	await _talk_now("grocer")
+	print("V8TEST q_recolte step_after_collect=%d state=%s jus=%d -> %s" % [stp_after_collect, quests.st("q_recolte"), item_count("jus"), _ok(stp_after_collect == 1 and quests.st("q_recolte") == "done")])
+	# --- quête du domaine : le carnet de Basile
+	rank = 6;party.apply_rank(rank);quests.on_rank(rank);quests.ensure_tracked()
+	_place(world.snap(npc_pos("j_herb") + Vector3(0, 0, 2.2), 0.4), npc_pos("j_herb"), 5.0, -0.2)
+	await _wait(0.4)
+	await _talk_now("j_herb")
+	print("V8TEST carnet started state=%s step=%d -> %s" % [quests.st("q_jonc_carnet"), quests.step("q_jonc_carnet"), _ok(quests.st("q_jonc_carnet") == "active")])
+	enter_domain("masques")
+	await _wait(1.2)
+	print("V8TEST domain relics=%d event_npc=%s -> %s" % [dungeon.relics.size(), dungeon.event_npc != null, _ok(dungeon.relics.size() == 3 and dungeon.event_npc != null)])
+	var r0: Dictionary = dungeon.relics[0]
+	_place((r0.node as Node3D).global_position - Vector3(0, 1.1, 0) + Vector3(1.0, 0, -1.0), (r0.node as Node3D).global_position, 5.0, -0.2)
+	await _wait(0.6)
+	await snap("v8_relique_domaine")
+	for k in 3:
+		var r: Dictionary = dungeon.relics[0]
+		party.global_position = (r.node as Node3D).global_position - Vector3(0, 1.1, 0)
+		await _wait(0.1)
+		interact_target = _find_interaction()
+		interact()
+		await _wait(0.1)
+	print("V8TEST relics pages=%d step=%d -> %s" % [item_count("page_carnet"), quests.step("q_jonc_carnet"), _ok(item_count("page_carnet") == 3 and quests.step("q_jonc_carnet") == 1)])
+	# vider le domaine pour libérer Basile
+	var guard2: = 0
+	while dungeon.state != "done" and guard2 < 80:
+		guard2 += 1
+		for mm in dungeon.mobs:
+			if is_instance_valid(mm) and mm.alive: mm.take_hit(100000000.0, "", Vector3.INF)
+		for tt in dungeon.totems:
+			(tt as Totem).take_hit(10.0, "", Vector3.INF);(tt as Totem).take_hit(10.0, (tt as Totem).needs[0], Vector3.INF)
+		if dungeon.state == "puzzle": party.global_position = dungeon.to_global(Vector3(0, 0.5, 34))
+		if dungeon.state == "boss_wait": party.global_position = dungeon.to_global(Vector3(0, 0.5, 74))
+		if dungeon.state == "boss" and dungeon.boss: dungeon.boss.take_hit(100000000.0, "", Vector3.INF)
+		await _wait(0.5)
+	party.global_position = dungeon.event_npc.global_position + Vector3(1.6, 0.3, 0)
+	await _wait(0.4)
+	interact_target = _find_interaction()
+	var ev_ok: bool = interact_target.get("action", "") == "event"
+	interact()
+	await _wait(0.3)
+	var guard3: = 0
+	while ui.dlg_open and guard3 < 30:
+		guard3 += 1;ui.dialogue_next(true);ui.dialogue_next(true);await get_tree().process_frame
+	print("V8TEST basile event_ready=%s step=%d -> %s" % [ev_ok, quests.step("q_jonc_carnet"), _ok(ev_ok and quests.step("q_jonc_carnet") == 2)])
+	leave_domain(true)
+	await _wait(0.5)
+	_place(world.snap(npc_pos("j_herb") + Vector3(0, 0, 2.2), 0.4), npc_pos("j_herb"), 5.0, -0.2)
+	await _talk_now("j_herb")
+	print("V8TEST carnet done=%s gateau=%d -> %s" % [quests.st("q_jonc_carnet"), item_count("gateau"), _ok(quests.st("q_jonc_carnet") == "done" and item_count("gateau") >= 2)])
+	# --- quête de cuisine (le festin du pêcheur)
+	await _talk_now("j_cook")
+	add_item("poisson", 2);add_item("lotus", 1);add_item("sel", 1)
+	ui.show_overlay(ui.cook_menu, true)
+	ui.cook_menu._pick("soupe")
+	ui.cook_menu._start_cook()
+	var guard4: = 0
+	while gauge.running and gauge.pos < (gauge.ok.x + gauge.gold.x) * 0.5 and guard4 < 600:
+		guard4 += 1;await get_tree().process_frame
+	gauge.stop()
+	await _wait(1.2)
+	ui.show_overlay(ui.cook_menu, false)
+	await _talk_now("j_cook")
+	print("V8TEST soupe quest=%s -> %s" % [quests.st("q_jonc_soupe"), _ok(quests.st("q_jonc_soupe") == "done")])
+	# --- acte II : les trois villages
+	quests.q["main"].step = 3;quests.refresh_new()
+	print("V8TEST main2 available=%s -> %s" % [quests.st("main2"), _ok(quests.st("main2") == "available")])
+	await _talk_now("elder")
+	for who in ["j_chief", "f_chief", "h_chief", "elder"]:
+		await _talk_now(who)
+	print("V8TEST main2 state=%s mora=%d -> %s" % [quests.st("main2"), mora, _ok(quests.st("main2") == "done")])
+	# --- feux de vigie
+	await _talk_now("h_scout")
+	for b in beacons:
+		party.global_position = (b.node as Node3D).position + Vector3(1.0, -0.5, 0)
+		await _wait(0.15)
+		interact_target = _find_interaction()
+		interact()
+	await _talk_now("h_scout")
+	print("V8TEST vigie lit=%d state=%s -> %s" % [beacons.filter( func(b): return b.lit).size(), quests.st("q_vent_vigie"), _ok(quests.st("q_vent_vigie") == "done")])
+	# --- courant ascendant
+	var u: Vector3 = world.updraft_spots[0]
+	party.global_position = u + Vector3(0, 8, 0);party.velocity = Vector3.ZERO
+	await _wait(0.3)
+	party.air_t = 0.5;party.start_glide()
+	var y0: = party.global_position.y
+	await _wait(1.5)
+	print("V8TEST updraft dy=%.1f -> %s" % [party.global_position.y - y0, _ok(party.global_position.y - y0 > 3.0)])
+	party.stop_glide()
+	# --- sauvegarde v5
+	var bak: = ""
+	if FileAccess.file_exists(SAVE_PATH): bak = FileAccess.get_file_as_string(SAVE_PATH)
+	allow_save_in_test = true
+	var inv0: = inv.duplicate();var mora0: = mora;var rec0: = recipes_known.size()
+	save_game()
+	inv = {};mora = 0;recipes_known = {}
+	var loaded: = load_game()
+	print("V8TEST save_load ok=%s inv_same=%s mora=%d recipes=%d quests_done=%s -> %s" % [loaded, inv == inv0, mora, recipes_known.size(), quests.st("q_jonc_carnet"), 
+		_ok(loaded and inv == inv0 and mora == mora0 and recipes_known.size() == rec0 and quests.st("q_jonc_carnet") == "done")])
+	if bak != "":
+		var f: = FileAccess.open(SAVE_PATH, FileAccess.WRITE);f.store_string(bak);f.close()
+	else:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+	allow_save_in_test = false
+
+func _v8_shots() -> void :
+	party.test_invuln = true
+	allow_cine_in_test = true
+	add_item("tarte", 3);add_item("omelette", 2);add_item("jus", 4);add_item("gateau", 1);add_item("brochette_ardente", 2)
+	add_item("pomme", 7);add_item("soleillette", 5);add_item("viande", 4);add_item("sel", 3);add_item("menthe", 6)
+	learn_recipe("omelette", false);learn_recipe("gateau", false)
+	# villages
+	for vv in world.villages:
+		var c: Vector3 = vv.pos
+		var e: float = vv.entry
+		var fwd: = Vector3(sin(e), 0, cos(e))
+		_place(world.snap(c + fwd * 24.0, 0.4), c, 9.0, -0.28)
+		await _wait(1.2)
+		await snap("v8_village_%s" % vv.id)
+	# marché et marmite (Joncbourg)
+	var jc: Vector3 = npc_pos("j_cook")
+	_place(world.snap(jc + Vector3(3.0, 0, 3.0), 0.4), jc, 6.0, -0.25)
+	await _wait(0.8)
+	await snap("v8_etal_marmite")
+	# boutique et cuisine
+	ui.show_overlay(ui.shop_menu, true, "jonc_epicerie")
+	await _wait(0.5)
+	await snap("v8_boutique")
+	ui.show_overlay(ui.shop_menu, false)
+	ui.show_overlay(ui.cook_menu, true)
+	await _wait(0.3)
+	ui.cook_menu._pick("tarte")
+	await _wait(0.2)
+	await snap("v8_cuisine")
+	add_item("farine", 2);add_item("beurre", 1);add_item("sucre", 1)
+	ui.cook_menu._pick("tarte");ui.cook_menu._start_cook()
+	await _wait(0.9)
+	await snap("v8_cuisson")
+	ui.cook_menu.game.stop()
+	await _wait(1.2)
+	ui.show_overlay(ui.cook_menu, false)
+	# sac à provisions et inventaire
+	ui.toggle_foodbag()
+	await _wait(0.4)
+	await snap("v8_sac_provisions")
+	ui.toggle_foodbag()
+	toggle_pause()
+	await _wait(0.2)
+	ui.open_sub("bag")
+	await _wait(0.4)
+	await snap("v8_inventaire")
+	ui.bag_menu.tabs.select(1)
+	await _wait(0.3)
+	await snap("v8_inventaire_ingredients")
+	ui.close_sub();toggle_pause()
+	# vision élémentaire près du verger
+	_place(world.snap(world.orchard + Vector3(0, 0, 12), 0.4), world.orchard, 7.0, -0.25)
+	await _wait(0.6)
+	ui.set_sight(true)
+	await _wait(1.0)
+	await snap("v8_vision")
+	ui.set_sight(false)
+	await _wait(0.5)
+	# techniques multicolores
+	var camp: Vector3 = camps[1].center
+	_place(_near(camp, 8.0), camp, 6.5, -0.25)
+	await _wait(0.6)
+	for k in 4:
+		party.switch_cd = 0.0;party.switch_to(k)
+		await _wait(1.1)
+		party.ch().skill_cd = 0.0
+		party.do_skill()
+		await _wait(0.5)
+		await snap("v8_competence_%d" % k)
+		party.ch().energy = party.ch().energy_max;party.ch().burst_cd = 0.0
+		await _wait(1.0)
+		party.do_burst()
+		await _wait(1.25)
+		await snap("v8_dechainement_%d" % k)
+		await _wait(1.5)
+	# cinématiques
+	cine.play(CineScenes.build("village_forge", self))
+	await _wait(2.2)
+	await snap("v8_cine_village")
+	while cine.running: await _wait(0.2)
+	cine.play(CineScenes.build("prologue", self))
+	await _wait(11.0)
+	await snap("v8_cine_prologue")
+	cine.skip()
+	while cine.running: await _wait(0.2)
+	cine.play(CineScenes.build("forge_rekindle", self))
+	await _wait(3.4)
+	await snap("v8_cine_forge")
+	while cine.running: await _wait(0.2)

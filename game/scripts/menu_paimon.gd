@@ -88,13 +88,13 @@ func open() -> void :
 	var opened: = world_chests.filter( func(c): return c.opened).size()
 	var mins: = int(main.t_play / 60.0)
 	var rows: = [
-		["Éclats d'Aether", str(main.shards)],
+		["Mora  •  Éclats d'Aether", "%d  •  %d" % [main.mora, main.shards]],
 		["Cristaux d'Aether", "%d / %d" % [main.crystals_got, main.crystals.size()]],
 		["Anémoculus  (endurance %d)" % int(main.party.stamina_max), "%d / %d" % [main.oculi_got, main.oculi.size()]],
 		["Coffres ouverts", "%d / %d" % [opened, world_chests.size()]],
 		["Téléporteurs activés", "%d / %d" % [main.wp_unlocked.size(), main.wp_nodes.size()]],
-		["Réactions élémentaires", str(main.reactions)],
-		["Ennemis vaincus", str(main.kills)],
+		["Ennemis vaincus  •  réactions", "%d  •  %d" % [main.kills, main.reactions]],
+		["Plats cuisinés", str(main.dishes_cooked)],
 		["Temps d'aventure", "%d h %02d" % [int(mins / 60.0), mins % 60]],
 	]
 	for i in rows.size():

@@ -178,6 +178,142 @@ static func slash(pos: Vector3, yaw: float, col: Color, radius: = 2.2, arc_deg: 
 	mi.rotation = Vector3(tilt, yaw, 0)
 	fade_free(mi, 0.22, Vector3(1.15, 1.15, 1.15))
 
+# ----------------------------------------------------------------------------
+# Effets multicolores : chaque élément a une palette (cœur clair -> couleur -> couleur profonde)
+# et une couleur d'accent pour les étincelles.
+# ----------------------------------------------------------------------------
+const PALETTES: = {
+	"hydro": [Color(0.9, 1.0, 1.0), Color(0.4, 0.92, 1.0), Color(0.18, 0.5, 1.0), Color(0.36, 0.28, 0.95)],
+	"electro": [Color(1.0, 0.95, 1.0), Color(1.0, 0.58, 0.95), Color(0.7, 0.38, 1.0), Color(0.38, 0.18, 0.9)],
+	"pyro": [Color(1.0, 0.97, 0.72), Color(1.0, 0.76, 0.22), Color(1.0, 0.4, 0.1), Color(0.86, 0.1, 0.16)],
+	"lava": [Color(1.0, 0.93, 0.55), Color(1.0, 0.56, 0.1), Color(0.92, 0.2, 0.06), Color(0.45, 0.08, 0.1)],
+	"cryo": [Color(1.0, 1.0, 1.0), Color(0.75, 0.95, 1.0), Color(0.5, 0.78, 1.0), Color(0.62, 0.55, 1.0)],
+	"heal": [Color(0.95, 1.0, 0.9), Color(0.6, 1.0, 0.65), Color(0.3, 0.9, 0.55), Color(0.2, 0.7, 0.75)],
+}
+const ACCENTS: = {"hydro": Color(0.65, 1.0, 0.85), "electro": Color(1.0, 0.86, 0.4), "pyro": Color(1.0, 0.95, 0.55),
+	"lava": Color(1.0, 0.75, 0.3), "cryo": Color(0.9, 1.0, 1.0), "heal": Color(1.0, 1.0, 0.7)}
+
+static func pal(elem: String) -> Array:
+	return PALETTES.get(elem, [Color.WHITE, element_color(elem).lightened(0.3), element_color(elem), element_color(elem).darkened(0.3)])
+
+static var _pmat: StandardMaterial3D
+## Matériau des particules colorées par sommet (un peu « surexposé » pour déclencher le halo).
+static func _particle_mat() -> StandardMaterial3D:
+	if _pmat == null:
+		_pmat = StandardMaterial3D.new()
+		_pmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_pmat.vertex_color_use_as_albedo = true
+		_pmat.albedo_color = Color(1.7, 1.7, 1.7, 1.0)
+		_pmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_pmat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		_pmat.disable_receive_shadows = true
+	return _pmat
+
+## Particules dont chaque grain prend une couleur au hasard dans la palette, puis pâlit et s'éteint.
+static func particles_pal(pos: Vector3, elem: String, amount: = 24, speed: = 5.0, life: = 0.7, size: = 0.12, gravity: = -6.0) -> void :
+	var pl: Array = pal(elem)
+	var p: = CPUParticles3D.new()
+	var sm: = SphereMesh.new();sm.radius = size;sm.height = size * 2.0;sm.radial_segments = 6;sm.rings = 3
+	p.mesh = sm
+	p.material_override = _particle_mat()
+	p.amount = amount;p.one_shot = true;p.explosiveness = 0.92;p.lifetime = life
+	p.direction = Vector3.UP;p.spread = 180.0
+	p.initial_velocity_min = speed * 0.4;p.initial_velocity_max = speed
+	p.gravity = Vector3(0, gravity, 0)
+	p.scale_amount_min = 0.5;p.scale_amount_max = 1.3
+	var init: = Gradient.new()
+	init.set_color(0, pl[0]);init.set_color(1, pl[3]);init.add_point(0.35, pl[1]);init.add_point(0.7, pl[2])
+	p.color_initial_ramp = init
+	var ramp: = Gradient.new()
+	ramp.set_color(0, Color(1, 1, 1, 1));ramp.add_point(0.6, Color(1, 1, 1, 0.85));ramp.set_color(1, Color(1, 1, 1, 0.0))
+	p.color_ramp = ramp
+	var curve: = Curve.new();curve.add_point(Vector2(0, 1));curve.add_point(Vector2(1, 0))
+	p.scale_amount_curve = curve
+	add(p, pos)
+	p.emitting = true
+	world.get_tree().create_timer(life + 0.3, false).timeout.connect(p.queue_free)
+
+## Petites étincelles rapides dans la couleur d'accent de l'élément.
+static func sparks(pos: Vector3, elem: String, amount: = 14, speed: = 7.0) -> void :
+	var col: Color = ACCENTS.get(elem, Color.WHITE)
+	var p: = CPUParticles3D.new()
+	var bm: = BoxMesh.new();bm.size = Vector3(0.03, 0.03, 0.22)
+	p.mesh = bm;p.material_override = mat_emit(col, 4.0)
+	p.amount = amount;p.one_shot = true;p.explosiveness = 1.0;p.lifetime = 0.35
+	p.direction = Vector3.UP;p.spread = 180.0;p.initial_velocity_min = speed * 0.6;p.initial_velocity_max = speed
+	p.gravity = Vector3(0, -4, 0);p.particle_flag_align_y = true
+	p.scale_amount_min = 0.6;p.scale_amount_max = 1.2
+	add(p, pos)
+	p.emitting = true
+	world.get_tree().create_timer(0.7, false).timeout.connect(p.queue_free)
+
+## Arc de coup en dégradé : bord d'attaque blanc, cœur coloré, traîne profonde (deux couches).
+static func slash_pal(pos: Vector3, yaw: float, elem: String, radius: = 2.2, arc_deg: = 150.0, flip: = false, tilt: = 0.0) -> void :
+	var pl: Array = pal(elem)
+	for layer in 2:
+		var st: = SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var seg: = 22
+		var rr: = radius * (1.0 if layer == 0 else 0.84)
+		var wmax: = 0.42 if layer == 0 else 0.26
+		var a0: = deg_to_rad( - arc_deg * 0.5); var a1: = deg_to_rad(arc_deg * 0.5)
+		for i in seg:
+			var t0: = float(i) / seg; var t1: = float(i + 1) / seg
+			var ang0: = lerpf(a0, a1, t0); var ang1: = lerpf(a0, a1, t1)
+			if flip:
+				ang0 = - ang0;ang1 = - ang1
+			var al0: = sin(t0 * PI) * (0.55 + 0.45 * t0); var al1: = sin(t1 * PI) * (0.55 + 0.45 * t1)
+			var w0: = wmax * sin(t0 * PI) + 0.04; var w1: = wmax * sin(t1 * PI) + 0.04
+			var d0: = Vector3(sin(ang0), 0, cos(ang0)); var d1: = Vector3(sin(ang1), 0, cos(ang1))
+			var p: = [d0 * rr, d0 * (rr - w0), d1 * (rr - w1), d1 * rr]
+			var edge: Color = pl[0] if layer == 0 else pl[1]
+			var core: Color = (pl[1] as Color).lerp(pl[2], t0) if layer == 0 else (pl[2] as Color).lerp(pl[3], t0)
+			var core1: Color = (pl[1] as Color).lerp(pl[2], t1) if layer == 0 else (pl[2] as Color).lerp(pl[3], t1)
+			var cs: = [Color(edge.r, edge.g, edge.b, al0), Color(core.r, core.g, core.b, 0.0), Color(core1.r, core1.g, core1.b, 0.0), Color(edge.r, edge.g, edge.b, al1)]
+			# bande intérieure : du cœur coloré au transparent
+			var mid0: = d0 * (rr - w0 * 0.45); var mid1: = d1 * (rr - w1 * 0.45)
+			var tri: = [[p[0], cs[0]], [mid0, Color(core.r, core.g, core.b, al0)], [mid1, Color(core1.r, core1.g, core1.b, al1)], [p[3], cs[3]]]
+			for idx in [0, 1, 2, 0, 2, 3]:
+				st.set_color(tri[idx][1]);st.add_vertex(tri[idx][0])
+			var tri2: = [[mid0, Color(core.r, core.g, core.b, al0)], [p[1], cs[1]], [p[2], cs[2]], [mid1, Color(core1.r, core1.g, core1.b, al1)]]
+			for idx in [0, 1, 2, 0, 2, 3]:
+				st.set_color(tri2[idx][1]);st.add_vertex(tri2[idx][0])
+		var mi: = mesh_node(st.commit(), _particle_mat(), pos + Vector3(0, 0.02 * layer, 0))
+		mi.rotation = Vector3(tilt, yaw, 0)
+		fade_free(mi, 0.24 + layer * 0.05, Vector3(1.15, 1.15, 1.15))
+	var tip_a: = deg_to_rad(arc_deg * 0.5) * (-1.0 if flip else 1.0)
+	var tip: = Basis.from_euler(Vector3(tilt, yaw, 0)) * (Vector3(sin(tip_a), 0, cos(tip_a)) * radius)
+	sparks(pos + tip, elem, 7, 5.0)
+
+## Sphère à deux couches (cœur clair + halo profond).
+static func sphere_pal(pos: Vector3, elem: String, r0: float, r1: float, t: float, alpha: = 0.6) -> void :
+	var pl: Array = pal(elem)
+	sphere(pos, pl[3], r0 * 1.15, r1 * 1.12, t * 1.1, alpha * 0.55)
+	sphere(pos, pl[1], r0, r1 * 0.8, t, alpha)
+	sphere(pos, pl[0], r0 * 0.5, r1 * 0.45, t * 0.7, alpha * 0.9)
+
+## Deux anneaux décalés de couleurs différentes.
+static func ring_pal(pos: Vector3, elem: String, r0: float, r1: float, t: float, thick: = 0.15, alpha: = 0.85) -> void :
+	var pl: Array = pal(elem)
+	ring(pos, pl[1], r0, r1, t, thick, alpha)
+	ring(pos + Vector3(0, 0.05, 0), pl[3], r0 * 0.8, r1 * 0.82, t * 1.15, thick * 0.7, alpha * 0.8)
+	ring(pos + Vector3(0, 0.1, 0), pl[0], r0 * 0.6, r1 * 0.62, t * 0.8, thick * 0.5, alpha)
+
+## Colonne : cœur lumineux, gaine colorée.
+static func column_pal(pos: Vector3, elem: String, r: float, h: float, t: float) -> void :
+	var pl: Array = pal(elem)
+	column(pos, pl[3], r * 1.25, h * 0.9, t * 1.1)
+	column(pos, pl[1], r, h, t)
+	column(pos, pl[0], r * 0.45, h * 1.05, t * 0.8)
+
+## Gerbe complète (déchaînements, explosions) : sphère, anneaux, particules et étincelles.
+static func palette_burst(pos: Vector3, elem: String, scale: = 1.0) -> void :
+	sphere_pal(pos, elem, 0.3 * scale, 2.6 * scale, 0.45, 0.55)
+	ring_pal(pos, elem, 0.4 * scale, 3.2 * scale, 0.5, 0.18)
+	particles_pal(pos, elem, int(30 * scale), 6.0 * scale, 0.9, 0.1, -3.0)
+	sparks(pos, elem, int(16 * scale), 9.0 * scale)
+	flash(pos, (pal(elem)[1] as Color), 5.0 * scale, 10.0 * scale, 0.35)
+
 static func float_text(pos: Vector3, text: String, col: Color, size: = 64, rise: = 1.4, life: = 0.9) -> void :
 	var l: = Label3D.new()
 	l.text = text
@@ -216,12 +352,17 @@ class Projectile extends Node3D:
 	var radius: = 0.7
 	var on_hit: Callable
 	var trail_col: = FX.HYDRO
+	var trail_elem: = ""
 	var _t: = 0.0
 	func _physics_process(delta: float) -> void :
 		global_position += velocity * delta
 		_t += delta
 		if Engine.get_physics_frames() % 3 == 0:
-			FX.sphere(global_position, trail_col, 0.18, 0.05, 0.25, 0.5)
+			var tc: Color = trail_col
+			if trail_elem != "":
+				var pl: Array = FX.pal(trail_elem)
+				tc = pl[1 + (Engine.get_physics_frames() / 3) % 3]
+			FX.sphere(global_position, tc, 0.18, 0.05, 0.25, 0.5)
 		for e in get_tree().get_nodes_in_group("enemies"):
 			if e.alive and e.global_position.distance_to(global_position - Vector3(0, 0.4, 0)) < radius + e.hit_radius:
 				if on_hit.is_valid(): on_hit.call(e, global_position)

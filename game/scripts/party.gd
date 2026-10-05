@@ -76,6 +76,7 @@ var safe_pos: = Vector3.INF
 var safe_t: = 0.0
 var sea_warn_t: = 0.0
 var frozen_t: = 0.0
+var food_buffs: = {}
 const CLIMB_SPEED: = 1.5
 const CLIMB_DRAIN: = 9.0
 const CLIMB_JUMP_COST: = 22.0
@@ -147,13 +148,62 @@ func apply_rank(r: int) -> void :
 		o.hp = o.max_hp * hp_ratio
 
 func eat_food() -> bool:
+	return eat_dish("tarte")
+
+## Effets des plats (voir Items.DEFS[id].effect). Renvoie faux si le plat ne servirait à rien.
+func eat_dish(id: String, mult: = 1.0) -> bool:
+	if not Items.DEFS.has(id) or not Items.DEFS[id].has("effect"): return false
+	var e: Array = Items.DEFS[id].effect
 	var c: = ch()
-	if not c.alive or c.hp >= c.max_hp: return false
-	c.hp = minf(c.max_hp, c.hp + c.max_hp * 0.35)
-	FX.float_text(global_position + Vector3(0, 2.0, 0), "+35% PV", FX.HEAL, 56, 1.4, 1.2)
-	FX.particles(global_position + Vector3(0, 1.0, 0), FX.HEAL, 24, 3.0, 1.0, 0.09, 2.0)
+	var p: = global_position + Vector3(0, 2.0, 0)
+	match String(e[0]):
+		"heal", "heal_stam":
+			if not c.alive or (c.hp >= c.max_hp and (String(e[0]) == "heal" or stamina >= stamina_max)): return false
+			var h: float = c.max_hp * e[1] * mult / 100.0
+			c.hp = minf(c.max_hp, c.hp + h)
+			FX.float_text(p, "+%d PV" % int(h), FX.HEAL, 56, 1.4, 1.2)
+			if String(e[0]) == "heal_stam": stamina = minf(stamina_max, stamina + float(e[2]) * mult)
+		"heal_all":
+			var any: = false
+			for o in chars:
+				if o.alive and o.hp < o.max_hp:
+					o.hp = minf(o.max_hp, o.hp + o.max_hp * e[1] * mult / 100.0);any = true
+			if not any: return false
+			FX.float_text(p, "+%d %% PV (équipe)" % int(e[1] * mult), FX.HEAL, 50, 1.4, 1.2)
+		"revive":
+			var done: = false
+			for o in chars:
+				if not o.alive:
+					o.alive = true;o.hp = o.max_hp * e[1] * mult / 100.0;done = true
+					FX.float_text(p, "%s revient au combat !" % o.name, Color(1.0, 0.9, 0.6), 44, 1.4, 1.4)
+					break
+			if not done:
+				if c.hp >= c.max_hp: return false
+				c.hp = minf(c.max_hp, c.hp + c.max_hp * e[1] * mult / 100.0)
+				FX.float_text(p, "+%d %% PV" % int(e[1] * mult), FX.HEAL, 56, 1.4, 1.2)
+		"stamina":
+			if stamina >= stamina_max - 0.5: return false
+			stamina = minf(stamina_max, stamina + float(e[1]) * mult)
+			FX.float_text(p, "+%d endurance" % int(float(e[1]) * mult), Color(1.0, 0.9, 0.4), 50, 1.4, 1.2)
+		"atk", "stam_save", "guard":
+			food_buffs[String(e[0])] = {"v": float(e[1]) * mult, "t": float(e[2]), "dur": float(e[2]), "id": id}
+			FX.float_text(p, Items.effect_text(id, mult), Color(1.0, 0.85, 0.5), 40, 1.4, 1.4)
+	FX.particles_pal(global_position + Vector3(0, 1.0, 0), "heal", 18, 3.0, 0.9, 0.08, 2.0)
+	FX.particles(global_position + Vector3(0, 1.2, 0), Color(1.0, 0.92, 0.6), 10, 2.0, 0.8, 0.06, 1.0)
 	_sfx("heal")
 	return true
+
+## Bonus des plats en cours (atk, stam_save, guard) en pourcentage.
+func buff_val(kind: String) -> float:
+	var b: Dictionary = food_buffs.get(kind, {})
+	return float(b.v) if not b.is_empty() and float(b.t) > 0.0 else 0.0
+
+func atk_of(c: Dictionary) -> float:
+	return c.atk * (1.0 + c.atk_buff + buff_val("atk") / 100.0)
+
+## Coût en endurance, réduit par les plats « endurance −x % ».
+func stam_cost(x: float) -> float:
+	return x * (1.0 - buff_val("stam_save") / 100.0)
 
 func _sfx(n: String, vol: = 0.0) -> void :
 	if main and main.audio: main.audio.play(n, vol)
@@ -183,6 +233,7 @@ func _add_char(c: Dictionary) -> void :
 			var blade: = WeaponTrail.blade_extent(weapon)
 			trail = WeaponTrail.new()
 			trail.setup(sock, blade.x, blade.y, FX.element_color(c.element))
+			trail.pal = FX.pal(c.element)
 			add_child(trail)
 	_setup_cloth(skel)
 	c.merge({"node": model, "ap": ap, "hand": hand, "fxb": fx, "skel": skel, "weapon_node": weapon, "weapon_t": 0.0, "trail": trail, 
@@ -297,7 +348,7 @@ func enemies_in(center: Vector3, radius: float) -> Array:
 
 func _hit(e: Enemy, mult: float, elem: String, from: = Vector3.INF, power: = 1.0, who: = -1) -> void :
 	var c: Dictionary = chars[who] if who >= 0 else ch()
-	var dmg: float = c.atk * (1.0 + c.atk_buff) * mult * randf_range(0.93, 1.07)
+	var dmg: float = atk_of(c) * mult * randf_range(0.93, 1.07)
 	if c.name == "Kael" and inferno_t > 0.0: dmg *= 1.25
 	e.take_hit(dmg, elem, from, power)
 	stats.damage += dmg
@@ -370,6 +421,7 @@ func _lunge(v: float, dur: float) -> void :
 
 func _kaelith_blade(tgt: Enemy, mult: float, step: int) -> void :
 	if ch().name != "Kaelith": return
+	if main: main.world_hit(global_position, facing_dir(), 3.2)
 	var from: Vector3 = catalyst_gem.global_position if catalyst_gem else _hand_pos()
 	cat_attack = 0.5
 	var count: = 3 if step == 3 else 1
@@ -379,26 +431,26 @@ func _kaelith_blade(tgt: Enemy, mult: float, step: int) -> void :
 			dir = (tgt.global_position + Vector3(0, 0.5, 0) - from).normalized()
 		dir = dir.rotated(Vector3.UP, (k - (count - 1) * 0.5) * 0.18)
 		var p: = FX.Projectile.new()
-		p.velocity = dir * 24.0;p.life = 0.8;p.trail_col = FX.HYDRO
+		p.velocity = dir * 24.0;p.life = 0.8;p.trail_col = FX.HYDRO;p.trail_elem = "hydro"
 		p.on_hit = func(e, pos):
 			_hit(e, mult / (1.0 if count == 1 else 1.6), "hydro", pos, 0.6)
-			FX.sphere(pos, FX.HYDRO, 0.2, 1.0, 0.25, 0.6)
-			FX.particles(pos, FX.HYDRO, 10, 4.0, 0.4, 0.08)
+			FX.sphere_pal(pos, "hydro", 0.2, 1.0, 0.25, 0.6)
+			FX.particles_pal(pos, "hydro", 10, 4.0, 0.4, 0.08)
 			if not e.is_object: gain_energy(0.6)
 		FX.add(p, from)
 		var blade: = MeshInstance3D.new(); var sm: = SphereMesh.new();sm.radius = 0.16;sm.height = 0.32
 		blade.mesh = sm;blade.material_override = FX.mat_emit(FX.HYDRO.lightened(0.3), 3.0)
 		p.add_child(blade);blade.basis = Basis.looking_at(dir, Vector3.UP) * Basis.from_scale(Vector3(1.0, 0.45, 2.4))
-	FX.sphere(from, FX.HYDRO, 0.1, 0.45, 0.2, 0.7)
+	FX.sphere_pal(from, "hydro", 0.1, 0.45, 0.2, 0.7)
 
 func _lyra_slash(mult: float, step: int) -> void :
 	if ch().name != "Lyra": return
+	if main: main.world_hit(global_position, facing_dir(), 2.8)
 	var fwd: = facing_dir()
 	var yaw: float = visual.rotation.y
 	var origin: = global_position + Vector3(0, 1.0, 0)
 	var tilt: float = [0.0, 0.15, -0.15, 1.35][step]
-	FX.slash(origin + fwd * 0.3, yaw, FX.ELECTRO, 2.3, 160.0, step == 2, tilt)
-	FX.slash(origin + fwd * 0.3, yaw, Color(0.95, 0.9, 1.0), 2.0, 140.0, step == 2, tilt)
+	FX.slash_pal(origin + fwd * 0.3, yaw, "electro", 2.3, 160.0, step == 2, tilt)
 	var hit_any: = false
 	for e in get_tree().get_nodes_in_group("enemies"):
 		if not e.alive: continue
@@ -422,33 +474,33 @@ func _show_weapon(c: Dictionary) -> void :
 		w.scale = Vector3.ONE * 0.15
 		w.create_tween().tween_property(w, "scale", Vector3.ONE, 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		if c.node.visible:
-			FX.particles(c.hand.global_position, FX.element_color(c.element), 10, 2.2, 0.35, 0.05, 0.0)
+			FX.particles_pal(c.hand.global_position, c.element, 10, 2.2, 0.35, 0.05, 0.0)
 
 func _hide_weapon(c: Dictionary) -> void :
 	var w: Node3D = c.weapon_node
 	if w == null or not w.visible: return
 	if c.node.visible and c.alive:
-		FX.particles(c.hand.global_position, FX.element_color(c.element), 10, 1.6, 0.4, 0.05, 1.0)
+		FX.particles_pal(c.hand.global_position, c.element, 10, 1.6, 0.4, 0.05, 1.0)
 	w.visible = false
 
 
 func _kael_slash(mult: float, step: int) -> void :
 	if ch().name != "Kael": return
+	if main: main.world_hit(global_position, facing_dir(), 2.8)
 	var fwd: = facing_dir()
 	var yaw: float = visual.rotation.y
 	var origin: = global_position + Vector3(0, 1.0, 0)
 	var tilt: float = [0.0, 0.2, -0.2, -0.9, 0.0][step]
 	var r: = 2.2 if step < 4 else 2.6
 	var flip: = step == 2
-	FX.slash(origin + fwd * 0.3, yaw, FX.PYRO, r, 150.0, flip, tilt)
-	FX.slash(origin + fwd * 0.3, yaw, Color(1.0, 0.86, 0.45), r * 0.86, 125.0, flip, tilt)
-	FX.particles(origin + fwd * 1.1, Color(1.0, 0.55 + randf() * 0.3, 0.15), 8, 2.5, 0.4, 0.05, 2.5)
+	FX.slash_pal(origin + fwd * 0.3, yaw, "pyro", r, 150.0, flip, tilt)
+	FX.particles_pal(origin + fwd * 1.1, "pyro", 8, 2.5, 0.4, 0.05, 2.5)
 	var reach: = r + 0.4
 	if step == 4:
 		reach = 4.2
 		for k in 4:
 			var q: = global_position + fwd * (1.2 + k * 0.85)
-			get_tree().create_timer(k * 0.04, false).timeout.connect( func(): FX.sphere(q + Vector3(0, 0.9, 0), FX.PYRO, 0.3, 0.9 + k * 0.12, 0.3, 0.55))
+			get_tree().create_timer(k * 0.04, false).timeout.connect( func(): FX.sphere_pal(q + Vector3(0, 0.9, 0), "pyro", 0.3, 0.9 + k * 0.12, 0.3, 0.55))
 		FX.flash(origin + fwd * 1.5, FX.PYRO, 4.0, 7.0, 0.25)
 	var hit_any: = false
 	for e in get_tree().get_nodes_in_group("enemies"):
@@ -457,7 +509,7 @@ func _kael_slash(mult: float, step: int) -> void :
 		var cone: = 75.0 if step < 4 else 35.0
 		if d.length() < reach + e.hit_radius and rad_to_deg(fwd.angle_to(d)) < cone:
 			_hit(e, mult, "pyro", global_position, 0.9 if step == 4 else 0.35)
-			FX.particles(e.global_position + Vector3(0, 0.8, 0), FX.PYRO, 6, 2.5, 0.3, 0.06, 2.0)
+			FX.particles_pal(e.global_position + Vector3(0, 0.8, 0), "pyro", 6, 2.5, 0.3, 0.06, 2.0)
 			hit_any = hit_any or not e.is_object
 	if hit_any:
 		_sfx("hit", -4.0)
@@ -467,21 +519,21 @@ func _kael_slash(mult: float, step: int) -> void :
 
 func _zahara_strike(mult: float, step: int) -> void :
 	if ch().name != "Zahara": return
+	if main: main.world_hit(global_position, facing_dir(), 3.0)
 	var fwd: = facing_dir()
 	var yaw: float = visual.rotation.y
 	var impact: = global_position + fwd * 1.7
 	if main: impact.y = main.world.height_at(impact.x, impact.z)
 	if step < 3:
 		var tilt: float = [0.0, 0.5, -0.15][step]
-		FX.slash(global_position + Vector3(0, 0.95, 0) + fwd * 0.2, yaw, FX.LAVA, 2.5, 150.0, step == 2, tilt)
-		FX.slash(global_position + Vector3(0, 0.95, 0) + fwd * 0.2, yaw, Color(1.0, 0.8, 0.35), 2.1, 120.0, step == 2, tilt)
+		FX.slash_pal(global_position + Vector3(0, 0.95, 0) + fwd * 0.2, yaw, "lava", 2.5, 150.0, step == 2, tilt)
 	else:
-		FX.ring(impact, FX.LAVA, 0.3, 3.3, 0.45, 0.25)
-		FX.sphere(impact + Vector3(0, 0.2, 0), FX.LAVA.lightened(0.2), 0.3, 2.2, 0.35, 0.7)
+		FX.ring_pal(impact, "lava", 0.3, 3.3, 0.45, 0.25)
+		FX.sphere_pal(impact + Vector3(0, 0.2, 0), "lava", 0.3, 2.2, 0.35, 0.7)
 		FX.flash(impact + Vector3(0, 1, 0), FX.LAVA, 5.0, 9.0, 0.3)
 		FX.particles(impact + Vector3(0, 0.2, 0), Color(0.3, 0.22, 0.2), 14, 4.0, 0.6, 0.1, -9.0)
 		if main: main.shake(0.2)
-	FX.particles(impact + Vector3(0, 0.3, 0), FX.LAVA, 12, 4.0, 0.5, 0.07, -10.0)
+	FX.particles_pal(impact + Vector3(0, 0.3, 0), "lava", 12, 4.0, 0.5, 0.07, -10.0)
 	var hit_any: = false
 	var r: = 2.5 if step < 3 else 2.2
 	for e in get_tree().get_nodes_in_group("enemies"):
@@ -502,11 +554,11 @@ func _zahara_strike(mult: float, step: int) -> void :
 func _lava_shard(from: Vector3, dir: Vector3, mult: float) -> void :
 	var p: = FX.Projectile.new()
 	p.velocity = (dir + Vector3(0, 0.08, 0)).normalized() * 16.0
-	p.life = 0.55;p.trail_col = FX.LAVA;p.radius = 0.55
+	p.life = 0.55;p.trail_col = FX.LAVA;p.trail_elem = "lava";p.radius = 0.55
 	p.on_hit = func(e, pos):
 		_hit(e, mult, "lava", pos, 0.3)
-		FX.sphere(pos, FX.LAVA, 0.2, 0.9, 0.25, 0.7)
-		FX.particles(pos, FX.LAVA, 8, 3.5, 0.4, 0.06, -8.0)
+		FX.sphere_pal(pos, "lava", 0.2, 0.9, 0.25, 0.7)
+		FX.particles_pal(pos, "lava", 8, 3.5, 0.4, 0.06, -8.0)
 	FX.add(p, from)
 	var rock: = MeshInstance3D.new(); var pm: = PrismMesh.new();pm.size = Vector3(0.17, 0.36, 0.15)
 	rock.mesh = pm;rock.material_override = FX.mat_emit(FX.LAVA.lightened(0.15), 3.0)
@@ -553,11 +605,11 @@ func do_skill() -> void :
 
 func _kael_flame_wave() -> void :
 	if ch().name != "Kael": return
+	FX.sparks(global_position + Vector3(0, 1.0, 0) + facing_dir() * 1.5, "pyro", 20, 9.0)
 	var fwd: = facing_dir()
 	var yaw: float = visual.rotation.y
 	var origin: = global_position
-	FX.slash(origin + Vector3(0, 1.0, 0) + fwd * 0.3, yaw, FX.PYRO, 3.0, 170.0, false, 0.12)
-	FX.slash(origin + Vector3(0, 1.0, 0) + fwd * 0.3, yaw, Color(1.0, 0.9, 0.5), 2.6, 150.0, false, 0.12)
+	FX.slash_pal(origin + Vector3(0, 1.0, 0) + fwd * 0.3, yaw, "pyro", 3.0, 170.0, false, 0.12)
 	FX.flash(origin + Vector3(0, 1.2, 0) + fwd, FX.PYRO, 5.0, 10.0, 0.35)
 	_sfx("explode", -5.0)
 	if main: main.shake(0.15)
@@ -567,9 +619,9 @@ func _kael_flame_wave() -> void :
 
 func _flame_wave_step(p: Vector3, fwd: Vector3, k: int, state: Dictionary) -> void :
 	if main: p.y = main.world.height_at(p.x, p.z)
-	FX.column(p, FX.PYRO, 0.8 + k * 0.05, 1.5 + k * 0.08, 0.5)
-	FX.sphere(p + Vector3(0, 0.6, 0), Color(1.0, 0.75, 0.3), 0.3, 1.1, 0.3, 0.5)
-	FX.particles(p + Vector3(0, 0.5, 0), Color(1.0, 0.55 + randf() * 0.3, 0.15), 8, 3.0, 0.5, 0.08, 3.0)
+	FX.column_pal(p, "pyro", 0.8 + k * 0.05, 1.5 + k * 0.08, 0.5)
+	FX.sphere_pal(p + Vector3(0, 0.6, 0), "pyro", 0.3, 1.1, 0.3, 0.5)
+	FX.particles_pal(p + Vector3(0, 0.5, 0), "pyro", 8, 3.0, 0.5, 0.08, 3.0)
 	var who: = _index_of("Kael")
 	var c: Dictionary = chars[who]
 	for e in enemies_in(p, 1.7):
@@ -577,7 +629,7 @@ func _flame_wave_step(p: Vector3, fwd: Vector3, k: int, state: Dictionary) -> vo
 		if state.hit.has(id): continue
 		state.hit[id] = true
 		_hit(e, 2.6, "pyro", p - fwd, 1.0, who)
-		e.apply_burn(c.atk * (1.0 + c.atk_buff) * 0.6, 4.0)
+		e.apply_burn(atk_of(c) * 0.6, 4.0)
 		if not e.is_object: gain_energy(2.5)
 
 
@@ -587,7 +639,7 @@ func _zahara_torrent() -> void :
 	var a: = global_position + fwd * 0.9
 	var length: = 9.0
 	var b: = a + fwd * length
-	FX.ring(a, FX.LAVA, 0.4, 3.0, 0.5, 0.22)
+	FX.ring_pal(a, "lava", 0.4, 3.0, 0.5, 0.22)
 	FX.flash(a + Vector3(0, 1, 0), FX.LAVA, 6.0, 12.0, 0.4)
 	FX.particles(a + Vector3(0, 0.3, 0), Color(0.3, 0.22, 0.2), 16, 4.0, 0.7, 0.12, -9.0)
 	if main: main.shake(0.25)
@@ -627,7 +679,7 @@ func _zahara_torrent() -> void :
 	for k in 5:
 		var q: = a.lerp(b, k / 4.0)
 		if main: q.y = main.world.height_at(q.x, q.z)
-		get_tree().create_timer(k * 0.09, false).timeout.connect( func(): FX.particles(q + Vector3(0, 0.3, 0), FX.LAVA.lightened(0.15), 8, 4.5, 0.6, 0.08, -9.0))
+		get_tree().create_timer(k * 0.09, false).timeout.connect( func(): FX.particles_pal(q + Vector3(0, 0.3, 0), "lava", 8, 4.5, 0.6, 0.08, -9.0))
 	var light: = OmniLight3D.new();light.light_color = FX.LAVA;light.light_energy = 2.0;light.omni_range = 7.0
 	light.shadow_enabled = false;node.add_child(light);light.position = (b - a) * 0.5 + Vector3(0, 1.0, 0)
 	var state: = {"hit": {}, "a": a, "b": b}
@@ -647,17 +699,17 @@ func _torrent_tick(state: Dictionary, first: bool) -> void :
 		var t: = clampf(ap.dot(ab) / ab.length_squared(), 0.0, 1.0)
 		if (ap - ab * t).length() > 1.3 + e.hit_radius: continue
 		var dmg_mult: = 2.2 if first else 0.42
-		var dmg: float = c.atk * (1.0 + c.atk_buff) * dmg_mult * randf_range(0.93, 1.07)
+		var dmg: float = atk_of(c) * dmg_mult * randf_range(0.93, 1.07)
 		e.take_hit(dmg, "lava", Vector3.INF if not first else a, 0.9 if first else 0.0)
 		stats.damage += dmg
-		e.apply_burn(c.atk * (1.0 + c.atk_buff) * 0.5, 3.0)
+		e.apply_burn(atk_of(c) * 0.5, 3.0)
 		if first and not state.hit.has(e.get_instance_id()):
 			state.hit[e.get_instance_id()] = true
 			if not e.is_object: gain_energy(2.5)
 	if not first:
 		var q: Vector3 = a.lerp(b, randf())
 		if main: q.y = main.world.height_at(q.x, q.z)
-		FX.particles(q + Vector3(0, 0.2, 0), FX.LAVA.lightened(0.2), 6, 2.5, 0.5, 0.07, -6.0)
+		FX.particles_pal(q + Vector3(0, 0.2, 0), "lava", 6, 2.5, 0.5, 0.07, -6.0)
 
 func _index_of(n: String) -> int:
 	for i in chars.size():
@@ -665,8 +717,9 @@ func _index_of(n: String) -> int:
 	return active
 
 func _kaelith_vortex(center: Vector3) -> void :
+	FX.sparks(center + Vector3(0, 1.0, 0), "hydro", 18, 8.0)
 	var state: = {"hit": {}}
-	FX.sphere(center + Vector3(0, 1.0, 0), FX.HYDRO, 0.3, 1.6, 0.4, 0.55)
+	FX.sphere_pal(center + Vector3(0, 1.0, 0), "hydro", 0.3, 1.6, 0.4, 0.55)
 	FX.flash(center + Vector3(0, 1.5, 0), FX.HYDRO, 3.0, 9.0, 0.4)
 	for i in 10:
 		get_tree().create_timer(i * 0.25, false).timeout.connect(_vortex_pull.bind(center))
@@ -674,8 +727,8 @@ func _kaelith_vortex(center: Vector3) -> void :
 		get_tree().create_timer(0.8 * (i + 1), false).timeout.connect(_vortex_tick.bind(center, state))
 
 func _vortex_pull(center: Vector3) -> void :
-	FX.ring(center, FX.HYDRO, 5.5, 0.6, 0.3, 0.12, 0.7)
-	FX.sphere(center + Vector3(0, 1.0, 0), FX.HYDRO.lightened(0.2), 1.1, 0.4, 0.3, 0.35)
+	FX.ring_pal(center, "hydro", 5.5, 0.6, 0.3, 0.12, 0.7)
+	FX.sphere_pal(center + Vector3(0, 1.0, 0), "hydro", 1.1, 0.4, 0.3, 0.35)
 	for e in enemies_in(center, 6.5):
 		e.pull_towards(center, 3.5)
 
@@ -684,7 +737,7 @@ func _vortex_tick(center: Vector3, state: Dictionary) -> void :
 	var who: = _index_of("Kaelith")
 	for e in hits:
 		_hit(e, 1.25, "hydro", Vector3.INF, 1.0, who)
-		FX.column(e.global_position, FX.HYDRO, 0.6, 2.2, 0.5)
+		FX.column_pal(e.global_position, "hydro", 0.6, 2.2, 0.5)
 		if not state.hit.has(e.get_instance_id()):
 			state.hit[e.get_instance_id()] = true
 			if not e.is_object: gain_energy(3.0)
@@ -695,13 +748,14 @@ func _vortex_tick(center: Vector3, state: Dictionary) -> void :
 
 func _lyra_discharge() -> void :
 	var p: = global_position + Vector3(0, 0.9, 0)
-	FX.sphere(p, FX.ELECTRO, 0.4, 5.2, 0.35, 0.55)
-	FX.ring(global_position, FX.ELECTRO, 0.6, 5.5, 0.4, 0.12)
+	FX.sparks(p, "electro", 26, 11.0)
+	FX.sphere_pal(p, "electro", 0.4, 5.2, 0.35, 0.55)
+	FX.ring_pal(global_position, "electro", 0.6, 5.5, 0.4, 0.12)
 	FX.flash(p, FX.ELECTRO, 6.0, 12.0, 0.35)
 	_sfx("thunder", -3.0)
 	for i in 12:
 		var a: = TAU * i / 12.0
-		FX.bolt(p, p + Vector3(cos(a) * 5.0, randf_range(-0.6, 0.8), sin(a) * 5.0), FX.ELECTRO, 0.07, 0.25, 0.5)
+		FX.bolt(p, p + Vector3(cos(a) * 5.0, randf_range(-0.6, 0.8), sin(a) * 5.0), FX.pal("electro")[1 + randi() % 3], 0.07, 0.25, 0.5)
 	var n: = 0
 	for e in enemies_in(global_position, 5.0):
 		_hit(e, 2.3, "electro", global_position, 1.2, _index_of("Lyra"))
@@ -735,11 +789,13 @@ func do_burst() -> void :
 
 func _kaelith_wave() -> void :
 	var p: = global_position
-	FX.column(p, FX.HYDRO, 1.3, 7.0, 1.0)
+	FX.sparks(p + Vector3(0, 1.2, 0), "hydro", 40, 14.0)
+	FX.particles_pal(p + Vector3(0, 2.5, 0), "hydro", 40, 7.0, 1.6, 0.12, -1.5)
+	FX.column_pal(p, "hydro", 1.3, 7.0, 1.0)
 	for i in 3:
-		get_tree().create_timer(i * 0.18, false).timeout.connect( func(): FX.ring(p, FX.HYDRO.lightened(i * 0.15), 1.0, 11.0, 0.9, 0.22, 0.85))
-	FX.sphere(p + Vector3(0, 1, 0), FX.HYDRO, 1.0, 10.5, 0.8, 0.35)
-	FX.particles(p + Vector3(0, 1.5, 0), FX.HYDRO.lightened(0.3), 60, 11.0, 1.2, 0.16)
+		get_tree().create_timer(i * 0.18, false).timeout.connect( func(): FX.ring_pal(p, "hydro", 1.0, 11.0, 0.9, 0.22, 0.85))
+	FX.sphere_pal(p + Vector3(0, 1, 0), "hydro", 1.0, 10.5, 0.8, 0.35)
+	FX.particles_pal(p + Vector3(0, 1.5, 0), "hydro", 60, 11.0, 1.2, 0.16)
 	FX.flash(p + Vector3(0, 3, 0), FX.HYDRO, 8.0, 20.0, 0.8)
 	_sfx("splash", 2.0)
 	if main: main.shake(0.5)
@@ -749,17 +805,19 @@ func _kaelith_wave() -> void :
 		if o.alive:
 			o.hp = minf(o.max_hp, o.hp + o.max_hp * 0.3)
 	FX.float_text(p + Vector3(0, 2.4, 0), "+30% PV", FX.HEAL, 60, 1.6, 1.3)
-	FX.particles(p + Vector3(0, 1.0, 0), FX.HEAL, 30, 3.0, 1.2, 0.1, 2.0)
+	FX.particles_pal(p + Vector3(0, 1.0, 0), "heal", 30, 3.0, 1.2, 0.1, 2.0)
 
 func _lyra_storm_start() -> void :
+	FX.sparks(global_position + Vector3(0, 1.2, 0), "electro", 40, 14.0)
+	FX.particles_pal(global_position + Vector3(0, 2.0, 0), "electro", 40, 8.0, 1.2, 0.1, -2.0)
 	storm_t = 8.0
 	storm_tick = 0.2
 	for o in chars: o.atk_speed = 1.3
 	var p: = global_position
-	FX.sphere(p + Vector3(0, 1, 0), FX.ELECTRO, 0.5, 6.5, 0.45, 0.5)
+	FX.sphere_pal(p + Vector3(0, 1, 0), "electro", 0.5, 6.5, 0.45, 0.5)
 	for i in 6:
 		var q: = p + Vector3(randf_range(-4, 4), 0, randf_range(-4, 4))
-		FX.bolt(q + Vector3(0, 14, 0), q, FX.ELECTRO, 0.16, 0.3, 0.8)
+		FX.bolt(q + Vector3(0, 14, 0), q, FX.pal("electro")[1 + randi() % 3], 0.16, 0.3, 0.8)
 	FX.flash(p + Vector3(0, 4, 0), FX.ELECTRO, 10.0, 22.0, 0.6)
 	_sfx("thunder", 2.0)
 	if main: main.shake(0.45)
@@ -779,21 +837,22 @@ func _lyra_storm_start() -> void :
 
 func _kael_inferno_start() -> void :
 	if ch().name != "Kael": return
+	FX.sparks(global_position + Vector3(0, 1.2, 0), "pyro", 40, 14.0)
 	inferno_t = 10.0
 	inferno_tick = 0.3
 	var p: = global_position
-	FX.sphere(p + Vector3(0, 1, 0), FX.PYRO, 0.5, 5.5, 0.45, 0.55)
+	FX.sphere_pal(p + Vector3(0, 1, 0), "pyro", 0.5, 5.5, 0.45, 0.55)
 	for i in 3:
-		get_tree().create_timer(i * 0.12, false).timeout.connect( func(): FX.ring(p, FX.PYRO.lightened(i * 0.15), 0.8, 6.5, 0.6, 0.2))
+		get_tree().create_timer(i * 0.12, false).timeout.connect( func(): FX.ring_pal(p, "pyro", 0.8, 6.5, 0.6, 0.2))
 	FX.flash(p + Vector3(0, 2, 0), FX.PYRO, 9.0, 18.0, 0.6)
-	FX.particles(p + Vector3(0, 1, 0), FX.PYRO, 40, 8.0, 0.8, 0.12, 2.0)
+	FX.particles_pal(p + Vector3(0, 1, 0), "pyro", 40, 8.0, 0.8, 0.12, 2.0)
 	FX.float_text(p + Vector3(0, 2.4, 0), "Brasier : +25% dégâts", Color(1.0, 0.75, 0.4), 44, 1.4, 1.4)
 	_sfx("explode", 1.0)
 	if main: main.shake(0.4)
 	var c: = ch()
 	for e in enemies_in(p, 5.5):
 		_hit(e, 2.8, "pyro", p, 1.5)
-		e.apply_burn(c.atk * (1.0 + c.atk_buff) * 0.6, 4.0)
+		e.apply_burn(atk_of(c) * 0.6, 4.0)
 	if inferno_node: inferno_node.queue_free()
 	inferno_node = Node3D.new();add_child(inferno_node)
 	var ring: = MeshInstance3D.new(); var tm: = TorusMesh.new();tm.inner_radius = 4.55;tm.outer_radius = 5.0;tm.rings = 48;tm.ring_segments = 6
@@ -833,30 +892,31 @@ func _inferno_update(delta: float) -> void :
 		var hits: = enemies_in(global_position, 5.0)
 		for e in hits:
 			_hit(e, 0.55, "pyro", Vector3.INF, 0.2)
-			FX.particles(e.global_position + Vector3(0, 0.8, 0), FX.PYRO, 6, 2.0, 0.4, 0.07, 2.0)
+			FX.particles_pal(e.global_position + Vector3(0, 0.8, 0), "pyro", 6, 2.0, 0.4, 0.07, 2.0)
 		if hits.size() > 0:
 			_sfx("hit", -10.0)
 			gain_energy(0.4)
 		for k in 2:
 			var a: = randf() * TAU
-			FX.column(global_position + Vector3(cos(a) * 4.8, 0, sin(a) * 4.8), FX.PYRO, 0.35, 1.4, 0.45)
+			FX.column_pal(global_position + Vector3(cos(a) * 4.8, 0, sin(a) * 4.8), "pyro", 0.35, 1.4, 0.45)
 	if inferno_t <= 0.0:
 		inferno_t = 0.0
 		if inferno_node:
-			FX.particles(global_position + Vector3(0, 1, 0), FX.PYRO, 20, 4.0, 0.5, 0.08, 2.0)
+			FX.particles_pal(global_position + Vector3(0, 1, 0), "pyro", 20, 4.0, 0.5, 0.08, 2.0)
 			inferno_node.queue_free();inferno_node = null
 
 
 
 func _zahara_eruption() -> void :
 	if ch().name != "Zahara": return
+	FX.sparks(global_position + Vector3(0, 1.2, 0), "lava", 40, 14.0)
 	var p: = global_position
 	var c: = ch()
-	FX.column(p, FX.LAVA, 1.6, 9.0, 1.2)
+	FX.column_pal(p, "lava", 1.6, 9.0, 1.2)
 	for i in 3:
-		get_tree().create_timer(i * 0.15, false).timeout.connect( func(): FX.ring(p, FX.LAVA.lightened(i * 0.12), 1.0, 8.0, 0.9, 0.25, 0.9))
-	FX.sphere(p + Vector3(0, 1, 0), FX.LAVA, 1.0, 7.5, 0.7, 0.4)
-	FX.particles(p + Vector3(0, 1.5, 0), FX.LAVA, 60, 12.0, 1.4, 0.18, -14.0)
+		get_tree().create_timer(i * 0.15, false).timeout.connect( func(): FX.ring_pal(p, "lava", 1.0, 8.0, 0.9, 0.25, 0.9))
+	FX.sphere_pal(p + Vector3(0, 1, 0), "lava", 1.0, 7.5, 0.7, 0.4)
+	FX.particles_pal(p + Vector3(0, 1.5, 0), "lava", 60, 12.0, 1.4, 0.18, -14.0)
 	FX.particles(p + Vector3(0, 1.0, 0), Color(0.25, 0.18, 0.16), 26, 6.0, 1.2, 0.2, -4.0)
 	FX.flash(p + Vector3(0, 3, 0), FX.LAVA, 10.0, 22.0, 0.9)
 	_sfx("explode", 3.0)
@@ -869,13 +929,13 @@ func _zahara_eruption() -> void :
 	for e in enemies_in(p, 7.5):
 		_hit(e, 5.6, "lava", p, 2.5)
 		e.apply_res_down(10.0)
-		e.apply_burn(c.atk * (1.0 + c.atk_buff) * 0.7, 5.0)
+		e.apply_burn(atk_of(c) * 0.7, 5.0)
 
 func _geyser(q: Vector3) -> void :
 	if main: q.y = main.world.height_at(q.x, q.z)
-	FX.column(q, FX.LAVA, 0.55, 4.0, 0.8)
-	FX.particles(q + Vector3(0, 0.5, 0), FX.LAVA.lightened(0.2), 12, 7.0, 0.9, 0.1, -12.0)
-	FX.ring(q, FX.LAVA, 0.2, 1.4, 0.4, 0.3)
+	FX.column_pal(q, "lava", 0.55, 4.0, 0.8)
+	FX.particles_pal(q + Vector3(0, 0.5, 0), "lava", 12, 7.0, 0.9, 0.1, -12.0)
+	FX.ring_pal(q, "lava", 0.2, 1.4, 0.4, 0.3)
 
 func _storm_update(delta: float) -> void :
 	storm_t -= delta
@@ -888,8 +948,8 @@ func _storm_update(delta: float) -> void :
 		if targets.size() > 0:
 			var e: Enemy = targets[randi() % targets.size()]
 			q = e.global_position
-		FX.bolt(q + Vector3(randf_range(-1, 1), 11.0, randf_range(-1, 1)), q, FX.ELECTRO, 0.12, 0.2, 0.7)
-		FX.sphere(q + Vector3(0, 0.3, 0), FX.ELECTRO, 0.2, 1.8, 0.25, 0.6)
+		FX.bolt(q + Vector3(randf_range(-1, 1), 11.0, randf_range(-1, 1)), q, FX.pal("electro")[1 + randi() % 3], 0.12, 0.2, 0.7)
+		FX.sphere_pal(q + Vector3(0, 0.3, 0), "electro", 0.2, 1.8, 0.25, 0.6)
 		FX.flash(q + Vector3(0, 2, 0), FX.ELECTRO, 3.0, 8.0, 0.2)
 		_sfx("zap", -6.0)
 		for e in enemies_in(q, 2.2):
@@ -944,8 +1004,8 @@ func do_dash() -> void :
 	if climbing:
 		_end_climb(Vector3(climb_n.x, 0, climb_n.z).normalized() * 2.5);return
 	if swimming or vaulting: return
-	if not is_active() or dash_t > 0.0 or stamina < 18.0 or attack_lock > 0.3: return
-	stamina -= 18.0
+	if not is_active() or dash_t > 0.0 or stamina < stam_cost(18.0) or attack_lock > 0.3: return
+	stamina -= stam_cost(18.0)
 	dash_t = 0.22;iframe = maxf(iframe, 0.3)
 	var dirs: = _cam_basis_dirs()
 	var d: Vector3 = dirs[0] * input_vec.y + dirs[1] * input_vec.x
@@ -953,7 +1013,7 @@ func do_dash() -> void :
 	_face_towards(dash_dir, true)
 	_play("Dash", 0.05, 1.4)
 	_sfx("dash", -3.0)
-	FX.particles(global_position + Vector3(0, 0.6, 0), FX.element_color(ch().element), 12, 3.0, 0.35, 0.08, 0.0)
+	FX.particles_pal(global_position + Vector3(0, 0.6, 0), ch().element, 12, 3.0, 0.35, 0.08, 0.0)
 
 func switch_to(i: int) -> void :
 	if i == active or i >= chars.size() or switch_cd > 0.0 or not chars[i].alive or attack_lock > 0.4 or cast_t > 0.0: return
@@ -963,8 +1023,8 @@ func switch_to(i: int) -> void :
 	attack_lock = 0.0;combo = 0;combo_timer = 0.0
 	_show_active()
 	visual.rotation.y = y
-	FX.sphere(global_position + Vector3(0, 0.9, 0), FX.element_color(ch().element), 0.3, 1.6, 0.3, 0.6)
-	FX.particles(global_position + Vector3(0, 0.9, 0), FX.element_color(ch().element), 20, 4.0, 0.5, 0.08)
+	FX.sphere_pal(global_position + Vector3(0, 0.9, 0), ch().element, 0.3, 1.6, 0.3, 0.6)
+	FX.particles_pal(global_position + Vector3(0, 0.9, 0), ch().element, 20, 4.0, 0.5, 0.08)
 
 var test_invuln: = false
 var hits_taken: = 0
@@ -976,7 +1036,7 @@ func take_damage(amount: float, elem: String, from: Vector3) -> void :
 		iframe = 0.5
 		return
 	var c: = ch()
-	var dmg: = amount * randf_range(0.9, 1.1)
+	var dmg: = amount * randf_range(0.9, 1.1) * (1.0 - buff_val("guard") / 100.0)
 	c.hp -= dmg
 	iframe = 0.5
 	FX.float_text(global_position + Vector3(0, 1.9, 0), str(int(dmg)), Color(1, 0.35, 0.35), 50)
@@ -1026,6 +1086,9 @@ func _physics_process(delta: float) -> void :
 			o.weapon_t -= delta
 			if o.weapon_t <= 0.0: _hide_weapon(o)
 	switch_cd = maxf(0.0, switch_cd - delta)
+	for k in food_buffs.keys():
+		food_buffs[k].t -= delta
+		if food_buffs[k].t <= 0.0: food_buffs.erase(k)
 	var striking: bool = attack_lock > 0.04 and (cur_anim.begins_with("Attack") or cur_anim == "Skill" or cur_anim == "Burst")
 	for i in chars.size():
 		var o: Dictionary = chars[i]
@@ -1057,8 +1120,13 @@ func _physics_process(delta: float) -> void :
 		air_t += delta
 		fall_speed = maxf(fall_speed, - velocity.y)
 		if gliding:
-			velocity.y = lerpf(velocity.y, - GLIDE_SINK, 5.0 * delta)
-			stamina = maxf(0.0, stamina - 4.0 * delta)
+			if main and main.updraft_at(global_position) > 0.0:
+				velocity.y = lerpf(velocity.y, 9.5, 2.5 * delta)
+				if Engine.get_physics_frames() % 6 == 0:
+					FX.particles(global_position + Vector3(0, 1.5, 0), Color(0.92, 0.97, 1.0), 4, 2.0, 0.6, 0.05, 6.0)
+			else:
+				velocity.y = lerpf(velocity.y, - GLIDE_SINK, 5.0 * delta)
+			stamina = maxf(0.0, stamina - stam_cost(4.0 * delta))
 			if stamina <= 0.0: stop_glide()
 		else:
 			velocity.y -= GRAV * delta
@@ -1071,7 +1139,7 @@ func _physics_process(delta: float) -> void :
 		spd = WALK if mag < 0.55 else RUN
 		loco = "walk" if mag < 0.55 else "run"
 		if sprint_held and stamina > 0.0 and is_on_floor():
-			spd = SPRINT;loco = "sprint";stamina = maxf(0.0, stamina - 20.0 * delta)
+			spd = SPRINT;loco = "sprint";stamina = maxf(0.0, stamina - stam_cost(20.0 * delta))
 	if gliding:
 		spd = GLIDE_SPEED if mag > 0.05 else GLIDE_SPEED * 0.6
 		loco = ""
@@ -1233,9 +1301,9 @@ func _end_climb(push: = Vector3.ZERO) -> void :
 ## Saut d'escalade : bond rapide dans la direction voulue (coûte de l'endurance).
 func _climb_jump() -> void :
 	if climb_jump_t > 0.0: return
-	if stamina < CLIMB_JUMP_COST:
+	if stamina < stam_cost(CLIMB_JUMP_COST):
 		_end_climb(Vector3(climb_n.x, 0, climb_n.z).normalized() * 2.0);return
-	stamina -= CLIMB_JUMP_COST
+	stamina -= stam_cost(CLIMB_JUMP_COST)
 	climb_jump_t = 0.32
 	_sfx("jump", -6.0)
 	FX.particles(global_position + Vector3(0, 0.8, 0) - Vector3(climb_n.x, 0, climb_n.z) * 0.3, Color(0.85, 0.8, 0.7), 8, 1.8, 0.4, 0.06, -4.0)
@@ -1255,7 +1323,7 @@ func _climb_update(delta: float) -> void :
 		spd = 6.2
 	var moving: = move.length() > 0.12
 	if moving and climb_jump_t <= 0.0:
-		stamina = maxf(0.0, stamina - CLIMB_DRAIN * delta)
+		stamina = maxf(0.0, stamina - stam_cost(CLIMB_DRAIN * delta))
 	if stamina <= 0.0:
 		FX.float_text(global_position + Vector3(0, 2.0, 0), "Endurance épuisée", Color(1.0, 0.7, 0.45), 36, 1.0, 1.0)
 		_end_climb(nh * 1.5);return
@@ -1375,7 +1443,7 @@ func _swim_update(delta: float) -> void :
 	var fast: = sprint_held and mag > 0.05 and stamina > 0.0
 	var spd: = 0.0
 	if mag > 0.05: spd = SWIM_FAST if fast else (SWIM_SPEED if mag >= 0.55 else SWIM_SPEED * 0.55)
-	stamina = maxf(0.0, stamina - (16.0 if fast else (3.0 if mag > 0.05 else 1.5)) * delta)
+	stamina = maxf(0.0, stamina - stam_cost((16.0 if fast else (3.0 if mag > 0.05 else 1.5)) * delta))
 	if stamina <= 0.0:
 		_drown();return
 	# on ne s'éloigne pas trop au large
