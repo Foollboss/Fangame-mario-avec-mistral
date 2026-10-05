@@ -6,6 +6,37 @@ quatre héros — **Kaelith** (Hydro, catalyseur), **Lyra** (Électro, épée), 
 
 > Le nom du dépôt vient d'un ancien projet ; le jeu actuel est *Échos d'Aetheria*.
 
+## Version 8.0 : villages, cuisine, boutiques et cinématiques
+
+- **Trois nouveaux villages** sur les autres îles : **Joncbourg** (Marais d'Émeraude, village de pêcheurs),
+  **Forgeval** (Terres de Braise, village de forgerons, avec sa grande forge) et **Hautevent** (Falaises de
+  l'Orage, village des guetteurs, avec son moulin). Chacun a ses maisons, sa place, une épicerie, un
+  cuisinier, une marmite, et quatre habitants avec leurs quêtes.
+- **12 nouvelles quêtes** : l'acte II « Les Échos lointains » (rencontrer les chefs des trois villages),
+  des quêtes de village (chasse, cueillette, cuisine, feux de vigie à rallumer en hauteur) et **trois quêtes
+  dans les domaines** (pages du carnet de Basile et sa cage dans le Repaire des Masques, Cœurs de braise de la
+  Forge d'Ignis, pierres d'écho et Esprit céleste du Sanctuaire).
+- **Cinématiques** (bandes noires, caméra animée, sous-titres, bouton « Passer ») : prologue, arrivée dans
+  chaque village, réveil du Gardien Givré, présentation des boss du monde, rallumage de la grande forge,
+  union des trois villages et scène de fin. Nouvelles animations Blender pour l'occasion : parler, saluer, victoire.
+- **Inventaire à onglets** (Nourriture, Ingrédients, Matériaux, Trésors) et **Mora**, la monnaie (monstres,
+  coffres, quêtes). **Sac à provisions** (touche H ou bouton) pour manger sans ouvrir le menu.
+- **Arbres fruitiers** : frappe un arbre qui porte des fruits (pommes, soleillettes, cerises, baies givrées),
+  il tremble et ses fruits tombent ; ils repoussent quelques minutes plus tard. **Plantes à cueillir** :
+  menthe, champignons, lotus, piments de braise, lys des vents.
+- **Cuisine** aux marmites : 12 recettes, mini-jeu de cuisson (zone dorée = « Délicieux ! » ×2), cuisson
+  automatique après 3 réussites. Plats : soins, résurrection, endurance, ATQ +%, endurance économisée,
+  dégâts réduits (icône et minuteur au-dessus des PV).
+- **Boutiques** : épicerie et cuisinier dans chaque village (et Mireille à Brise-Marée) ; on y achète
+  ingrédients, plats et recettes. Choix de réponse dans les dialogues (« Voir la boutique »).
+- **Techniques multicolores** : chaque élément a une palette de 4 couleurs (Hydro blanc-cyan-bleu-indigo,
+  Électro blanc-rose-violet, Pyro crème-or-orange-carmin, Lave jaune-orange-rouge-sombre) : arcs en dégradé,
+  sphères et anneaux à plusieurs couches, étincelles d'accent, traînées d'arme en dégradé, éclairs variés.
+- **Vision élémentaire** (touche V maintenue, bouton œil sur mobile) : le monde se décolore et les
+  Anémoculus, coffres, plantes, fruits et cristaux proches s'illuminent. **Courants ascendants** près des
+  aiguilles rocheuses et à Hautevent : on y monte en planeur.
+- Carte : noms des villages, boutiques et marmites.
+
 ## Version 7.1 : escalade, nage et Anémoculus
 
 - **Escalade** : pousse contre un mur, une falaise, un toit, une tour ou un pilier pour t'y accrocher.
@@ -48,8 +79,10 @@ quatre héros — **Kaelith** (Hydro, catalyseur), **Lyra** (Électro, épée), 
 | Saut, planeur, bond en escalade | Espace |
 | Sprint, esquive, lâcher prise, nage rapide | Maj ou clic droit |
 | Changer de héros | 1 – 4 |
-| Interagir (PNJ, coffres, offrande aux statues) | F |
-| Carte / Quêtes / Heure / Manger | M / L / N / H |
+| Interagir (PNJ, coffres, statues, cueillette, marmites) | F |
+| Sac à provisions (manger) | H |
+| Vision élémentaire (maintenir) | V |
+| Carte / Quêtes / Heure | M / L / N |
 | Zoom caméra | Molette |
 | Menu | Échap |
 
@@ -69,6 +102,7 @@ blender/
   anim/                solveur de pose (FK/IK) et bibliothèque d'animations
   build_props.py       modélise les décors → game/assets/props_genshin.glb
   props/kit.py         kit de modélisation procédurale + textures peintes
+game/tools/make_item_icons.py  dessine les icônes des objets (ui/items/*.png)
   source/              GLB d'origine des héros (maillage + squelette + texture)
 ```
 
@@ -96,6 +130,8 @@ godot -- --combattest --shots=/tmp/combat   # captures des 4 héros en combat
 godot -- --climbtest --shots=/tmp/escalade  # escalade (maison, phare, aiguille, planeur)
 godot -- --swimtest --shots=/tmp/nage       # nage (lac, mer, noyade, sortie de l'eau)
 godot -- --oculustest --shots=/tmp/oculus   # Anémoculus, offrande, sauvegarde
+godot -- --v8test --shots=/tmp/v8            # inventaire, fruits, cuisine, boutique, quêtes, domaine
+godot -- --v8shots --shots=/tmp/v8img        # villages, menus, vision, techniques, cinématiques
 ```
 
 ## Exporter le jeu
@@ -109,7 +145,7 @@ godot --headless --export-release "Windows" ../builds/Echos_Aetheria.exe
 GODOT_ANDROID_KEYSTORE_RELEASE_PATH=/chemin/aetheria_v7.keystore \
 GODOT_ANDROID_KEYSTORE_RELEASE_USER=aetheria \
 GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD=******** \
-godot --headless --export-release "Android" ../builds/Echos_Aetheria_v7.1.apk
+godot --headless --export-release "Android" ../builds/Echos_Aetheria_v8.apk
 ```
 
 Garde précieusement le fichier `aetheria_v7.keystore` et son mot de passe : Android n'accepte une

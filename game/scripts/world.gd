@@ -1347,7 +1347,7 @@ func _region_sites() -> void :
 	for k in 40:
 		var a: = r3.randf() * TAU; var rr: = sqrt(r3.randf()) * sr
 		var q: = snap(sc + Vector3(cos(a) * rr, 0, sin(a) * rr))
-		if q.y < SWAMP_Y + 0.2 or _near_poi(q, -6.0): continue
+		if q.y < SWAMP_Y + 0.2 or _near_poi(q, -6.0) or _near_village(q, 4.0): continue
 		mm_add("Mushrooms", Transform3D(Basis(Vector3.UP, r3.randf() * TAU).scaled(Vector3.ONE * r3.randf_range(2.6, 4.2)), q), 
 			[Color(0.55, 0.35, 0.95), Color(0.25, 0.85, 0.75), Color(0.95, 0.45, 0.7)][k % 3])
 
@@ -1371,7 +1371,7 @@ func _region_sites() -> void :
 	for k in 600:
 		if obs >= 46: break
 		var p: = _rand_land(2.5, 40.0, 0.6)
-		if p == Vector3.INF or biome_at(p.x, p.z) != "braise" or _near_poi(p, -4.0) or lava_at(p): continue
+		if p == Vector3.INF or biome_at(p.x, p.z) != "braise" or _near_poi(p, -4.0) or lava_at(p) or _near_village(p, 2.0): continue
 		mm_add("Obsidian", Transform3D(Basis(Vector3.UP, r3.randf() * TAU).scaled(Vector3.ONE * r3.randf_range(0.6, 1.5)), p - Vector3(0, 0.1, 0)))
 		if r3.randf() < 0.4: cyl_collider(p, 0.5, 1.6)
 		obs += 1

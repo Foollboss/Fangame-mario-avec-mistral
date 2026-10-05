@@ -90,6 +90,7 @@ func close() -> void :
 	visible = false
 
 func _entries() -> Array:
+	if not Shops.DEFS.has(shop_id): return []
 	var d: Dictionary = Shops.DEFS[shop_id]
 	var out: = []
 	for r in d.recipes:

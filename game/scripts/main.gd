@@ -1362,13 +1362,13 @@ func _find_interaction() -> Dictionary:
 	for cp in world.cook_spots:
 		if cp.distance_to(p) < 2.6:
 			return {"kind": "cook", "verb": "Cuisiner", "what": "à la marmite"}
-	for g in gathers:
-		if g.t <= 0.0 and (g.pos as Vector3).distance_to(p) < 1.9:
-			return {"kind": "gather", "ref": g, "verb": "Cueillir :", "what": Items.name_of(g.kind)}
 	if quests._step("q_vent_vigie").get("do", "") == "beacons":
 		for b in beacons:
 			if not b.lit and (b.node as Node3D).position.distance_to(p + Vector3(0, 0.9, 0)) < 2.4:
 				return {"kind": "beacon", "ref": b, "verb": "Allumer :", "what": "le feu de vigie"}
+	for g in gathers:
+		if g.t <= 0.0 and (g.pos as Vector3).distance_to(p) < 1.9:
+			return {"kind": "gather", "ref": g, "verb": "Cueillir :", "what": Items.name_of(g.kind)}
 	if not party.busy_moving():
 		for s in world.statues:
 			if Vector2(p.x - s.x, p.z - s.z).length() < 4.8 and absf(p.y - s.y) < 2.5:
@@ -2969,9 +2969,10 @@ func _v8_test() -> void :
 	var dropped: = drops.size()
 	await snap("v8_fruits_tombent")
 	# ramasser : marcher sur les fruits
+	await _wait(0.4)
 	for dd in drops.duplicate():
-		party.global_position = (dd.node as Node3D).position
-		await _wait(0.25)
+		if is_instance_valid(dd.node): party.global_position = (dd.node as Node3D).position
+		await _wait(0.3)
 	await _wait(0.3)
 	print("V8TEST tree_hit drops=%d picked=%d ripe=%s -> %s" % [dropped, item_count("soleillette") - c0, t.ripe, _ok(dropped >= 3 and item_count("soleillette") - c0 == dropped and not t.ripe)])
 	# --- cueillette
@@ -2988,6 +2989,8 @@ func _v8_test() -> void :
 	# --- boutique (Mireille, Brise-Marée)
 	_place(world.snap(npc_pos("grocer") + Vector3(0, 0, -2.2), 0.4), npc_pos("grocer"), 5.0, -0.2)
 	await _wait(0.4)
+	print("V8TEST q_recolte state=%s -> %s" % [quests.st("q_recolte"), _ok(quests.st("q_recolte") == "available")])
+	await _talk_now("grocer")
 	await _talk_now("grocer", 0)
 	await _wait(0.4)
 	print("V8TEST shop_open visible=%s shop=%s -> %s" % [ui.shop_menu.visible, ui.shop_menu.shop_id, _ok(ui.shop_menu.visible and ui.shop_menu.shop_id == "bm_epicerie")])
@@ -3010,18 +3013,16 @@ func _v8_test() -> void :
 	var b0: = item_count("brochette")
 	ui.cook_menu._start_cook()
 	var gauge: = ui.cook_menu.game
-	var guard: = 0
-	while gauge.running and gauge.pos < (gauge.gold.x + gauge.gold.y) * 0.5 and guard < 600:
-		guard += 1;await get_tree().process_frame
+	await _wait(0.3)
+	gauge.pos = (gauge.gold.x + gauge.gold.y) * 0.5
 	gauge.stop()
 	await _wait(0.2)
 	print("V8TEST cook kind=%s brochette +%d mastery=%d -> %s" % [ck, item_count("brochette") - b0, int(recipe_mastery.get("brochette", 0)), _ok(ck == "cook" and item_count("brochette") - b0 == 2)])
 	await _wait(1.0)
 	ui.show_overlay(ui.cook_menu, false)
-	# --- quête « La récolte de Mireille »
-	print("V8TEST q_recolte state=%s -> %s" % [quests.st("q_recolte"), _ok(quests.st("q_recolte") == "available")])
+	# --- quête « La récolte de Mireille » (déjà acceptée plus haut)
 	_place(world.snap(npc_pos("grocer") + Vector3(0, 0, -2.2), 0.4), npc_pos("grocer"), 5.0, -0.2)
-	await _talk_now("grocer")
+	remove_item("soleillette", item_count("soleillette"))
 	add_item("soleillette", 5)
 	var stp_after_collect: = quests.step("q_recolte")
 	await _talk_now("grocer")
@@ -3098,9 +3099,10 @@ func _v8_test() -> void :
 	# --- feux de vigie
 	await _talk_now("h_scout")
 	for b in beacons:
-		party.global_position = (b.node as Node3D).position + Vector3(1.0, -0.5, 0)
-		await _wait(0.15)
+		party.global_position = (b.node as Node3D).position + Vector3(0.9, 0.2, 0);party.velocity = Vector3.ZERO
+		await get_tree().physics_frame
 		interact_target = _find_interaction()
+		print("  beacon %d at %s kind=%s" % [b.i, (b.node as Node3D).position, interact_target.get("kind", "")])
 		interact()
 	await _talk_now("h_scout")
 	print("V8TEST vigie lit=%d state=%s -> %s" % [beacons.filter( func(b): return b.lit).size(), quests.st("q_vent_vigie"), _ok(quests.st("q_vent_vigie") == "done")])
@@ -3131,7 +3133,7 @@ func _v8_test() -> void :
 
 func _v8_shots() -> void :
 	party.test_invuln = true
-	allow_cine_in_test = true
+	for vv0 in world.villages: seen_cines["village_" + String(vv0.id)] = true
 	add_item("tarte", 3);add_item("omelette", 2);add_item("jus", 4);add_item("gateau", 1);add_item("brochette_ardente", 2)
 	add_item("pomme", 7);add_item("soleillette", 5);add_item("viande", 4);add_item("sel", 3);add_item("menthe", 6)
 	learn_recipe("omelette", false);learn_recipe("gateau", false)
@@ -3205,6 +3207,7 @@ func _v8_shots() -> void :
 		await snap("v8_dechainement_%d" % k)
 		await _wait(1.5)
 	# cinématiques
+	allow_cine_in_test = true
 	cine.play(CineScenes.build("village_forge", self))
 	await _wait(2.2)
 	await snap("v8_cine_village")

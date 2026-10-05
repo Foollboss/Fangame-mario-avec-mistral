@@ -76,6 +76,7 @@ def M():
         "soup": material("soup", (0.95, 0.6, 0.25), emit=(1.0, 0.55, 0.2), emit_strength=0.25, rough=0.3),
         "forge_glow": material("forge_glow", (1.0, 0.45, 0.12), emit=(1.0, 0.4, 0.1), emit_strength=3.5),
         "sign_wood": material("sign_wood", (0.68, 0.5, 0.32), "wood"),
+        "forge_stone": material("forge_stone", (0.36, 0.32, 0.31), "stone"),
     }
 
 
@@ -557,11 +558,13 @@ def cookpot():
 
 def forge():
     """Grande forge de Forgeval : four de pierre rougeoyant, cheminée et enclume."""
-    b = Builder("Forge", [MT["footing"], MT["forge_glow"], MT["iron"], MT["timber"], MT["tint_roof"]])
-    b.box("footing", (0, 0, 1.0), (3.2, 2.6, 2.0), bevel=0.06)
+    b = Builder("Forge", [MT["forge_stone"], MT["forge_glow"], MT["iron"], MT["timber"], MT["tint_roof"]])
+    b.box("forge_stone", (0, 0, 1.0), (3.2, 2.6, 2.0), bevel=0.06)
     b.box("forge_glow", (0, -1.31, 0.9), (1.4, 0.04, 1.0))
-    b.box("footing", (0, -1.36, 1.55), (1.8, 0.2, 0.3))
-    b.cyl("footing", (0.6, 0.4, 2.0), 0.55, 0.42, 3.2, segs=8, smooth=False)
+    b.box("forge_stone", (0, -1.36, 1.55), (1.8, 0.2, 0.3))
+    for k in range(5):
+        b.box("forge_glow", (-0.7 + k * 0.35, -1.33, 0.32), (0.18, 0.05, 0.1))
+    b.cyl("forge_stone", (0.6, 0.4, 2.0), 0.55, 0.42, 3.2, segs=8, smooth=False)
     b.cyl("iron", (0.6, 0.4, 5.15), 0.5, 0.5, 0.12, segs=8, smooth=False)
     b.box("iron", (-1.0, -2.6, 0.55), (0.9, 0.42, 0.18))
     b.box("iron", (-1.0, -2.6, 0.3), (0.32, 0.26, 0.5))
