@@ -1,0 +1,4 @@
+build/
+game/.godot/
+game/android/
+*.tmp
