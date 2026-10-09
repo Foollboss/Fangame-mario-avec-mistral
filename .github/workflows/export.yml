@@ -15,6 +15,9 @@ on:
       - ".github/workflows/export.yml"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 env:
   GODOT_VERSION: "4.5.1"
 
@@ -32,11 +35,15 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: SDK Android
-        uses: android-actions/setup-android@v3
-
-      - name: Paquets du SDK Android
-        run: sdkmanager "platform-tools" "build-tools;35.0.0" "platforms;android-35"
+      - name: SDK Android (déjà présent sur les machines GitHub)
+        run: |
+          set -e
+          SDK="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
+          SDKM=$(ls "$SDK"/cmdline-tools/*/bin/sdkmanager | sort -V | tail -n1)
+          yes | "$SDKM" --sdk_root="$SDK" --licenses > /dev/null || true
+          "$SDKM" --sdk_root="$SDK" "platform-tools" "build-tools;35.0.0" "platforms;android-35" > /dev/null
+          ls "$SDK/build-tools"
 
       - name: Godot + modèles d'export
         run: |
@@ -113,3 +120,24 @@ jobs:
         with:
           name: AsphaltUniteFangame-Android
           path: build/android/AsphaltUniteFangame.apk
+
+      # Publie (ou remplace) la Release "jeu" : liens de téléchargement directs et permanents
+      #   https://github.com/<propriétaire>/<dépôt>/releases/download/jeu/AsphaltUniteFangame.exe
+      #   https://github.com/<propriétaire>/<dépôt>/releases/download/jeu/AsphaltUniteFangame.apk
+      - name: Publier la Release "jeu"
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          gh release delete jeu --yes --cleanup-tag || true
+          gh release create jeu \
+            build/windows/AsphaltUniteFangame.exe \
+            build/android/AsphaltUniteFangame.apk \
+            --target "$GITHUB_SHA" \
+            --title "Asphalt Legends Unite Fangame — dernière version" \
+            --notes "Version compilée automatiquement depuis la branche ${GITHUB_REF_NAME} (commit ${GITHUB_SHA::7}).
+
+          - **Windows** : télécharge AsphaltUniteFangame.exe puis double-clique dessus (si SmartScreen s'affiche : Informations complémentaires → Exécuter quand même).
+          - **Android** : télécharge AsphaltUniteFangame.apk sur le téléphone, ouvre-le et autorise l'installation d'applications inconnues.
+
+          Fangame non officiel, gratuit, fait par des fans."
