@@ -57,6 +57,8 @@ var nitro_level := 0
 var nitro_t := 0.0
 var last_tap := -10.0
 var perfect_chain := 0
+var perfect_missed := false
+var _tap_gauge := 0.0
 
 var roll := 0.0
 var roll_speed := 0.0
@@ -123,12 +125,14 @@ func update(dt: float, race_time: float) -> void:
 		_update_wreck(dt)
 		return
 	if eliminated:
+		scraping = 0.0
 		v = maxf(0.0, v - 20.0 * dt)
-		s += v * dt
+		s = minf(s + v * dt, track.length - 2.0)
 		return
+	var s_prev := s
 	_nitro(dt)
 	_drive(dt)
-	_vertical(dt)
+	_vertical(dt, s_prev)
 	_walls()
 	gauge = clampf(gauge, 0.0, 1.0)
 	drift_press = false
@@ -139,23 +143,31 @@ func _nitro(dt: float) -> void:
 	if nitro_press:
 		nitro_press = false
 		var double_tap := (time - last_tap) < 0.32
+		# jauge mesurée au premier tap (elle baisse déjà entre les deux taps)
+		var g_tap := maxf(gauge, _tap_gauge) if double_tap else gauge
 		last_tap = time
+		_tap_gauge = gauge
 		if nitro_level == 0:
 			if gauge > 0.06:
 				nitro_level = 1
 				nitro_t = 0.0
+				perfect_missed = false
 				events.append(["nitro", 1])
 		elif nitro_level == 1 or nitro_level == 2:
-			if double_tap and gauge >= 0.88:
+			if double_tap and g_tap >= 0.88:
 				nitro_level = 3
 				nitro_t = 0.0
 				perfect_chain = 0
 				events.append(["shockwave", 0])
-			elif nitro_level == 1 and nitro_t >= PERFECT_T0 and nitro_t <= PERFECT_T1:
-				nitro_level = 2
-				stats.perfect_nitro += 1
-				perfect_chain += 1
-				events.append(["perfect", perfect_chain])
+			elif nitro_level == 1 and not double_tap:
+				# un seul essai par nitro : taper trop tôt ou trop tard fait rater le PARFAIT
+				if not perfect_missed and nitro_t >= PERFECT_T0 and nitro_t <= PERFECT_T1:
+					nitro_level = 2
+					stats.perfect_nitro += 1
+					perfect_chain += 1
+					events.append(["perfect", perfect_chain])
+				else:
+					perfect_missed = true
 	if nitro_level > 0:
 		var rate := 0.42 if nitro_level == 3 else (0.30 - nitro_stat * 0.0012)
 		gauge -= rate * dt
@@ -193,6 +205,10 @@ func _drive(dt: float) -> void:
 		v -= 26.0 * dt
 		if lvl == 1 or lvl == 2:
 			nitro_level = 0
+	elif not airborne and finished:
+		# après l'arrivée : freinage progressif pour s'arrêter dans la zone de dégagement
+		var room := maxf(track.length - 12.0 - s, 1.0)
+		v = maxf(0.0, v - maxf(v * v / (2.0 * room), 4.0) * dt)
 	elif not airborne:
 		if v < vcap:
 			var a: float = accel * (1.0 - pow(v / vcap, 2.0)) + NITRO_ACC[lvl]
@@ -224,21 +240,27 @@ func _drive(dt: float) -> void:
 	if absf(steer_in) < 0.15 and not drifting:
 		omega -= psi * 3.0 * sf
 	psi += (omega - kappa * dsdt) * dt
-	var lim := 0.5 if not drifting else 0.72
-	psi = clampf(psi, -lim, lim)
+	psi = clampf(psi, -0.72, 0.72)
+	if not drifting and absf(psi) > 0.5:
+		# sortie de dérapage : retour progressif (pas de saut d'une frame)
+		psi = move_toward(psi, signf(psi) * 0.5, 1.5 * dt)
 	s += dsdt * dt
 	x += v * sin(psi) * dt
-	stats.distance += dsdt * dt
+	if not finished:
+		stats.distance += dsdt * dt
 	var slip_t := drift_dir * 0.42 if drifting else 0.0
 	slip = lerpf(slip, slip_t, 1.0 - exp(-6.0 * dt))
 	steer_vis = lerpf(steer_vis, steer_in, 1.0 - exp(-10.0 * dt))
 
 
-func _vertical(dt: float) -> void:
+func _vertical(dt: float, s_prev: float) -> void:
 	var r := track.ramp_at(s, x)
 	var g := track.road_y(s) + r.x
 	if not airborne:
-		var new_vy := (g - yw) / dt
+		# seule la variation longitudinale du sol (à x constant) donne de la vitesse verticale :
+		# monter sur une rampe par le côté ne doit pas catapulter la voiture
+		var g_prev := track.road_y(s_prev) + track.ramp_at(s_prev, x).x
+		var new_vy := minf((g - yw) / dt, (g - g_prev) / dt)
 		if new_vy < vy - G * dt - 0.15 and v > 10.0:
 			_take_off()
 		else:
@@ -254,6 +276,11 @@ func _vertical(dt: float) -> void:
 		air_time += dt
 		vy -= G * grav_mult * dt
 		yw += vy * dt
+		if track.section_at(s) == "tunnel":
+			var ceil_y := track.road_y(s) + 5.5
+			if yw > ceil_y:
+				yw = ceil_y
+				vy = minf(vy, 0.0)
 		if roll_speed != 0.0:
 			roll += roll_speed * dt
 			if (roll_speed > 0.0 and roll >= roll_target) or (roll_speed < 0.0 and roll <= roll_target):
@@ -268,7 +295,8 @@ func _vertical(dt: float) -> void:
 			var t_rem := _air_time_left(g)
 			if t_rem > 0.55:
 				var dir := 1.0 if steer_in >= 0.0 else -1.0
-				spin_target = TAU * dir
+				# rotation positive autour de Y = nez vers la gauche : on inverse pour tourner du côté demandé
+				spin_target = -TAU * dir
 				spin_speed = spin_target / (t_rem * 0.85)
 				did_spin = true
 				events.append(["spin_start", 0])
@@ -293,9 +321,9 @@ func _take_off() -> void:
 	if on_ramp >= 0:
 		var rp: Dictionary = track.ramps[on_ramp]
 		if rp.kind == "ramp":
-			vy = maxf(vy, 6.0)
+			vy = clampf(vy, 6.0, 14.0)
 		else:
-			vy = maxf(vy, 8.5)
+			vy = clampf(vy, 8.5, 15.0)
 			var t_air := 2.0 * vy / G
 			var n_rolls := 2.0 if t_air > 2.1 and v > 70.0 else 1.0
 			var dir := 1.0 if rp.kind == "barrel_r" else -1.0
@@ -344,6 +372,8 @@ func _walls() -> void:
 	var rw := track.half_right(s) - half_w
 	if scraping > 0.0:
 		scraping -= 1.0 / 60.0
+	if s >= track.length - 2.0:
+		v = 0.0
 	if x > rw:
 		_hit_wall(1.0)
 		x = rw
@@ -372,6 +402,10 @@ func wreck(cause: String, by: Racer = null) -> void:
 		return
 	wrecked = true
 	wreck_t = 0.0
+	scraping = 0.0
+	braking = false
+	nitro_press = false
+	drift_press = false
 	stats.wrecks += 1
 	wreck_angvel = Vector3(randf_range(-4.0, 4.0), randf_range(-3.0, 3.0), randf_range(-8.0, 8.0))
 	wreck_rot = Vector3.ZERO
@@ -390,7 +424,7 @@ func wreck(cause: String, by: Racer = null) -> void:
 func _update_wreck(dt: float) -> void:
 	wreck_t += dt
 	v = maxf(0.0, v - v * 1.4 * dt - 4.0 * dt)
-	s += v * dt
+	s = minf(s + v * dt, track.length - 2.0)
 	x += wreck_vx * dt
 	wreck_vx *= exp(-2.0 * dt)
 	var lw := track.half_left(s) - half_w
@@ -406,7 +440,7 @@ func _update_wreck(dt: float) -> void:
 		vy = absf(vy) * 0.35
 		wreck_angvel *= 0.6
 	wreck_rot += wreck_angvel * dt
-	if wreck_t > WRECK_TIME:
+	if wreck_t > WRECK_TIME and not eliminated:
 		respawn()
 
 
@@ -419,6 +453,14 @@ func respawn(new_x: float = INF) -> void:
 	spin = 0.0
 	roll_speed = 0.0
 	spin_speed = 0.0
+	on_ramp = -1
+	ramp_roll = 0.0
+	did_roll = false
+	did_spin = false
+	grav_mult = 1.0
+	air_time = 0.0
+	scraping = 0.0
+	nitro_press = false
 	if new_x == INF:
 		var best := 0.0
 		var bd := 1e9
@@ -467,7 +509,7 @@ func sync_visual(dt: float) -> void:
 		var body_roll := steer_vis * 0.035 * clampf(v / 50.0, 0.0, 1.0)
 		var squat := -0.012 if nitro_level > 0 else (0.02 if braking else 0.0)
 		model.pivot.rotation = Vector3(pitch_vis - squat, spin, roll + ramp_roll + body_roll)
-	model.set_wheels(v * dt, steer_vis * 0.45)
+	model.set_wheels(v * dt, -steer_vis * 0.45)
 	model.set_nitro(nitro_level if not wrecked else 0)
 	model.set_smoke(drifting and not airborne)
 	model.set_sparks(scraping > 0.0, scrape_side)

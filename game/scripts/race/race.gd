@@ -89,14 +89,15 @@ func _ready() -> void:
 	controls = TouchControls.new()
 	add_child(controls)
 	var cmode: String = Game.setting("controls")
-	controls.setup("touchdrive" if touchdrive else cmode)
+	controls.setup(cmode, touchdrive)
 	controls.swipe.connect(_on_swipe)
-	if not (OS.has_feature("mobile") or DisplayServer.is_touchscreen_available()):
+	if not (OS.has_feature("mobile") or DisplayServer.is_touchscreen_available() or cfg.get("show_touch", false)):
 		controls.visible = false
 	_setup_audio()
 	if mode == "time_attack":
 		var ref: Dictionary = CarsDB.cars_of_class(ev.cls)[0]
-		target_time = track.length / (float(ref.top[0]) / 3.6 * 0.80)
+		# distance réelle grille -> ligne d'arrivée (sans la zone de dégagement)
+		target_time = (builder.finish_s - player.s) / (float(ref.top[0]) / 3.6 * 0.80)
 		for o in ev.objectives:
 			if o.type == "time":
 				o.value = target_time
@@ -319,6 +320,13 @@ func _physics_process(dt: float) -> void:
 				if r == player and r.finished:
 					_coast_input(r)
 				r.update(dt, race_time)
+				# réapparition : choisir une voie libre AVANT les collisions de cette frame
+				for e in r.events:
+					if e[0] == "respawn":
+						_safe_respawn(r)
+						if r.is_player:
+							for c in traffic.cars:
+								c.passed.erase(0)
 			_collide_racers()
 			_collide_traffic(dt)
 			traffic.update(dt, player.s)
@@ -330,8 +338,10 @@ func _physics_process(dt: float) -> void:
 	for r in racers:
 		r.sync_visual(dt)
 	cam.update_cam(dt)
-	hud.update_hud(dt, player, racers.size(), race_time, builder.finish_s)
-	hud.update_markers(cam, racers, player)
+	var shown_t := player.finish_time if player.finished else race_time
+	hud.update_hud(dt, player, racers.size(), shown_t, builder.finish_s)
+	if not _results_shown:
+		hud.update_markers(cam, racers, player)
 	_update_audio(dt)
 
 
@@ -568,8 +578,6 @@ func _process_events() -> void:
 			else:
 				if kind == "wreck":
 					pass
-				elif kind == "respawn":
-					_safe_respawn(r)
 				elif kind == "takedown":
 					if e[1] == player:
 						pass
@@ -624,9 +632,9 @@ func _player_event(kind: String, val) -> void:
 			hud.flash(0.9)
 			Game.vibrate(250)
 		"respawn":
-			_safe_respawn(player)
-			cam.set_mode("chase")
-			cam.snap()
+			if state != "finish":
+				cam.set_mode("chase")
+				cam.snap()
 		"takedown":
 			Sfx.play("takedown", 0.0)
 			hud.big("TAKEDOWN !", "+NITRO", UI.MAGENTA, 1.0)
@@ -696,6 +704,9 @@ func _rules(dt: float) -> void:
 				if last != null:
 					last.eliminated = true
 					last.model.visible = false
+					var eng := last.model.get_node_or_null("Engine") as AudioStreamPlayer3D
+					if eng:
+						eng.stop()
 					if last == player:
 						hud.big("ÉLIMINÉ !", "", UI.RED, 2.0)
 						Sfx.play("crash", -2.0)
@@ -710,7 +721,11 @@ func _rules(dt: float) -> void:
 		var left := target_time - race_time
 		hud.set_mode_text("OBJECTIF  " + CareerDB.format_time(maxf(left, 0.0)), UI.WHITE if left > 5.0 else UI.RED)
 	elif mode == "takedown" and state == "race":
-		hud.set_mode_text("TAKEDOWNS  %d / %d" % [player.stats.takedowns, int(ev.objectives[0].value)], UI.MAGENTA)
+		var goal := 0
+		for o in ev.objectives:
+			if o.type == "takedowns":
+				goal = maxi(goal, int(o.value))
+		hud.set_mode_text("TAKEDOWNS  %d / %d" % [player.stats.takedowns, goal], UI.MAGENTA)
 
 
 func _on_player_finish(eliminated: bool = false) -> void:
@@ -735,7 +750,7 @@ func _show_results() -> void:
 	var dnf := player.eliminated
 	var pos := player.place
 	if mode == "time_attack":
-		pos = 1 if race_time <= target_time else 2
+		pos = 1 if (not dnf and player.finish_time <= target_time) else 2
 	# temps estimés des concurrents qui n'ont pas fini
 	var table := []
 	var order := racers.duplicate()
@@ -836,9 +851,24 @@ func _update_audio(dt: float) -> void:
 # ---------------------------------------------------------------------------
 
 func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		# bouton Retour d'Android : pause / reprise au lieu de fermer le jeu
+		if _paused:
+			_resume()
+		elif not _results_shown and state != "finish":
+			_pause()
+		return
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_APPLICATION_PAUSED:
 		if state == "race" and not _paused:
 			_pause()
+
+
+func _exit_tree() -> void:
+	# la course règle l'échelle 3D / MSAA du viewport racine : on les remet pour le menu
+	var vp := get_viewport()
+	if vp:
+		vp.scaling_3d_scale = 1.0
+		vp.msaa_3d = Viewport.MSAA_2X if int(Game.setting("quality")) >= 1 else Viewport.MSAA_DISABLED
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -850,13 +880,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _pause() -> void:
-	if _results_shown:
+	if _results_shown or state == "finish":
 		return
 	_paused = true
 	controls.release_all()
 	hud.show_pause()
 	for p in [snd_engine, snd_engine2, snd_wind, snd_nitro, snd_screech, snd_scrape]:
 		p.stream_paused = true
+	_set_ai_engines_paused(true)
 
 
 func _resume() -> void:
@@ -864,14 +895,27 @@ func _resume() -> void:
 	hud.hide_pause()
 	for p in [snd_engine, snd_engine2, snd_wind, snd_nitro, snd_screech, snd_scrape]:
 		p.stream_paused = false
+	_set_ai_engines_paused(false)
+
+
+func _set_ai_engines_paused(p: bool) -> void:
+	for r in racers:
+		if r.model:
+			var a := r.model.get_node_or_null("Engine") as AudioStreamPlayer3D
+			if a:
+				a.stream_paused = p
 
 
 func _restart() -> void:
+	# recommencer coûte un carburant (comme lancer une course depuis le menu)
+	if not cfg.get("free_ride", false) and not Game.use_fuel(str(cfg.car)):
+		_quit()
+		return
 	Game.goto_scene("res://scenes/race.tscn")
 
 
 func _quit() -> void:
-	Game.menu_return = {"screen": _return_screen()}
+	Game.menu_return = {"screen": _return_screen(), "season": ev.get("season", "")}
 	Game.goto_scene("res://scenes/menu.tscn")
 
 

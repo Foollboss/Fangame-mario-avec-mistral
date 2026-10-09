@@ -270,6 +270,25 @@ func _straight_enough(s0: float, s1: float) -> bool:
 	return true
 
 
+## Zone de vol plane (pas de rampe sur une côte ou une crête : sauts démesurés)
+func _level_enough(s0: float, s1: float) -> bool:
+	var i0 := clampi(int(s0), 0, n - 1)
+	var i1 := clampi(int(s1), 0, n - 1)
+	var y0 := fwd[i0].y
+	for i in range(i0, i1):
+		if absf(fwd[i].y) > 0.035 or absf(fwd[i].y - y0) > 0.02:
+			return false
+	return true
+
+
+func _no_tunnel(s0: float, s1: float) -> bool:
+	var t := SEC_NAMES.find("tunnel")
+	for i in range(clampi(int(s0), 0, n - 1), clampi(int(s1), 0, n - 1)):
+		if sec[i] == t:
+			return false
+	return true
+
+
 func _place_ramps() -> void:
 	ramps.clear()
 	_ramp_buckets.clear()
@@ -282,7 +301,8 @@ func _place_ramps() -> void:
 		if roll < 0.38:
 			kind = "barrel_r" if rng.randf() < 0.5 else "barrel_l"
 		var r_len := 9.0 if kind == "ramp" else 8.0
-		if _straight_enough(s - 20.0, s + r_len + 70.0):
+		if _straight_enough(s - 20.0, s + r_len + 70.0) and _level_enough(s - 30.0, s + r_len + 200.0) \
+				and _no_tunnel(s - 20.0, s + r_len + 350.0):
 			var lane := rng.randi_range(0, lanes - 1)
 			if two_way:
 				lane = rng.randi_range(lanes / 2, lanes - 1) if rng.randf() < 0.75 else lane
@@ -293,7 +313,8 @@ func _place_ramps() -> void:
 			# parfois une deuxième rampe à côté
 			if kind == "ramp" and lanes >= 4 and rng.randf() < 0.35:
 				var lane2 := (lane + 2) % lanes
-				ramps.append({"s0": s, "len": r_len, "x": lane_center(lane2), "hw": 2.2, "h": 1.5, "kind": "ramp"})
+				if not is_oncoming_lane(lane2):
+					ramps.append({"s0": s, "len": r_len, "x": lane_center(lane2), "hw": 2.2, "h": 1.5, "kind": "ramp"})
 			count += 1
 			s += every * rng.randf_range(0.75, 1.25)
 		else:

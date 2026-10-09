@@ -31,7 +31,8 @@ func _ready() -> void:
 	var ev := {"id": "test", "track": track, "mode": mode, "cls": CarsDB.get_car(car).cls, "rank": Game.car_rank(car),
 		"objectives": [{"type": "position", "value": 3}, {"type": "barrel_rolls", "value": 1}], "credits": 1000,
 		"bp_car": "", "bp_n": 0, "opponents": 5}
-	Game.race_config = {"event": ev, "car": car, "touchdrive": true, "free_ride": true}
+	Game.race_config = {"event": ev, "car": car, "touchdrive": args.get("td", "1") == "1", "free_ride": true,
+		"show_touch": true}
 	var sc: PackedScene = load("res://scenes/race.tscn")
 	_race = sc.instantiate()
 	get_tree().root.add_child.call_deferred(_race)

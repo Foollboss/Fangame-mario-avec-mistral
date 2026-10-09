@@ -66,6 +66,7 @@ var markers: Array[Label] = []
 var pause_layer: Control
 var results_layer: Control
 var _big_t := 0.0
+var _big_fade: Tween
 var _flash := 0.0
 
 
@@ -216,9 +217,9 @@ func update_hud(dt: float, p: Racer, n_racers: int, race_time: float, track_len:
 	if _big_t > 0.0:
 		_big_t -= dt
 		if _big_t <= 0.0:
-			var tw := create_tween()
-			tw.tween_property(big_lbl, "modulate:a", 0.0, 0.25)
-			tw.parallel().tween_property(big_sub, "modulate:a", 0.0, 0.25)
+			_big_fade = create_tween()
+			_big_fade.tween_property(big_lbl, "modulate:a", 0.0, 0.25)
+			_big_fade.parallel().tween_property(big_sub, "modulate:a", 0.0, 0.25)
 
 
 func flash(a: float = 1.0) -> void:
@@ -279,6 +280,9 @@ func popup(text: String, sub: String = "", col: Color = UI.MAGENTA) -> void:
 
 
 func big(text: String, sub: String = "", col: Color = UI.WHITE, dur: float = 1.2) -> void:
+	# coupe le fondu du message précédent, sinon il masque le nouveau (compte à rebours 2, 1, GO)
+	if _big_fade and _big_fade.is_valid():
+		_big_fade.kill()
 	big_lbl.text = text
 	big_lbl.add_theme_color_override("font_color", col)
 	big_sub.text = sub

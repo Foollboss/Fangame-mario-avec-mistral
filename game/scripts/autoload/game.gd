@@ -25,6 +25,8 @@ var _fade_layer: CanvasLayer
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# le bouton Retour d'Android est géré par les scènes (pause / écran précédent)
+	get_tree().quit_on_go_back = false
 	_setup_input()
 	_setup_fade()
 	load_game()

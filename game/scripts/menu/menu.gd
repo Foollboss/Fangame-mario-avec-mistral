@@ -247,6 +247,15 @@ func _unhandled_input(event: InputEvent) -> void:
 		show_screen("career")
 
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		if current == "home" or current == "title":
+			dialog("QUITTER ?", "Veux-tu quitter Asphalt Unite Fangame ?",
+				[["QUITTER", "red", func(): get_tree().quit()], ["RESTER", "yellow", Callable()]])
+		else:
+			back()
+
+
 func showroom_interactive() -> bool:
 	return not bg.visible
 

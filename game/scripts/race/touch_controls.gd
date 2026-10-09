@@ -4,7 +4,8 @@ extends CanvasLayer
 
 signal swipe(dir: int)
 
-var mode := "buttons"      # buttons | tilt | touchdrive
+var mode := "buttons"      # buttons | tilt
+var touchdrive := false
 var _pad: Control
 var _buttons := {}         # nom -> {center, radius, action, tex, pressed}
 var _touch := {}           # index -> nom du bouton
@@ -12,8 +13,9 @@ var _swipe_start := {}     # index -> position
 var tilt_steer := 0.0
 
 
-func setup(p_mode: String) -> void:
-	mode = p_mode
+func setup(p_mode: String, p_touchdrive: bool = false) -> void:
+	mode = p_mode if p_mode == "tilt" else "buttons"
+	touchdrive = p_touchdrive
 	layer = 6
 	_pad = Control.new()
 	UI.full_rect(_pad)
@@ -21,10 +23,11 @@ func setup(p_mode: String) -> void:
 	_pad.draw.connect(_on_draw)
 	add_child(_pad)
 	_buttons.clear()
+	# flèches de direction à gauche (aussi en TouchDrive, pour reprendre la main), DRIFT + NITRO à droite
 	if mode == "buttons":
-		_add("left", "steer_left", "res://assets/ui/btn_left.png", 92.0)
-		_add("right", "steer_right", "res://assets/ui/btn_right.png", 92.0)
-	_add("nitro", "nitro", "res://assets/ui/btn_nitro.png", 108.0)
+		_add("left", "steer_left", "res://assets/ui/btn_left.png", 100.0)
+		_add("right", "steer_right", "res://assets/ui/btn_right.png", 100.0)
+	_add("nitro", "nitro", "res://assets/ui/btn_nitro.png", 112.0)
 	_add("drift", "drift", "res://assets/ui/btn_drift.png", 84.0)
 	get_viewport().size_changed.connect(_layout)
 	_layout()
@@ -40,10 +43,10 @@ func _layout() -> void:
 	var l := 40.0 + safe.x
 	var r := 40.0 + safe.z
 	if _buttons.has("left"):
-		_buttons.left.center = Vector2(l + 92.0, vs.y - 120.0)
-		_buttons.right.center = Vector2(l + 300.0, vs.y - 120.0)
-	_buttons.nitro.center = Vector2(vs.x - r - 108.0, vs.y - 150.0)
-	_buttons.drift.center = Vector2(vs.x - r - 330.0, vs.y - 105.0)
+		_buttons.left.center = Vector2(l + 100.0, vs.y - 125.0)
+		_buttons.right.center = Vector2(l + 320.0, vs.y - 125.0)
+	_buttons.nitro.center = Vector2(vs.x - r - 112.0, vs.y - 130.0)
+	_buttons.drift.center = Vector2(vs.x - r - 320.0, vs.y - 190.0)
 	_pad.queue_redraw()
 
 
@@ -122,8 +125,9 @@ func release_all() -> void:
 func steer_value() -> float:
 	if mode == "tilt":
 		var acc := Input.get_accelerometer()
-		# paysage : l'axe Y de l'accéléromètre donne l'inclinaison gauche/droite
-		var t := clampf(acc.y / 4.5, -1.0, 1.0)
+		# Godot compense la rotation de l'écran : en paysage, x = axe horizontal de l'écran
+		# (téléphone incliné vers la droite -> x > 0)
+		var t := clampf(acc.x / 4.5, -1.0, 1.0)
 		if absf(t) < 0.08:
 			t = 0.0
 		tilt_steer = lerpf(tilt_steer, t, 0.3)
