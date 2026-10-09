@@ -5,7 +5,7 @@ config_version=5
 
 [application]
 
-config/name="Asphalt Legends Unite - Fangame"
+config/name="Asphalt Fangame"
 config/description="Fangame de course arcade inspiré d'Asphalt Legends Unite (non officiel)."
 run/main_scene="res://scenes/hub.tscn"
 config/features=PackedStringArray("4.5", "Forward Plus")

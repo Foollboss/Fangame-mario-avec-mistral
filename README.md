@@ -18,13 +18,13 @@ Tous les modèles 3D (voitures, trafic, rampes, palmiers…) sont générés par
 ## Jouer
 
 ### Sur PC Windows (.exe)
-Télécharge `AsphaltUniteFangame.exe` et double-clique dessus. Tout est dans ce seul fichier (pas d'installation).
+Télécharge `AsphaltFangame.exe` et double-clique dessus. Tout est dans ce seul fichier (pas d'installation).
 Windows SmartScreen peut afficher « Windows a protégé votre ordinateur » car le fichier n'est pas signé : clique sur **Informations complémentaires → Exécuter quand même**.
 
 ### Sur téléphone Android (.apk)
-1. Copie `AsphaltUniteFangame.apk` sur le téléphone (ou télécharge-le directement dessus).
+1. Copie `AsphaltFangame.apk` sur le téléphone (ou télécharge-le directement dessus).
 2. Ouvre-le et autorise l'**installation d'applications inconnues** quand Android le demande.
-3. Lance « Asphalt Unite Fangame ». Le jeu se joue en paysage, avec le TouchDrive activé par défaut.
+3. Lance « Asphalt Fangame ». Le jeu se joue en paysage, avec le TouchDrive activé par défaut.
 
 Commandes tactiles : moitié gauche de l'écran = diriger (◀ ▶), bouton **NITRO** (double tape = onde de choc), bouton **DRIFT** (double tape = 360°), cadre « TOUCHDRIVE » en haut à gauche pour l'activer ou le désactiver, bouton retour d'Android = pause / écran précédent.
 Il faut un téléphone Android 64 bits récent (compatible Vulkan ou OpenGL ES 3).

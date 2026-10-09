@@ -95,35 +95,39 @@ jobs:
           echo "GODOT_ANDROID_KEYSTORE_RELEASE_USER=$KS_ALIAS" >> "$GITHUB_ENV"
           echo "GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD=$KS_PASS" >> "$GITHUB_ENV"
 
+      - name: Numéro de version Android
+        working-directory: godot
+        run: sed -i "s/^version\/code=.*/version\/code=${GITHUB_RUN_NUMBER}/" export_presets.cfg
+
       - name: Export Windows (.exe)
         working-directory: godot
         run: |
           mkdir -p ../build/windows
-          godot --headless --export-release "Windows Desktop" ../build/windows/AsphaltUniteFangame.exe
-          test -s ../build/windows/AsphaltUniteFangame.exe
+          godot --headless --export-release "Windows Desktop" ../build/windows/AsphaltFangame.exe
+          test -s ../build/windows/AsphaltFangame.exe
 
       - name: Export Android (.apk)
         working-directory: godot
         run: |
           mkdir -p ../build/android
-          godot --headless --export-release "Android" ../build/android/AsphaltUniteFangame.apk
-          test -s ../build/android/AsphaltUniteFangame.apk
+          godot --headless --export-release "Android" ../build/android/AsphaltFangame.apk
+          test -s ../build/android/AsphaltFangame.apk
 
       - name: Envoyer le .exe
         uses: actions/upload-artifact@v4
         with:
-          name: AsphaltUniteFangame-Windows
-          path: build/windows/AsphaltUniteFangame.exe
+          name: AsphaltFangame-Windows
+          path: build/windows/AsphaltFangame.exe
 
       - name: Envoyer l'APK
         uses: actions/upload-artifact@v4
         with:
-          name: AsphaltUniteFangame-Android
-          path: build/android/AsphaltUniteFangame.apk
+          name: AsphaltFangame-Android
+          path: build/android/AsphaltFangame.apk
 
       # Publie (ou remplace) la Release "jeu" : liens de téléchargement directs et permanents
-      #   https://github.com/<propriétaire>/<dépôt>/releases/download/jeu/AsphaltUniteFangame.exe
-      #   https://github.com/<propriétaire>/<dépôt>/releases/download/jeu/AsphaltUniteFangame.apk
+      #   https://github.com/<propriétaire>/<dépôt>/releases/download/jeu/AsphaltFangame.exe
+      #   https://github.com/<propriétaire>/<dépôt>/releases/download/jeu/AsphaltFangame.apk
       - name: Publier la Release "jeu"
         env:
           GH_TOKEN: ${{ github.token }}
@@ -131,13 +135,13 @@ jobs:
           set -e
           gh release delete jeu --yes --cleanup-tag || true
           gh release create jeu \
-            build/windows/AsphaltUniteFangame.exe \
-            build/android/AsphaltUniteFangame.apk \
+            build/windows/AsphaltFangame.exe \
+            build/android/AsphaltFangame.apk \
             --target "$GITHUB_SHA" \
-            --title "Asphalt Legends Unite Fangame — dernière version" \
+            --title "Asphalt Fangame — dernière version" \
             --notes "Version compilée automatiquement depuis la branche ${GITHUB_REF_NAME} (commit ${GITHUB_SHA::7}).
 
-          - **Windows** : télécharge AsphaltUniteFangame.exe puis double-clique dessus (si SmartScreen s'affiche : Informations complémentaires → Exécuter quand même).
-          - **Android** : télécharge AsphaltUniteFangame.apk sur le téléphone, ouvre-le et autorise l'installation d'applications inconnues.
+          - **Windows** : télécharge AsphaltFangame.exe puis double-clique dessus (si SmartScreen s'affiche : Informations complémentaires → Exécuter quand même).
+          - **Android** : télécharge AsphaltFangame.apk sur le téléphone, ouvre-le et autorise l'installation d'applications inconnues.
 
           Fangame non officiel, gratuit, fait par des fans."
