@@ -10,6 +10,7 @@ config/description="Fangame de course arcade inspiré d'Asphalt Legends Unite (n
 run/main_scene="res://scenes/hub.tscn"
 config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
+config/quit_on_go_back=false
 
 [autoload]
 
@@ -24,6 +25,7 @@ window/size/window_width_override=1600
 window/size/window_height_override=900
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+window/handheld/orientation=4
 
 [input_devices]
 
@@ -34,6 +36,9 @@ pointing/emulate_touch_from_mouse=false
 renderer/rendering_method="forward_plus"
 renderer/rendering_method.mobile="mobile"
 anti_aliasing/quality/msaa_3d=2
+anti_aliasing/quality/msaa_3d.mobile=0
 anti_aliasing/quality/screen_space_aa=1
 lights_and_shadows/directional_shadow/size=4096
+lights_and_shadows/directional_shadow/size.mobile=2048
+textures/vram_compression/import_etc2_astc=true
 environment/defaults/default_clear_color=Color(0.05, 0.0, 0.1, 1)

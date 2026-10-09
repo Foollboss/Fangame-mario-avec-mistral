@@ -430,6 +430,16 @@ func _on_bg_input(e: InputEvent) -> void:
 		car_pivot.rotation.y += e.relative.x * 0.008
 
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		if overlay:
+			_close_overlay()
+		elif current != "home":
+			back()
+		else:
+			get_tree().quit()
+
+
 func _unhandled_input(e: InputEvent) -> void:
 	if e.is_action_pressed("ui_cancel"):
 		if overlay:
@@ -1838,7 +1848,10 @@ func _screen_settings() -> void:
 			Audio.refresh_volumes())
 		h.add_child(sl)
 		v.add_child(h)
-	for t in [["PLEIN ÉCRAN", "fullscreen"], ["AFFICHER LES FPS", "show_fps"], ["TOUCHDRIVE PAR DÉFAUT", "touchdrive"]]:
+	var toggles := [["AFFICHER LES FPS", "show_fps"], ["TOUCHDRIVE PAR DÉFAUT", "touchdrive"]]
+	if not Game.is_mobile():
+		toggles.push_front(["PLEIN ÉCRAN", "fullscreen"])
+	for t in toggles:
 		var h2 := K.hbox(12)
 		var l2 := K.label(t[0], 26, Color.WHITE, "black")
 		l2.custom_minimum_size = Vector2(380, 0)

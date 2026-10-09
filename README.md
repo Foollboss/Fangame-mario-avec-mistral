@@ -15,13 +15,28 @@ Tous les modèles 3D (voitures, trafic, rampes, palmiers…) sont générés par
 
 > Les captures ont été faites avec le rendu logiciel « Compatibility » (sans SSAO/SSR/ombres douces). Sur un vrai PC avec le rendu Forward+, c'est plus joli.
 
-## Lancer le jeu
+## Jouer
 
+### Sur PC Windows (.exe)
+Télécharge `AsphaltUniteFangame.exe` et double-clique dessus. Tout est dans ce seul fichier (pas d'installation).
+Windows SmartScreen peut afficher « Windows a protégé votre ordinateur » car le fichier n'est pas signé : clique sur **Informations complémentaires → Exécuter quand même**.
+
+### Sur téléphone Android (.apk)
+1. Copie `AsphaltUniteFangame.apk` sur le téléphone (ou télécharge-le directement dessus).
+2. Ouvre-le et autorise l'**installation d'applications inconnues** quand Android le demande.
+3. Lance « Asphalt Unite Fangame ». Le jeu se joue en paysage, avec le TouchDrive activé par défaut.
+
+Commandes tactiles : moitié gauche de l'écran = diriger (◀ ▶), bouton **NITRO** (double tape = onde de choc), bouton **DRIFT** (double tape = 360°), cadre « TOUCHDRIVE » en haut à gauche pour l'activer ou le désactiver, bouton retour d'Android = pause / écran précédent.
+Il faut un téléphone Android 64 bits récent (compatible Vulkan ou OpenGL ES 3).
+
+### Où trouver les fichiers
+- Les fichiers `.exe` et `.apk` sont générés automatiquement par GitHub à chaque modification du dossier `godot/` : onglet **Actions** du dépôt → dernière exécution « Export du jeu » → section **Artifacts**.
+- Tu peux aussi les générer toi-même : ouvre le projet dans Godot 4.5 → *Projet → Exporter* → « Windows Desktop » ou « Android » (les préréglages sont déjà prêts dans `godot/export_presets.cfg`).
+
+### Depuis les sources (Godot)
 1. Installe **Godot 4.5** (version standard, pas besoin de .NET) : https://godotengine.org/download
 2. Ouvre Godot → **Importer** → choisis `godot/project.godot`.
 3. Le premier import des modèles prend quelques secondes, puis appuie sur **F5** (▶).
-
-Pour exporter un .exe / .apk : *Projet → Exporter* (installe les modèles d'export proposés par Godot).
 
 ## Ce qu'il y a dedans
 

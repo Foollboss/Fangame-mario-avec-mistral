@@ -1,0 +1,115 @@
+# Compile automatiquement le jeu en .exe (Windows) et .apk (Android).
+# Les fichiers sont téléchargeables dans l'onglet "Actions" de GitHub > dernière exécution > "Artifacts".
+#
+# Signature Android : par défaut une clé temporaire est générée à chaque compilation.
+# Pour garder toujours la même clé (mises à jour sans désinstaller), ajoute ces secrets au dépôt :
+#   ANDROID_KEYSTORE_BASE64   (base64 de ton fichier .keystore)
+#   ANDROID_KEYSTORE_ALIAS
+#   ANDROID_KEYSTORE_PASSWORD
+name: Export du jeu (Windows + Android)
+
+on:
+  push:
+    paths:
+      - "godot/**"
+      - ".github/workflows/export.yml"
+  workflow_dispatch:
+
+env:
+  GODOT_VERSION: "4.5.1"
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: SDK Android
+        uses: android-actions/setup-android@v3
+
+      - name: Paquets du SDK Android
+        run: sdkmanager "platform-tools" "build-tools;35.0.0" "platforms;android-35"
+
+      - name: Godot + modèles d'export
+        run: |
+          set -e
+          wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip" -O godot.zip
+          unzip -q godot.zip
+          sudo mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" /usr/local/bin/godot
+          wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz" -O templates.tpz
+          T="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          mkdir -p "$T"
+          unzip -q -o -j templates.tpz "templates/version.txt" "templates/windows_release_x86_64.exe" "templates/android_release.apk" -d "$T"
+          rm -f godot.zip templates.tpz
+
+      - name: Import du projet
+        working-directory: godot
+        run: godot --headless --import || godot --headless --import
+
+      - name: Réglages de l'éditeur (SDK Android, Java)
+        run: |
+          set -e
+          mkdir -p "$HOME/.config/godot"
+          F=$(ls "$HOME"/.config/godot/editor_settings-*.tres 2>/dev/null | head -n1 || true)
+          if [ -z "$F" ]; then
+            F="$HOME/.config/godot/editor_settings-${GODOT_VERSION%.*}.tres"
+            printf '[gd_resource type="EditorSettings" format=3]\n\n[resource]\n' > "$F"
+          fi
+          sed -i '/^export\/android\/android_sdk_path/d;/^export\/android\/java_sdk_path/d' "$F"
+          echo "export/android/android_sdk_path = \"$ANDROID_SDK_ROOT\"" >> "$F"
+          echo "export/android/java_sdk_path = \"$JAVA_HOME\"" >> "$F"
+
+      - name: Clé de signature Android
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_ALIAS: ${{ secrets.ANDROID_KEYSTORE_ALIAS }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          set -e
+          KS="$RUNNER_TEMP/release.keystore"
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > "$KS"
+          else
+            KS_ALIAS=fangame
+            KS_PASS=$(openssl rand -hex 12)
+            keytool -genkeypair -keystore "$KS" -alias "$KS_ALIAS" -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass "$KS_PASS" -keypass "$KS_PASS" -dname "CN=Asphalt Unite Fangame, O=Fangame, C=FR"
+          fi
+          echo "::add-mask::$KS_PASS"
+          echo "GODOT_ANDROID_KEYSTORE_RELEASE_PATH=$KS" >> "$GITHUB_ENV"
+          echo "GODOT_ANDROID_KEYSTORE_RELEASE_USER=$KS_ALIAS" >> "$GITHUB_ENV"
+          echo "GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD=$KS_PASS" >> "$GITHUB_ENV"
+
+      - name: Export Windows (.exe)
+        working-directory: godot
+        run: |
+          mkdir -p ../build/windows
+          godot --headless --export-release "Windows Desktop" ../build/windows/AsphaltUniteFangame.exe
+          test -s ../build/windows/AsphaltUniteFangame.exe
+
+      - name: Export Android (.apk)
+        working-directory: godot
+        run: |
+          mkdir -p ../build/android
+          godot --headless --export-release "Android" ../build/android/AsphaltUniteFangame.apk
+          test -s ../build/android/AsphaltUniteFangame.apk
+
+      - name: Envoyer le .exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: AsphaltUniteFangame-Windows
+          path: build/windows/AsphaltUniteFangame.exe
+
+      - name: Envoyer l'APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AsphaltUniteFangame-Android
+          path: build/android/AsphaltUniteFangame.apk

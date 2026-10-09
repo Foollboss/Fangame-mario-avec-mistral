@@ -152,12 +152,16 @@ func _default_save() -> Dictionary:
 				  "perfect_nitros": 0, "near_misses": 0, "distance_km": 0.0, "best_times": {}},
 		"daily": {"day": "", "progress": {}, "claimed": {}},
 		"pass": {"xp": 0, "claimed": []},
-		"settings": {"quality": 2, "touchdrive": false, "sfx": 0.8, "music": 0.5, "engine": 0.7,
+		"settings": {"quality": 1 if is_mobile() else 2, "touchdrive": is_mobile(), "sfx": 0.8, "music": 0.5, "engine": 0.7,
 					 "show_fps": false, "camera": 0, "fullscreen": false},
 	}
 	for c in cars:
 		s["cars"][c["id"]] = {"owned": c.get("free", false), "stars": 1, "plans": 0, "upg": [0, 0, 0, 0], "paint": ""}
 	return s
+
+
+func is_mobile() -> bool:
+	return OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("ios")
 
 
 func _load_save() -> void:
@@ -210,7 +214,7 @@ func set_setting(key: String, value) -> void:
 
 
 func apply_window_settings() -> void:
-	if DisplayServer.get_name() == "headless":
+	if DisplayServer.get_name() == "headless" or is_mobile():
 		return
 	var fs: bool = setting("fullscreen", false)
 	var mode := DisplayServer.window_get_mode()

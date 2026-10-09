@@ -153,6 +153,14 @@ func _shuffle(a: Array) -> void:
 
 
 # ---------------------------------------------------------------------------
+func _notification(what: int) -> void:
+	# bouton « retour » d'Android : met en pause / reprend
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST and state != "results":
+		_toggle_pause()
+	elif what == NOTIFICATION_APPLICATION_FOCUS_OUT and not paused and state == "racing":
+		_toggle_pause()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause") and state != "results":
 		_toggle_pause()

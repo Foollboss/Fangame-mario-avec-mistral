@@ -63,7 +63,10 @@ func _ready() -> void:
 	_build_board()
 	_build_touch()
 
-	hint = K.outlined(K.label("← →  DIRIGER    ↑ / ESPACE  NITRO (x2 = ONDE DE CHOC)    ↓ / MAJ  DRIFT (x2 = 360°)    T  TOUCHDRIVE    C  CAMÉRA", 18, Color(1, 1, 1, 0.85), "semi", HORIZONTAL_ALIGNMENT_CENTER), 5)
+	var hint_text := "← →  DIRIGER    ↑ / ESPACE  NITRO (x2 = ONDE DE CHOC)    ↓ / MAJ  DRIFT (x2 = 360°)    T  TOUCHDRIVE    C  CAMÉRA"
+	if DisplayServer.is_touchscreen_available():
+		hint_text = "◀ ▶  DIRIGER (MOITIÉ GAUCHE)    NITRO : TAPE (x2 = ONDE DE CHOC)    DRIFT (x2 = 360°)    TOUCHDRIVE : TOUCHE LE CADRE EN HAUT À GAUCHE"
+	hint = K.outlined(K.label(hint_text, 18, Color(1, 1, 1, 0.85), "semi", HORIZONTAL_ALIGNMENT_CENTER), 5)
 	K.place(hint, Control.PRESET_CENTER_BOTTOM, Vector2(-700, -60), Vector2(1400, 40))
 	root.add_child(hint)
 
@@ -245,7 +248,7 @@ func update_board(order: Array, player: Racer) -> void:
 func _build_touch() -> void:
 	if not DisplayServer.is_touchscreen_available():
 		return
-	var vp := Vector2(1920, 1080)
+	var vp := get_viewport().get_visible_rect().size
 	var defs := [
 		["steer_left", Rect2(0, vp.y * 0.35, vp.x * 0.3, vp.y * 0.65), "◀"],
 		["steer_right", Rect2(vp.x * 0.3, vp.y * 0.35, vp.x * 0.3, vp.y * 0.65), "▶"],

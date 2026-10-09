@@ -1,3 +1,4 @@
 godot/.godot/
 *.blend1
 __pycache__/
+build/
