@@ -681,8 +681,12 @@ def app_icon():
         t = y / S
         c = (int(40 + 120 * t), int(10 + 20 * t), int(90 + 120 * (1 - t)), 255)
         d.line([0, y, S, y], fill=c)
+    stripes = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(stripes)
     for k in range(-S, S * 2, 70):
-        d.polygon([(k, S), (k + 30, S), (k + 230, 0), (k + 200, 0)], fill=(255, 255, 255, 18))
+        sd.polygon([(k, S), (k + 30, S), (k + 230, 0), (k + 200, 0)], fill=(255, 255, 255, 28))
+    im = Image.alpha_composite(im, stripes)
+    d = ImageDraw.Draw(im)
     f = font(300)
     d.text((70 + 8, 40 + 8), "A", font=f, fill=(0, 0, 0, 160))
     d.text((70, 40), "A", font=f, fill=(255, 255, 255, 255))

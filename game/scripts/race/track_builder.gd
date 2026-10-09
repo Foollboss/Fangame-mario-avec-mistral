@@ -708,7 +708,8 @@ func _billboard(i: int, side: int, dist: float) -> void:
 	MatLib.apply_props(inst)
 	var b := _flat_basis(i)
 	# orienté vers les pilotes qui arrivent, légèrement tourné vers la route
-	var bb := b.rotated(Vector3.UP, (-0.35 if side > 0 else 0.35))
+	# la face avant du panneau (modèle Blender) regarde vers -Z : demi-tour pour qu'elle fasse face aux pilotes
+	var bb := b.rotated(Vector3.UP, PI + (-0.35 if side > 0 else 0.35))
 	inst.transform = Transform3D(bb, P(i, side * dist, 0.0))
 	var k := rng.randi_range(0, 3)
 	for mi in MatLib._mesh_instances(inst):
@@ -780,13 +781,29 @@ func _build_ramps() -> void:
 		# flèches lumineuses au sol pour signaler la rampe
 		var arrow := MeshInstance3D.new()
 		var q := QuadMesh.new()
-		q.size = Vector2(r.hw * 1.6, 3.0)
+		q.size = Vector2(r.hw * 1.3, 2.4)
 		q.orientation = PlaneMesh.FACE_Y
 		arrow.mesh = q
-		arrow.material_override = MatLib.emissive("ramp_arrow", Color(1.0, 0.75, 0.0), 1.5)
+		arrow.material_override = _arrow_material()
 		arrow.transform = Transform3D(track.basis_at(r.s0 - 14.0), track.point(r.s0 - 14.0, r.x, 0.02))
 		arrow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		root.add_child(arrow)
+
+
+func _arrow_material() -> Material:
+	if _m.has("arrow"):
+		return _m.arrow
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = MatLib.tex("res://assets/textures/ramp_stripes.png")
+	m.emission_enabled = true
+	m.emission_texture = MatLib.tex("res://assets/textures/ramp_stripes.png")
+	m.emission_energy_multiplier = 0.9 if night else 0.35
+	m.uv1_scale = Vector3(1.0, 0.5, 1.0)
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.albedo_color = Color(1, 1, 1, 0.85)
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_m.arrow = m
+	return m
 
 
 func _build_gantry(s: float, banner: String) -> void:

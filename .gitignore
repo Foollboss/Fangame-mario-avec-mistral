@@ -2,3 +2,4 @@ build/
 game/.godot/
 game/android/
 *.tmp
+release/*.apk
