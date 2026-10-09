@@ -3,3 +3,4 @@ game/.godot/
 game/android/
 *.tmp
 release/*.apk
+__pycache__/
