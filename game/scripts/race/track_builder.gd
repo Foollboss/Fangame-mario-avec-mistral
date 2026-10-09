@@ -33,7 +33,7 @@ func build(p_track: Track, p_root: Node3D, p_quality: int) -> void:
 	env_id = track.def.env
 	night = bool(env.night)
 	rng.seed = int(track.def.seed) * 13 + 1
-	finish_s = track.length - 30.0
+	finish_s = track.length - track.runoff
 	_setup_materials()
 	_compute_levels()
 	var n_chunks := int(ceil(float(track.n - 1) / CHUNK))
@@ -643,6 +643,8 @@ func _street_props(i0: int, i1: int) -> void:
 				if i % 36 == (0 if side > 0 else 18):
 					var lb := b if side < 0 else b.rotated(Vector3.UP, PI)
 					_add_prop("streetlamp", Transform3D(lb, P(i, side * (e + 0.5), 0.15)), s)
+					if night:
+						_add_prop("light_pool", Transform3D(b, P(i, side * (e - 2.0), 0.03)), s)
 				# végétation
 				if i % 16 == (8 if side > 0 else 0) and not _near_intersection(s, 10.0):
 					var vtype := "palm" if (veg == "palm" or sk == "beach") else "tree"
@@ -655,6 +657,8 @@ func _street_props(i0: int, i1: int) -> void:
 				if i % 40 == (0 if side > 0 else 20):
 					var hb := b if side < 0 else b.rotated(Vector3.UP, PI)
 					_add_prop("streetlamp", Transform3D(hb, P(i, side * (e + 0.8), 0.0)), s)
+					if night:
+						_add_prop("light_pool", Transform3D(b, P(i, side * (e - 1.8), 0.03)), s)
 				if i % 180 == (60 if side > 0 else 150) and quality >= 1:
 					_billboard(i, side, e + 14.0)
 				if env_id == "la" and i % 22 == 11:
@@ -678,6 +682,22 @@ func _street_props(i0: int, i1: int) -> void:
 				var e3 := track.wl[i]
 				_add_prop("traffic_light", Transform3D(bb, P(i, -e3 - 0.6, 0.15)), s)
 		s += 2.0
+
+
+func _light_pool_mesh() -> Mesh:
+	var q := QuadMesh.new()
+	q.size = Vector2(13.0, 13.0)
+	q.orientation = PlaneMesh.FACE_Y
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_texture = CarModel._blob_texture()
+	mat.albedo_color = Color(1.0, 0.75, 0.45, 0.32)
+	mat.disable_receive_shadows = true
+	mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+	q.material = mat
+	return q
 
 
 func _billboard(i: int, side: int, dist: float) -> void:
@@ -710,9 +730,13 @@ func _flush_props() -> void:
 		"rock_a": "res://assets/props/rock_a.glb", "rock_b": "res://assets/props/rock_b.glb",
 	}
 	for nm in _props:
-		if not paths.has(nm) or not ResourceLoader.exists(paths[nm]):
+		var mesh: Mesh = null
+		if nm == "light_pool":
+			mesh = _light_pool_mesh()
+		elif not paths.has(nm) or not ResourceLoader.exists(paths[nm]):
 			continue
-		var mesh := MatLib.prop_mesh(paths[nm])
+		else:
+			mesh = MatLib.prop_mesh(paths[nm])
 		if mesh == null:
 			continue
 		for g in _props[nm]:
@@ -728,7 +752,7 @@ func _flush_props() -> void:
 			mmi.name = "%s_%d" % [nm, g]
 			mmi.visibility_range_end = 700.0
 			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if quality >= 1 and nm != "rock_a" \
-				else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				and nm != "light_pool" else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			root.add_child(mmi)
 
 

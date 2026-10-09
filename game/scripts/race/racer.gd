@@ -67,6 +67,7 @@ var spin_target := 0.0
 var did_roll := false
 var did_spin := false
 var pitch_vis := 0.0
+var grav_mult := 1.0
 
 var wrecked := false
 var wreck_t := 0.0
@@ -251,7 +252,7 @@ func _vertical(dt: float) -> void:
 				ramp_roll = lerpf(ramp_roll, 0.0, 1.0 - exp(-10.0 * dt))
 	if airborne:
 		air_time += dt
-		vy -= G * dt
+		vy -= G * grav_mult * dt
 		yw += vy * dt
 		if roll_speed != 0.0:
 			roll += roll_speed * dt
@@ -277,7 +278,8 @@ func _vertical(dt: float) -> void:
 
 func _air_time_left(g: float) -> float:
 	var h := yw - g
-	return (vy + sqrt(maxf(vy * vy + 2.0 * G * h, 0.0))) / G
+	var gg := G * grav_mult
+	return (vy + sqrt(maxf(vy * vy + 2.0 * gg * h, 0.0))) / gg
 
 
 func _take_off() -> void:
@@ -286,6 +288,8 @@ func _take_off() -> void:
 	did_roll = false
 	did_spin = false
 	roll = ramp_roll
+	# saut naturel (crête de colline) : gravité renforcée pour des sauts courts façon Asphalt
+	grav_mult = 1.0 if on_ramp >= 0 else 1.9
 	if on_ramp >= 0:
 		var rp: Dictionary = track.ramps[on_ramp]
 		if rp.kind == "ramp":
@@ -335,6 +339,7 @@ func _land(g: float) -> void:
 
 
 func _walls() -> void:
+	s = minf(s, track.length - 2.0)
 	var lw := track.half_left(s) - half_w
 	var rw := track.half_right(s) - half_w
 	if scraping > 0.0:

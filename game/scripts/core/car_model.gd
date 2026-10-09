@@ -92,9 +92,9 @@ func setup(id: String, color: Color, opts: Dictionary = {}) -> void:
 	if opts.get("headlight", false):
 		_headlight = SpotLight3D.new()
 		_headlight.position = Vector3(0, 0.75 - COG, -length * 0.5)
-		_headlight.spot_range = 55.0
+		_headlight.spot_range = 75.0
 		_headlight.spot_angle = 32.0
-		_headlight.light_energy = 4.0
+		_headlight.light_energy = 9.0
 		_headlight.light_color = Color(0.9, 0.95, 1.0)
 		_headlight.shadow_enabled = false
 		_headlight.rotation_degrees = Vector3(-6, 0, 0)

@@ -6,9 +6,9 @@ var target: Racer
 var mode := "intro"
 var t := 0.0
 var trauma := 0.0
-var base_fov := 68.0
-var dist := 6.4
-var height := 2.15
+var base_fov := 64.0
+var dist := 5.1
+var height := 1.7
 var _pos := Vector3.ZERO
 var _look := Vector3.ZERO
 var _fwd := Vector3.FORWARD
@@ -92,11 +92,11 @@ func _compute_chase(dt: float, instant: bool) -> void:
 	var k := 1.0 if instant else 1.0 - exp(-7.0 * dt)
 	_fwd = _fwd.lerp(dir, k).normalized()
 	var spd := clampf(r.v / 90.0, 0.0, 1.0)
-	var d := dist + spd * 1.2 - (0.5 if r.nitro_level > 0 else 0.0)
+	var d := dist + spd * 0.7 - (0.4 if r.nitro_level > 0 else 0.0)
 	var car := r.model.global_position
 	var ground := tr.point(r.s, r.x).y
-	var cy := lerpf(ground, car.y, 0.55) if r.airborne else car.y
-	var desired := Vector3(car.x, cy, car.z) - _fwd * d + Vector3.UP * (height + spd * 0.25)
+	var cy := lerpf(ground, car.y, 0.82) if r.airborne else car.y
+	var desired := Vector3(car.x, cy, car.z) - _fwd * d + Vector3.UP * (height + spd * 0.15)
 	var kp := 1.0 if instant else 1.0 - exp(-12.0 * dt)
 	_pos.x = lerpf(_pos.x, desired.x, kp)
 	_pos.z = lerpf(_pos.z, desired.z, kp)
@@ -104,7 +104,7 @@ func _compute_chase(dt: float, instant: bool) -> void:
 	var floor_y := tr.road_y(r.s - d) + 0.8
 	_pos.y = maxf(_pos.y, floor_y)
 	global_position = _pos
-	var look := Vector3(car.x, cy + 0.9, car.z) + _fwd * 5.0
+	var look := Vector3(car.x, cy + 0.85, car.z) + _fwd * 4.0
 	_look = look if instant else _look.lerp(look, 1.0 - exp(-14.0 * dt))
 	look_at(_look, Vector3.UP)
 	var fov_t := base_fov + spd * 9.0 + (7.0 if r.nitro_level > 0 else 0.0) + (5.0 if r.nitro_level >= 2 else 0.0)

@@ -14,7 +14,7 @@ const ENVS := {
 		"fog_density": 0.0018, "night": false, "ground": "grass", "styles": ["stucco", "stucco", "office", "brick"],
 		"heights": [7.0, 22.0], "veg": "palm", "accent": Color("#ff8a3d")},
 	"tokyo": {"name": "Tokyo", "sky": "res://assets/sky/sky_tokyo.png", "sun_dir": Vector3(0.3, 0.7, 0.6),
-		"sun_color": Color(0.45, 0.5, 0.85), "sun_energy": 0.25, "ambient": 0.35, "fog": Color(0.12, 0.06, 0.22),
+		"sun_color": Color(0.55, 0.6, 0.95), "sun_energy": 0.5, "ambient": 0.8, "fog": Color(0.12, 0.06, 0.22),
 		"fog_density": 0.0025, "night": true, "ground": "concrete", "styles": ["tokyo", "tokyo", "office", "tokyo"],
 		"heights": [25.0, 90.0], "veg": "tree", "accent": Color("#2fe0ff")},
 	"desert": {"name": "Nevada", "sky": "res://assets/sky/sky_desert.png", "sun_dir": Vector3(-0.3, 0.8, 0.45),

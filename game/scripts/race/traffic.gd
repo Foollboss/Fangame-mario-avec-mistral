@@ -40,7 +40,7 @@ func setup(p_track: Track, p_density: float, p_night: bool, quality: int) -> voi
 	density = p_density
 	night = p_night
 	rng.seed = track.def.seed * 7 + 3
-	_finish_s = track.length - 40.0
+	_finish_s = track.length - track.runoff - 40.0
 	target = int(round(lerpf(5.0, 13.0, density))) - (2 if quality == 0 else 0)
 	var palette := ["#d8d8d8", "#202022", "#8a8f99", "#2b3a55", "#7a1f1f", "#e8e8e8", "#3d5c3a", "#b8a27a",
 		"#4a4f57", "#1f3f7a", "#c9c9c9", "#5a2a5a"]

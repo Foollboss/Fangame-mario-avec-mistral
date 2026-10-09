@@ -102,7 +102,7 @@ def asphalt_wet():
     S = 512
     fine = fnoise(S, S, 0.4, 13)
     big = fnoise(S, S, 3.0, 14)
-    base = 0.09 + 0.03 * (big - 0.5) + 0.05 * (fine - 0.5)
+    base = 0.15 + 0.03 * (big - 0.5) + 0.05 * (fine - 0.5)
     col = np.stack([base, base, base * 1.08], -1)
     save_rgb(col, os.path.join(TEX, "asphalt_wet_albedo.png"))
     puddle = fnoise(S, S, 3.5, 15)

@@ -230,9 +230,9 @@ static func facade(style: String) -> ShaderMaterial:
 	m.set_shader_parameter("emit_tex", tex("res://assets/textures/facade_%s_emit.png" % style))
 	var e := 0.0
 	if night:
-		e = 2.2
+		e = 0.75 if style == "shop" else 0.9
 	elif style == "shop":
-		e = 0.6
+		e = 0.45
 	m.set_shader_parameter("emit_strength", e)
 	m.set_shader_parameter("glass_rough", 0.12 if style == "office" else 0.2)
 	_cache[key] = m

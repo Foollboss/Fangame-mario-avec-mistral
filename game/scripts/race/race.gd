@@ -71,6 +71,7 @@ func _ready() -> void:
 		dens *= 0.8
 	traffic.setup(track, dens, bool(env.night), quality)
 	_spawn_racers()
+	_update_places()
 	cam = ChaseCam.new()
 	world.add_child(cam)
 	cam.target = player
@@ -123,15 +124,18 @@ func _setup_environment(env: Dictionary) -> void:
 	e.sky = sky
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 	e.ambient_light_energy = float(env.ambient)
+	if env.night:
+		e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+		e.ambient_light_color = Color(0.42, 0.36, 0.62)
 	e.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	e.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	e.tonemap_exposure = 1.0 if not env.night else 1.15
+	e.tonemap_exposure = 1.0
 	e.tonemap_white = 6.0
 	e.glow_enabled = quality >= 1
-	e.glow_intensity = 0.8 if not env.night else 1.2
+	e.glow_intensity = 0.8 if not env.night else 0.9
 	e.glow_strength = 1.0
 	e.glow_bloom = 0.05 if not env.night else 0.15
-	e.glow_hdr_threshold = 1.0 if not env.night else 0.7
+	e.glow_hdr_threshold = 1.0 if not env.night else 0.95
 	e.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN
 	e.fog_enabled = true
 	e.fog_light_color = env.fog
@@ -365,7 +369,7 @@ func _coast_input(r: Racer) -> void:
 		r.ai = AIDriver.new(0.6, 0.0, 7)
 		r.ai.auto_nitro = false
 	r.ai.drive(r, self, get_physics_process_delta_time())
-	r.speed_factor = 0.8
+	r.speed_factor = 0.5
 
 
 func _rubber_band(r: Racer) -> void:

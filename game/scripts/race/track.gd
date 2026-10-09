@@ -24,6 +24,7 @@ var two_way := false
 var ramps: Array = []
 var _ramp_buckets := {}
 var intersections: Array = []
+var runoff := 320.0
 var rng := RandomNumberGenerator.new()
 
 
@@ -78,6 +79,16 @@ func build(track_def: Dictionary) -> void:
 		acc_s += steps
 		acc_h += dh
 		h_ctrl.append([acc_s, acc_h])
+	# zone de dégagement après l'arrivée
+	var last_sec: int = secs[secs.size() - 1]
+	for i in int(runoff):
+		p2 += Vector2(sin(th), -cos(th))
+		pts2.append(p2)
+		ths.append(th)
+		ks.append(0.0)
+		secs.append(last_sec)
+	acc_s += runoff
+	h_ctrl.append([acc_s, acc_h])
 	n = pts2.size()
 	length = float(n - 1)
 	# hauteurs : linéaire par morceaux puis lissage (crêtes encore marquées -> sauts)
@@ -265,7 +276,7 @@ func _place_ramps() -> void:
 	var every := float(def.get("ramp_every", 260.0))
 	var s := 230.0
 	var count := 0
-	while s < length - 230.0:
+	while s < length - runoff - 230.0:
 		var kind := "ramp"
 		var roll := rng.randf()
 		if roll < 0.38:
@@ -298,7 +309,7 @@ func _place_ramps() -> void:
 func _place_intersections() -> void:
 	intersections.clear()
 	var s := 140.0
-	while s < length - 120.0:
+	while s < length - runoff - 120.0:
 		var i := int(s)
 		if SEC_NAMES[sec[i]] == "city" and absf(curv[i]) < 1.0 / 600.0 and _flat(s - 10.0, s + 10.0):
 			var near_ramp := false
