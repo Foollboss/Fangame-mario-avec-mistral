@@ -674,23 +674,38 @@ func _setup_fade() -> void:
 	_fade_layer.layer = 100
 	add_child(_fade_layer)
 	_fade = ColorRect.new()
-	_fade.color = Color(0.05, 0.0, 0.12, 0.0)
+	_fade.color = Color(0.05, 0.0, 0.12, 1.0)
+	_fade.modulate.a = 0.0
 	_fade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_fade_layer.add_child(_fade)
+	# texte de chargement (visible quand l'écran est noir pendant la construction du circuit)
+	var lbl := Label.new()
+	lbl.text = "CHARGEMENT…"
+	lbl.add_theme_font_override("font", load("res://assets/fonts/BarlowCondensed-800i.ttf"))
+	lbl.add_theme_font_size_override("font_size", 40)
+	lbl.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+	lbl.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	lbl.offset_left = -320
+	lbl.offset_top = -90
+	lbl.offset_right = -40
+	lbl.offset_bottom = -30
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fade.add_child(lbl)
 
 
 func goto_scene(path: String) -> void:
 	_fade.mouse_filter = Control.MOUSE_FILTER_STOP
 	var tw := create_tween()
-	tw.tween_property(_fade, "color:a", 1.0, 0.25)
+	tw.tween_property(_fade, "modulate:a", 1.0, 0.25)
 	await tw.finished
 	get_tree().paused = false
 	get_tree().change_scene_to_file(path)
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var tw2 := create_tween()
-	tw2.tween_property(_fade, "color:a", 0.0, 0.35)
+	tw2.tween_property(_fade, "modulate:a", 0.0, 0.35)
 	await tw2.finished
 	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
