@@ -6,11 +6,13 @@ config_version=5
 [application]
 
 config/name="Asphalt Fangame"
+config/version="1.1"
 config/description="Fangame de course arcade inspiré d'Asphalt Legends Unite (non officiel)."
 run/main_scene="res://scenes/hub.tscn"
 config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
 config/quit_on_go_back=false
+run/flush_stdout_on_print=true
 
 [autoload]
 
@@ -26,7 +28,6 @@ window/size/window_height_override=900
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=4
-window/energy_saving/keep_screen_on=true
 
 [debug]
 
@@ -43,6 +44,7 @@ renderer/rendering_method.mobile="gl_compatibility"
 anti_aliasing/quality/msaa_3d=2
 anti_aliasing/quality/msaa_3d.mobile=0
 anti_aliasing/quality/screen_space_aa=1
+anti_aliasing/quality/screen_space_aa.mobile=0
 lights_and_shadows/directional_shadow/size=4096
 lights_and_shadows/directional_shadow/size.mobile=2048
 textures/vram_compression/import_etc2_astc=true

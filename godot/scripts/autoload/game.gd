@@ -103,8 +103,7 @@ func _ready() -> void:
 	_setup_inputs()
 	_parse_cmdline()
 	apply_window_settings()
-	if DisplayServer.get_name() != "headless":
-		DisplayServer.screen_set_keep_on(true)
+	_start_heartbeat()
 
 
 # ---------------------------------------------------------------------------
@@ -164,6 +163,13 @@ func _default_save() -> Dictionary:
 
 ## Dernières lignes du journal de la session précédente (pour diagnostiquer une fermeture).
 func previous_log_tail(max_lines: int = 80) -> String:
+	var hb := ""
+	if FileAccess.file_exists(HEARTBEAT_PREV):
+		hb = "DERNIER SIGNE DE VIE DE LA SESSION PRÉCÉDENTE :\n" + FileAccess.get_file_as_string(HEARTBEAT_PREV) + "\n"
+	return hb + _previous_log_lines(max_lines)
+
+
+func _previous_log_lines(max_lines: int) -> String:
 	var dir := DirAccess.open("user://logs")
 	if dir == null:
 		return "Aucun journal trouvé."
@@ -181,6 +187,51 @@ func previous_log_tail(max_lines: int = 80) -> String:
 	var lines := fa.get_as_text().split("\n")
 	var start: int = max(0, lines.size() - max_lines)
 	return "%s\n\n%s" % [path.get_file(), "\n".join(lines.slice(start))]
+
+
+func is_forward_plus() -> bool:
+	return RenderingServer.get_current_rendering_method() == "forward_plus"
+
+
+# ---------------------------------------------------------------------------
+# Diagnostic : « dernier signe de vie » écrit toutes les 5 s. Si le jeu se ferme
+# brutalement (plantage, manque de mémoire), on retrouve au lancement suivant
+# où il en était (écran, temps de jeu, mémoire, images par seconde).
+# ---------------------------------------------------------------------------
+const HEARTBEAT := "user://logs/dernier_signe_de_vie.txt"
+const HEARTBEAT_PREV := "user://logs/dernier_signe_de_vie_precedent.txt"
+var _hb_timer: Timer
+
+
+func _start_heartbeat() -> void:
+	DirAccess.make_dir_recursive_absolute("user://logs")
+	if FileAccess.file_exists(HEARTBEAT):
+		var d := DirAccess.open("user://logs")
+		if d:
+			if d.file_exists(HEARTBEAT_PREV.get_file()):
+				d.remove(HEARTBEAT_PREV.get_file())
+			d.rename(HEARTBEAT.get_file(), HEARTBEAT_PREV.get_file())
+	_hb_timer = Timer.new()
+	_hb_timer.wait_time = 5.0
+	_hb_timer.process_mode = Node.PROCESS_MODE_ALWAYS
+	_hb_timer.timeout.connect(_write_heartbeat)
+	add_child(_hb_timer)
+	_hb_timer.start()
+	_write_heartbeat()
+
+
+func _write_heartbeat() -> void:
+	var f := FileAccess.open(HEARTBEAT, FileAccess.WRITE)
+	if f == null:
+		return
+	var scene := get_tree().current_scene
+	var extra := ""
+	if scene and scene.has_method("debug_state"):
+		extra = scene.debug_state()
+	f.store_string("Version %s · %s · %s\nTemps depuis le lancement : %.0f s\nÉcran : %s %s\nImages/s : %d\nMémoire (moteur) : %.0f Mo\nRendu : %s\n" % [
+		ProjectSettings.get_setting("application/config/version", "1.0"), OS.get_name(), OS.get_model_name(),
+		Time.get_ticks_msec() / 1000.0, scene.name if scene else "?", extra, Engine.get_frames_per_second(),
+		OS.get_static_memory_usage() / 1048576.0, RenderingServer.get_current_rendering_method()])
 
 
 func is_mobile() -> bool:
@@ -795,4 +846,12 @@ func _autotest_quit() -> void:
 	if autotest.has("shot"):
 		_shot(autotest["shot"])
 	print("autotest: quit")
+	quit_game()
+
+
+## Quitte proprement : coupe tous les sons, attend quelques images, puis ferme.
+func quit_game() -> void:
+	Audio.stop_all()
+	# l'AudioServer libère les sons arrêtés de façon asynchrone : on lui laisse le temps
+	await get_tree().create_timer(0.35, true, false, true).timeout
 	get_tree().quit()

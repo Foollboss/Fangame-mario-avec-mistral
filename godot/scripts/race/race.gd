@@ -153,6 +153,10 @@ func _shuffle(a: Array) -> void:
 
 
 # ---------------------------------------------------------------------------
+func debug_state() -> String:
+	return "(course %s, %s, chrono %.1f s, position %d, %.0f m)" % [req.get("theme", "?"), state, clock, player.race_pos if player else 0, player.s if player else 0.0]
+
+
 func _notification(what: int) -> void:
 	# bouton « retour » d'Android : met en pause / reprend
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST:

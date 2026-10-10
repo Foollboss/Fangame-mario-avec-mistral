@@ -54,7 +54,7 @@ jobs:
           wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz" -O templates.tpz
           T="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
           mkdir -p "$T"
-          unzip -q -o -j templates.tpz "templates/version.txt" "templates/windows_release_x86_64.exe" "templates/android_release.apk" -d "$T"
+          unzip -q -o -j templates.tpz "templates/version.txt" "templates/windows_release_x86_64.exe" "templates/android_release.apk" "templates/android_debug.apk" -d "$T"
           rm -f godot.zip templates.tpz
 
       - name: Import du projet
@@ -94,6 +94,9 @@ jobs:
           echo "GODOT_ANDROID_KEYSTORE_RELEASE_PATH=$KS" >> "$GITHUB_ENV"
           echo "GODOT_ANDROID_KEYSTORE_RELEASE_USER=$KS_ALIAS" >> "$GITHUB_ENV"
           echo "GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD=$KS_PASS" >> "$GITHUB_ENV"
+          echo "GODOT_ANDROID_KEYSTORE_DEBUG_PATH=$KS" >> "$GITHUB_ENV"
+          echo "GODOT_ANDROID_KEYSTORE_DEBUG_USER=$KS_ALIAS" >> "$GITHUB_ENV"
+          echo "GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD=$KS_PASS" >> "$GITHUB_ENV"
 
       - name: Numéro de version Android
         working-directory: godot
@@ -112,6 +115,9 @@ jobs:
           mkdir -p ../build/android
           godot --headless --export-release "Android" ../build/android/AsphaltFangame.apk
           test -s ../build/android/AsphaltFangame.apk
+          # version de diagnostic : une erreur de script est écrite dans le journal au lieu de fermer le jeu
+          godot --headless --export-debug "Android" ../build/android/AsphaltFangame-diagnostic.apk
+          test -s ../build/android/AsphaltFangame-diagnostic.apk
 
       - name: Envoyer le .exe
         uses: actions/upload-artifact@v4
@@ -137,11 +143,13 @@ jobs:
           gh release create jeu \
             build/windows/AsphaltFangame.exe \
             build/android/AsphaltFangame.apk \
+            build/android/AsphaltFangame-diagnostic.apk \
             --target "$GITHUB_SHA" \
             --title "Asphalt Fangame — dernière version" \
             --notes "Version compilée automatiquement depuis la branche ${GITHUB_REF_NAME} (commit ${GITHUB_SHA::7}).
 
           - **Windows** : télécharge AsphaltFangame.exe puis double-clique dessus (si SmartScreen s'affiche : Informations complémentaires → Exécuter quand même).
           - **Android** : télécharge AsphaltFangame.apk sur le téléphone, ouvre-le et autorise l'installation d'applications inconnues.
+          - **Android (diagnostic)** : AsphaltFangame-diagnostic.apk, à utiliser seulement si le jeu se ferme tout seul (plus lent, mais il note les erreurs dans Réglages → Journal des erreurs au lieu de se fermer).
 
           Fangame non officiel, gratuit, fait par des fans."

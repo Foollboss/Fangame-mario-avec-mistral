@@ -1003,7 +1003,7 @@ func make_environment() -> Environment:
 	env.adjustment_enabled = true
 	env.adjustment_saturation = 1.15
 	env.adjustment_contrast = 1.06
-	if quality >= 2:
+	if quality >= 2 and Game.is_forward_plus():
 		env.ssao_enabled = true
 		env.ssao_radius = 1.2
 		env.ssao_intensity = 1.5

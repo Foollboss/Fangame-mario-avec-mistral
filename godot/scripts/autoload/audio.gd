@@ -55,9 +55,11 @@ func _ready() -> void:
 	add_child(_music_player)
 
 
-func _exit_tree() -> void:
-	# arrête tous les sons avant la fermeture (évite des fuites signalées à la sortie)
+## Coupe tous les sons (appelé avant de quitter le jeu).
+func stop_all() -> void:
 	_music_wanted = false
+	_engine_on = false
+	_engine_pb = null
 	_music_player.stop()
 	_engine_player.stop()
 	for p in _pool:

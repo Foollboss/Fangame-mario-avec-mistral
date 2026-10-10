@@ -39,6 +39,8 @@ var _cam_offset := -1.6
 var _dragging := false
 var _spin := 0.0
 var _back_ms := -100000
+var _back_released := true  # un appui long sur « retour » ne compte pas comme deux appuis
+var _back_key_seen := false  # faux avec la navigation par gestes (pas d'événement de touche)
 
 
 func _ready() -> void:
@@ -93,7 +95,7 @@ func _build_showroom() -> void:
 	env.glow_intensity = 0.9
 	env.glow_bloom = 0.12
 	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_ADDITIVE
-	env.ssr_enabled = Game.setting("quality", 2) >= 2
+	env.ssr_enabled = Game.setting("quality", 2) >= 2 and Game.is_forward_plus()
 	env.adjustment_enabled = true
 	env.adjustment_saturation = 1.2
 	var we := WorldEnvironment.new()
@@ -431,16 +433,28 @@ func _on_bg_input(e: InputEvent) -> void:
 		car_pivot.rotation.y += e.relative.x * 0.008
 
 
+func debug_state() -> String:
+	return "(menu : %s)" % current
+
+
+func _input(e: InputEvent) -> void:
+	if e is InputEventKey and e.keycode == KEY_BACK:
+		_back_key_seen = true
+		if not e.pressed:
+			_back_released = true
+
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
 		if overlay:
 			_close_overlay()
 		elif current != "home":
 			back()
-		elif Time.get_ticks_msec() - _back_ms < 2500:
-			get_tree().quit()
+		elif (_back_released or not _back_key_seen) and Time.get_ticks_msec() - _back_ms < 2500 and Time.get_ticks_msec() - _back_ms > 250:
+			Game.quit_game()
 		else:
 			_back_ms = Time.get_ticks_msec()
+			_back_released = false
 			K.toast(ui, "APPUIE ENCORE SUR RETOUR POUR QUITTER", K.YELLOW)
 
 
