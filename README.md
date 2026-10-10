@@ -27,7 +27,9 @@ Windows SmartScreen peut afficher « Windows a protégé votre ordinateur » car
 3. Lance « Asphalt Fangame ». Le jeu se joue en paysage, avec le TouchDrive activé par défaut.
 
 Commandes tactiles : moitié gauche de l'écran = diriger (◀ ▶), bouton **NITRO** (double tape = onde de choc), bouton **DRIFT** (double tape = 360°), cadre « TOUCHDRIVE » en haut à gauche pour l'activer ou le désactiver, bouton retour d'Android = pause / écran précédent.
-Il faut un téléphone Android 64 bits récent (compatible Vulkan ou OpenGL ES 3).
+Il faut un téléphone Android 64 bits compatible OpenGL ES 3 (quasiment tous les téléphones depuis 2015).
+
+Si le jeu se ferme tout seul : relance-le, va dans **Réglages → Journal des erreurs** et fais une capture d'écran du texte affiché, il indique la cause de la fermeture précédente.
 
 ### Où trouver les fichiers
 - Les fichiers `.exe` et `.apk` sont générés automatiquement par GitHub à chaque modification du dossier `godot/` : onglet **Actions** du dépôt → dernière exécution « Export du jeu » → section **Artifacts**.

@@ -103,6 +103,8 @@ func _ready() -> void:
 	_setup_inputs()
 	_parse_cmdline()
 	apply_window_settings()
+	if DisplayServer.get_name() != "headless":
+		DisplayServer.screen_set_keep_on(true)
 
 
 # ---------------------------------------------------------------------------
@@ -158,6 +160,27 @@ func _default_save() -> Dictionary:
 	for c in cars:
 		s["cars"][c["id"]] = {"owned": c.get("free", false), "stars": 1, "plans": 0, "upg": [0, 0, 0, 0], "paint": ""}
 	return s
+
+
+## Dernières lignes du journal de la session précédente (pour diagnostiquer une fermeture).
+func previous_log_tail(max_lines: int = 80) -> String:
+	var dir := DirAccess.open("user://logs")
+	if dir == null:
+		return "Aucun journal trouvé."
+	var files := []
+	for f in dir.get_files():
+		if f.ends_with(".log") and f != "godot.log":
+			files.append(f)
+	if files.is_empty():
+		return "Aucun journal de session précédente (relance le jeu après une fermeture)."
+	files.sort()
+	var path: String = "user://logs/" + files[files.size() - 1]
+	var fa := FileAccess.open(path, FileAccess.READ)
+	if fa == null:
+		return "Impossible de lire " + path
+	var lines := fa.get_as_text().split("\n")
+	var start: int = max(0, lines.size() - max_lines)
+	return "%s\n\n%s" % [path.get_file(), "\n".join(lines.slice(start))]
 
 
 func is_mobile() -> bool:

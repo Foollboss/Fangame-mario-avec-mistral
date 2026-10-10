@@ -38,6 +38,7 @@ var career_chapter := 0
 var _cam_offset := -1.6
 var _dragging := false
 var _spin := 0.0
+var _back_ms := -100000
 
 
 func _ready() -> void:
@@ -436,8 +437,11 @@ func _notification(what: int) -> void:
 			_close_overlay()
 		elif current != "home":
 			back()
-		else:
+		elif Time.get_ticks_msec() - _back_ms < 2500:
 			get_tree().quit()
+		else:
+			_back_ms = Time.get_ticks_msec()
+			K.toast(ui, "APPUIE ENCORE SUR RETOUR POUR QUITTER", K.YELLOW)
 
 
 func _unhandled_input(e: InputEvent) -> void:
@@ -1864,6 +1868,18 @@ func _screen_settings() -> void:
 			open("settings", {}, false))
 		h2.add_child(b2)
 		v.add_child(h2)
+	var logb := K.button("JOURNAL DES ERREURS (SESSION PRÉCÉDENTE)", 20, "white", Vector2(560, 54))
+	logb.pressed.connect(func():
+		var lv := _open_overlay("JOURNAL")
+		var sc := ScrollContainer.new()
+		sc.custom_minimum_size = Vector2(960, 560)
+		var txt := K.label(Game.previous_log_tail(), 15, Color(0.9, 0.9, 0.95), "upright")
+		txt.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
+		txt.custom_minimum_size = Vector2(940, 0)
+		txt.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+		sc.add_child(txt)
+		lv.add_child(sc))
+	v.add_child(logb)
 	var help := K.label("COMMANDES — Clavier : ← → / Q D diriger · ↑ / Z / Espace nitro (2x = onde de choc) · ↓ / S / Maj drift (2x = 360°) · T TouchDrive · C caméra · Échap pause\nManette : stick gauche · A / RT nitro · X / B / LT drift · Y caméra · Start pause · LB / RB onglets", 18, Color(1, 1, 1, 0.8), "semi")
 	help.autowrap_mode = TextServer.AUTOWRAP_WORD
 	help.custom_minimum_size = Vector2(1500, 0)

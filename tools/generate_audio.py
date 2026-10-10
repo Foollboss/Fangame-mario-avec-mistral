@@ -3,8 +3,8 @@
 Asphalt Fangame — génération des sons et de la musique en fichiers .wav.
 
 Avant, la musique synthwave et les bruitages étaient calculés en GDScript au lancement du
-jeu (la musique dans un Thread). Sur téléphone ce calcul prend plusieurs dizaines de
-secondes : on les pré-calcule donc ici, une fois pour toutes.
+jeu (la musique dans un Thread), ce qui retardait la musique de quelques secondes et
+chargeait le processeur des téléphones : on les pré-calcule donc ici, une fois pour toutes.
 
 Utilisation : python3 tools/generate_audio.py
 Sortie      : godot/assets/audio/*.wav (mono, 16 bits, 22 050 Hz)
