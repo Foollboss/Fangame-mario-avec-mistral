@@ -8,6 +8,7 @@ import { seedFromString } from '../../engine/rng';
 import { DEFAULT_BINDINGS, type Action } from '../../input/input';
 import { t, tr, locale, getLang, LANGS, type Lang } from '../../i18n/i18n';
 import { pixelIcon } from '../pixelIcons';
+import { skinScreen } from './skinScreen';
 
 const MODE_LABEL = (m: GameMode): string => ({ survie: t('Mode survie'), creatif: t('Mode créatif'), hardcore: t('Mode hardcore'), spectateur: t('Mode spectateur') })[m] ?? m;
 const DIFF = (): string[] => [t('Paisible'), t('Facile'), t('Normale'), t('Difficile')];
@@ -39,6 +40,7 @@ export function mainMenu(app: AppApi): Screen {
       button(t('Solo'), () => app.ui.push(worldSelect(app))),
       button(t('Multijoueur'), () => app.ui.push(multiplayerScreen(app))),
       button(t('Mods et contenu'), () => app.ui.push(modsScreen(app))),
+      button(t('Personnaliser le skin'), () => app.ui.push(skinScreen(app))),
       h(
         'div',
         { class: 'row', style: { marginTop: '14px' } },
@@ -398,6 +400,7 @@ export function optionsScreen(app: AppApi, inGame: boolean): Screen {
     'div',
     { class: 'options-grid' },
     touchBtn,
+    button(t('Personnaliser le skin…'), () => app.ui.push(skinScreen(app, inGame))),
     slider({ label: (v) => t('Champ de vision : {v}°', { v }), min: 50, max: 110, step: 1, value: s.fov, onChange: (v) => ((s.fov = v), save()) }),
     slider({ label: (v) => t('Distance d’affichage : {v} tronçons', { v }), min: 3, max: 16, step: 1, value: s.renderDistance, onChange: (v) => ((s.renderDistance = v), save()) }),
     slider({ label: (v) => t('Sensibilité : {v} %', { v: Math.round(v * 100) }), min: 0.2, max: 3, step: 0.05, value: s.sensitivity, onChange: (v) => ((s.sensitivity = v), save()) }),

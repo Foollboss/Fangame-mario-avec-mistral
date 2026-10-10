@@ -4,6 +4,7 @@ import { PlayerInventory } from '../inventory/inventory';
 import type { ItemRegistry } from '../registry/items';
 import type { GameMode } from '../save/storage';
 import { t } from '../i18n/i18n';
+import { DEFAULT_SKIN_CODE } from './skin';
 
 export interface SpawnPoint {
   dim: string;
@@ -16,6 +17,8 @@ export class Player extends LivingEntity {
   readonly kind = 'player';
   readonly inventory: PlayerInventory;
   name: string;
+  /** Apparence (code de skin, voir skin.ts) : vient des réglages, transmise aux autres joueurs. */
+  skin = DEFAULT_SKIN_CODE;
   gameMode: GameMode = 'survie';
   flying = false;
   sneaking = false;

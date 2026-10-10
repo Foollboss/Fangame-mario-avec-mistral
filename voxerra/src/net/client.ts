@@ -29,6 +29,8 @@ export class RemoteEntity extends Entity {
   heldItem: string | null = null;
   sneaking = false;
   flying = false;
+  /** Joueurs : code du skin. */
+  skin = '';
   private tx = 0;
   private ty = 0;
   private tz = 0;
@@ -59,6 +61,7 @@ export class RemoteEntity extends Entity {
     this.pitch = s.pt;
     if (s.ty) this.type = s.ty;
     if (s.n) this.displayName = s.n;
+    if (s.sk) this.skin = s.sk;
     if (typeof s.hp === 'number') this.health = s.hp;
     if (typeof s.mx === 'number') this.maxHealth = s.mx;
     this.hurtTime = s.h ?? 0;
@@ -116,7 +119,7 @@ export class RemoteSession {
   }
 
   /** Établit la connexion et attend l'accueil du serveur. */
-  static connect(url: string, name: string, timeoutMs = 10000): Promise<RemoteSession> {
+  static connect(url: string, name: string, skin?: string, timeoutMs = 10000): Promise<RemoteSession> {
     return new Promise((resolve, reject) => {
       let ws: WebSocket;
       try {
@@ -131,7 +134,7 @@ export class RemoteSession {
         ws.close();
         reject(new Error(t('Le serveur ne répond pas.')));
       }, timeoutMs);
-      ws.onopen = () => ws.send(JSON.stringify({ t: 'hello', name, version: PROTOCOL_VERSION } satisfies ClientMsg));
+      ws.onopen = () => ws.send(JSON.stringify({ t: 'hello', name, version: PROTOCOL_VERSION, skin } satisfies ClientMsg));
       ws.onerror = () => {
         clearTimeout(timer);
         reject(new Error(t('Serveur injoignable ({url}).', { url })));
@@ -344,6 +347,10 @@ export class RemoteSession {
   }
   chat(text: string): void {
     this.send({ t: 'chat', text });
+  }
+  /** Nouveau skin choisi pendant la partie. */
+  skin(code: string): void {
+    this.send({ t: 'skin', skin: code });
   }
   respawn(): void {
     this.send({ t: 'respawn' });

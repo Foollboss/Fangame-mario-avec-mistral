@@ -1,6 +1,7 @@
 /** Paramètres utilisateur (localStorage, lecture/écriture protégées). */
 import { DEFAULT_BINDINGS, type Action } from '../input/input';
 import { detectLang, type Lang } from '../i18n/i18n';
+import { DEFAULT_SKIN_CODE, decodeSkin } from '../entity/skin';
 
 export interface Settings {
   /** Langue de l'interface (détectée au premier lancement). */
@@ -25,6 +26,8 @@ export interface Settings {
   bindings: Record<Action, string[]>;
   servers: { name: string; address: string }[];
   mods: string[];
+  /** Apparence du joueur (code de skin, voir entity/skin.ts). */
+  skin: string;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -48,6 +51,7 @@ export const DEFAULT_SETTINGS: Settings = {
   bindings: structuredClone(DEFAULT_BINDINGS),
   servers: [{ name: 'Serveur local', address: 'ws://localhost:25590' }],
   mods: [],
+  skin: DEFAULT_SKIN_CODE,
 };
 
 const KEY = 'voxerra.settings.v1';
@@ -60,6 +64,7 @@ export function loadSettings(): Settings {
     const merged = { ...structuredClone(DEFAULT_SETTINGS), language: detectLang(), touchControls: detectTouch(), ...s };
     if (!['fr', 'en', 'es'].includes(merged.language)) merged.language = 'fr';
     merged.bindings = { ...structuredClone(DEFAULT_BINDINGS), ...(s.bindings ?? {}) };
+    if (!decodeSkin(merged.skin)) merged.skin = DEFAULT_SKIN_CODE;
     // application Android : contrôles tactiles toujours actifs au lancement
     if (isAndroidApp()) merged.touchControls = true;
     return merged;

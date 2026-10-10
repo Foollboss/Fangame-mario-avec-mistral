@@ -5,6 +5,7 @@ import type { ChunkRecord } from '../src/save/serializer';
 import type { WorldMeta } from '../src/save/storage';
 import { wireToChunk, PROTOCOL_VERSION, type ServerMsg } from '../src/net/protocol';
 import { decodeChunk } from '../src/save/serializer';
+import { DEFAULT_SKIN_CODE, PRESETS, encodeSkin } from '../src/entity/skin';
 
 class MemStore implements ServerStorage {
   chunks = new Map<string, ChunkRecord>();
@@ -97,5 +98,29 @@ describe('serveur multijoueur', () => {
     srv.handle(srv.connect(b.conn), JSON.stringify({ t: 'hello', name: 'Même', version: PROTOCOL_VERSION }));
     srv.handle(srv.connect(c.conn), JSON.stringify({ t: 'hello', name: 'même', version: PROTOCOL_VERSION }));
     expect(c.got[0]).toMatchObject({ t: 'kick' });
+  });
+
+  it('transmet le skin de chaque joueur aux autres (et remplace un skin mal formé)', () => {
+    const srv = new GameServer(content, newServerMeta('s', 'S', 5, '5'), new MemStore(), { radius: 1, log: () => {} });
+    const a = fakeConn(),
+      b = fakeConn();
+    const ca = srv.connect(a.conn),
+      cb = srv.connect(b.conn);
+    const ninja = encodeSkin(PRESETS.find((p) => p.id === 'ninja')!.skin);
+    srv.handle(ca, JSON.stringify({ t: 'hello', name: 'Alba', version: PROTOCOL_VERSION, skin: ninja }));
+    srv.handle(cb, JSON.stringify({ t: 'hello', name: 'Brune', version: PROTOCOL_VERSION, skin: '<script>' }));
+    for (let i = 0; i < 3; i++) srv.tick();
+    const seen = (got: ServerMsg[], name: string) =>
+      got
+        .filter((m): m is Extract<ServerMsg, { t: 'ents' }> => m.t === 'ents')
+        .pop()!
+        .list.find((e) => e.n === name)?.sk;
+    expect(seen(b.got, 'Alba')).toBe(ninja);
+    expect(seen(a.got, 'Brune')).toBe(DEFAULT_SKIN_CODE);
+    // changement en cours de partie
+    const mage = encodeSkin(PRESETS.find((p) => p.id === 'mage')!.skin);
+    srv.handle(ca, JSON.stringify({ t: 'skin', skin: mage }));
+    srv.tick();
+    expect(seen(b.got, 'Alba')).toBe(mage);
   });
 });

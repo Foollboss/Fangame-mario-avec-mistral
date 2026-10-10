@@ -223,7 +223,7 @@ body.touch-mode .chat-chip { height: 38px; font-size: 16px; padding: 0 14px; }
 .tip .desc { color: #a8a8a8; font-size: 14px; margin-top: 2px; }
 .tip .stat { color: #5555ff; font-size: 14px; }
 .player-figure { width: 104px; height: 144px; background: #000; border: 2px solid #373737; box-shadow: inset -2px -2px 0 #fff; position: relative; overflow: hidden; }
-.player-figure canvas { image-rendering: pixelated; }
+.player-figure canvas { image-rendering: pixelated; display: block; margin: 0 auto; }
 .recipe-book { width: 250px; max-height: 360px; display: flex; flex-direction: column; gap: 4px; }
 .recipe-book .rb-list { display: grid; grid-template-columns: repeat(5, 44px); gap: 2px; overflow-y: auto; max-height: 300px; padding: 2px; }
 .recipe-book .rb-item { width: 44px; height: 44px; background: #8b8b8b; position: relative; cursor: pointer; box-shadow: inset 2px 2px 0 #373737, inset -2px -2px 0 #fff; }
@@ -358,3 +358,30 @@ body.touch-mode .toasts { top: calc(64px + var(--sa-top)); }
 .px-icon.trash { width: 22px; height: 22px; }
 .px-icon.inline { display: inline-block; width: 0.9em; height: 0.9em; margin-left: 6px; vertical-align: -1px; color: #7ee07e; }
 
+
+/* ------------------------------------------------------------------ personnalisation du skin */
+.skin-layout { display: flex; gap: 14px; align-items: flex-start; width: min(880px, 96%); }
+.skin-left { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 210px; flex: none; }
+.skin-canvas { width: 210px; height: 300px; display: block; background: radial-gradient(circle at 50% 42%, #5a6a8a 0%, #2a3040 70%); border: 2px solid #000; box-shadow: inset 0 0 0 2px #555; touch-action: none; cursor: grab; }
+.skin-canvas:active { cursor: grabbing; }
+.skin-flat { width: 210px; height: 300px; display: flex; align-items: center; justify-content: center; background: #2a3040; border: 2px solid #000; }
+.skin-flat canvas { width: 108px; height: 216px; image-rendering: pixelated; }
+.skin-left .btn { width: 210px; }
+.skin-panel { flex: 1; min-width: 0; height: 340px; overflow-y: auto; background: rgba(0, 0, 0, 0.45); border: 2px solid #000; box-shadow: inset 0 0 0 2px #444; padding: 8px 10px; display: flex; flex-direction: column; gap: 10px; }
+.skin-row { display: flex; flex-direction: column; gap: 5px; }
+.skin-label { color: #ffe070; font-size: 15px; text-shadow: var(--text-shadow); }
+.swatches { display: flex; flex-wrap: wrap; gap: 5px; }
+.swatch { width: 28px; height: 28px; padding: 0; border: 2px solid #000; box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.28), inset -2px -2px 0 rgba(0, 0, 0, 0.35); cursor: pointer; }
+.swatch.on { outline: 3px solid #fff; outline-offset: 1px; }
+.btn.skin-cycle { width: 100%; height: 34px; font-size: 16px; }
+.skin-pair { display: flex; gap: 6px; }
+.skin-pair .btn { flex: 1; min-width: 0; }
+.skin-presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.skin-preset { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 6px; min-width: 76px; background: #5a5a5a; color: #fff; font: inherit; font-size: 12px; border: 2px solid #000; box-shadow: inset 2px 2px 0 #9a9a9a, inset -2px -2px 0 #333; cursor: pointer; }
+.skin-preset:hover { background: #7f8ab8; }
+.skin-preset canvas { width: 36px; height: 72px; image-rendering: pixelated; }
+.skin-codebar { width: min(880px, 96%); display: flex; flex-direction: column; gap: 5px; margin: 10px 0; }
+.skin-code { font-size: 12px; color: #c8c8c8; user-select: all; word-break: break-all; }
+.skin-code-input { flex: 1; min-width: 0; height: 34px; font-size: 14px; }
+.skin-code-msg { min-height: 16px; }
+body.touch-mode .swatch { width: 34px; height: 34px; }

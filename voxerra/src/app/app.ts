@@ -245,6 +245,10 @@ export class App implements AppApi {
       this.game.camera.fov = s.fov;
       this.game.camera.updateProjectionMatrix();
       this.game.player.name = s.playerName;
+      if (this.game.player.skin !== s.skin) {
+        this.game.player.skin = s.skin;
+        this.game.remote?.skin(s.skin);
+      }
     }
   }
 

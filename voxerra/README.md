@@ -35,6 +35,20 @@ ne sont pas versionnés (trop lourds) : ils sont dans `launcher/dist/`, `desktop
 `android/app/build/outputs/apk/release/`. Les exécutables ne sont pas signés : Windows SmartScreen peut demander
 **Informations complémentaires → Exécuter quand même** ; sur Android, autoriser l'installation d'applis inconnues.
 
+## Personnaliser son skin
+
+**Personnaliser le skin** (menu principal, ou **Options** en pleine partie) ouvre un écran avec un aperçu 3D qui tourne
+(on le fait pivoter en le glissant) :
+
+- **Skins tout faits** : Aventurier (celui d'origine), Exploratrice, Mineur, Mage astral, Ninja, Vacancier ;
+- **Peau**, **yeux**, **cheveux** (coiffure courte, longue, hérissée, queue de cheval ou rasée), **haut** (uni, rayures,
+  veste ouverte ou emblème ; manches longues ou courtes), **pantalon**, **chaussures**, **accessoire** (écharpe, cape,
+  casquette, lunettes ou aucun) et sa couleur ;
+- **Au hasard** tire un skin ; le **code** (« 1.e8b88a.… ») se copie et se colle pour partager un skin.
+
+Le skin apparaît en vue à la 3e personne, sur le bras en vue subjective, dans l'inventaire, et pour les autres joueurs en
+multijoueur (envoyé à la connexion et à chaque changement ; un code mal formé est remplacé par le skin d'origine).
+
 ## Les Îles célestes
 
 Une dimension lumineuse d'îles flottantes au-dessus d'une mer de nuages, accessible dès que l'on a de la lumirite.

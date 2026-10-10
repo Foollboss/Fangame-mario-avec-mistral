@@ -20,7 +20,7 @@ export function normalizeAddress(address: string): string {
 export async function connectToServer(app: App, address: string, name: string, loading: LoadingHandle): Promise<Game> {
   const url = normalizeAddress(address);
   loading.set(t('Connexion à {address}…', { address: url }), 0, 1);
-  const session = await RemoteSession.connect(url, name);
+  const session = await RemoteSession.connect(url, name, app.settings.skin);
   const w = session.welcome;
   loading.set(t('Préparation…'), 0, 1);
   await app.initPool(w.world.seed, w.world.worldType, w.world.structures);

@@ -45,6 +45,7 @@ import { installGameModules } from './modules';
 import { advancementsScreen } from '../ui/advancementsUI';
 import type { RemoteSession } from '../net/client';
 import { t, getLang, WEATHER_LABEL } from '../i18n/i18n';
+import { DEFAULT_SKIN, decodeSkin } from '../entity/skin';
 
 export function createWorkerPool(forceLocal = false): WorkerPool {
   const n = Math.max(2, Math.min(4, (navigator.hardwareConcurrency || 4) - 1));
@@ -90,6 +91,8 @@ export class Game {
   readonly entities: EntityRenderer;
   readonly items: ItemModels;
   readonly held: HeldItemRenderer;
+  /** Skin avec lequel le bras en vue subjective a été peint. */
+  private armSkin = '';
   readonly highlight = new BlockHighlight();
   readonly controller: PlayerController;
   readonly hud: Hud;
@@ -176,6 +179,7 @@ export class Game {
     if (meta.gameMode === 'hardcore' && p.gameMode !== 'spectateur') p.gameMode = 'survie';
     p.name = this.host.settings.playerName;
     p.displayName = p.name;
+    p.skin = this.host.settings.skin;
     this.sim.addPlayer(p);
     this.entities.localPlayerId = p.id;
     this.enterDimension(p.dim);
@@ -237,6 +241,7 @@ export class Game {
     p.id = w.id;
     p.name = this.host.settings.playerName;
     p.displayName = p.name;
+    p.skin = this.host.settings.skin;
     this.sim.difficulty = w.world.difficulty;
     this.sim.env.time = w.world.time;
     Object.assign(this.sim.rules, w.world.rules);
@@ -840,6 +845,10 @@ export class Game {
     renderer.render(this.scene, cam);
     // objet tenu
     if (ctrl.view === 0 && !this.hideHud && !p.spectator) {
+      if (this.armSkin !== p.skin) {
+        this.armSkin = p.skin;
+        this.held.setSkin(decodeSkin(p.skin) ?? DEFAULT_SKIN);
+      }
       const el = this.world.getLight(Math.floor(p.x), Math.floor(p.y + p.eye), Math.floor(p.z));
       const use = p.using ? (p.using.kind as 'eat' | 'bow' | 'block' | 'recall') : null;
       this.held.update(dt, {

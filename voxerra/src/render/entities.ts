@@ -9,6 +9,8 @@ import type { ModelPart, CreatureDef } from '../registry/types';
 import type { ItemModels, ItemModel } from './itemModels';
 import { hexToRgb } from '../engine/math';
 import { Rng, hashString } from '../engine/rng';
+import { DEFAULT_SKIN, decodeSkin, playerParts, type Skin } from '../entity/skin';
+import { faceSize, paintSkinFace } from './playerSkin';
 
 type LightFn = (x: number, y: number, z: number) => { sky: number; block: number };
 
@@ -21,6 +23,8 @@ interface PartNode {
 
 interface View {
   kind: string;
+  /** Joueurs : code du skin avec lequel la vue a été construite. */
+  skin?: string;
   root: THREE.Group;
   parts: PartNode[];
   item?: ItemModel;
@@ -87,8 +91,11 @@ function shadedBox(w: number, h: number, d: number): THREE.BoxGeometry {
   return g;
 }
 
+/** Texture d'une face (0..5, ordre de THREE.BoxGeometry) d'une pièce, à la place du grain de 2 couleurs. */
+type FaceTex = (p: ModelPart, face: number) => THREE.Texture;
+
 /** Construit un modèle de boîtes ; chaque partie a un pivot animable. */
-function buildParts(parts: ModelPart[], scale: number, seed: string): { root: THREE.Group; nodes: PartNode[] } {
+function buildParts(parts: ModelPart[], scale: number, seed: string, faceTex?: FaceTex): { root: THREE.Group; nodes: PartNode[] } {
   const root = new THREE.Group();
   const byId = new Map<string, THREE.Group>();
   const nodes: PartNode[] = [];
@@ -115,7 +122,7 @@ function buildParts(parts: ModelPart[], scale: number, seed: string): { root: TH
     const top = partTexture(p.color, p.color2, undefined, seed + p.id + 't', w, d);
     const front = p.eyes ? partTexture(p.color, p.color2, p.eyes, seed + p.id + 'f', w, h) : side;
     for (let f = 0; f < 6; f++) {
-      const map = f === 2 || f === 3 ? top : f === 5 ? front : side;
+      const map = faceTex ? faceTex(p, f) : f === 2 || f === 3 ? top : f === 5 ? front : side;
       mats.push(new THREE.MeshBasicMaterial({ map, vertexColors: true, transparent: false }));
     }
     const mesh = new THREE.Mesh(shadedBox(w * s, h * s, d * s), mats);
@@ -129,17 +136,89 @@ function buildParts(parts: ModelPart[], scale: number, seed: string): { root: TH
   return { root, nodes };
 }
 
-/** Modèle du joueur (création originale : aventurier à écharpe). */
-export const PLAYER_PARTS: ModelPart[] = [
-  { id: 'body', size: [8, 12, 4], pos: [-4, 12, -2], pivot: [0, 24, 0], color: '#2a6a8a', color2: '#245a78', role: 'body' },
-  { id: 'head', size: [8, 8, 8], pos: [-4, 24, -4], pivot: [0, 24, 0], color: '#e8b88a', eyes: '#1a1a2a', role: 'head' },
-  { id: 'hair', size: [8, 3, 8], pos: [-4, 29, -4], pivot: [0, 24, 0], color: '#5a3a24', parent: 'head' },
-  { id: 'scarf', size: [9, 2, 5], pos: [-4.5, 22, -2.5], pivot: [0, 24, 0], color: '#d04a2a', color2: '#b03a20', parent: 'body' },
-  { id: 'arm_r', size: [4, 12, 4], pos: [4, 12, -2], pivot: [6, 22, 0], color: '#2a6a8a', color2: '#e8b88a', role: 'arm_r' },
-  { id: 'arm_l', size: [4, 12, 4], pos: [-8, 12, -2], pivot: [-6, 22, 0], color: '#2a6a8a', color2: '#e8b88a', role: 'arm_l' },
-  { id: 'leg_r', size: [4, 12, 4], pos: [0, 0, -2], pivot: [2, 12, 0], color: '#3a3a5a', color2: '#4a2a1a', role: 'leg_r' },
-  { id: 'leg_l', size: [4, 12, 4], pos: [-4, 0, -2], pivot: [-2, 12, 0], color: '#3a3a5a', color2: '#4a2a1a', role: 'leg_l' },
-];
+/** Échelle du modèle du joueur (32 pixels de haut ≈ 1,9 bloc). */
+const PLAYER_SCALE = 0.9375;
+
+function skinCanvasTexture(canvas: HTMLCanvasElement): THREE.CanvasTexture {
+  const t = new THREE.CanvasTexture(canvas);
+  t.magFilter = THREE.NearestFilter;
+  t.minFilter = THREE.NearestFilter;
+  t.colorSpace = THREE.NoColorSpace;
+  return t;
+}
+
+/** Textures de skin partagées entre les vues des joueurs (une série par code de skin). */
+const skinTexCache = new Map<string, THREE.CanvasTexture>();
+
+function skinFaceTex(skin: Skin, code: string): FaceTex {
+  return (p, f) => {
+    const key = `${code}|${p.id}|${f}`;
+    let t = skinTexCache.get(key);
+    if (!t) {
+      const [fw, fh] = faceSize(f, ...p.size);
+      t = skinCanvasTexture(paintSkinFace(skin, p.id, f, fw, fh));
+      skinTexCache.set(key, t);
+    }
+    return t;
+  };
+}
+
+/** Code de skin d'une entité joueur (locale ou distante). */
+const skinCode = (e: Entity): string => (e as unknown as { skin?: string }).skin ?? '';
+
+/**
+ * Aperçu du joueur pour l'écran de personnalisation : modèle seul, centré, avec ses propres
+ * textures (libérées à chaque changement), et une petite animation d'attente.
+ */
+export class SkinPreview {
+  readonly group = new THREE.Group();
+  private nodes: PartNode[] = [];
+  private root: THREE.Group | null = null;
+  private textures: THREE.Texture[] = [];
+
+  constructor(skin: Skin) {
+    this.setSkin(skin);
+  }
+
+  setSkin(skin: Skin): void {
+    this.clear();
+    const { root, nodes } = buildParts(playerParts(skin), PLAYER_SCALE, 'apercu', (p, f) => {
+      const [fw, fh] = faceSize(f, ...p.size);
+      const t = skinCanvasTexture(paintSkinFace(skin, p.id, f, fw, fh));
+      this.textures.push(t);
+      return t;
+    });
+    root.position.y = -0.9;
+    this.group.add(root);
+    this.root = root;
+    this.nodes = nodes;
+  }
+
+  /** Bras et tête qui bougent un peu ; t en secondes. */
+  animate(t: number): void {
+    for (const n of this.nodes) {
+      n.pivot.rotation.copy(n.baseRot);
+      const r = n.def.role;
+      if (r === 'arm_r') n.pivot.rotation.x = Math.sin(t * 1.6) * 0.12;
+      else if (r === 'arm_l') n.pivot.rotation.x = -Math.sin(t * 1.6) * 0.12;
+      else if (r === 'head') n.pivot.rotation.y = Math.sin(t * 0.7) * 0.25;
+    }
+  }
+
+  private clear(): void {
+    if (this.root) this.group.remove(this.root);
+    for (const n of this.nodes) for (const m of n.mats) m.dispose();
+    this.root?.traverse((o) => (o as THREE.Mesh).geometry?.dispose());
+    for (const t of this.textures) t.dispose();
+    this.textures = [];
+    this.nodes = [];
+    this.root = null;
+  }
+
+  dispose(): void {
+    this.clear();
+  }
+}
 
 export class EntityRenderer {
   readonly group = new THREE.Group();
@@ -154,8 +233,8 @@ export class EntityRenderer {
     private models: ItemModels,
   ) {}
 
-  private makeModelView(kind: string, parts: ModelPart[], scale: number, seed: string): View {
-    const { root, nodes } = buildParts(parts, scale, seed);
+  private makeModelView(kind: string, parts: ModelPart[], scale: number, seed: string, faceTex?: FaceTex): View {
+    const { root, nodes } = buildParts(parts, scale, seed, faceTex);
     const group = new THREE.Group();
     group.add(root);
     const view: View = {
@@ -167,6 +246,7 @@ export class EntityRenderer {
       lastZ: 0,
       dispose: () => {
         for (const n of nodes) for (const m of n.mats) m.dispose();
+        root.traverse((o) => (o as THREE.Mesh).geometry?.dispose());
         if (view.held) view.held.model.dispose();
       },
       update: (e, alpha, dt, light, daylight) => this.animateModel(view, e, alpha, dt, light, daylight),
@@ -175,7 +255,13 @@ export class EntityRenderer {
   }
 
   private makeView(e: Entity): View | null {
-    if (e.kind === 'player') return this.makeModelView('player', PLAYER_PARTS, 0.9375, 'joueur');
+    if (e.kind === 'player') {
+      const code = skinCode(e);
+      const skin = decodeSkin(code) ?? DEFAULT_SKIN;
+      const view = this.makeModelView('player', playerParts(skin), PLAYER_SCALE, 'joueur', skinFaceTex(skin, code || 'defaut'));
+      view.skin = code;
+      return view;
+    }
     if (e.kind === 'mob') {
       const type = (e as unknown as { type: string }).type;
       const def = this.creatures.get(type);
@@ -361,6 +447,13 @@ export class EntityRenderer {
       if (e.id === this.localPlayerId && !this.showLocalPlayer) continue;
       seen.add(e.id);
       let v = this.views.get(e.id);
+      // skin changé (personnalisation en cours de partie, autre joueur) : modèle reconstruit
+      if (v && v.kind === 'player' && v.skin !== skinCode(e)) {
+        this.group.remove(v.root);
+        v.dispose();
+        this.views.delete(e.id);
+        v = undefined;
+      }
       if (!v) {
         const nv = this.makeView(e);
         if (!nv) continue;

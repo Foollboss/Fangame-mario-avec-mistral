@@ -38,6 +38,7 @@ export interface EntSnap {
   st?: ItemStack; // objet au sol
   w?: number; // largeur (demi)
   ht?: number; // hauteur
+  sk?: string; // skin (joueurs)
 }
 
 /** État propre au joueur (survie). */
@@ -56,7 +57,7 @@ export interface SelfSnap {
 }
 
 export type ClientMsg =
-  | { t: 'hello'; name: string; version: number }
+  | { t: 'hello'; name: string; version: number; skin?: string }
   | { t: 'move'; x: number; y: number; z: number; yw: number; pt: number; sn: boolean; sp: boolean; fl: boolean; og: boolean; sl: number }
   | { t: 'fall'; dist: number }
   | { t: 'dig'; x: number; y: number; z: number }
@@ -70,7 +71,8 @@ export type ClientMsg =
   | { t: 'be'; x: number; y: number; z: number; data: Record<string, unknown> | null }
   | { t: 'chat'; text: string }
   | { t: 'respawn' }
-  | { t: 'dodge'; fx: number; fz: number };
+  | { t: 'dodge'; fx: number; fz: number }
+  | { t: 'skin'; skin: string };
 
 export interface WelcomeMsg {
   t: 'welcome';

@@ -1,6 +1,8 @@
 /** Objet tenu en vue subjective (bras, balancement, coups, manger, arc, bouclier). */
 import * as THREE from 'three';
 import type { ItemModels, ItemModel } from './itemModels';
+import { DEFAULT_SKIN, type Skin } from '../entity/skin';
+import { faceSize, paintSkinFace } from './playerSkin';
 
 export interface HeldState {
   id: string | null;
@@ -19,8 +21,9 @@ export class HeldItemRenderer {
   readonly scene = new THREE.Scene();
   readonly camera: THREE.PerspectiveCamera;
   private holder = new THREE.Group();
-  private arm: THREE.Mesh;
-  private armMat: THREE.MeshBasicMaterial;
+  /** Bras droit du skin (manche et main), visible quand la main est vide. */
+  private arm = new THREE.Group();
+  private armMats: THREE.MeshBasicMaterial[] = [];
   private model: ItemModel | null = null;
   private currentId: string | null = null;
   private equip = 1;
@@ -29,20 +32,32 @@ export class HeldItemRenderer {
   constructor(private models: ItemModels) {
     this.camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.01, 10);
     this.scene.add(this.holder);
-    this.armMat = new THREE.MeshBasicMaterial({ color: 0xe8b88a });
-    const armGeo = new THREE.BoxGeometry(0.22, 0.22, 0.8);
-    // manche de la tunique
-    const colors: number[] = [];
-    const pos = armGeo.getAttribute('position');
-    for (let i = 0; i < pos.count; i++) {
-      const sleeve = pos.getZ(i) > 0.05;
-      colors.push(...(sleeve ? [0.16, 0.42, 0.54] : [0.91, 0.72, 0.54]));
-    }
-    armGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-    this.armMat.vertexColors = true;
-    this.armMat.color.set(0xffffff);
-    this.arm = new THREE.Mesh(armGeo, this.armMat);
+    // boîte du bras debout (comme sur le modèle), couchée pour que la main pointe vers l'avant
+    const armGeo = new THREE.BoxGeometry(0.22, 0.8, 0.22);
+    const shade = [0.78, 0.78, 1, 0.55, 0.9, 0.7];
+    const cols: number[] = [];
+    for (let f = 0; f < 6; f++) for (let v = 0; v < 4; v++) cols.push(shade[f], shade[f], shade[f]);
+    armGeo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+    for (let f = 0; f < 6; f++) this.armMats.push(new THREE.MeshBasicMaterial({ vertexColors: true }));
+    const mesh = new THREE.Mesh(armGeo, this.armMats);
+    mesh.rotation.x = Math.PI / 2;
+    this.arm.add(mesh);
     this.scene.add(this.arm);
+    this.setSkin(DEFAULT_SKIN);
+  }
+
+  /** Repeint le bras avec le skin du joueur. */
+  setSkin(skin: Skin): void {
+    this.armMats.forEach((m, f) => {
+      m.map?.dispose();
+      const [fw, fh] = faceSize(f, 4, 12, 4);
+      const t = new THREE.CanvasTexture(paintSkinFace(skin, 'arm_r', f, fw, fh));
+      t.magFilter = THREE.NearestFilter;
+      t.minFilter = THREE.NearestFilter;
+      t.colorSpace = THREE.NoColorSpace;
+      m.map = t;
+      m.needsUpdate = true;
+    });
   }
 
   resize(aspect: number): void {
@@ -109,7 +124,7 @@ export class HeldItemRenderer {
     this.arm.position.set(0.6 + bx - swHalf * 0.3, -0.62 + by - eq * 0.6 + sw * 0.1, -0.6 - swHalf * 0.2);
     this.arm.rotation.set(0.3 - sw * 0.9, -0.2 + swHalf * 0.4, 0.1);
     const l = Math.max(s.sky * s.daylight, s.block, 0.1);
-    this.armMat.color.setRGB(l, l, l);
+    for (const m of this.armMats) m.color.setRGB(l, l, l);
     this.model?.setLight(s.sky, s.block, s.daylight);
   }
 

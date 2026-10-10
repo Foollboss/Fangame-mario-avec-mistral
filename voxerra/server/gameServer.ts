@@ -9,6 +9,7 @@ import type { Content } from '../src/registry/content';
 import type { WorldMeta } from '../src/save/storage';
 import { DEFAULT_RULES } from '../src/save/storage';
 import { Player } from '../src/entity/player';
+import { DEFAULT_SKIN_CODE, decodeSkin, encodeSkin } from '../src/entity/skin';
 import { Chunk } from '../src/world/chunk';
 import { ckey, ckeyX, ckeyZ, CS } from '../src/world/constants';
 import { createGenerator, type DimGenerator } from '../src/worldgen/generator';
@@ -59,6 +60,11 @@ export interface ServerOptions {
 }
 
 const round = (v: number, k = 100): number => Math.round(v * k) / k;
+/** Skin envoyé par un client : relu et réécrit, ou celui par défaut s'il est mal formé. */
+const cleanSkin = (code: unknown): string => {
+  const s = decodeSkin(code);
+  return s ? encodeSkin(s) : DEFAULT_SKIN_CODE;
+};
 const VIEW_ENTS = 72;
 
 export class GameServer {
@@ -246,6 +252,9 @@ export class GameServer {
         case 'chat':
           this.onChat(c, p, String(m.text ?? '').slice(0, 256));
           break;
+        case 'skin':
+          p.skin = cleanSkin(m.skin);
+          break;
         case 'respawn':
           this.respawn(c, p);
           break;
@@ -301,6 +310,7 @@ export class GameServer {
     }
     p.name = name;
     p.displayName = name;
+    p.skin = cleanSkin(m.skin);
     c.player = p;
     // colonnes autour du point d'arrivée, puis sol sûr
     this.loadAround(p.dim, p.x, p.z, 2);
@@ -552,6 +562,7 @@ export class GameServer {
     const s: EntSnap = { id: e.id, k: e.kind, x: round(e.x), y: round(e.y), z: round(e.z), yw: round(e.yaw), pt: round(e.pitch), w: e.body.hw, ht: e.body.h };
     if (le.type) s.ty = le.type;
     if (e.displayName) s.n = e.displayName;
+    if (e instanceof Player) s.sk = e.skin;
     if (typeof le.health === 'number') {
       s.hp = round(le.health, 10);
       s.mx = le.maxHealth;

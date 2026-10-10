@@ -17,6 +17,8 @@ import type { Station, Recipe } from '../crafting/recipes';
 import type { FurnaceData } from '../sim/furnace';
 import { t, tr } from '../i18n/i18n';
 import { pixelIcon } from './pixelIcons';
+import { DEFAULT_SKIN, decodeSkin, playerParts } from '../entity/skin';
+import { drawSkinFront } from '../render/playerSkin';
 
 export interface InvContext {
   content: Content;
@@ -451,30 +453,13 @@ class CraftingScreen extends ContainerScreen {
 }
 
 /** Silhouette pixel-art du personnage (création originale). */
-function playerFigure(): HTMLElement {
-  const c = h('canvas', { width: 26, height: 36 }) as HTMLCanvasElement;
-  c.style.width = '104px';
+/** Le joueur vu de face, avec son skin. */
+function playerFigure(code: string): HTMLElement {
+  const skin = decodeSkin(code) ?? DEFAULT_SKIN;
+  const c = drawSkinFront(skin, playerParts(skin));
+  c.style.width = '72px';
   c.style.height = '144px';
-  const g = c.getContext('2d')!;
-  const px = (x: number, y: number, w: number, hh: number, col: string) => {
-    g.fillStyle = col;
-    g.fillRect(x, y, w, hh);
-  };
-  px(9, 2, 8, 8, '#e8b88a'); // tête
-  px(9, 2, 8, 3, '#5a3a24'); // cheveux
-  px(11, 6, 1, 1, '#1a1a2a');
-  px(14, 6, 1, 1, '#1a1a2a');
-  px(8, 10, 10, 2, '#d04a2a'); // écharpe
-  px(8, 12, 10, 10, '#2a6a8a'); // tunique
-  px(8, 20, 10, 2, '#6a4a2a'); // ceinture
-  px(5, 12, 3, 9, '#2a6a8a');
-  px(18, 12, 3, 9, '#2a6a8a');
-  px(5, 21, 3, 2, '#e8b88a');
-  px(18, 21, 3, 2, '#e8b88a');
-  px(9, 22, 4, 10, '#3a3a5a');
-  px(13, 22, 4, 10, '#3a3a5a');
-  px(9, 31, 4, 3, '#4a2a1a');
-  px(13, 31, 4, 3, '#4a2a1a');
+  c.style.imageRendering = 'pixelated';
   return h('div', { class: 'player-figure' }, c);
 }
 
@@ -501,7 +486,7 @@ export class PlayerInventoryScreen extends CraftingScreen {
       h(
         'div',
         { class: 'inv-layout' },
-        h('div', { class: 'inv-top' }, armorEl, playerFigure(), h('div', { style: { display: 'flex', flexDirection: 'column', gap: '4px' } }, h('div', { class: 'ptitle' }, t('Fabrication')), this.craftBlock(), h('div', { style: { marginTop: '10px' } }, h('div', { class: 'ptitle' }, t('Main secondaire')), off))),
+        h('div', { class: 'inv-top' }, armorEl, playerFigure(this.ctx.player.skin), h('div', { style: { display: 'flex', flexDirection: 'column', gap: '4px' } }, h('div', { class: 'ptitle' }, t('Fabrication')), this.craftBlock(), h('div', { style: { marginTop: '10px' } }, h('div', { class: 'ptitle' }, t('Main secondaire')), off))),
         grid,
       ),
     );
