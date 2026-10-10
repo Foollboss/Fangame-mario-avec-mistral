@@ -22,12 +22,14 @@ Télécharge `AsphaltFangame.exe` et double-clique dessus. Tout est dans ce seul
 Windows SmartScreen peut afficher « Windows a protégé votre ordinateur » car le fichier n'est pas signé : clique sur **Informations complémentaires → Exécuter quand même**.
 
 ### Sur téléphone Android (.apk)
-1. Copie `AsphaltFangame.apk` sur le téléphone (ou télécharge-le directement dessus).
+1. Télécharge `AsphaltFangame.apk` directement sur le téléphone : https://github.com/foollboss/fangame-mario-avec-mistral/releases/download/jeu/AsphaltFangame.apk
 2. Ouvre-le et autorise l'**installation d'applications inconnues** quand Android le demande.
 3. Lance « Asphalt Fangame ». Le jeu se joue en paysage, avec le TouchDrive activé par défaut.
 
-Commandes tactiles : moitié gauche de l'écran = diriger (◀ ▶), bouton **NITRO** (double tape = onde de choc), bouton **DRIFT** (double tape = 360°), cadre « TOUCHDRIVE » en haut à gauche pour l'activer ou le désactiver, bouton retour d'Android = pause / écran précédent.
-Il faut un téléphone Android 64 bits compatible OpenGL ES 3 (quasiment tous les téléphones depuis 2015).
+**« Application non installée » ?** Une ancienne version d'Asphalt Fangame est déjà installée et elle a été signée avec une autre clé (chaque version générée par GitHub a sa propre clé pour l'instant). Android refuse alors la mise à jour. Désinstalle l'ancienne version (**Paramètres → Applications → Asphalt Fangame → Désinstaller**, et aussi la version de diagnostic si tu l'as installée), puis rouvre l'APK. La progression du jeu est effacée par la désinstallation.
+
+Commandes tactiles : **◀** au milieu à gauche avec **DRIFT** en dessous (double tape = 360°), **▶** au milieu à droite avec **NITRO** en dessous (double tape = onde de choc), cadre « TOUCHDRIVE » en haut à gauche pour l'activer ou le désactiver, bouton retour d'Android = pause / écran précédent. On peut appuyer sur deux boutons en même temps (◀ + NITRO par exemple).
+Il faut un téléphone Android 7 ou plus récent, 64 bits et compatible OpenGL ES 3 (quasiment tous les téléphones depuis 2016).
 
 Si le jeu se ferme tout seul :
 1. Relance-le, va dans **Réglages → Journal des erreurs** et fais une capture d'écran : tu y vois le « dernier signe de vie » de la partie précédente (écran, temps de jeu, mémoire) et les dernières lignes du journal.
@@ -35,7 +37,8 @@ Si le jeu se ferme tout seul :
 3. Un plantage du pilote graphique ou un manque de mémoire ne laisse pas de trace dans le journal : seul `adb logcat` (sur un PC) le montre.
 
 ### Où trouver les fichiers
-- Les fichiers `.exe` et `.apk` sont générés automatiquement par GitHub à chaque modification du dossier `godot/` : onglet **Actions** du dépôt → dernière exécution « Export du jeu » → section **Artifacts**.
+- Dernière version : page **Releases** du dépôt → « jeu » (https://github.com/foollboss/fangame-mario-avec-mistral/releases/tag/jeu), avec `AsphaltFangame.exe`, `AsphaltFangame.apk` et `AsphaltFangame-diagnostic.apk`.
+- Ils sont générés automatiquement par GitHub à chaque modification du dossier `godot/` (onglet **Actions** → « Export du jeu » → section **Artifacts**).
 - Tu peux aussi les générer toi-même : ouvre le projet dans Godot 4.5 → *Projet → Exporter* → « Windows Desktop » ou « Android » (les préréglages sont déjà prêts dans `godot/export_presets.cfg`).
 
 ### Depuis les sources (Godot)
