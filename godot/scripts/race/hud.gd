@@ -30,6 +30,7 @@ var fps_label: Label
 var speedlines: ColorRect
 var pause_layer: Control
 var results_layer: Control
+var touch_nodes: Array = []
 
 var _nitro := 0.0
 var _nitro_level := 0
@@ -64,8 +65,8 @@ func _ready() -> void:
 	_build_touch()
 
 	var hint_text := "← →  DIRIGER    ↑ / ESPACE  NITRO (x2 = ONDE DE CHOC)    ↓ / MAJ  DRIFT (x2 = 360°)    T  TOUCHDRIVE    C  CAMÉRA"
-	if DisplayServer.is_touchscreen_available():
-		hint_text = "◀ ▶  DIRIGER (MOITIÉ GAUCHE)    NITRO : TAPE (x2 = ONDE DE CHOC)    DRIFT (x2 = 360°)    TOUCHDRIVE : TOUCHE LE CADRE EN HAUT À GAUCHE"
+	if is_touch():
+		hint_text = "◀ ▶  DIRIGER    NITRO (x2 = ONDE DE CHOC)    DRIFT (x2 = 360°)    TOUCHDRIVE : TOUCHE LE CADRE EN HAUT À GAUCHE"
 	hint = K.outlined(K.label(hint_text, 18, Color(1, 1, 1, 0.85), "semi", HORIZONTAL_ALIGNMENT_CENTER), 5)
 	K.place(hint, Control.PRESET_CENTER_BOTTOM, Vector2(-700, -60), Vector2(1400, 40))
 	root.add_child(hint)
@@ -194,7 +195,10 @@ func _draw_nitro() -> void:
 
 func _build_messages() -> void:
 	msg_box = K.vbox(6)
-	K.place(msg_box, Control.PRESET_CENTER_RIGHT, Vector2(-430, -60), Vector2(400, 10))
+	if is_touch():
+		K.place(msg_box, Control.PRESET_CENTER_TOP, Vector2(-200, 104), Vector2(400, 10))
+	else:
+		K.place(msg_box, Control.PRESET_CENTER_RIGHT, Vector2(-430, -60), Vector2(400, 10))
 	msg_box.alignment = BoxContainer.ALIGNMENT_END
 	msg_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(msg_box)
@@ -211,7 +215,10 @@ func _build_center() -> void:
 
 func _build_board() -> void:
 	board = K.vbox(3)
-	K.place(board, Control.PRESET_CENTER_LEFT, Vector2(26, -80), Vector2(240, 200))
+	if is_touch():
+		K.place(board, Control.PRESET_TOP_LEFT, Vector2(26, 196), Vector2(240, 200))
+	else:
+		K.place(board, Control.PRESET_CENTER_LEFT, Vector2(26, -80), Vector2(240, 200))
 	board.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(board)
 
@@ -245,32 +252,74 @@ func update_board(order: Array, player: Racer) -> void:
 		row[0].add_theme_stylebox_override("panel", K.style(K.PURPLE if r == player else Color(0.04, 0.02, 0.08, 0.6)))
 
 
+func is_touch() -> bool:
+	return DisplayServer.is_touchscreen_available() or Game.autotest.has("touch")
+
+
+## Commandes tactiles : ◀ au milieu à gauche (DRIFT dessous), ▶ au milieu à droite (NITRO dessous).
+## Les zones sensibles sont plus grandes que les ronds dessinés pour être faciles à toucher.
 func _build_touch() -> void:
-	if not DisplayServer.is_touchscreen_available():
+	if not is_touch():
 		return
 	var vp := get_viewport().get_visible_rect().size
+	var r := vp.y * 0.105            # rayon des boutons
+	var m := vp.x * 0.025 + r        # distance du centre des boutons au bord
+	var cy := vp.y * 0.52            # hauteur des flèches
+	var cy2 := cy + r * 2.35         # hauteur de DRIFT / NITRO
+	var zone_w := m + r * 1.6
+	var split := (cy + cy2) * 0.5
 	var defs := [
-		["steer_left", Rect2(0, vp.y * 0.35, vp.x * 0.3, vp.y * 0.65), "◀"],
-		["steer_right", Rect2(vp.x * 0.3, vp.y * 0.35, vp.x * 0.3, vp.y * 0.65), "▶"],
-		["drift", Rect2(vp.x * 0.62, vp.y * 0.62, vp.x * 0.17, vp.y * 0.38), "DRIFT"],
-		["nitro", Rect2(vp.x * 0.80, vp.y * 0.5, vp.x * 0.2, vp.y * 0.5), "NITRO"],
+		# action, centre du rond, zone sensible, texte, couleur, rayon
+		["steer_left", Vector2(m, cy), Rect2(0, cy - r * 1.6, zone_w, split - (cy - r * 1.6)), "◀", Color(1, 1, 1), r],
+		["drift", Vector2(m, cy2), Rect2(0, split, zone_w, vp.y - split), "DRIFT", K.CYAN, r * 0.9],
+		["steer_right", Vector2(vp.x - m, cy), Rect2(vp.x - zone_w, cy - r * 1.6, zone_w, split - (cy - r * 1.6)), "▶", Color(1, 1, 1), r],
+		["nitro", Vector2(vp.x - m, cy2), Rect2(vp.x - zone_w, split, zone_w, vp.y - split), "NITRO", K.YELLOW, r * 1.05],
 	]
 	for d in defs:
+		var zone: Rect2 = d[2]
 		var b := TouchScreenButton.new()
 		var shape := RectangleShape2D.new()
-		var r: Rect2 = d[1]
-		shape.size = r.size
+		shape.size = zone.size
 		b.shape = shape
 		b.shape_centered = false
-		b.position = r.position
+		b.position = zone.position
 		b.action = d[0]
-		b.visibility_mode = TouchScreenButton.VISIBILITY_TOUCHSCREEN_ONLY
+		b.visibility_mode = TouchScreenButton.VISIBILITY_ALWAYS
 		add_child(b)
-		var lbl := K.label(d[2], 30, Color(1, 1, 1, 0.35), "black", HORIZONTAL_ALIGNMENT_CENTER)
-		lbl.position = r.position + Vector2(0, r.size.y - 90)
-		lbl.size = Vector2(r.size.x, 60)
-		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		root.add_child(lbl)
+		var vis := _touch_visual(d[1], d[3], d[4], d[5])
+		root.add_child(vis)
+		touch_nodes.append(b)
+		touch_nodes.append(vis)
+		b.pressed.connect(func(): vis.set_meta("down", true); vis.queue_redraw())
+		b.released.connect(func(): vis.set_meta("down", false); vis.queue_redraw())
+
+
+func set_touch_visible(on: bool) -> void:
+	for n in touch_nodes:
+		n.visible = on
+
+
+func _touch_visual(center: Vector2, text: String, col: Color, radius: float) -> Control:
+	var c := Control.new()
+	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	c.position = center - Vector2(radius, radius)
+	c.size = Vector2(radius, radius) * 2.0
+	c.set_meta("down", false)
+	var font := K.font("black")
+	c.draw.connect(func():
+		var down: bool = c.get_meta("down", false)
+		var ctr := Vector2(radius, radius)
+		c.draw_circle(ctr, radius, Color(col.r * 0.25, col.g * 0.2, col.b * 0.35, 0.75 if down else 0.45))
+		c.draw_arc(ctr, radius - 3.0, 0.0, TAU, 48, Color(col.r, col.g, col.b, 1.0 if down else 0.8), 6.0 if down else 4.0, true)
+		if text == "◀" or text == "▶":
+			var s := 1.0 if text == "▶" else -1.0
+			var k := radius * 0.42
+			c.draw_colored_polygon(PackedVector2Array([ctr + Vector2(s * k, 0), ctr + Vector2(-s * k * 0.7, -k), ctr + Vector2(-s * k * 0.7, k)]), Color(1, 1, 1, 1.0 if down else 0.85))
+		else:
+			var fs := int(radius * 0.36)
+			var tw := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+			c.draw_string(font, ctr + Vector2(-tw * 0.5, fs * 0.35), text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(col.r, col.g, col.b, 1.0 if down else 0.9)))
+	return c
 
 
 # ---------------------------------------------------------------------------
@@ -347,6 +396,7 @@ func push_message(text: String, sub: String = "", color: Color = K.YELLOW) -> vo
 # Pause
 # ---------------------------------------------------------------------------
 func show_pause(on: bool) -> void:
+	set_touch_visible(not on)
 	if pause_layer:
 		pause_layer.queue_free()
 		pause_layer = null
@@ -379,6 +429,7 @@ func show_pause(on: bool) -> void:
 func show_results(data: Dictionary) -> void:
 	for c in [msg_box, board, nitro_bar, speedlines, hint]:
 		c.visible = false
+	set_touch_visible(false)
 	results_layer = Control.new()
 	results_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	results_layer.process_mode = Node.PROCESS_MODE_ALWAYS
