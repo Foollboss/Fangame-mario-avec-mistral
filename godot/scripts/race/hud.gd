@@ -281,17 +281,76 @@ func _build_touch() -> void:
 		var shape := RectangleShape2D.new()
 		shape.size = zone.size
 		b.shape = shape
-		b.shape_centered = false
-		b.position = zone.position
+		# sans texture, Godot centre toujours la forme sur la position du bouton :
+		# on place donc le bouton au CENTRE de sa zone sensible
+		b.position = zone.get_center()
 		b.action = d[0]
 		b.visibility_mode = TouchScreenButton.VISIBILITY_ALWAYS
 		add_child(b)
 		var vis := _touch_visual(d[1], d[3], d[4], d[5])
+		vis.set_meta("label", d[3])
+		vis.set_meta("center", d[1])
 		root.add_child(vis)
 		touch_nodes.append(b)
 		touch_nodes.append(vis)
 		b.pressed.connect(func(): vis.set_meta("down", true); vis.queue_redraw())
 		b.released.connect(func(): vis.set_meta("down", false); vis.queue_redraw())
+
+
+## Outil de test (--touchtest) : simule un doigt au centre de chaque rond, en coordonnées
+## de la fenêtre comme un vrai écran tactile, et affiche les commandes déclenchées.
+func run_touch_test() -> void:
+	var to_window := get_viewport().get_final_transform()
+	print("touchtest: fenetre=", DisplayServer.window_get_size(), " canevas=", get_viewport().get_visible_rect().size)
+	var idx := 0
+	for n in touch_nodes:
+		if not (n is Control):
+			continue
+		var label: String = n.get_meta("label", "?")
+		var center: Vector2 = n.get_meta("center", n.position + n.size * 0.5)
+		var wpos: Vector2 = to_window * center
+		var ev := InputEventScreenTouch.new()
+		ev.index = idx
+		ev.position = wpos
+		ev.pressed = true
+		Input.parse_input_event(ev)
+		for i in 3:
+			await get_tree().process_frame
+		var active := []
+		for a in ["steer_left", "steer_right", "drift", "nitro"]:
+			if Input.is_action_pressed(a):
+				active.append(a)
+		print("touchtest: doigt sur [%s] -> %s" % [label, ", ".join(active) if not active.is_empty() else "RIEN"])
+		var up := InputEventScreenTouch.new()
+		up.index = idx
+		up.position = wpos
+		up.pressed = false
+		Input.parse_input_event(up)
+		for i in 3:
+			await get_tree().process_frame
+		idx += 1
+	# deux doigts en même temps : ◀ maintenu + NITRO
+	var pts := {}
+	for n in touch_nodes:
+		if n is Control:
+			pts[n.get_meta("label", "?")] = to_window * (n.get_meta("center", Vector2.ZERO) as Vector2)
+	var downs := []
+	for pair in [[10, "◀"], [11, "NITRO"]]:
+		var e := InputEventScreenTouch.new()
+		e.index = pair[0]
+		e.position = pts[pair[1]]
+		e.pressed = true
+		Input.parse_input_event(e)
+		downs.append(e)
+	for i in 3:
+		await get_tree().process_frame
+	print("touchtest: deux doigts [◀ + NITRO] -> gauche=%s nitro=%s" % [Input.is_action_pressed("steer_left"), Input.is_action_pressed("nitro")])
+	for e in downs:
+		var u := InputEventScreenTouch.new()
+		u.index = e.index
+		u.position = e.position
+		u.pressed = false
+		Input.parse_input_event(u)
 
 
 func set_touch_visible(on: bool) -> void:

@@ -243,6 +243,9 @@ func _process(delta: float) -> void:
 					hud.push_message("DÉPART PARFAIT", "+NITRO")
 		"racing":
 			clock += dt
+			if Game.autotest.has("touchtest") and clock > 1.0 and not has_meta("touchtest_done"):
+				set_meta("touchtest_done", true)
+				hud.run_touch_test()
 		"finished":
 			clock += 0.0
 			if state_t > 3.0 and not _finish_shown:
