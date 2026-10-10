@@ -96,6 +96,7 @@ var ai_aggressive := false
 var ai_target_x := 0.0
 var _ai_lane_timer := 0.0
 var _ai_nitro_timer := 0.0
+var _full_wait := 0.0
 var _ai_rng := RandomNumberGenerator.new()
 
 # statistiques de course
@@ -289,8 +290,9 @@ func _handle_nitro(dt: float, clock: float) -> void:
 				if is_player:
 					Audio.play("boost", -3.0, 1.2)
 				_nitro_fx()
-			elif not double_tap:
-				# appui hors de la zone bleu clair : nitro normal, une nouvelle zone apparaît
+			elif nitro_time > DOUBLE_TAP:
+				# appui hors de la zone bleu clair (sauf le 2e appui d'un double appui) :
+				# nitro normal, une nouvelle zone apparaît -> marteler le bouton ne marche pas
 				if nitro_level != NITRO_NORMAL:
 					nitro_level = NITRO_NORMAL
 					_nitro_fx()
@@ -362,7 +364,7 @@ func in_ultra_window() -> bool:
 
 ## Jauge pleine : l'onde de choc est disponible (double appui).
 func shockwave_ready() -> bool:
-	return nitro >= SHOCK_FULL and nitro_level < NITRO_SHOCK and started and not finished
+	return nitro >= SHOCK_FULL and nitro_level < NITRO_SHOCK and started and not finished and not wrecked
 
 
 func _nitro_fx() -> void:
@@ -607,9 +609,19 @@ func think(dt: float, clock: float, racers: Array, traffic: Array, player: Racer
 	var straight: bool = abs(k) < 0.004
 	if nitro_level == NITRO_OFF:
 		in_nitro = false
-		if nitro > (30.0 if is_player else 40.0) and straight and _ai_nitro_timer <= 0.0 and started:
+		if is_player:
+			# TouchDrive : on laisse la jauge se remplir pour l'onde de choc. Le joueur a
+			# quelques secondes pour faire le double appui lui-même, sinon l'autopilote le fait.
+			# (l'ultra nitro reste au joueur : appui dans la zone turquoise)
+			_full_wait = _full_wait + dt if shockwave_ready() else 0.0
+			if _full_wait > 3.0 and straight and started:
+				in_nitro = true
+		elif nitro > 40.0 and straight and _ai_nitro_timer <= 0.0 and started:
 			in_nitro = true
 			_ai_nitro_timer = 0.4
+	elif is_player and nitro_level == NITRO_NORMAL and _full_at_press and nitro_time < DOUBLE_TAP:
+		# 2e appui du double appui automatique : relâche une image puis ré-appuie
+		in_nitro = not _prev_nitro
 	elif nitro_level == NITRO_NORMAL or nitro_level == NITRO_PERFECT:
 		var want_perfect := _ai_rng.randf() < (0.9 if is_player else ai_skill)
 		in_nitro = want_perfect and nitro_time > PERFECT_A + 0.08 and nitro_time < PERFECT_B - 0.05 and not _prev_nitro

@@ -517,7 +517,8 @@ func _ultra_blast(r: Racer) -> void:
 			traffic.knock(t, sign(dx) if dx != 0.0 else 1.0, r.v)
 			knocked += 1
 	for o in racers:
-		if o == r or o.wrecked or o.ghost > 0.0 or o.finished:
+		# pas de takedown pendant l'invincibilité qui suit une réapparition
+		if r.ghost > 0.0 or o == r or o.wrecked or o.ghost > 0.0 or o.finished:
 			continue
 		var ds2: float = o.s - r.s
 		if ds2 > -5.0 and ds2 < 16.0 and absf(o.x - r.x) < 4.0 and absf(o.h - r.h) < 2.0:
