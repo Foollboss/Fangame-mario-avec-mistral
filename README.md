@@ -28,7 +28,7 @@ Windows SmartScreen peut afficher « Windows a protégé votre ordinateur » car
 
 **« Application non installée » ?** Une ancienne version d'Asphalt Fangame est déjà installée et elle a été signée avec une autre clé (chaque version générée par GitHub a sa propre clé pour l'instant). Android refuse alors la mise à jour. Désinstalle l'ancienne version (**Paramètres → Applications → Asphalt Fangame → Désinstaller**, et aussi la version de diagnostic si tu l'as installée), puis rouvre l'APK. La progression du jeu est effacée par la désinstallation.
 
-Commandes tactiles : **◀** au milieu à gauche avec **DRIFT** en dessous (double tape = 360°), **▶** au milieu à droite avec **NITRO** en dessous (double tape = onde de choc), cadre « TOUCHDRIVE » en haut à gauche pour l'activer ou le désactiver, bouton retour d'Android = pause / écran précédent. On peut appuyer sur deux boutons en même temps (◀ + NITRO par exemple).
+Commandes tactiles : **◀** au milieu à gauche avec **DRIFT** en dessous (double tape = 360°), **▶** au milieu à droite avec **NITRO** en dessous (zone bleu clair = parfait, double tape jauge pleine = onde de choc, zone turquoise = ultra nitro), cadre « TOUCHDRIVE » en haut à gauche pour l'activer ou le désactiver, bouton retour d'Android = pause / écran précédent. On peut appuyer sur deux boutons en même temps (◀ + NITRO par exemple).
 Il faut un téléphone Android 7 ou plus récent, 64 bits et compatible OpenGL ES 3 (quasiment tous les téléphones depuis 2016).
 
 Si le jeu se ferme tout seul :
@@ -49,10 +49,11 @@ Si le jeu se ferme tout seul :
 ## Ce qu'il y a dedans
 
 **Course**
-- Accélération automatique, **drift** (rempli la nitro), **nitro** en 3 niveaux comme dans Asphalt :
-  - 1 appui = nitro normal (flammes orange)
-  - ré-appuyer dans la zone violette de la jauge = **NITRO PARFAIT** (3 d'affilée = *SÉQUENCE PARFAITE*)
-  - double appui = **ONDE DE CHOC** (flammes bleues, éjecte le trafic)
+- Accélération automatique, **drift** (remplit la nitro), **nitro** comme dans Asphalt Legends Unite, avec des **zones dans la jauge** :
+  - 1 appui = nitro normal (flammes orange) : la jauge se vide et une **zone bleu clair** apparaît dedans
+  - ré-appuyer quand le bord de la jauge est dans la zone bleu clair = **NITRO PARFAIT** (flammes bleu clair, 3 d'affilée = *SÉQUENCE PARFAITE*)
+  - jauge pleine (elle clignote en violet) + double appui = **ONDE DE CHOC** (flammes violettes, éjecte le trafic)
+  - pendant l'onde de choc, une **zone turquoise** apparaît : appuie dedans pour l'**ULTRA NITRO** (flammes turquoise) — encore plus rapide que l'onde de choc, une explosion éjecte le trafic et les rivaux proches, et tout contact élimine l'adversaire. Un appui trop tôt pendant l'onde de choc fait rater l'ultra.
 - **Rampes** et **rampes à tonneau** (inclinées : la voiture fait un **tonneau** en l'air), sauts sur les bosses de San Francisco, **360°** (double appui sur drift).
 - **Takedowns** (pousse les rivaux sur le côté ou percute-les par l'arrière), **épaves** au ralenti avec réapparition, **frôlements** de trafic.
 - 5 adversaires IA (changements de voie, rampes, nitro, agressivité, élastique) + trafic civil (berlines, taxis, SUV, vans, bus).
@@ -88,7 +89,7 @@ Pour ajouter / modifier une voiture : édite `godot/data/cars.json` puis relance
 | Action | Clavier (AZERTY ou QWERTY) | Manette |
 |---|---|---|
 | Diriger | ← → ou Q / D | Stick gauche, croix |
-| Nitro (2x = onde de choc) | ↑, Z ou Espace | A, RT |
+| Nitro (zone bleu clair = parfait, jauge pleine 2x = onde de choc, zone turquoise = ultra) | ↑, Z ou Espace | A, RT |
 | Drift / frein (2x = 360°) | ↓, S ou Maj | X / B, LT |
 | TouchDrive | T | Select |
 | Caméra | C | Y |

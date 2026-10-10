@@ -28,6 +28,7 @@ var board: VBoxContainer
 var hint: Label
 var fps_label: Label
 var speedlines: ColorRect
+var flash_rect: ColorRect
 var pause_layer: Control
 var results_layer: Control
 var touch_nodes: Array = []
@@ -35,6 +36,12 @@ var touch_nodes: Array = []
 var _nitro := 0.0
 var _nitro_level := 0
 var _nitro_time := 0.0
+var _perfect_zone := Vector2.ZERO
+var _ultra_zone := Vector2.ZERO
+var _in_perfect := false
+var _in_ultra := false
+var _shock_ready := false
+var _anim_t := 0.0
 var _center_t := 0.0
 var _board_rows: Array = []
 
@@ -55,6 +62,11 @@ func _ready() -> void:
 	sm.set_shader_parameter("intensity", 0.0)
 	speedlines.material = sm
 	root.add_child(speedlines)
+	flash_rect = ColorRect.new()
+	flash_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	flash_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	flash_rect.color = Color(1, 1, 1, 0)
+	root.add_child(flash_rect)
 
 	_build_top_left()
 	_build_top_right()
@@ -64,11 +76,12 @@ func _ready() -> void:
 	_build_board()
 	_build_touch()
 
-	var hint_text := "← →  DIRIGER    ↑ / ESPACE  NITRO (x2 = ONDE DE CHOC)    ↓ / MAJ  DRIFT (x2 = 360°)    T  TOUCHDRIVE    C  CAMÉRA"
+	var hint_text := "← →  DIRIGER    ↑ / ESPACE  NITRO    ↓ / MAJ  DRIFT (x2 = 360°)    T  TOUCHDRIVE    C  CAMÉRA"
 	if is_touch():
-		hint_text = "◀ ▶  DIRIGER    NITRO (x2 = ONDE DE CHOC)    DRIFT (x2 = 360°)    TOUCHDRIVE : TOUCHE LE CADRE EN HAUT À GAUCHE"
+		hint_text = "◀ ▶  DIRIGER    NITRO    DRIFT (x2 = 360°)    TOUCHDRIVE : TOUCHE LE CADRE EN HAUT À GAUCHE"
+	hint_text += "\nNITRO : ré-appuie dans la zone BLEU CLAIR = PARFAIT  ·  jauge pleine + double appui = ONDE DE CHOC  ·  pendant l'onde, zone TURQUOISE = ULTRA NITRO"
 	hint = K.outlined(K.label(hint_text, 18, Color(1, 1, 1, 0.85), "semi", HORIZONTAL_ALIGNMENT_CENTER), 5)
-	K.place(hint, Control.PRESET_CENTER_BOTTOM, Vector2(-700, -60), Vector2(1400, 40))
+	K.place(hint, Control.PRESET_CENTER_BOTTOM, Vector2(-760, -84), Vector2(1520, 64))
 	root.add_child(hint)
 
 	fps_label = K.label("", 16, Color(0.7, 1, 0.7), "upright")
@@ -159,46 +172,124 @@ func _build_nitro_bar() -> void:
 	root.add_child(nitro_bar)
 
 
+const NB_W := 580.0
+const NB_H := 24.0
+const NB_SK := 10.0
+
+
+## Abscisse dans la jauge inclinée pour une fraction f (0..1) à la hauteur y.
+func _nb_x(f: float, y: float) -> float:
+	return NB_W * f + NB_SK - 2.0 * NB_SK * y / NB_H
+
+
+func _nb_seg(f0: float, f1: float, y0: float, y1: float) -> PackedVector2Array:
+	return PackedVector2Array([Vector2(_nb_x(f0, y0), y0), Vector2(_nb_x(f1, y0), y0),
+		Vector2(_nb_x(f1, y1), y1), Vector2(_nb_x(f0, y1), y1)])
+
+
+func _nitro_color(level: int) -> Color:
+	match level:
+		Racer.NITRO_NORMAL:
+			return K.NITRO_ORANGE
+		Racer.NITRO_PERFECT:
+			return K.SKY
+		Racer.NITRO_SHOCK:
+			return K.VIOLET
+		Racer.NITRO_ULTRA:
+			return K.TURQUOISE
+	return K.YELLOW
+
+
 func _draw_nitro() -> void:
-	var w := 580.0
-	var hgt := 24.0
-	var sk := 10.0
-	var bg := PackedVector2Array([Vector2(sk, 0), Vector2(w + sk, 0), Vector2(w - sk, hgt), Vector2(-sk, hgt)])
+	var bg := _nb_seg(0.0, 1.0, 0.0, NB_H)
 	nitro_bar.draw_colored_polygon(bg, Color(0.04, 0.02, 0.08, 0.8))
 	var f: float = clamp(_nitro / 100.0, 0.0, 1.0)
-	var col := K.YELLOW
-	if _nitro_level == 2:
-		col = K.MAGENTA
-	elif _nitro_level == 3:
-		col = K.CYAN
-	if w * f > sk * 2.0 + 6.0:
-		var fw := w * f
-		var poly := PackedVector2Array([Vector2(sk + 2, 3), Vector2(fw + sk - 2, 3), Vector2(fw - sk + 2, hgt - 3), Vector2(-sk + 4, hgt - 3)])
-		nitro_bar.draw_colored_polygon(poly, col)
+	var pulse := 0.5 + 0.5 * sin(_anim_t * 9.0)
+	var col := _nitro_color(_nitro_level)
+	if _shock_ready:
+		# jauge pleine : elle clignote en violet, l'onde de choc est prête
+		col = K.YELLOW.lerp(K.VIOLET, smoothstep(0.3, 0.7, pulse))
+	elif _nitro_level == Racer.NITRO_ULTRA:
+		col = K.TURQUOISE.lerp(Color.WHITE, 0.25 * pulse)
+	if f * NB_W > 4.0:
+		nitro_bar.draw_colored_polygon(_nb_seg(0.0, f, 3.0, NB_H - 3.0), col)
+		# reflet en haut de la jauge
+		nitro_bar.draw_colored_polygon(_nb_seg(0.0, f, 3.0, 8.0), Color(1, 1, 1, 0.22))
+	# zones de timing DANS la jauge : bleu clair = nitro parfait, turquoise = ultra nitro
+	_draw_zone(_perfect_zone, K.SKY, _in_perfect, "PARFAIT")
+	_draw_zone(_ultra_zone, K.TURQUOISE, _in_ultra, "ULTRA")
 	# segments
 	for i in [1, 2]:
-		var sx: float = w * i / 3.0
-		nitro_bar.draw_line(Vector2(sx + sk, 0), Vector2(sx - sk, hgt), Color(0, 0, 0, 0.7), 3.0)
-	# jauge de timing du nitro parfait
-	if _nitro_level == 1 or _nitro_level == 2:
-		var ty := hgt + 8.0
-		var tw := w * 0.6
-		var tx := (w - tw) * 0.5
-		nitro_bar.draw_rect(Rect2(tx, ty, tw, 10), Color(0, 0, 0, 0.6))
-		var a := Racer.PERFECT_A / Racer.NITRO_BURST
-		var b := Racer.PERFECT_B / Racer.NITRO_BURST
-		var in_win := _nitro_time >= Racer.PERFECT_A and _nitro_time <= Racer.PERFECT_B
-		nitro_bar.draw_rect(Rect2(tx + tw * a, ty, tw * (b - a), 10), Color(0.8, 0.3, 1.0, 1.0 if in_win else 0.55))
-		var c: float = clamp(_nitro_time / Racer.NITRO_BURST, 0.0, 1.0)
-		nitro_bar.draw_rect(Rect2(tx + tw * c - 2, ty - 4, 4, 18), Color.WHITE)
+		var sf: float = i / 3.0
+		nitro_bar.draw_line(Vector2(_nb_x(sf, 0.0), 0.0), Vector2(_nb_x(sf, NB_H), NB_H), Color(0, 0, 0, 0.7), 3.0)
+	# bord de la jauge qui descend pendant le nitro
+	if _nitro_level > Racer.NITRO_OFF and f > 0.0:
+		nitro_bar.draw_line(Vector2(_nb_x(f, -3.0), -3.0), Vector2(_nb_x(f, NB_H + 3.0), NB_H + 3.0), Color.WHITE, 3.0)
+	# contour
+	var outline_col := Color(1, 1, 1, 0.25)
+	var outline_w := 2.0
+	if _shock_ready:
+		outline_col = Color(K.VIOLET.r, K.VIOLET.g, K.VIOLET.b, 0.55 + 0.45 * pulse)
+		outline_w = 4.0
+	elif _nitro_level >= Racer.NITRO_SHOCK:
+		outline_col = _nitro_color(_nitro_level)
+		outline_w = 3.0
+	var ol := bg.duplicate()
+	ol.append(bg[0])
+	nitro_bar.draw_polyline(ol, outline_col, outline_w)
+	if _shock_ready:
+		_nb_text("DOUBLE APPUI : ONDE DE CHOC", NB_W * 0.5, 16, K.VIOLET.lightened(0.25 * pulse))
+
+
+## Petit texte sous la jauge, centré sur cx, avec un contour sombre pour rester lisible sur le ciel.
+func _nb_text(text: String, cx: float, fs: int, col: Color) -> void:
+	var font := K.font("black")
+	var tw := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	var pos := Vector2(cx - tw * 0.5, NB_H + 21.0)
+	nitro_bar.draw_string_outline(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 6, Color(0.04, 0.0, 0.1, 0.85))
+	nitro_bar.draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
+
+
+func _draw_zone(zone: Vector2, col: Color, inside: bool, text: String) -> void:
+	if zone.y <= zone.x:
+		return
+	var f0: float = clamp(zone.x / 100.0, 0.0, 1.0)
+	var f1: float = clamp(zone.y / 100.0, 0.0, 1.0)
+	if (f1 - f0) * NB_W < 2.0:
+		return
+	# zone opaque, plus claire que la jauge et cernée de sombre pour se voir même
+	# quand la jauge a la même couleur (nitro parfait dans la zone bleu clair)
+	var zone_poly := _nb_seg(f0, f1, 1.0, NB_H - 1.0)
+	nitro_bar.draw_colored_polygon(zone_poly, col.lightened(0.45 if inside else 0.2))
+	var border := zone_poly.duplicate()
+	border.append(border[0])
+	nitro_bar.draw_polyline(border, Color(0.03, 0.0, 0.08, 0.9), 4.0)
+	nitro_bar.draw_polyline(border, Color.WHITE if inside else col.lightened(0.5), 2.0)
+	if inside:
+		# halo quand le bord de la jauge est dans la zone : c'est le moment d'appuyer
+		var halo := _nb_seg(f0, f1, -5.0, NB_H + 5.0)
+		halo.append(halo[0])
+		nitro_bar.draw_polyline(halo, Color(col.r, col.g, col.b, 0.6), 2.0)
+	_nb_text(text, _nb_x((f0 + f1) * 0.5, NB_H), 15, col.lightened(0.3) if inside else col)
+
+
+## Flash plein écran (ultra nitro, onde de choc).
+func flash(col: Color, strength: float = 0.4, duration: float = 0.45) -> void:
+	if flash_rect == null:
+		return
+	flash_rect.color = Color(col.r, col.g, col.b, strength)
+	var tw := flash_rect.create_tween()
+	tw.tween_property(flash_rect, "color:a", 0.0, duration).set_ease(Tween.EASE_OUT)
 
 
 func _build_messages() -> void:
 	msg_box = K.vbox(6)
 	if is_touch():
 		K.place(msg_box, Control.PRESET_CENTER_TOP, Vector2(-200, 104), Vector2(400, 10))
+		msg_box.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	else:
 		K.place(msg_box, Control.PRESET_CENTER_RIGHT, Vector2(-430, -60), Vector2(400, 10))
+		msg_box.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	msg_box.alignment = BoxContainer.ALIGNMENT_END
 	msg_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(msg_box)
@@ -389,22 +480,34 @@ func update_hud(dt: float, player: Racer, pos: int, total: int, dist: float, clo
 	timer_label.text = K.fmt_time(clock)
 	td_label.text = " OUI" if touchdrive else " NON"
 	td_label.add_theme_color_override("font_color", K.LIME if touchdrive else K.RED)
+	_anim_t += dt
 	_nitro = player.nitro
 	_nitro_level = player.nitro_level
 	_nitro_time = player.nitro_time
+	_perfect_zone = player.perfect_zone()
+	_ultra_zone = player.ultra_zone()
+	_in_perfect = player.in_perfect_window()
+	_in_ultra = player.in_ultra_window()
+	_shock_ready = player.shockwave_ready()
 	nitro_bar.queue_redraw()
 	var target := 0.0
+	var tint := Color(1, 1, 1)
 	match player.nitro_level:
-		1:
+		Racer.NITRO_NORMAL:
 			target = 0.35
-		2:
+		Racer.NITRO_PERFECT:
 			target = 0.6
-		3:
+			tint = Color(0.75, 0.9, 1.0)
+		Racer.NITRO_SHOCK:
+			target = 0.9
+			tint = Color(0.82, 0.6, 1.0)
+		Racer.NITRO_ULTRA:
 			target = 1.0
+			tint = Color(0.55, 1.0, 0.92)
 	var sm := speedlines.material as ShaderMaterial
 	var cur: float = sm.get_shader_parameter("intensity")
 	sm.set_shader_parameter("intensity", lerp(cur, target, 1.0 - exp(-5.0 * dt)))
-	sm.set_shader_parameter("tint", Color(1, 1, 1) if player.nitro_level < 2 else (Color(0.9, 0.6, 1.0) if player.nitro_level == 2 else Color(0.6, 0.85, 1.0)))
+	sm.set_shader_parameter("tint", tint)
 	if _center_t > 0.0:
 		_center_t -= dt
 		if _center_t <= 0.0:
@@ -575,6 +678,8 @@ func show_results(data: Dictionary) -> void:
 		body.add_child(fl)
 	var stats_line := "TAKEDOWNS %d   ·   TONNEAUX %d   ·   SAUTS %d   ·   NITROS PARFAITS %d   ·   FRÔLEMENTS %d" % [
 		data.get("takedowns", 0), data.get("barrel_rolls", 0), data.get("jumps", 0), data.get("perfect_nitros", 0), data.get("near_misses", 0)]
+	if int(data.get("ultra_nitros", 0)) > 0:
+		stats_line += "   ·   ULTRA NITROS %d" % int(data.get("ultra_nitros", 0))
 	body.add_child(K.outlined(K.label(stats_line, 20, Color(1, 1, 1, 0.85), "semi"), 4))
 
 	# tableau complet

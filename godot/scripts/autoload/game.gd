@@ -150,7 +150,7 @@ func _default_save() -> Dictionary:
 		"career": {"flags": {}},
 		"events": {},
 		"stats": {"races": 0, "wins": 0, "takedowns": 0, "barrel_rolls": 0, "jumps": 0, "wrecks": 0,
-				  "perfect_nitros": 0, "near_misses": 0, "distance_km": 0.0, "best_times": {}},
+				  "perfect_nitros": 0, "ultra_nitros": 0, "near_misses": 0, "distance_km": 0.0, "best_times": {}},
 		"daily": {"day": "", "progress": {}, "claimed": {}},
 		"pass": {"xp": 0, "claimed": []},
 		"settings": {"quality": 1 if is_mobile() else 2, "touchdrive": is_mobile(), "sfx": 0.8, "music": 0.5, "engine": 0.7,
@@ -644,7 +644,7 @@ func apply_race_result(res: Dictionary) -> Dictionary:
 	st["races"] = int(st["races"]) + 1
 	if int(res.get("position", 9)) == 1 and req.get("mode", "classic") != "time_attack":
 		st["wins"] = int(st["wins"]) + 1
-	for k in ["takedowns", "barrel_rolls", "jumps", "wrecks", "perfect_nitros", "near_misses"]:
+	for k in ["takedowns", "barrel_rolls", "jumps", "wrecks", "perfect_nitros", "ultra_nitros", "near_misses"]:
 		st[k] = int(st.get(k, 0)) + int(res.get(k, 0))
 	st["distance_km"] = float(st["distance_km"]) + float(req.get("length", 0.0)) / 1000.0
 	var bt: Dictionary = st["best_times"]

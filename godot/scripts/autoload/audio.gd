@@ -4,7 +4,7 @@ extends Node
 ## Autoload : "Audio"
 
 const MIX := 22050.0
-const SFX_NAMES := ["crash", "takedown", "boost", "shockwave", "beep", "go", "click", "confirm",
+const SFX_NAMES := ["crash", "takedown", "boost", "shockwave", "ultra", "beep", "go", "click", "confirm",
 	"land", "scrape", "whoosh", "reward", "star"]
 
 var _sfx: Dictionary = {}
@@ -117,7 +117,7 @@ func set_engine(speed: float, top_speed: float, throttle: float, nitro_level: in
 	else:
 		_target_rpm = 3600.0 + p * 4000.0
 	_throttle = throttle
-	_nitro = float(nitro_level)
+	_nitro = minf(float(nitro_level), 3.5)
 
 
 func _process(_delta: float) -> void:

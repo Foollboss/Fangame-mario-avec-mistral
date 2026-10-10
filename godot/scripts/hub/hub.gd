@@ -1798,7 +1798,7 @@ func _screen_profile() -> void:
 	var rows := [
 		["COURSES", str(st["races"])], ["VICTOIRES", str(st["wins"])], ["TAKEDOWNS", str(st["takedowns"])],
 		["TONNEAUX", str(st["barrel_rolls"])], ["SAUTS", str(st["jumps"])], ["NITROS PARFAITS", str(st["perfect_nitros"])],
-		["FRÔLEMENTS", str(st.get("near_misses", 0))], ["ÉPAVES", str(st["wrecks"])], ["DISTANCE", "%.1f KM" % float(st["distance_km"])],
+		["ULTRA NITROS", str(st.get("ultra_nitros", 0))], ["FRÔLEMENTS", str(st.get("near_misses", 0))], ["ÉPAVES", str(st["wrecks"])], ["DISTANCE", "%.1f KM" % float(st["distance_km"])],
 		["DRAPEAUX", str(Game.total_flags())], ["VOITURES", "%d / %d" % [Game.owned_cars().size(), Game.cars.size()]],
 	]
 	var grid := GridContainer.new()
@@ -1894,7 +1894,7 @@ func _screen_settings() -> void:
 		sc.add_child(txt)
 		lv.add_child(sc))
 	v.add_child(logb)
-	var help := K.label("COMMANDES — Clavier : ← → / Q D diriger · ↑ / Z / Espace nitro (2x = onde de choc) · ↓ / S / Maj drift (2x = 360°) · T TouchDrive · C caméra · Échap pause\nManette : stick gauche · A / RT nitro · X / B / LT drift · Y caméra · Start pause · LB / RB onglets", 18, Color(1, 1, 1, 0.8), "semi")
+	var help := K.label("COMMANDES — Clavier : ← → / Q D diriger · ↑ / Z / Espace nitro (zone bleu clair = parfait, jauge pleine 2x = onde de choc, zone turquoise pendant l'onde = ultra nitro) · ↓ / S / Maj drift (2x = 360°) · T TouchDrive · C caméra · Échap pause\nManette : stick gauche · A / RT nitro · X / B / LT drift · Y caméra · Start pause · LB / RB onglets", 18, Color(1, 1, 1, 0.8), "semi")
 	help.autowrap_mode = TextServer.AUTOWRAP_WORD
 	help.custom_minimum_size = Vector2(1500, 0)
 	v.add_child(help)

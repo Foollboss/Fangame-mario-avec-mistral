@@ -1,7 +1,7 @@
 class_name Racer
 extends Node3D
 ## Un concurrent (joueur ou IA). Physique arcade façon Asphalt en espace piste :
-## accélération automatique, drift, nitro (normal / parfait / onde de choc), sauts,
+## accélération automatique, drift, nitro (normal / parfait / onde de choc / ultra), sauts,
 ## tonneaux sur rampes inclinées, 360°, takedowns, épaves et réapparition.
 
 signal stunt(racer: Racer, kind: String, text: String, nitro_gain: float)
@@ -12,6 +12,19 @@ const NITRO_BURST := 1.35
 const PERFECT_A := 0.62
 const PERFECT_B := 1.05
 const DOUBLE_TAP := 0.32
+# niveaux de nitro (comme dans Asphalt Legends Unite) :
+# normal (orange) -> ré-appui dans la zone bleu clair de la jauge = PARFAIT (bleu clair)
+# jauge pleine + double appui = ONDE DE CHOC (violet)
+# pendant l'onde de choc, appui dans la zone turquoise de la jauge = ULTRA NITRO (turquoise)
+const NITRO_OFF := 0
+const NITRO_NORMAL := 1
+const NITRO_PERFECT := 2
+const NITRO_SHOCK := 3
+const NITRO_ULTRA := 4
+const SHOCK_FULL := 99.0      # l'onde de choc demande une jauge pleine
+const ULTRA_A := 0.7          # fenêtre de l'ultra nitro (secondes après le début de l'onde de choc)
+const ULTRA_B := 1.12
+const ULTRA_BONUS := 15.0     # nitro rendu en déclenchant l'ultra
 
 var track: Track
 var car_id := ""
@@ -47,6 +60,8 @@ var nitro_level := 0
 var nitro_time := 0.0
 var perfect_chain := 0
 var last_nitro_press := -10.0
+var _full_at_press := false
+var ultra_lost := false
 var drifting := false
 var drift_time := 0.0
 var drift_dir := 0.0
@@ -89,6 +104,8 @@ var barrel_rolls := 0
 var jumps := 0
 var wrecks := 0
 var perfect_nitros := 0
+var shockwaves := 0
+var ultra_nitros := 0
 var near_misses := 0
 var flat_spins := 0
 var near_miss_ids := {}
@@ -129,15 +146,18 @@ func physics_step(dt: float, clock: float) -> void:
 	var top := top_speed()
 	var acc: float = stats["accel"]
 	match nitro_level:
-		1:
+		NITRO_NORMAL:
 			top *= stats["nitro_mult"]
 			acc *= 1.9
-		2:
+		NITRO_PERFECT:
 			top *= stats["nitro_mult"] + 0.07
 			acc *= 2.4
-		3:
+		NITRO_SHOCK:
 			top *= stats["nitro_mult"] + 0.14
 			acc *= 3.2
+		NITRO_ULTRA:
+			top *= stats["nitro_mult"] + 0.24
+			acc *= 4.4
 	if finished:
 		top *= 0.6
 	if not started:
@@ -228,49 +248,121 @@ func _handle_nitro(dt: float, clock: float) -> void:
 	var pressed := in_nitro and not _prev_nitro
 	_prev_nitro = in_nitro
 	if not started or finished:
-		if nitro_level > 0:
-			nitro_level = 0
+		if nitro_level > NITRO_OFF:
+			nitro_level = NITRO_OFF
 			_nitro_fx()
 		return
 	if pressed:
-		if clock - last_nitro_press < DOUBLE_TAP and nitro >= 18.0 and nitro_level != 3:
-			nitro_level = 3
+		var double_tap := clock - last_nitro_press < DOUBLE_TAP
+		if double_tap and _full_at_press and nitro_level < NITRO_SHOCK:
+			nitro_level = NITRO_SHOCK
 			nitro_time = 0.0
 			perfect_chain = 0
+			ultra_lost = false
+			shockwaves += 1
 			stunt.emit(self, "shockwave", "ONDE DE CHOC", 0.0)
 			if is_player:
 				Audio.play("shockwave", -2.0)
 			_nitro_fx()
-		elif (nitro_level == 1 or nitro_level == 2) and nitro_time >= PERFECT_A and nitro_time <= PERFECT_B:
-			nitro_level = 2
-			nitro_time = 0.0
-			perfect_nitros += 1
-			perfect_chain += 1
-			stunt.emit(self, "perfect", "NITRO PARFAIT", 0.0)
-			if perfect_chain == 3:
-				stunt.emit(self, "sequence", "SÉQUENCE PARFAITE", 0.0)
-			if is_player:
-				Audio.play("boost", -3.0, 1.2)
-			_nitro_fx()
-		elif nitro_level == 0 and nitro > 4.0:
-			nitro_level = 1
+		elif nitro_level == NITRO_SHOCK:
+			if not ultra_lost and nitro_time >= ULTRA_A and nitro_time <= ULTRA_B:
+				nitro_level = NITRO_ULTRA
+				nitro_time = 0.0
+				nitro = minf(100.0, nitro + ULTRA_BONUS)
+				ultra_nitros += 1
+				stunt.emit(self, "ultra", "ULTRA NITRO", 0.0)
+				if is_player:
+					Audio.play("ultra", 0.0)
+				_nitro_fx()
+			elif nitro_time > DOUBLE_TAP:
+				# appui hors de la zone turquoise : l'ultra est raté pour cette onde de choc
+				ultra_lost = true
+		elif nitro_level == NITRO_NORMAL or nitro_level == NITRO_PERFECT:
+			if nitro_time >= PERFECT_A and nitro_time <= PERFECT_B:
+				nitro_level = NITRO_PERFECT
+				nitro_time = 0.0
+				perfect_nitros += 1
+				perfect_chain += 1
+				stunt.emit(self, "perfect", "NITRO PARFAIT", 0.0)
+				if perfect_chain == 3:
+					stunt.emit(self, "sequence", "SÉQUENCE PARFAITE", 0.0)
+				if is_player:
+					Audio.play("boost", -3.0, 1.2)
+				_nitro_fx()
+			elif not double_tap:
+				# appui hors de la zone bleu clair : nitro normal, une nouvelle zone apparaît
+				if nitro_level != NITRO_NORMAL:
+					nitro_level = NITRO_NORMAL
+					_nitro_fx()
+				nitro_time = 0.0
+				perfect_chain = 0
+		elif nitro_level == NITRO_OFF and nitro > 4.0:
+			nitro_level = NITRO_NORMAL
 			nitro_time = 0.0
 			perfect_chain = 0
 			if is_player:
 				Audio.play("boost", -5.0)
 			_nitro_fx()
+		_full_at_press = nitro >= SHOCK_FULL and nitro_level < NITRO_SHOCK
 		last_nitro_press = clock
-	if nitro_level > 0:
+	if nitro_level > NITRO_OFF:
 		nitro_time += dt
-		var burn: float = stats["nitro_burn"] * (1.7 if nitro_level == 3 else 1.0)
-		nitro -= burn * dt
-		var active := nitro > 0.0 and (nitro_level == 3 or in_nitro or nitro_time < NITRO_BURST)
+		nitro -= nitro_burn_rate() * dt
+		var active := nitro > 0.0 and (nitro_level >= NITRO_SHOCK or in_nitro or nitro_time < NITRO_BURST)
 		if not active:
-			nitro_level = 0
+			nitro_level = NITRO_OFF
 			_nitro_fx()
 	elif started:
 		nitro += 2.2 * dt  # recharge passive lente
 	nitro = clamp(nitro, 0.0, 100.0)
+
+
+## Consommation de nitro par seconde au niveau actuel.
+func nitro_burn_rate() -> float:
+	var burn: float = stats["nitro_burn"]
+	if nitro_level == NITRO_SHOCK:
+		burn *= 1.7
+	elif nitro_level == NITRO_ULTRA:
+		burn *= 1.45
+	return burn
+
+
+## Zone de la jauge (en unités de nitro, x = bas, y = haut) que le bord de la jauge
+## traverse pendant la fenêtre [t_a, t_b] du niveau actuel. Vector2.ZERO = pas de zone.
+func _zone(t_a: float, t_b: float) -> Vector2:
+	var burn := nitro_burn_rate()
+	var hi := nitro - burn * maxf(t_a - nitro_time, 0.0)
+	var lo := nitro - burn * maxf(t_b - nitro_time, 0.0)
+	if nitro_time > t_b or hi <= 0.0:
+		return Vector2.ZERO
+	return Vector2(maxf(lo, 0.0), hi)
+
+
+## Zone bleu clair du nitro parfait (pendant un nitro normal ou parfait).
+func perfect_zone() -> Vector2:
+	if nitro_level != NITRO_NORMAL and nitro_level != NITRO_PERFECT:
+		return Vector2.ZERO
+	return _zone(PERFECT_A, PERFECT_B)
+
+
+## Zone turquoise de l'ultra nitro (pendant l'onde de choc, tant qu'elle n'est pas ratée).
+func ultra_zone() -> Vector2:
+	if nitro_level != NITRO_SHOCK or ultra_lost:
+		return Vector2.ZERO
+	return _zone(ULTRA_A, ULTRA_B)
+
+
+func in_perfect_window() -> bool:
+	return (nitro_level == NITRO_NORMAL or nitro_level == NITRO_PERFECT) and nitro_time >= PERFECT_A and nitro_time <= PERFECT_B
+
+
+func in_ultra_window() -> bool:
+	return nitro_level == NITRO_SHOCK and not ultra_lost and nitro_time >= ULTRA_A and nitro_time <= ULTRA_B
+
+
+## Jauge pleine : l'onde de choc est disponible (double appui).
+func shockwave_ready() -> bool:
+	return nitro >= SHOCK_FULL and nitro_level < NITRO_SHOCK and started and not finished
 
 
 func _nitro_fx() -> void:
@@ -366,7 +458,7 @@ func wreck(reason: String = "") -> void:
 	wrecked = true
 	wreck_timer = 2.1
 	wrecks += 1
-	nitro_level = 0
+	nitro_level = NITRO_OFF
 	_nitro_fx()
 	drifting = false
 	rolling = false
@@ -513,12 +605,12 @@ func think(dt: float, clock: float, racers: Array, traffic: Array, player: Racer
 	# nitro
 	_ai_nitro_timer -= dt
 	var straight: bool = abs(k) < 0.004
-	if nitro_level == 0:
+	if nitro_level == NITRO_OFF:
 		in_nitro = false
 		if nitro > (30.0 if is_player else 40.0) and straight and _ai_nitro_timer <= 0.0 and started:
 			in_nitro = true
 			_ai_nitro_timer = 0.4
-	elif nitro_level == 1 or nitro_level == 2:
+	elif nitro_level == NITRO_NORMAL or nitro_level == NITRO_PERFECT:
 		var want_perfect := _ai_rng.randf() < (0.9 if is_player else ai_skill)
 		in_nitro = want_perfect and nitro_time > PERFECT_A + 0.08 and nitro_time < PERFECT_B - 0.05 and not _prev_nitro
 		if not in_nitro and nitro_time > PERFECT_B:

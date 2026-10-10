@@ -275,21 +275,31 @@ func set_nitro(level: int) -> void:
 	for f in flames:
 		f.emitting = on
 	if on:
+		# normal = orange, parfait = bleu clair, onde de choc = violet, ultra = turquoise
 		var c0 := Color(1.0, 0.65, 0.25)
 		var c1 := Color(1.0, 0.3, 0.0, 0.0)
 		var sz := 0.42
-		if level == 2:
-			c0 = Color(1.0, 0.6, 1.0)
-			c1 = Color(0.65, 0.1, 1.0, 0.0)
-			sz = 0.55
-		elif level == 3:
-			c0 = Color(0.85, 0.95, 1.0)
-			c1 = Color(0.1, 0.45, 1.0, 0.0)
-			sz = 0.75
+		var life := 0.16
+		# (mélange additif : des couleurs sombres et saturées restent colorées une fois empilées)
+		if level == Racer.NITRO_PERFECT:
+			c0 = Color(0.3, 0.62, 1.0)
+			c1 = Color(0.05, 0.3, 0.95, 0.0)
+			sz = 0.52
+		elif level == Racer.NITRO_SHOCK:
+			c0 = Color(0.58, 0.18, 1.0)
+			c1 = Color(0.35, 0.0, 0.85, 0.0)
+			sz = 0.66
+			life = 0.2
+		elif level >= Racer.NITRO_ULTRA:
+			c0 = Color(0.06, 0.88, 0.7)
+			c1 = Color(0.0, 0.55, 0.5, 0.0)
+			sz = 0.8
+			life = 0.27
 		for f in flames:
 			f.color_ramp.set_color(0, c0)
 			f.color_ramp.set_color(1, c1)
 			(f.mesh as QuadMesh).size = Vector2(sz, sz)
+			f.lifetime = life
 
 
 func set_drift_smoke(on: bool) -> void:

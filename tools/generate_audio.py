@@ -100,9 +100,23 @@ def sfx():
     def star(t, d, st):
         return (math.sin(math.tau * 1046.5 * t) + math.sin(math.tau * 1318.5 * t) + math.sin(math.tau * 1568.0 * t)) * 0.15 * math.exp(-t * 3.0)
 
+    # ultra nitro : grosse explosion grave + souffle + scintillement qui monte.
+    # Son propre générateur aléatoire pour ne pas changer les autres sons ni la musique.
+    rng_ultra = np.random.default_rng(424242)
+
+    def ultra(t, d, st):
+        n = rng_ultra.uniform(-1.0, 1.0)
+        st["lp"] = st["lp"] * 0.82 + n * 0.18
+        boom = math.sin(math.tau * (62.0 - 24.0 * t) * t) * math.exp(-t * 2.2) * 0.85
+        rush = st["lp"] * 1.6 * math.exp(-t * 1.8)
+        rise = 420.0 + 900.0 * t
+        shimmer = (math.sin(math.tau * rise * t) + 0.5 * math.sin(math.tau * rise * 1.5 * t)) * 0.12 * math.sin(math.pi * t / d)
+        return (boom + rush + shimmer) * min(1.0, t * 80.0)
+
     table = [("crash", 0.9, crash), ("takedown", 0.8, takedown), ("boost", 0.7, boost), ("shockwave", 1.1, shockwave),
              ("beep", 0.18, beep), ("go", 0.5, go), ("click", 0.05, click), ("confirm", 0.22, confirm), ("land", 0.3, land),
-             ("scrape", 0.35, scrape), ("whoosh", 0.45, whoosh), ("reward", 0.7, reward), ("star", 1.0, star)]
+             ("scrape", 0.35, scrape), ("whoosh", 0.45, whoosh), ("reward", 0.7, reward), ("star", 1.0, star),
+             ("ultra", 1.4, ultra)]
     for name, dur, f in table:
         write_wav("sfx_" + name, gen(dur, f))
 

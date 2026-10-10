@@ -26,6 +26,7 @@ var _rng := RandomNumberGenerator.new()
 var _rewards: Dictionary = {}
 var _finish_shown := false
 var _test_ramp_x := 0.0
+var _shock_hint_shown := false
 
 
 func _ready() -> void:
@@ -243,6 +244,9 @@ func _process(delta: float) -> void:
 					hud.push_message("DÉPART PARFAIT", "+NITRO")
 		"racing":
 			clock += dt
+			if not _shock_hint_shown and player.shockwave_ready():
+				_shock_hint_shown = true
+				hud.push_message("JAUGE PLEINE", "x2 = ONDE DE CHOC", UIKit.VIOLET)
 			if Game.autotest.has("touchtest") and clock > 1.0 and not has_meta("touchtest_done"):
 				set_meta("touchtest_done", true)
 				hud.run_touch_test()
@@ -290,6 +294,8 @@ func _drive(dt: float) -> void:
 			player.in_drift = Input.is_action_pressed("drift")
 	else:
 		player.think(dt, clock, racers, traffic.active_cars(), player)
+	if Game.autotest.has("nitrotest") and state == "racing" and not player.finished:
+		_nitro_test()
 	# IA + élastique (rubber band)
 	for r in racers:
 		if r == player:
@@ -317,6 +323,49 @@ func _drive(dt: float) -> void:
 			r.finish_time = clock
 			if r == player:
 				_on_player_finished()
+
+
+## Test automatique du nitro (--nitrotest=/chemin/prefixe) : appuis scriptés pour vérifier
+## nitro parfait, onde de choc et ultra nitro, avec captures de la jauge.
+var _nt_level := 0
+
+
+func _nitro_test() -> void:
+	var t := clock
+	var presses := [[1.3, 1.38], [1.45, 1.53], [2.37, 2.45],    # double appui = onde de choc, puis zone turquoise = ultra
+		[7.0, 7.08], [7.8, 7.88], [8.65, 8.73], [9.0, 9.08],       # nitro, parfait, parfait, appui hors zone
+		[12.0, 12.08], [12.15, 12.23], [12.65, 12.73], [13.0, 13.08]]  # onde de choc, appui trop tôt, ultra raté
+	var down := false
+	for pr in presses:
+		if t >= pr[0] and t < pr[1]:
+			down = true
+	player.in_nitro = down
+	var events := [[0.8, "fill", 100.0], [1.2, "shot", "1_jauge_pleine"], [1.95, "shot", "2_onde_zone_ultra"],
+		[2.3, "shot", "3_onde_dans_zone"], [2.75, "shot", "4_ultra"], [6.5, "fill", 70.0],
+		[7.4, "shot", "5_zone_parfait"], [7.75, "shot", "6_dans_zone_parfait"], [8.1, "shot", "7_parfait"],
+		[11.5, "fill", 100.0], [12.5, "shot", "8_onde"], [16.0, "end", 0]]
+	for i in events.size():
+		var e: Array = events[i]
+		if t < e[0] or has_meta("nt_%d" % i):
+			continue
+		set_meta("nt_%d" % i, true)
+		match e[1]:
+			"fill":
+				# repart d'une jauge au repos pour l'étape suivante
+				print("nitrotest remise à zéro (niveau %d avant)" % player.nitro_level)
+				player.nitro_level = Racer.NITRO_OFF
+				player._nitro_fx()
+				player.nitro = e[2]
+			"shot":
+				print("nitrotest capture %s : niveau=%d nitro=%.1f t_nitro=%.2f zone_parfait=%s zone_ultra=%s" % [
+					e[2], player.nitro_level, player.nitro, player.nitro_time, player.perfect_zone(), player.ultra_zone()])
+				if String(Game.autotest["nitrotest"]) != "1":
+					Game._shot("%s_%s.png" % [Game.autotest["nitrotest"], e[2]])
+			"end":
+				print("nitrotest bilan : parfaits=%d ondes=%d ultras=%d épaves=%d" % [player.perfect_nitros, player.shockwaves, player.ultra_nitros, player.wrecks])
+	if player.nitro_level != _nt_level:
+		print("nitrotest t=%.2f niveau %d -> %d nitro=%.1f ultra_raté=%s" % [t, _nt_level, player.nitro_level, player.nitro, player.ultra_lost])
+		_nt_level = player.nitro_level
 
 
 func _update_order() -> void:
@@ -353,6 +402,13 @@ func _pair(a: Racer, b: Racer) -> void:
 	var dx := b.x - a.x
 	if abs(ds) > Racer.CAR_LEN or abs(dx) > Racer.CAR_HALF_W * 2.0 or abs(a.h - b.h) > 1.3:
 		return
+	# ultra nitro : tout contact élimine l'adversaire
+	if a.nitro_level == Racer.NITRO_ULTRA and b.nitro_level != Racer.NITRO_ULTRA:
+		_takedown(a, b)
+		return
+	if b.nitro_level == Racer.NITRO_ULTRA and a.nitro_level != Racer.NITRO_ULTRA:
+		_takedown(b, a)
+		return
 	var lat_ov := Racer.CAR_HALF_W * 2.0 - absf(dx)
 	var lon_ov := Racer.CAR_LEN - absf(ds)
 	if lat_ov < lon_ov * 0.55:
@@ -361,9 +417,9 @@ func _pair(a: Racer, b: Racer) -> void:
 		var rel := (a.vx - b.vx) * dir
 		a.x -= dir * lat_ov * 0.5
 		b.x += dir * lat_ov * 0.5
-		if rel > 5.0 and (a.v > b.v * 0.85 or a.nitro_level >= 2):
+		if rel > 5.0 and (a.v > b.v * 0.85 or a.nitro_level >= Racer.NITRO_PERFECT):
 			_takedown(a, b)
-		elif rel < -5.0 and (b.v > a.v * 0.85 or b.nitro_level >= 2):
+		elif rel < -5.0 and (b.v > a.v * 0.85 or b.nitro_level >= Racer.NITRO_PERFECT):
 			_takedown(b, a)
 		else:
 			var avx := a.vx
@@ -376,7 +432,7 @@ func _pair(a: Racer, b: Racer) -> void:
 		var front: Racer = b if ds > 0.0 else a
 		var back: Racer = a if ds > 0.0 else b
 		var closing := back.v - front.v
-		if back.nitro_level == 3 or closing > 11.0:
+		if back.nitro_level >= Racer.NITRO_SHOCK or closing > 11.0:
 			_takedown(back, front)
 		else:
 			back.v = max(0.0, front.v - 1.5)
@@ -407,14 +463,18 @@ func _vs_traffic(r: Racer, t) -> void:
 	var dx: float = t.x - r.x
 	var len_sum: float = Racer.CAR_LEN * 0.5 + t.half_len
 	var w_sum: float = Racer.CAR_HALF_W + t.half_w
-	if abs(ds) < len_sum and r.h < t.height:
-		if abs(dx) < w_sum:
-			if r.nitro_level == 3:
+	# ultra nitro : une aura turquoise éjecte aussi le trafic tout proche
+	var aura := ULTRA_AURA if r.nitro_level == Racer.NITRO_ULTRA else 0.0
+	if abs(ds) < len_sum + aura and r.h < t.height:
+		if abs(dx) < w_sum + aura:
+			if r.nitro_level >= Racer.NITRO_SHOCK:
 				traffic.knock(t, sign(dx) if dx != 0.0 else 1.0, r.v)
 				if r == player:
-					hud.push_message("TRAFIC ÉJECTÉ", "+NITRO", UIKit.CYAN)
+					var ultra := r.nitro_level == Racer.NITRO_ULTRA
+					hud.push_message("TRAFIC ÉJECTÉ", "+NITRO", UIKit.TURQUOISE if ultra else UIKit.VIOLET)
 					Audio.play("crash", -6.0, 1.3)
-					r.nitro = min(100.0, r.nitro + 6.0)
+				# l'ultra éjecte beaucoup de voitures : il rapporte moins par voiture
+				r.nitro = minf(100.0, r.nitro + (3.0 if r.nitro_level == Racer.NITRO_ULTRA else 6.0))
 				return
 			if r.ghost > 0.0:
 				return
@@ -442,7 +502,36 @@ func _vs_traffic(r: Racer, t) -> void:
 				Audio.play("whoosh", -6.0)
 
 
+const ULTRA_AURA := 1.5
+
+
+## Ultra nitro : explosion turquoise au déclenchement, éjecte le trafic et les rivaux proches.
+func _ultra_blast(r: Racer) -> void:
+	var knocked := 0
+	for t in traffic.active_cars():
+		if t.knocked:
+			continue
+		var ds: float = t.s - r.s
+		var dx: float = t.x - r.x
+		if ds > -6.0 and ds < 30.0 and absf(dx) < 7.5 and r.h < t.height + 1.0:
+			traffic.knock(t, sign(dx) if dx != 0.0 else 1.0, r.v)
+			knocked += 1
+	for o in racers:
+		if o == r or o.wrecked or o.ghost > 0.0 or o.finished:
+			continue
+		var ds2: float = o.s - r.s
+		if ds2 > -5.0 and ds2 < 16.0 and absf(o.x - r.x) < 4.0 and absf(o.h - r.h) < 2.0:
+			_takedown(r, o)
+	if knocked > 0:
+		r.nitro = minf(100.0, r.nitro + 3.0 * knocked)
+		if r == player:
+			hud.push_message("TRAFIC ÉJECTÉ x%d" % knocked, "+NITRO", UIKit.TURQUOISE)
+			Audio.play("crash", -5.0, 1.2)
+
+
 func _on_stunt(r: Racer, kind: String, text: String, gain: float) -> void:
+	if kind == "ultra":
+		_ultra_blast(r)
 	if r != player:
 		return
 	match kind:
@@ -463,12 +552,18 @@ func _on_stunt(r: Racer, kind: String, text: String, gain: float) -> void:
 		"spin":
 			hud.push_message(text, "+NITRO", UIKit.CYAN)
 		"perfect":
-			hud.push_message(text, "", UIKit.MAGENTA)
+			hud.push_message(text, "", UIKit.SKY)
 		"sequence":
-			hud.push_message(text, "", UIKit.MAGENTA)
+			hud.push_message(text, "", UIKit.SKY)
 		"shockwave":
-			hud.push_message(text, "", UIKit.CYAN)
+			# les premières fois, on rappelle comment déclencher l'ultra nitro
+			hud.push_message(text, "ZONE TURQUOISE = ULTRA" if r.shockwaves <= 2 else "", UIKit.VIOLET)
+			hud.flash(UIKit.VIOLET, 0.22, 0.4)
 			cam.add_shake(0.8)
+		"ultra":
+			hud.show_center(text, 1.1, "", UIKit.TURQUOISE)
+			hud.flash(UIKit.TURQUOISE, 0.45, 0.6)
+			cam.add_shake(1.2)
 		"drift":
 			hud.push_message(text, "+NITRO", UIKit.YELLOW)
 
@@ -524,6 +619,7 @@ func _show_results() -> void:
 		"jumps": player.jumps,
 		"wrecks": player.wrecks,
 		"perfect_nitros": player.perfect_nitros,
+		"ultra_nitros": player.ultra_nitros,
 		"near_misses": player.near_misses,
 	}
 	_rewards = Game.apply_race_result(res)

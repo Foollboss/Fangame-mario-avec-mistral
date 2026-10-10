@@ -80,12 +80,14 @@ func update(dt: float) -> void:
 func _chase(dt: float, ratio: float) -> void:
 	var nitro_k := 0.0
 	match target.nitro_level:
-		1:
+		Racer.NITRO_NORMAL:
 			nitro_k = 0.6
-		2:
+		Racer.NITRO_PERFECT:
 			nitro_k = 0.85
-		3:
+		Racer.NITRO_SHOCK:
 			nitro_k = 1.2
+		Racer.NITRO_ULTRA:
+			nitro_k = 1.5
 	var dist: float = [6.2, 9.5, 0.0][mode] + ratio * 0.8 - nitro_k * 0.6
 	var height: float = [2.0, 3.1, 1.15][mode] - nitro_k * 0.15
 	_dist = lerp(_dist, dist, 1.0 - exp(-3.0 * dt))
@@ -102,5 +104,7 @@ func _chase(dt: float, ratio: float) -> void:
 		var up := track.frame(target.s).basis.y
 		look_at(look, up)
 	fov = lerp(fov, 66.0 + ratio * 9.0 + nitro_k * 9.0, 1.0 - exp(-3.0 * dt))
-	if target.nitro_level == 3:
+	if target.nitro_level == Racer.NITRO_SHOCK:
 		add_shake(0.6)
+	elif target.nitro_level == Racer.NITRO_ULTRA:
+		add_shake(0.8)
