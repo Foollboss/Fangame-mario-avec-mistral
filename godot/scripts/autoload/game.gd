@@ -571,7 +571,9 @@ func season_races(ch_idx: int, se_idx: int) -> Array:
 			"length": 2400.0 + 260.0 * r + 120.0 * ch_idx,
 			"mode": mode,
 			"class": cls,
-			"rec_rank": int(lerp(rmin, rmax * 0.85, k)),
+			# début de chapitre sous le rang de la voiture gratuite de la classe (barre verte),
+			# puis le rang recommandé monte au fil des saisons
+			"rec_rank": int(lerp(rmin * 0.9, rmax * 0.85, k)),
 			"objective": obj,
 			"reward": reward,
 			"flags_required": r,
@@ -862,10 +864,16 @@ func _parse_cmdline() -> void:
 			mst["stars"] = max_stars(autotest["car"])
 			var ml := max_level(autotest["car"])
 			mst["upg"] = [ml, ml, ml, ml]
+		elif autotest.has("upg"):
+			# --upg=n : n niveaux d'amélioration sur chaque statistique (dans la limite des étoiles)
+			var un := mini(int(autotest["upg"]), level_cap(autotest["car"]))
+			car_state(autotest["car"])["upg"] = [un, un, un, un]
 	if autotest.has("career"):
 		# --career=chapitre,saison,course : lance une course de carrière (tests des objectifs)
 		var cp: PackedStringArray = String(autotest["career"]).split(",")
 		var creq: Dictionary = season_races(int(cp[0]), int(cp[1]))[int(cp[2])]
+		if autotest.has("reseed"):
+			creq["seed"] = int(creq["seed"]) + int(autotest["reseed"])  # tests : autre tirage
 		call_deferred("start_race", creq)
 	if autotest.has("race"):
 		var req := quick_race_request(autotest["race"])

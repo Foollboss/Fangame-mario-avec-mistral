@@ -942,7 +942,7 @@ func _screen_season_map(a: Dictionary) -> void:
 		cr.add_child(crv)
 		rw.add_child(cr)
 	side.add_child(rw)
-	side.add_child(_rec_rank_bar(int(race["rec_rank"]), Game.best_owned_rank(race.get("class", "")), 24, HORIZONTAL_ALIGNMENT_CENTER, true, true))
+	side.add_child(_rec_rank_bar(int(race["rec_rank"]), Game.best_owned_rank(race.get("class", "")), 24, HORIZONTAL_ALIGNMENT_CENTER, true, true, race.get("mode", "") == "time_attack"))
 	var nxt := K.button("SUIVANT" if not locked_sel else "VERROUILLÉE", 36, "primary", Vector2(500, 90))
 	nxt.disabled = locked_sel
 	nxt.pressed.connect(func():
@@ -1007,7 +1007,7 @@ func _screen_car_select(a: Dictionary) -> void:
 	if req.has("rec_rank"):
 		# course adaptée à la voiture : comparée à la voiture sélectionnée, sinon à la meilleure possédée
 		var cmp := Game.car_rank(Game.save["selected_car"]) if req.has("rec_factor") else Game.best_owned_rank("" if any_class else cls)
-		hdr.add_child(_rec_rank_bar(Game.race_rec_rank(req, Game.save["selected_car"]), cmp, 24, HORIZONTAL_ALIGNMENT_LEFT, true))
+		hdr.add_child(_rec_rank_bar(Game.race_rec_rank(req, Game.save["selected_car"]), cmp, 24, HORIZONTAL_ALIGNMENT_LEFT, true, false, req.get("mode", "") == "time_attack"))
 	if not any_class:
 		var cp := K.panel(Color(0.03, 0.01, 0.06, 0.9), K.SKEW)
 		cp.add_child(K.label("CLASSE %s UNIQUEMENT" % cls, 22, Game.class_color(cls), "black"))
@@ -1020,15 +1020,16 @@ func _screen_car_select(a: Dictionary) -> void:
 const RANK_HINTS := ["RIVAUX NORMAUX", "RIVAUX PLUS DIFFICILES  ·  ONDE DE CHOC", "RIVAUX PLUS RAPIDES  ·  ULTRA NITRO"]
 
 
-func _rec_rank_bar(rec: int, car_rank_value: int, fs: int, align: int = HORIZONTAL_ALIGNMENT_CENTER, skew := true, hint := false) -> Control:
-	var status := Game.rank_status(car_rank_value, rec)
+func _rec_rank_bar(rec: int, car_rank_value: int, fs: int, align: int = HORIZONTAL_ALIGNMENT_CENTER, skew := true, hint := false, time_attack := false) -> Control:
+	# contre-la-montre : pas de rivaux, donc pas de difficulté de rivaux
+	var status := Game.RANK_EASY if time_attack else Game.rank_status(car_rank_value, rec)
 	var col: Color = rank_status_color(status)
 	var txt_col := Color.WHITE if status == Game.RANK_OVER else Color(0.05, 0.05, 0.05)
 	var rr := K.panel(col, K.SKEW if skew else 0.0)
 	var v := K.vbox(0)
 	v.add_child(K.label("RANG RECOMMANDÉ : %d" % rec, fs, txt_col, "black", align))
 	if hint:
-		v.add_child(K.label(RANK_HINTS[status], maxi(fs - 6, 14), txt_col, "semi", align))
+		v.add_child(K.label("CONTRE-LA-MONTRE  ·  SANS RIVAUX" if time_attack else RANK_HINTS[status], maxi(fs - 6, 14), txt_col, "semi", align))
 	rr.add_child(v)
 	return rr
 
@@ -1089,7 +1090,7 @@ func _car_card(id: String, cb: Callable, req: Dictionary = {}) -> Button:
 	var rp := K.panel(Color(0.02, 0.01, 0.05, 0.9))
 	var rkh := K.hbox(0)
 	var rank_col := K.LIME if owned else Color(1, 1, 1, 0.6)
-	if owned and req.has("rec_rank"):
+	if owned and req.has("rec_rank") and req.get("mode", "") != "time_attack":
 		# en sélection de course : le rang prend la couleur de la difficulté avec cette voiture
 		rank_col = rank_status_color(Game.rank_status(Game.car_rank(id), Game.race_rec_rank(req, id)))
 	rkh.add_child(K.label(str(Game.car_rank(id)), 22, rank_col, "black"))
@@ -1267,7 +1268,7 @@ func _screen_car_detail(a: Dictionary) -> void:
 	rkp.add_child(K.class_badge(c["class"], 78))
 	rk.add_child(rkp)
 	if req.has("rec_rank"):
-		rk.add_child(_rec_rank_bar(Game.race_rec_rank(req, id), Game.car_rank(id), 20, HORIZONTAL_ALIGNMENT_RIGHT, false, true))
+		rk.add_child(_rec_rank_bar(Game.race_rec_rank(req, id), Game.car_rank(id), 20, HORIZONTAL_ALIGNMENT_RIGHT, false, true, req.get("mode", "") == "time_attack"))
 
 	# barre d'actions
 	var bar_h := K.hbox(18)
@@ -1645,8 +1646,11 @@ func _start_event(ev: Dictionary) -> void:
 			loc = l["name"]
 	var rank := Game.car_rank(car_id)
 	if cls != "":
+		# au rang de départ de la classe : jouable avec la voiture gratuite (barre orange)
 		var pool := Game.cars_of_class(cls)
-		rank = int(lerp(float(pool[0]["rank"][0]), float(pool[0]["rank"][1]), 0.45))
+		rank = 1000000
+		for pc in pool:
+			rank = mini(rank, int(pc["rank"][0]))
 	var req := {
 		"id": ev["id"], "event": ev["id"], "name": loc, "theme": ev["theme"],
 		"seed": hash(ev["id"] + Game._today()), "length": 3000.0, "mode": ev["mode"],
