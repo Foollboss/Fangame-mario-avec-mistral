@@ -46,9 +46,9 @@ func _ready() -> void:
 
 	track = Track.new()
 	add_child(track)
-	# objectif « tonneaux » : au moins 2 rampes à tonneau de plus que demandé, pour pouvoir en rater
+	# objectif « tonneaux » : deux fois plus de rampes à tonneau que demandé (+1), pour pouvoir en rater
 	var obj: Dictionary = req.get("objective", {})
-	var min_barrels: int = int(obj.get("value", 0)) + 2 if obj.get("type", "") == "barrel" else 0
+	var min_barrels: int = int(obj.get("value", 0)) * 2 + 1 if obj.get("type", "") == "barrel" else 0
 	track.generate(req.get("theme", "sf"), int(req.get("seed", 1)), float(req.get("length", 3000.0)),
 		{"quality": quality, "barrel_heavy": req.get("barrel_heavy", false), "min_barrels": min_barrels})
 	track.build_visuals()
