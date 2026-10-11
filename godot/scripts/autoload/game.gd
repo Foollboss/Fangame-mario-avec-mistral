@@ -856,6 +856,17 @@ func _parse_cmdline() -> void:
 	if autotest.has("car"):
 		save["selected_car"] = autotest["car"]
 		car_state(autotest["car"])["owned"] = true
+		if autotest.has("maxcar"):
+			# --maxcar : voiture au maximum (étoiles et améliorations) pour les tests
+			var mst: Dictionary = car_state(autotest["car"])
+			mst["stars"] = max_stars(autotest["car"])
+			var ml := max_level(autotest["car"])
+			mst["upg"] = [ml, ml, ml, ml]
+	if autotest.has("career"):
+		# --career=chapitre,saison,course : lance une course de carrière (tests des objectifs)
+		var cp: PackedStringArray = String(autotest["career"]).split(",")
+		var creq: Dictionary = season_races(int(cp[0]), int(cp[1]))[int(cp[2])]
+		call_deferred("start_race", creq)
 	if autotest.has("race"):
 		var req := quick_race_request(autotest["race"])
 		if autotest.has("mode"):

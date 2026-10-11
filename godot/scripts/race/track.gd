@@ -97,7 +97,7 @@ func generate(p_theme: String, seed_value: int, p_length: float, opts: Dictionar
 	_build_curvature()
 	_build_points()
 	_build_frames()
-	_place_ramps(opts.get("barrel_heavy", false))
+	_place_ramps(opts.get("barrel_heavy", false), int(opts.get("min_barrels", 0)))
 	_place_splits_and_tunnels()
 
 
@@ -213,7 +213,7 @@ func _build_frames() -> void:
 		ups[i] = u2
 
 
-func _place_ramps(barrel_heavy: bool) -> void:
+func _place_ramps(barrel_heavy: bool, min_barrels: int = 0) -> void:
 	ramps = []
 	var s := 380.0
 	while s < finish_s - 260.0:
@@ -245,6 +245,87 @@ func _place_ramps(barrel_heavy: bool) -> void:
 				ramps.append({"s": s, "len": 14.0, "x": lane_x(lane), "w": 5.6, "h": 2.6, "barrel": false, "tilt": 0.0})
 		s += rng.randf_range(260.0, 440.0)
 	ramps.sort_custom(func(a, b): return a["s"] < b["s"])
+	if min_barrels > 0:
+		_ensure_barrels(min_barrels)
+
+
+## Nombre d'endroits où l'on peut faire un tonneau (deux rampes côte à côte = un seul endroit).
+func barrel_sites() -> int:
+	var pos: Array = []
+	for r in ramps:
+		if r["barrel"]:
+			pos.append(float(r["s"]))
+	pos.sort()
+	var count := 0
+	var last := -1e9
+	for p in pos:
+		if p - last > 30.0:
+			count += 1
+			last = p
+	return count
+
+
+func _site_has_barrel(s: float) -> bool:
+	for r in ramps:
+		if r["barrel"] and absf(r["s"] - s) < 30.0:
+			return true
+	return false
+
+
+func _barrel_ramp(s: float, k: int) -> Dictionary:
+	# alternance gauche / droite, côté haut vers l'extérieur
+	var lane := 0 if k % 2 == 0 else LANES - 1
+	var tilt := 1.0 if lane == LANES - 1 else -1.0
+	return {"s": s, "len": 12.0, "x": lane_x(lane), "w": 5.0, "h": 3.4, "barrel": true, "tilt": tilt}
+
+
+## Objectif « RÉALISE n TONNEAUX » : garantit assez de rampes à tonneau sur la piste
+## (sinon l'objectif peut être impossible, par exemple sur une piste sans rampe à tonneau).
+func _ensure_barrels(count: int) -> void:
+	var k := 0
+	# 1) des rampes de saut deviennent des rampes à tonneau, réparties sur toute la piste
+	var jump_sites: Array = []
+	for r in ramps:
+		if not r["barrel"] and not _site_has_barrel(r["s"]) and not jump_sites.has(r["s"]):
+			jump_sites.append(r["s"])
+	var need := count - barrel_sites()
+	if need > 0 and not jump_sites.is_empty():
+		var step := maxf(float(jump_sites.size()) / float(need), 1.0)
+		var f := 0.0
+		while need > 0 and int(f) < jump_sites.size():
+			var site: float = jump_sites[int(f)]
+			ramps = ramps.filter(func(r): return r["barrel"] or absf(r["s"] - site) > 1.0)
+			ramps.append(_barrel_ramp(site, k))
+			k += 1
+			need -= 1
+			f += step
+	# 2) s'il en manque encore : nouvelles rampes sur les portions assez droites
+	if barrel_sites() < count:
+		for limit in [0.0042, 0.006, 0.009]:
+			var s := 380.0
+			while barrel_sites() < count and s < finish_s - 220.0:
+				if _barrel_spot_ok(s, limit):
+					ramps.append(_barrel_ramp(s, k))
+					k += 1
+					s += 220.0
+				else:
+					s += 20.0
+			if barrel_sites() >= count:
+				break
+	ramps.sort_custom(func(a, b): return a["s"] < b["s"])
+
+
+func _barrel_spot_ok(s: float, curv_limit: float) -> bool:
+	for r in ramps:
+		if absf(r["s"] - s) < 150.0:
+			return false
+	for c in crest_list:
+		if absf(s - c["s"]) < 120.0:
+			return false
+	for t in range(int((s - 30.0) / STEP), int((s + 150.0) / STEP)):
+		if t >= 0 and t < n and absf(curv[t]) > curv_limit:
+			return false
+	return true
 
 
 func _place_splits_and_tunnels() -> void:

@@ -29,6 +29,8 @@ var _test_ramp_x := 0.0
 var _shock_hint_shown := false
 var difficulty := 0          # Game.RANK_EASY / RANK_CLOSE / RANK_OVER (couleur du rang recommandé)
 var _diff_speed := 1.0       # bonus de vitesse des rivaux (rang recommandé rouge)
+var _band_far := 0.9         # élastique : vitesse des rivaux loin devant (> 140 m)
+var _band_mid := 0.96        # élastique : vitesse des rivaux devant (60-140 m)
 
 
 func _ready() -> void:
@@ -44,8 +46,11 @@ func _ready() -> void:
 
 	track = Track.new()
 	add_child(track)
+	# objectif « tonneaux » : au moins 2 rampes à tonneau de plus que demandé, pour pouvoir en rater
+	var obj: Dictionary = req.get("objective", {})
+	var min_barrels: int = int(obj.get("value", 0)) + 2 if obj.get("type", "") == "barrel" else 0
 	track.generate(req.get("theme", "sf"), int(req.get("seed", 1)), float(req.get("length", 3000.0)),
-		{"quality": quality, "barrel_heavy": req.get("barrel_heavy", false)})
+		{"quality": quality, "barrel_heavy": req.get("barrel_heavy", false), "min_barrels": min_barrels})
 	track.build_visuals()
 
 	world_env = WorldEnvironment.new()
@@ -76,17 +81,24 @@ func _ready() -> void:
 	hud.quit_pressed.connect(_quit)
 	hud.next_pressed.connect(_quit)
 	hud.touchdrive_toggled.connect(_toggle_touchdrive)
-	hud.show_center(req.get("name", ""), 2.2, Game.objective_text(req.get("objective", {})), Color.WHITE)
-
 	if mode == "time_attack":
-		target_time = (float(req.get("length", 3000.0)) / (player.stats["top_speed"] * 0.80)) + 6.0
+		target_time = time_attack_target(float(req.get("length", 3000.0)), player.stats)
 		req["objective"] = {"type": "time", "value": target_time}
+		hud.set_target_time(target_time)
+		hud.show_center(req.get("name", ""), 2.2, "TERMINE EN MOINS DE " + UIKit.fmt_time(target_time), Color.WHITE)
+	else:
+		hud.show_center(req.get("name", ""), 2.2, Game.objective_text(req.get("objective", {})), Color.WHITE)
 
 	Audio.engine_start()
 	Audio.play_music()
 	for r in racers:
 		r._apply_transform(0.016)
 	_update_order()
+
+
+## Temps cible du contre-la-montre selon la longueur de la piste et la voiture.
+static func time_attack_target(length: float, stats: Dictionary) -> float:
+	return length / (float(stats["top_speed"]) * 0.80) + 6.0
 
 
 func _spawn_racers() -> void:
@@ -96,6 +108,7 @@ func _spawn_racers() -> void:
 	player = Racer.new()
 	add_child(player)
 	player.setup(track, car_id, pstats, true, Game.save.get("name", "Joueur"), paint)
+	player.ai_aggressive = Game.autotest.has("hunt")  # test : l'autopilote cherche les takedowns
 	racers.append(player)
 	if mode == "time_attack":
 		player.s = track.start_s
@@ -113,14 +126,37 @@ func _spawn_racers() -> void:
 	difficulty = Game.rank_status(Game.car_rank(car_id), int(rec))
 	if Game.autotest.has("difficulty"):
 		difficulty = clampi(int(Game.autotest["difficulty"]), Game.RANK_EASY, Game.RANK_OVER)
-	var rank_rng: Array = [[0.9, 1.06], [0.95, 1.08], [1.0, 1.1]][difficulty]
-	var skill_rng: Array = [[0.55, 0.95], [0.72, 1.0], [0.82, 1.0]][difficulty]
-	var aggressive: float = [0.4, 0.55, 0.65][difficulty]
-	_diff_speed = [1.0, 1.0, 1.04][difficulty]
+	# rouge : la force des rivaux grandit avec l'écart (0 = à peine au-dessus, 1 = 10 % ou plus),
+	# pour qu'un rang recommandé juste au-dessus de la voiture reste jouable
+	var car_r := float(Game.car_rank(car_id))
+	var over := 0.0
+	if difficulty == Game.RANK_OVER:
+		over = clampf((rec - car_r) / maxf(car_r * 0.10, 1.0), 0.0, 1.0)
+		if Game.autotest.has("difficulty"):
+			over = clampf(float(Game.autotest.get("over", 1.0)), 0.0, 1.0)
+	var lv := 0 if difficulty == Game.RANK_EASY else 1   # niveau de base : vert ou orange
+	var rank_rng: Array = [[0.9, 1.06], [0.95, 1.08]][lv]
+	var skill_rng: Array = [[0.55, 0.95], [0.72, 1.0]][lv]
+	var aggressive: float = [0.4, 0.55][lv]
+	_band_far = [0.9, 0.94][lv]
+	_band_mid = [0.96, 0.98][lv]
+	_diff_speed = 1.0
+	if difficulty == Game.RANK_OVER:
+		rank_rng = [lerpf(0.95, 1.0, over), lerpf(1.08, 1.1, over)]
+		skill_rng = [lerpf(0.72, 0.82, over), 1.0]
+		aggressive = lerpf(0.55, 0.65, over)
+		_band_far = lerpf(0.94, 0.96, over)
+		_band_mid = lerpf(0.98, 0.99, over)
+		_diff_speed = 1.0 + 0.03 * over
 	var n_ai := 5
 	for i in n_ai:
-		var c: Dictionary = pool[_rng.randi() % pool.size()]
 		var rank: float = rec * _rng.randf_range(rank_rng[0], rank_rng[1])
+		# voiture de rival dont le rang peut descendre jusqu'au rang visé (sinon les rivaux
+		# seraient tous plus forts que prévu avec une petite voiture comme la CLA de départ)
+		var fit := pool.filter(func(pc): return float(pc["rank"][0]) <= rank)
+		if fit.is_empty():
+			fit = [pool.reduce(func(a, b): return a if float(a["rank"][0]) <= float(b["rank"][0]) else b)]
+		var c: Dictionary = fit[_rng.randi() % fit.size()]
 		rank = clamp(rank, float(c["rank"][0]), float(c["rank"][1]))
 		var st := Game.race_stats(c["id"], int(rank))
 		var ai := Racer.new()
@@ -134,7 +170,7 @@ func _spawn_racers() -> void:
 		ai.ai_shockwave = difficulty >= Game.RANK_CLOSE
 		ai.ai_ultra = difficulty >= Game.RANK_OVER
 		ai.ai_shock_ratio = [0.0, 0.5, 0.65][difficulty]
-		ai.ai_ultra_chance = 0.35 + 0.5 * ai.ai_skill if ai.ai_ultra else 0.0
+		ai.ai_ultra_chance = (0.35 + 0.5 * ai.ai_skill) * lerpf(0.4, 1.0, over) if ai.ai_ultra else 0.0
 		ai._ai_save_shock = ai.ai_shockwave and _rng.randf() < ai.ai_shock_ratio
 		racers.append(ai)
 	# grille : 3 rangées de 2, le joueur part en dernière ligne
@@ -324,14 +360,16 @@ func _drive(dt: float) -> void:
 		var gap: float = r.s - player.s
 		var mult := 1.0
 		if gap > 140.0:
-			mult = [0.9, 0.94, 0.97][difficulty]
+			mult = _band_far
 		elif gap > 60.0:
-			mult = [0.96, 0.98, 1.0][difficulty]
+			mult = _band_mid
 		elif gap < -200.0:
 			mult = 1.1
 		elif gap < -80.0:
 			mult = 1.04
-		r.speed_mult = lerp(r.speed_mult, mult * _diff_speed, dt * 0.5)
+		# bonus de vitesse (rouge) seulement pour les rivaux qui se battent près du joueur :
+		# un rival déjà loin devant ne s'envole pas
+		r.speed_mult = lerp(r.speed_mult, mult * (_diff_speed if gap <= 60.0 else 1.0), dt * 0.5)
 		r.think(dt, clock, racers, traffic.active_cars(), player)
 	for r in racers:
 		r.physics_step(dt, clock)
@@ -655,6 +693,9 @@ func _show_results() -> void:
 		"ultra_nitros": player.ultra_nitros,
 		"near_misses": player.near_misses,
 	}
+	if Game.autotest.has("log"):
+		print("RÉSULTAT pos=%d temps=%.1f cible=%.1f objectif=%s:%s ok=%s tonneaux=%d takedowns=%d épaves=%d difficulté=%d" % [
+			pos, clock, target_time, obj.get("type", ""), str(obj.get("value", "")), ok, player.barrel_rolls, player.takedowns, player.wrecks, difficulty])
 	_rewards = Game.apply_race_result(res)
 	var data := res.duplicate()
 	data["mode"] = mode

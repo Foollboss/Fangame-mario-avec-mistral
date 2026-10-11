@@ -587,7 +587,8 @@ func think(dt: float, clock: float, racers: Array, traffic: Array, player: Racer
 					continue
 				var dso: float = o.s - s
 				if dso > 2.0 and dso < 30.0 and abs(o.x - lx) < 2.0:
-					if ai_aggressive and o == player and v > o.v:
+					# agressif : va chercher le contact (rival -> joueur ; joueur en test --hunt -> rivaux)
+					if ai_aggressive and (o == player or is_player) and v > o.v:
 						cost -= 20.0
 					else:
 						cost += 10.0

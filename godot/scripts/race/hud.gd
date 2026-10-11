@@ -20,6 +20,9 @@ var td_label: Label
 var td_box: PanelContainer
 var speed_label: Label
 var timer_label: Label
+var target_box: PanelContainer
+var target_label: Label
+var _target_time := 0.0
 var nitro_bar: Control
 var msg_box: VBoxContainer
 var center_label: Label
@@ -162,6 +165,23 @@ func _build_top_right() -> void:
 	th.add_child(timer_label)
 	tp.add_child(th)
 	col.add_child(tp)
+	# contre-la-montre : temps cible affiché sous le chrono
+	target_box = K.panel(Color(0.04, 0.02, 0.08, 0.85))
+	var tgh := K.hbox(8)
+	tgh.alignment = BoxContainer.ALIGNMENT_END
+	tgh.add_child(K.label("CIBLE", 18, Color(1, 1, 1, 0.8), "black"))
+	target_label = K.label("00:00.000", 26, K.LIME, "black")
+	tgh.add_child(target_label)
+	target_box.add_child(tgh)
+	target_box.visible = false
+	col.add_child(target_box)
+
+
+## Contre-la-montre : affiche le temps cible sous le chrono.
+func set_target_time(t: float) -> void:
+	_target_time = t
+	target_box.visible = t > 0.0
+	target_label.text = K.fmt_time(t)
 
 
 func _build_nitro_bar() -> void:
@@ -478,6 +498,8 @@ func update_hud(dt: float, player: Racer, pos: int, total: int, dist: float, clo
 	dist_label.text = "%d%%" % int(clamp(dist, 0.0, 1.0) * 100.0)
 	speed_label.text = str(int(player.v * 3.6))
 	timer_label.text = K.fmt_time(clock)
+	if _target_time > 0.0:
+		target_label.add_theme_color_override("font_color", K.LIME if clock <= _target_time else K.RED)
 	td_label.text = " OUI" if touchdrive else " NON"
 	td_label.add_theme_color_override("font_color", K.LIME if touchdrive else K.RED)
 	_anim_t += dt
