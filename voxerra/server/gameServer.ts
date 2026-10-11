@@ -13,6 +13,7 @@ import { DEFAULT_SKIN_CODE, decodeSkin, encodeSkin } from '../src/entity/skin';
 import { Chunk } from '../src/world/chunk';
 import { ckey, ckeyX, ckeyZ, CS } from '../src/world/constants';
 import { createGenerator, type DimGenerator } from '../src/worldgen/generator';
+import type { GenEntity, GenBlockEntity } from '../src/worldgen/buffer';
 import { encodeChunk, decodeChunk, type ChunkRecord } from '../src/save/serializer';
 import { AdvancementTracker } from '../src/sim/advancements';
 import { installMobs } from '../src/sim/mobs';
@@ -47,16 +48,37 @@ interface Client {
   lastInv: string;
   lastPosT: number;
   deathHandled: boolean;
+  /** Arrivée en cours (terrain en chargement) : un second « hello » est ignoré. */
+  joining?: boolean;
+  /** Changement de dimension en cours. */
+  traveling?: boolean;
 }
 
-/** Stockage minimal utilisé par le serveur (FileStorage ou mémoire pour les tests). */
-export type ServerStorage = Pick<FileStorage, 'loadChunkSync' | 'saveBatchSync' | 'loadPlayer' | 'savePlayer'>;
+/**
+ * Stockage utilisé par le serveur : synchrone (FileStorage, mémoire pour les tests) ou, dans le
+ * navigateur, avec un chargement de colonnes asynchrone (IndexedDB).
+ */
+export type ServerStorage = Pick<FileStorage, 'saveBatchSync' | 'loadPlayer' | 'savePlayer'> & {
+  loadChunkSync?: FileStorage['loadChunkSync'];
+  loadChunkAsync?(id: string, dim: string, cx: number, cz: number): Promise<ChunkRecord | null>;
+};
+
+/** Colonne générée (générateur direct ou worker). */
+export interface GenChunk {
+  sections: (Uint16Array | null)[];
+  biomes: Uint8Array;
+  tints: Uint32Array;
+  blockEntities: GenBlockEntity[];
+  entities: GenEntity[];
+}
 
 export interface ServerOptions {
   radius?: number;
   motd?: string;
   log?: (msg: string) => void;
   maxPlayers?: number;
+  /** Génération asynchrone (workers du navigateur) ; sinon le générateur tourne sur place. */
+  generate?: (dim: string, cx: number, cz: number) => Promise<GenChunk>;
 }
 
 const round = (v: number, k = 100): number => Math.round(v * k) / k;
@@ -76,6 +98,11 @@ export class GameServer {
   private outbox = new Map<Client, ServerMsg[]>();
   private saveTimer = 0;
   private log: (m: string) => void;
+  private generate?: ServerOptions['generate'];
+  /** Colonnes en cours de chargement (mode asynchrone). */
+  private loads = new Map<string, Promise<void>>();
+  /** Zones réservées pendant une attente de chargement (pas de déchargement). */
+  private holds = new Set<{ dim: string; x: number; z: number; r: number }>();
   motd: string;
   maxPlayers: number;
 
@@ -89,6 +116,7 @@ export class GameServer {
     this.motd = opts.motd ?? 'Un serveur Voxerra';
     this.maxPlayers = opts.maxPlayers ?? 16;
     this.log = opts.log ?? ((m) => console.log(m));
+    this.generate = opts.generate;
     const sim = (this.sim = new Sim(content, meta));
     sim.modules.push(new AdvancementTracker(sim));
     installMobs(sim);
@@ -281,7 +309,7 @@ export class GameServer {
   }
 
   private onHello(c: Client, m: Extract<ClientMsg, { t: 'hello' }>): void {
-    if (c.player) return;
+    if (c.player || c.joining) return;
     const name = String(m.name ?? '').replace(/[^\p{L}\p{N}_\- ]/gu, '').trim().slice(0, 16) || 'Joueur';
     if (m.version !== PROTOCOL_VERSION) {
       c.conn.send(JSON.stringify({ t: 'kick', reason: `Version incompatible (serveur ${PROTOCOL_VERSION}, client ${m.version})` }));
@@ -311,14 +339,21 @@ export class GameServer {
     p.name = name;
     p.displayName = name;
     p.skin = cleanSkin(m.skin);
-    c.player = p;
+    c.joining = true;
     // colonnes autour du point d'arrivée, puis sol sûr
-    this.loadAround(p.dim, p.x, p.z, 2);
-    if (!saved) {
+    this.withArea(p.dim, p.x, p.z, 2, () => this.join(c, p, !saved));
+  }
+
+  private join(c: Client, p: Player, fresh: boolean): void {
+    c.joining = false;
+    if (!this.clients.includes(c)) return;
+    const name = c.name;
+    if (fresh) {
       const w = this.sim.world(p.dim);
       const gy = w.findGround(Math.floor(p.x), Math.floor(p.z));
       if (gy > 0) p.setPos(p.x, gy + 1, p.z);
     }
+    c.player = p;
     this.sim.addPlayer(p);
     c.lastInv = JSON.stringify(p.inventory.serializeAll());
     const meta = this.meta;
@@ -381,8 +416,7 @@ export class GameServer {
       for (const l of r.out) if (l) this.send(c, { t: 'ev', e: { t: 'msg', text: l, color: r.ok ? '#e0e0e0' : '#ff8080', to: p.id } });
       // téléportation par commande
       if (p.dim === before.dim && Math.hypot(p.x - before.x, p.y - before.y, p.z - before.z) > 0.01) {
-        this.loadAround(p.dim, p.x, p.z, 2);
-        this.send(c, { t: 'pos', dim: p.dim, x: p.x, y: p.y, z: p.z });
+        this.withArea(p.dim, p.x, p.z, 2, () => this.send(c, { t: 'pos', dim: p.dim, x: p.x, y: p.y, z: p.z }));
       }
     } else {
       this.log(`<${c.name}> ${text}`);
@@ -394,30 +428,41 @@ export class GameServer {
     if (!p.dead) return;
     c.deathHandled = false;
     const hardcore = this.meta.gameMode === 'hardcore';
+    const finish = () => {
+      this.send(c, { t: 'pos', dim: p.dim, x: p.x, y: p.y, z: p.z });
+      this.send(c, { t: 'inv', data: p.inventory.serializeAll() });
+    };
     if (hardcore) {
       p.gameMode = 'spectateur';
       p.respawn(p.x, p.y + 1, p.z);
-    } else {
-      const sp = p.spawn ?? { dim: 'surface', ...this.meta.spawn! };
-      p.respawn(sp.x, sp.y, sp.z);
-      if (sp.dim !== p.dim) this.changeDimension(c, p, sp.dim, sp.x, sp.y, sp.z, 'exact');
-      else {
-        this.loadAround(p.dim, p.x, p.z, 1);
+      finish();
+      return;
+    }
+    const sp = p.spawn ?? { dim: 'surface', ...this.meta.spawn! };
+    p.respawn(sp.x, sp.y, sp.z);
+    if (sp.dim !== p.dim) this.changeDimension(c, p, sp.dim, sp.x, sp.y, sp.z, 'exact', undefined, finish);
+    else
+      this.withArea(p.dim, p.x, p.z, 1, () => {
         const w = this.sim.world(p.dim);
         const t = w.content.blocks;
         let guard = 0;
         while (guard++ < 100 && (t.solid[w.getId(Math.floor(p.x), Math.floor(p.y), Math.floor(p.z))] || t.solid[w.getId(Math.floor(p.x), Math.floor(p.y + 1), Math.floor(p.z))])) p.setPos(p.x, p.y + 1, p.z);
-      }
-    }
-    this.send(c, { t: 'pos', dim: p.dim, x: p.x, y: p.y, z: p.z });
-    this.send(c, { t: 'inv', data: p.inventory.serializeAll() });
+        finish();
+      });
   }
 
-  private changeDimension(c: Client, p: Player, dim: string, x: number, y: number, z: number, mode: 'portal' | 'altar' | 'exact', portal?: string): void {
-    this.loadAround(dim, x, z, 2);
-    const pos = this.sim.completeTravel(p, dim, x, y, z, mode, portal);
-    this.loadAround(dim, pos.x, pos.z, 1);
-    this.send(c, { t: 'pos', dim, x: pos.x, y: pos.y, z: pos.z, mode: 'dim' });
+  private changeDimension(c: Client, p: Player, dim: string, x: number, y: number, z: number, mode: 'portal' | 'altar' | 'exact', portal?: string, then?: () => void): void {
+    if (c.traveling) return;
+    c.traveling = true;
+    this.withArea(dim, x, z, 2, () => {
+      if (!this.clients.includes(c)) return;
+      const pos = this.sim.completeTravel(p, dim, x, y, z, mode, portal);
+      this.withArea(dim, pos.x, pos.z, 1, () => {
+        c.traveling = false;
+        this.send(c, { t: 'pos', dim, x: pos.x, y: pos.y, z: pos.z, mode: 'dim' });
+        then?.();
+      });
+    });
   }
 
   // ------------------------------------------------------------------ évènements
@@ -449,48 +494,102 @@ export class GameServer {
     return `${dim}|${cx}|${cz}`;
   }
 
-  /** Charge (sauvegarde) ou génère une colonne, de façon synchrone. */
-  ensureChunk(dim: string, cx: number, cz: number): Chunk {
-    const w = this.sim.world(dim);
-    const have = w.getChunk(cx, cz);
+  /**
+   * Colonne chargée, ou chargée tout de suite (sauvegarde ou génération) en mode synchrone. En
+   * mode asynchrone (navigateur), lance son chargement et renvoie null tant qu'elle n'est pas prête.
+   */
+  ensureChunk(dim: string, cx: number, cz: number): Chunk | null {
+    const have = this.sim.world(dim).getChunk(cx, cz);
     if (have) return have;
-    const key = this.chunkKeyStr(dim, cx, cz);
-    const pending = this.pendingSaves.get(key);
-    const rec = pending?.rec ?? this.storage.loadChunkSync(this.meta.id, dim, cx, cz);
-    let c: Chunk;
-    let saved: unknown[] = [];
-    let genEnts: { type: string; x: number; y: number; z: number; data?: Record<string, unknown> }[] = [];
-    if (rec) {
-      const dec = decodeChunk(rec, this.content.blocks);
-      c = new Chunk(cx, cz);
-      c.loadSections(dec.sections);
-      c.biomes.set(dec.biomes);
-      c.tints.set(dec.tints);
-      for (const [i, d] of dec.blockEntities) c.blockEntities.set(i, d);
-      c.recordHasEntities = dec.entities.length > 0;
-      c.modified = true;
-      c.dirty = !!pending;
-      this.pendingSaves.delete(key);
-      saved = dec.entities;
-    } else {
-      const buf = this.gen(dim).generate(cx, cz);
-      c = new Chunk(cx, cz);
-      c.loadSections(buf.sections);
-      c.biomes.set(buf.biomes);
-      c.tints.set(buf.tints);
-      for (const be of buf.blockEntities) c.blockEntities.set(be.i, be.data);
-      genEnts = buf.entities;
+    const pending = this.pendingSaves.get(this.chunkKeyStr(dim, cx, cz));
+    if (pending) return this.addFromRecord(dim, cx, cz, pending.rec, true);
+    if (this.storage.loadChunkAsync) {
+      void this.requestChunk(dim, cx, cz);
+      return null;
     }
-    w.addChunk(c);
-    this.sim.restoreEntities(dim, saved);
-    for (const ge of genEnts) this.sim.spawnFromGen?.(dim, ge);
+    const rec = this.storage.loadChunkSync?.(this.meta.id, dim, cx, cz) ?? null;
+    return rec ? this.addFromRecord(dim, cx, cz, rec, false) : this.addFromGen(dim, cx, cz, this.gen(dim).generate(cx, cz));
+  }
+
+  /** Chargement asynchrone d'une colonne (une seule requête à la fois par colonne). */
+  private requestChunk(dim: string, cx: number, cz: number): Promise<void> {
+    const key = this.chunkKeyStr(dim, cx, cz);
+    let job = this.loads.get(key);
+    if (job) return job;
+    const ready = () => !!this.sim.world(dim).getChunk(cx, cz);
+    job = (async () => {
+      try {
+        const rec = await this.storage.loadChunkAsync!(this.meta.id, dim, cx, cz);
+        if (ready()) return;
+        // déchargée et mise de côté entre-temps : cette version est la plus récente
+        const pending = this.pendingSaves.get(key);
+        if (pending) return void this.addFromRecord(dim, cx, cz, pending.rec, true);
+        if (rec) return void this.addFromRecord(dim, cx, cz, rec, false);
+        const gen = this.generate ? await this.generate(dim, cx, cz) : this.gen(dim).generate(cx, cz);
+        if (!ready()) this.addFromGen(dim, cx, cz, gen);
+      } catch (e) {
+        this.log(`[serveur] échec du chargement de la colonne ${dim} ${cx} ${cz} : ${(e as Error).message}`);
+      } finally {
+        this.loads.delete(key);
+      }
+    })();
+    this.loads.set(key, job);
+    return job;
+  }
+
+  private addFromRecord(dim: string, cx: number, cz: number, rec: ChunkRecord, wasPending: boolean): Chunk {
+    const dec = decodeChunk(rec, this.content.blocks);
+    const c = new Chunk(cx, cz);
+    c.loadSections(dec.sections);
+    c.biomes.set(dec.biomes);
+    c.tints.set(dec.tints);
+    for (const [i, d] of dec.blockEntities) c.blockEntities.set(i, d);
+    c.recordHasEntities = dec.entities.length > 0;
+    c.modified = true;
+    c.dirty = wasPending;
+    this.pendingSaves.delete(this.chunkKeyStr(dim, cx, cz));
+    this.sim.world(dim).addChunk(c);
+    this.sim.restoreEntities(dim, dec.entities);
     return c;
   }
 
-  loadAround(dim: string, x: number, z: number, r: number): void {
+  private addFromGen(dim: string, cx: number, cz: number, buf: GenChunk): Chunk {
+    const c = new Chunk(cx, cz);
+    c.loadSections(buf.sections);
+    c.biomes.set(buf.biomes);
+    c.tints.set(buf.tints);
+    for (const be of buf.blockEntities ?? []) c.blockEntities.set(be.i, be.data);
+    this.sim.world(dim).addChunk(c);
+    for (const ge of buf.entities ?? []) this.sim.spawnFromGen?.(dim, ge);
+    return c;
+  }
+
+  /** Colonnes d'une zone qui ne sont pas encore prêtes (leur chargement est lancé). */
+  private areaMissing(dim: string, x: number, z: number, r: number): Promise<void>[] {
     const cx = Math.floor(x / CS),
       cz = Math.floor(z / CS);
-    for (let dz = -r; dz <= r; dz++) for (let dx = -r; dx <= r; dx++) this.ensureChunk(dim, cx + dx, cz + dz);
+    const out: Promise<void>[] = [];
+    for (let dz = -r; dz <= r; dz++) for (let dx = -r; dx <= r; dx++) if (!this.ensureChunk(dim, cx + dx, cz + dz)) out.push(this.requestChunk(dim, cx + dx, cz + dz));
+    return out;
+  }
+
+  /**
+   * Charge une zone puis continue : tout de suite si elle est prête (toujours le cas en mode
+   * synchrone), sinon une fois chargée ; la zone est réservée pendant l'attente.
+   */
+  withArea(dim: string, x: number, z: number, r: number, next: () => void): void {
+    if (!this.areaMissing(dim, x, z, r).length) return next();
+    const hold = { dim, x, z, r };
+    this.holds.add(hold);
+    void (async () => {
+      for (let i = 0; i < 40; i++) {
+        const missing = this.areaMissing(dim, x, z, r);
+        if (!missing.length) break;
+        await Promise.all(missing);
+      }
+      this.holds.delete(hold);
+      next();
+    })();
   }
 
   private unloadChunk(dim: string, c: Chunk): void {
@@ -531,12 +630,13 @@ export class GameServer {
       for (const [cx, cz] of want) {
         const k = ckey(cx, cz);
         if (c.sent.has(k)) continue;
-        const w = this.sim.world(p.dim);
-        if (!w.getChunk(cx, cz)) {
-          if (budget <= 0) continue;
+        let ch: Chunk | null | undefined = this.sim.world(p.dim).getChunk(cx, cz);
+        if (!ch) {
+          if (budget <= 0 || this.loads.size >= 24) continue;
           budget--;
+          ch = this.ensureChunk(p.dim, cx, cz);
+          if (!ch) continue; // en chargement : envoyée à un prochain tick
         }
-        const ch = this.ensureChunk(p.dim, cx, cz);
         this.send(c, { t: 'chunk', dim: p.dim, rec: chunkToWire(encodeChunk(ch, this.content.blocks)) });
         c.sent.add(k);
         if (--sends <= 0) break;
@@ -545,12 +645,14 @@ export class GameServer {
     // Déchargement : colonnes loin de tous les joueurs de la dimension
     for (const [dim, w] of this.sim.worldsByDim) {
       const ps = this.clients.map((c) => c.player).filter((p): p is Player => !!p && p.dim === dim);
+      const holds = [...this.holds].filter((h) => h.dim === dim);
       for (const ch of [...w.chunks.values()]) {
-        const near = ps.some((p) => {
-          const dx = ch.cx - Math.floor(p.x / CS),
-            dz = ch.cz - Math.floor(p.z / CS);
-          return dx * dx + dz * dz <= (R + 3) * (R + 3);
-        });
+        const near =
+          ps.some((p) => {
+            const dx = ch.cx - Math.floor(p.x / CS),
+              dz = ch.cz - Math.floor(p.z / CS);
+            return dx * dx + dz * dz <= (R + 3) * (R + 3);
+          }) || holds.some((h) => Math.abs(ch.cx - Math.floor(h.x / CS)) <= h.r + 1 && Math.abs(ch.cz - Math.floor(h.z / CS)) <= h.r + 1);
         if (!near) this.unloadChunk(dim, ch);
       }
     }
@@ -705,10 +807,10 @@ export class GameServer {
     }
   }
 
-  stop(): void {
+  stop(reason = 'Arrêt du serveur.'): void {
     for (const c of [...this.clients]) {
       try {
-        c.conn.send(JSON.stringify({ t: 'kick', reason: 'Arrêt du serveur.' }));
+        c.conn.send(JSON.stringify({ t: 'kick', reason }));
         c.conn.close();
       } catch {
         /* déjà fermé */

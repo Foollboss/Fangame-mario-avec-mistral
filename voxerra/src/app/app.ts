@@ -31,7 +31,9 @@ import { BIOMES } from '../worldgen/biomes';
 import { setLang, getLang, t, type Lang } from '../i18n/i18n';
 import { localizeContent } from '../i18n/content';
 import { TouchControls } from '../ui/touch';
-import { connectToServer } from '../net/connect';
+import { connectToServer, joinSession } from '../net/connect';
+import { LanHost, lanBridge } from '../net/lanHost';
+import { RemoteSession } from '../net/client';
 
 export const VERSION = '1.0.0';
 const PANORAMA_SEED = 20250917;
@@ -124,6 +126,8 @@ export class App implements AppApi {
   private expectUnlock = false;
   private poolSeed: number | null = null;
   private busy = false;
+  /** Partie ouverte au réseau local (serveur intégré). */
+  lanHost: LanHost | null = null;
 
   async boot(): Promise<void> {
     setLang(this.settings.language);
@@ -173,7 +177,10 @@ export class App implements AppApi {
     document.addEventListener('visibilitychange', () => {
       if (document.hidden && this.game) this.game.save();
     });
-    addEventListener('pagehide', () => this.game?.save());
+    addEventListener('pagehide', () => {
+      this.game?.save();
+      this.lanHost?.server.save();
+    });
     // Navigateur, lanceur Windows : fermer pendant une partie demande confirmation (la croix, ou Ctrl+W dans un
     // onglet classique, où le navigateur se réserve ce raccourci ; ailleurs, InputManager le bloque).
     // (L'application de bureau gère elle-même la fermeture et la sauvegarde.)
@@ -327,10 +334,71 @@ export class App implements AppApi {
       console.error(e);
     }
     this.game = null;
+    await this.closeLan();
     this.ui.hudLayer.innerHTML = '';
     await this.startPanorama();
     this.busy = false;
     this.showMainMenu();
+  }
+
+  private async closeLan(): Promise<void> {
+    const host = this.lanHost;
+    this.lanHost = null;
+    try {
+      await host?.stop();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  /**
+   * Ouvre la partie solo en cours au réseau local : le monde passe dans un serveur intégré à la
+   * page, que l'hôte rejoint aussitôt ; le relais de l'application accueille les amis.
+   */
+  async openToLan(): Promise<void> {
+    const solo = this.game;
+    const bridge = lanBridge();
+    if (!solo || solo.remote || this.busy || !bridge) return;
+    this.busy = true;
+    const loading = loadingScreen();
+    this.ui.set(loading.screen);
+    loading.set(t('Ouverture de la partie au réseau…'), 0, 1);
+    this.expectUnlock = true;
+    this.input.unlock();
+    const worldName = solo.meta.name;
+    try {
+      await solo.dispose(true);
+      this.game = null;
+      this.ui.hudLayer.innerHTML = '';
+      const meta = (await this.storage.loadMeta(solo.meta.id)) ?? solo.meta;
+      const host = new LanHost(this, meta);
+      this.lanHost = host;
+      host.start();
+      const session = await RemoteSession.connect(() => host.socket(), this.settings.playerName, this.settings.skin, 60000);
+      const game = await joinSession(this, session, t('partie locale'), loading);
+      this.game = game;
+      this.ui.hudLayer.append(game.hud.el, game.chat.el);
+      this.ui.closeAll();
+      this.input.lock();
+      this.audio.setMood('jour');
+      try {
+        const net = await host.openNetwork(bridge, worldName, this.settings.playerName);
+        game.chat.add(t('Partie ouverte au réseau local !'), '#a0ffa0');
+        game.chat.add(t('Vos amis sur le même Wi-Fi la trouvent dans Multijoueur, ou avec l’adresse {ip}.', { ip: net.addresses.join(' / ') || '?' }), '#c0e0ff');
+      } catch (e) {
+        game.chat.add(t('Impossible d’ouvrir la partie au réseau : {msg}', { msg: (e as Error).message }), '#ff8080');
+      }
+    } catch (e) {
+      console.error(e);
+      this.game = null;
+      await this.closeLan();
+      this.ui.hudLayer.innerHTML = '';
+      await this.startPanorama();
+      this.showMainMenu();
+      this.ui.push(messageScreen(this, t('Impossible d’ouvrir la partie'), t((e as Error).message)));
+    } finally {
+      this.busy = false;
+    }
   }
 
   async connect(address: string, name: string): Promise<void> {

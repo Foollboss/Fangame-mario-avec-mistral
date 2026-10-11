@@ -21,6 +21,11 @@ export async function connectToServer(app: App, address: string, name: string, l
   const url = normalizeAddress(address);
   loading.set(t('Connexion à {address}…', { address: url }), 0, 1);
   const session = await RemoteSession.connect(url, name, app.settings.skin);
+  return joinSession(app, session, url, loading);
+}
+
+/** Prépare la partie d'un client une fois accueilli par le serveur (distant ou intégré). */
+export async function joinSession(app: App, session: RemoteSession, url: string, loading: LoadingHandle): Promise<Game> {
   const w = session.welcome;
   loading.set(t('Préparation…'), 0, 1);
   await app.initPool(w.world.seed, w.world.worldType, w.world.structures);

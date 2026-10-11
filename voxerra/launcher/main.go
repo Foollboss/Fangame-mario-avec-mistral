@@ -36,6 +36,8 @@ window.voxerraHost = {
       }, 400);
     });
   },
+  // partie ouverte au réseau local (relais du lanceur)
+  lan: { hostUrl: 'ws://127.0.0.1:47183/lan/hote', gamesUrl: '/lan/parties' },
 };
 setInterval(function () { fetch('/alive', { method: 'POST' }).catch(function () {}); }, 5000);
 fetch('/alive', { method: 'POST' }).catch(function () {});
@@ -75,9 +77,11 @@ func page() []byte {
 	return append(out, gameHTML[i:]...)
 }
 
-func handler(s *state) http.Handler {
+func handler(s *state, lan *lanRelay) http.Handler {
 	body := page()
 	mux := http.NewServeMux()
+	mux.HandleFunc("/lan/hote", lan.handleHost)
+	mux.HandleFunc("/lan/parties", lan.handleGames)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" && r.URL.Path != "/index.html" {
 			http.NotFound(w, r)
@@ -130,7 +134,9 @@ func main() {
 		return
 	}
 	s := &state{quit: make(chan struct{})}
-	srv := &http.Server{Handler: handler(s), ReadHeaderTimeout: 10 * time.Second}
+	lan := newLanRelay()
+	defer lan.closeHost()
+	srv := &http.Server{Handler: handler(s, lan), ReadHeaderTimeout: 10 * time.Second}
 	go srv.Serve(ln)
 
 	if err := openWindow(url); err != nil {

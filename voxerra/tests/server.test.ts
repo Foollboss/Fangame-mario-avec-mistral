@@ -6,6 +6,7 @@ import type { WorldMeta } from '../src/save/storage';
 import { wireToChunk, PROTOCOL_VERSION, type ServerMsg } from '../src/net/protocol';
 import { decodeChunk } from '../src/save/serializer';
 import { DEFAULT_SKIN_CODE, PRESETS, encodeSkin } from '../src/entity/skin';
+import { createGenerator } from '../src/worldgen/generator';
 
 class MemStore implements ServerStorage {
   chunks = new Map<string, ChunkRecord>();
@@ -122,5 +123,71 @@ describe('serveur multijoueur', () => {
     srv.handle(ca, JSON.stringify({ t: 'skin', skin: mage }));
     srv.tick();
     expect(seen(b.got, 'Alba')).toBe(mage);
+  });
+
+  it('mode asynchrone (navigateur) : arrivée, terrain, sauvegarde et réapparition une fois la zone chargée', async () => {
+    const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    // colonnes lues et générées « plus tard », comme IndexedDB et les workers
+    class AsyncStore extends MemStore {
+      reads = 0;
+      async loadChunkAsync(id: string, dim: string, cx: number, cz: number): Promise<ChunkRecord | null> {
+        await wait(1);
+        this.reads++;
+        return this.loadChunkSync(id, dim, cx, cz);
+      }
+    }
+    const store = new AsyncStore();
+    const meta = newServerMeta('as', 'Async', 4242, '4242');
+    const gens = new Map<string, ReturnType<typeof createGenerator>>();
+    const generate = async (dim: string, cx: number, cz: number) => {
+      await wait(1);
+      if (!gens.has(dim)) gens.set(dim, createGenerator(dim, meta.seed, content));
+      return gens.get(dim)!.generate(cx, cz);
+    };
+    const make = () => new GameServer(content, meta, store, { radius: 2, log: () => {}, generate });
+    let srv = make();
+    const until = async (cond: () => boolean, what: string) => {
+      for (let i = 0; i < 400 && !cond(); i++) {
+        await wait(2);
+        srv.tick();
+      }
+      expect(cond(), what).toBe(true);
+    };
+    const a = fakeConn();
+    const ca = srv.connect(a.conn);
+    srv.handle(ca, JSON.stringify({ t: 'hello', name: 'Alba', version: PROTOCOL_VERSION }));
+    srv.flush();
+    expect(a.got.some((m) => m.t === 'welcome')).toBe(false); // terrain pas encore prêt
+    await until(() => a.got.some((m) => m.t === 'welcome'), 'accueil après chargement');
+    const pa = ca.player!;
+    const w = srv.sim.world('surface');
+    expect(w.isLoaded(Math.floor(pa.x), Math.floor(pa.z))).toBe(true);
+    // posé sur le sol (pas dans le vide ni dans la roche)
+    expect(content.blocks.solid[w.getId(Math.floor(pa.x), Math.floor(pa.y) - 1, Math.floor(pa.z))]).toBe(1);
+    await until(() => a.got.filter((m) => m.t === 'chunk').length >= 13, 'colonnes reçues');
+    // un bloc posé survit à la sauvegarde et au rechargement asynchrone
+    const x = Math.floor(pa.x) + 2,
+      z = Math.floor(pa.z);
+    const y = w.findGround(x, z);
+    w.setBlock(x, y + 1, z, content.b('bloc_or'));
+    srv.save();
+    srv.stop();
+    srv = make();
+    const a2 = fakeConn();
+    const ca2 = srv.connect(a2.conn);
+    srv.handle(ca2, JSON.stringify({ t: 'hello', name: 'Alba', version: PROTOCOL_VERSION }));
+    await until(() => a2.got.some((m) => m.t === 'welcome'), 'accueil (2)');
+    await until(() => srv.sim.world('surface').isLoaded(x, z), 'colonne du bloc chargée');
+    expect(content.blocks.get(srv.sim.world('surface').getId(x, y + 1, z)).id).toBe('bloc_or');
+    expect(store.reads).toBeGreaterThan(0);
+    // mort puis réapparition : la position n'est envoyée qu'une fois la zone prête
+    const p2 = ca2.player!;
+    p2.damage(1000, { type: 'void' });
+    srv.tick();
+    expect(p2.dead).toBe(true);
+    const before = a2.got.length;
+    srv.handle(ca2, JSON.stringify({ t: 'respawn' }));
+    await until(() => a2.got.slice(before).some((m) => m.t === 'pos'), 'position de réapparition');
+    expect(p2.dead).toBe(false);
   });
 });

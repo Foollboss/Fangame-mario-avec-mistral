@@ -84,6 +84,17 @@ export class RemoteEntity extends Entity {
   addEffect(): void {}
 }
 
+/** Ce que la session utilise d'un WebSocket (vrai WebSocket, ou connexion en mémoire pour l'hôte). */
+export interface SocketLike {
+  readonly readyState: number;
+  onopen: ((ev?: unknown) => void) | null;
+  onmessage: ((ev: { data: unknown }) => void) | null;
+  onclose: ((ev?: unknown) => void) | null;
+  onerror: ((ev?: unknown) => void) | null;
+  send(data: string): void;
+  close(): void;
+}
+
 export class RemoteSession {
   game: Game | null = null;
   streamer: ChunkStreamer | null = null;
@@ -98,7 +109,7 @@ export class RemoteSession {
   private closeReason = t('Connexion perdue.');
 
   constructor(
-    readonly ws: WebSocket,
+    readonly ws: SocketLike,
     readonly welcome: WelcomeMsg,
   ) {
     ws.onmessage = (ev) => {
@@ -118,12 +129,16 @@ export class RemoteSession {
     };
   }
 
-  /** Établit la connexion et attend l'accueil du serveur. */
-  static connect(url: string, name: string, skin?: string, timeoutMs = 10000): Promise<RemoteSession> {
+  /**
+   * Établit la connexion et attend l'accueil du serveur. `target` : adresse ws://, ou fabrique
+   * d'une connexion (serveur intégré à la page de l'hôte).
+   */
+  static connect(target: string | (() => SocketLike), name: string, skin?: string, timeoutMs = 10000): Promise<RemoteSession> {
+    const url = typeof target === 'string' ? target : t('partie locale');
     return new Promise((resolve, reject) => {
-      let ws: WebSocket;
+      let ws: SocketLike;
       try {
-        ws = new WebSocket(url);
+        ws = typeof target === 'string' ? (new WebSocket(target) as unknown as SocketLike) : target();
       } catch (e) {
         reject(new Error(t('Adresse invalide : {url}', { url })));
         void e;
@@ -164,7 +179,7 @@ export class RemoteSession {
   }
 
   send(m: ClientMsg): void {
-    if (this.ws.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify(m));
+    if (this.ws.readyState === 1) this.ws.send(JSON.stringify(m));
   }
 
   attach(game: Game): void {
