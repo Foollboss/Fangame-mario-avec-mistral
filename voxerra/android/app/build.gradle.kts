@@ -54,4 +54,6 @@ tasks.named("preBuild") { dependsOn(copyGame) }
 dependencies {
     implementation("androidx.webkit:webkit:1.17.1")
     implementation("androidx.activity:activity:1.13.0")
+    // relais de la partie ouverte au réseau local
+    implementation("org.java-websocket:Java-WebSocket:1.6.0")
 }

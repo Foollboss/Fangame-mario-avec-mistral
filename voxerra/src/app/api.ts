@@ -29,4 +29,8 @@ export interface AppApi {
   removeMod(id: string): void;
   /** Change la langue de l'interface et du contenu. */
   setLanguage(lang: Lang): void;
+  /** Ouvre la partie solo en cours au réseau local. */
+  openToLan(): Promise<void>;
+  /** Partie ouverte au réseau local (serveur intégré), si c'est le cas. */
+  readonly lanHost: { network: { port: number; addresses: string[] } | null; players(): string[] } | null;
 }

@@ -38,7 +38,8 @@ import { blockContainer, type FurnaceData, type ChestData } from '../sim/furnace
 import { throwStack, lookFacing } from '../sim/interact';
 import { runCommand, completeCommand } from '../sim/commands';
 import { Grave } from '../entity/grave';
-import { deathScreen, pauseScreen, statsScreen, lanInfoScreen, type LoadingHandle } from '../ui/screens/menus';
+import { deathScreen, pauseScreen, statsScreen, type LoadingHandle } from '../ui/screens/menus';
+import { openLanScreen, netInfoScreen } from '../ui/screens/lanScreens';
 import { h } from '../ui/dom';
 import type { LivingEntity } from '../entity/living';
 import { installGameModules } from './modules';
@@ -522,13 +523,27 @@ export class Game {
 
   openPause(): void {
     this.host.input.unlock();
+    const api = this.hostApi();
+    const host = api.lanHost;
+    const net = !this.remote ? 'solo' : host ? 'hote' : 'invite';
+    const lan = () => {
+      if (net === 'solo') return this.host.ui.push(openLanScreen(api));
+      const remote = this.remote!;
+      this.host.ui.push(
+        netInfoScreen(api, {
+          title: net === 'hote' ? t('Partie ouverte') : t('Infos de la partie'),
+          address: () => (host ? (host.network ? `${host.network.addresses.join(' / ')} (port ${host.network.port})` : t('pas encore ouverte au réseau')) : this.meta.id.replace(/^distant:/, '')),
+          players: () => (host ? host.players() : remote.players.map((p) => p.name)),
+        }),
+      );
+    };
     this.host.ui.push(
-      pauseScreen(this.hostApi(), {
-        advancements: () => this.host.ui.push(advancementsScreen(this.hostApi(), this.sim, this.player)),
-        stats: () => this.host.ui.push(statsScreen(this.hostApi(), this.player.stats, this.meta.playTime)),
+      pauseScreen(api, {
+        advancements: () => this.host.ui.push(advancementsScreen(api, this.sim, this.player)),
+        stats: () => this.host.ui.push(statsScreen(api, this.player.stats, this.meta.playTime)),
         saveQuit: () => this.host.quitToTitle(),
-        lan: () => this.host.ui.push(lanInfoScreen(this.hostApi())),
-        multiplayer: !!this.remote,
+        lan,
+        net,
       }),
     );
   }

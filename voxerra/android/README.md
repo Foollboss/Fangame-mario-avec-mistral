@@ -12,6 +12,12 @@ les sauvegardes (IndexedDB) et les workers fonctionnent comme dans un navigateur
 - Tout l'écran, y compris sous l'encoche de la caméra : l'appli transmet sa taille au jeu (variables CSS
   `--app-inset-*`), qui en écarte le joystick, les boutons et les textes des coins.
 - Le clavier du téléphone réduit la zone de jeu : la saisie de la discussion reste visible.
+- **Ouvrir au réseau local** (menu pause) : l'appli relaie les amis du même Wi-Fi vers le serveur intégré à la
+  page du jeu ([`LanRelay.java`](app/src/main/java/io/github/fullboss971/voxerra/LanRelay.java), même protocole
+  que le lanceur Windows : PC et téléphones jouent ensemble). Port 25590 (WebSocket) ouvert le temps de la partie,
+  annonce et découverte sur le port UDP 25591 ; la page se connecte au relais par `ws://127.0.0.1:47184/hote`
+  (origine vérifiée). Permissions : Internet, état du réseau et du Wi-Fi, multidiffusion Wi-Fi (pour recevoir les
+  annonces). La partie se met en pause si l'appli de l'hôte passe en arrière-plan.
 
 ## Construire
 
@@ -22,6 +28,12 @@ Il faut un JDK 17+ et le SDK Android (plateforme `android-36`), indiqué par `AN
 cd voxerra
 npm install
 npm run build:apk          # → android/app/build/outputs/apk/release/app-release.apk
+```
+
+Le relais réseau s'essaie sur la JVM, sans téléphone (doublures des classes Android, vrais clients WebSocket) :
+
+```bash
+android/relay-test/run.sh   # après un premier « npm run build:apk » (bibliothèques dans le cache Gradle)
 ```
 
 ## Signature

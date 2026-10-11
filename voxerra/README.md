@@ -110,6 +110,23 @@ Autres commandes :
 
 ### Jouer à plusieurs
 
+**En réseau local, depuis le jeu (comme « Ouvrir au réseau local »)** — avec `Voxerra.exe` ou l'appli Android :
+
+1. L'hôte lance son monde solo, puis **Échap → Ouvrir au réseau local → Ouvrir la partie**. Le monde tourne alors
+   dans un serveur intégré à sa page (le même que le serveur dédié) ; l'adresse à donner s'affiche dans la discussion
+   et dans **Échap → Partie ouverte**, avec la liste des joueurs connectés.
+2. Les amis connectés au **même Wi-Fi** ouvrent **Multijoueur** : la partie apparaît seule (« Partie de … ») ;
+   **Rejoindre**. Sinon, **Connexion directe** avec l'adresse de l'hôte (ex. `192.168.1.23`).
+3. Tout est en temps réel : déplacements, blocs, créatures, coffres, discussion. Quand l'hôte quitte, les invités
+   sont prévenus et le monde est sauvegardé (avec l'inventaire et la position de chaque invité, retrouvés à son retour).
+
+L'application ne fait que relayer les messages : port **25590** (TCP, WebSocket) pour les invités, ouvert seulement
+pendant la partie, et port **25591** (UDP) pour annoncer et découvrir les parties. Au premier lancement, Windows
+demande d'autoriser Voxerra sur le réseau : accepter (réseaux privés). PC et Android peuvent jouer ensemble.
+La version navigateur (`Voxerra.html`) peut rejoindre une partie avec **Connexion directe**, mais pas en héberger.
+
+**Serveur dédié (Node.js)** :
+
 1. Lancer le serveur : `npm run server` (options ci-dessous).
 2. Dans le jeu : **Multijoueur → Connexion directe**, adresse `localhost` (ou `IP:25590` sur le réseau local).
 
@@ -390,7 +407,7 @@ Aucune image ni aucun son n'est fourni : tout est produit au lancement.
 
 ## Tests
 
-`npm test` exécute 54 tests :
+`npm test` exécute 63 tests :
 
 | Fichier | Couverture |
 |---|---|
@@ -403,7 +420,9 @@ Aucune image ni aucun son n'est fourni : tout est produit au lancement.
 | `mobs.test.ts` | poursuite et dégâts, chauve-furie à portée de coup, fuite, butin, apparitions nocturnes, mode paisible, phases de boss, sauvegarde |
 | `commands.test.ts` | suggestions de commandes dans les 3 langues, chaque suggestion reconnue, message de refus |
 | `structures.test.ts` | chaque structure localisable, blocs connus, coffres, déterminisme entre colonnes, désactivation |
-| `server.test.ts` | accueil, colonnes, réplication des blocs, discussion, inventaire, reconnexion, refus |
+| `server.test.ts` | accueil, colonnes, réplication des blocs, discussion, inventaire, reconnexion, refus, skin, mode asynchrone de la partie ouverte (colonnes chargées et générées en différé) |
+| `skin.test.ts` | code court aller-retour (préréglages et skins au hasard), codes mal formés, pièces du modèle |
+| `eau.test.ts` | animaux qui nagent dans chaque eau, recul horizontal près d'une berge |
 | `mods.test.ts` | mod d'exemple complet, validation des packs |
 | `i18n.test.ts` | chaque texte et chaque nom traduit en anglais et en espagnol, changement de langue à chaud |
 | `content.test.ts` | textures, butins, modèles et autels cohérents |
@@ -412,7 +431,8 @@ Aucune image ni aucun son n'est fourni : tout est produit au lancement.
 
 ## Limites connues
 
-- **Multijoueur** : le serveur valide la portée, la vitesse et les actions, mais fait confiance au client pour le
+- **Multijoueur** : partie ouverte au réseau local limitée au même Wi-Fi (pas de relais par Internet) ; sur Android,
+  la partie se met en pause si l'appli de l'hôte passe en arrière-plan. Le serveur valide la portée, la vitesse et les actions, mais fait confiance au client pour le
   contenu de l'inventaire après une fabrication et pour les coffres (prévu pour jouer entre amis) ; connexion en `ws://`
   non chiffrée (utiliser un proxy TLS pour `wss://`) ; les progrès sont partagés par monde et non par joueur ;
   instantanés d'entités en JSON complet (adapté au réseau local, pas optimisé pour Internet).

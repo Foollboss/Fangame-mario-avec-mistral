@@ -374,6 +374,11 @@ export class App implements AppApi {
       const host = new LanHost(this, meta);
       this.lanHost = host;
       host.start();
+      // le réseau s'ouvre tout de suite : les amis peuvent arriver pendant le chargement de l'hôte
+      const network = host.openNetwork(bridge, worldName, this.settings.playerName).then(
+        (net) => ({ net, error: null }),
+        (e: Error) => ({ net: null, error: e.message }),
+      );
       const session = await RemoteSession.connect(() => host.socket(), this.settings.playerName, this.settings.skin, 60000);
       const game = await joinSession(this, session, t('partie locale'), loading);
       this.game = game;
@@ -381,13 +386,11 @@ export class App implements AppApi {
       this.ui.closeAll();
       this.input.lock();
       this.audio.setMood('jour');
-      try {
-        const net = await host.openNetwork(bridge, worldName, this.settings.playerName);
+      const { net, error } = await network;
+      if (net) {
         game.chat.add(t('Partie ouverte au réseau local !'), '#a0ffa0');
         game.chat.add(t('Vos amis sur le même Wi-Fi la trouvent dans Multijoueur, ou avec l’adresse {ip}.', { ip: net.addresses.join(' / ') || '?' }), '#c0e0ff');
-      } catch (e) {
-        game.chat.add(t('Impossible d’ouvrir la partie au réseau : {msg}', { msg: (e as Error).message }), '#ff8080');
-      }
+      } else game.chat.add(t('Impossible d’ouvrir la partie au réseau : {msg}', { msg: error ?? '?' }), '#ff8080');
     } catch (e) {
       console.error(e);
       this.game = null;

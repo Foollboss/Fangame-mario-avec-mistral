@@ -3,6 +3,10 @@
 
     <!-- multijoueur (serveur Voxerra sur le réseau local) -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- partie ouverte au réseau local : adresses et annonces sur le Wi-Fi -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <!-- WebGL 2 -->
     <uses-feature android:glEsVersion="0x00030000" android:required="true" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />

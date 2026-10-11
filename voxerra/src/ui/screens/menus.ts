@@ -9,6 +9,7 @@ import { DEFAULT_BINDINGS, type Action } from '../../input/input';
 import { t, tr, locale, getLang, LANGS, type Lang } from '../../i18n/i18n';
 import { pixelIcon } from '../pixelIcons';
 import { skinScreen } from './skinScreen';
+import { lanBridge, type LanGame } from '../../net/lanHost';
 
 const MODE_LABEL = (m: GameMode): string => ({ survie: t('Mode survie'), creatif: t('Mode créatif'), hardcore: t('Mode hardcore'), spectateur: t('Mode spectateur') })[m] ?? m;
 const DIFF = (): string[] => [t('Paisible'), t('Facile'), t('Normale'), t('Difficile')];
@@ -541,49 +542,95 @@ export function controlsScreen(app: AppApi, onClose?: () => void): Screen {
 
 // ---------------------------------------------------------------------------
 export function multiplayerScreen(app: AppApi): Screen {
-  const list = h('div', { class: 'world-list', style: { height: '260px' } });
-  let sel = 0;
+  const bridge = lanBridge();
+  const list = h('div', { class: 'world-list', style: { height: '250px' } });
+  let lanGames: LanGame[] = [];
+  // sélection : partie du réseau local (« l:hôte:port ») ou serveur enregistré (« s:index »)
+  let sel = '';
+  const join = (address: string) => app.connect(address, app.settings.playerName);
+  const item = (key: string, name: string, meta: string, color: string, address: string) => {
+    const it = h('div', { class: 'world-item' + (key === sel ? ' sel' : '') }, h('div', { class: 'thumb', style: { background: color } }), h('div', { class: 'info' }, h('div', { class: 'name' }, name), h('div', { class: 'meta' }, meta)));
+    it.addEventListener('click', () => {
+      sel = key;
+      render();
+    });
+    it.addEventListener('dblclick', () => join(address));
+    return it;
+  };
+  const selected = (): string | null => {
+    if (sel.startsWith('l:')) return sel.slice(2);
+    const s = app.settings.servers[Number(sel.slice(2))];
+    return sel.startsWith('s:') && s ? s.address : null;
+  };
   const render = () => {
     clear(list);
-    app.settings.servers.forEach((s, i) => {
-      const it = h('div', { class: 'world-item' + (i === sel ? ' sel' : '') }, h('div', { class: 'thumb', style: { background: '#2a3a4a' } }), h('div', { class: 'info' }, h('div', { class: 'name' }, s.name), h('div', { class: 'meta' }, s.address)));
-      it.addEventListener('click', () => {
-        sel = i;
-        render();
-      });
-      it.addEventListener('dblclick', () => app.connect(s.address, app.settings.playerName));
-      list.appendChild(it);
-    });
-    if (!app.settings.servers.length) list.appendChild(h('div', { class: 'list-empty' }, t('Aucun serveur. Ajoutez-en un.')));
+    for (const g of lanGames) {
+      const addr = `${g.host}:${g.port}`;
+      list.appendChild(item('l:' + addr, t('Partie de {name}', { name: g.name }), t('Sur le Wi-Fi — « {world} » — {addr}', { world: g.world, addr }), '#2a6a3a', addr));
+    }
+    app.settings.servers.forEach((s, i) => list.appendChild(item('s:' + i, s.name, s.address, '#2a3a4a', s.address)));
+    if (!list.children.length) list.appendChild(h('div', { class: 'list-empty' }, bridge ? t('Recherche des parties sur le Wi-Fi…') : t('Aucun serveur. Ajoutez-en un.')));
+    if (!sel && list.querySelector('.world-item')) {
+      sel = lanGames.length ? `l:${lanGames[0].host}:${lanGames[0].port}` : 's:0';
+      render();
+    }
   };
-  const addr = h('input', { class: 'input', placeholder: t('adresse:25590 (ex. localhost)') }) as HTMLInputElement;
+  // parties ouvertes sur le réseau local, mises à jour toutes les 1,5 s
+  let timer = 0;
+  if (bridge) {
+    const refresh = async () => {
+      try {
+        const games = await bridge.games();
+        if (JSON.stringify(games) !== JSON.stringify(lanGames)) {
+          lanGames = games;
+          render();
+        }
+      } catch {
+        /* relais indisponible */
+      }
+    };
+    void refresh();
+    timer = window.setInterval(refresh, 1500);
+  }
+  const addr = h('input', { class: 'input', placeholder: t('Adresse de l’hôte (ex. 192.168.1.23)') }) as HTMLInputElement;
+  addr.addEventListener('keydown', (e) => e.stopPropagation());
   const el = h(
     'div',
     { class: 'screen dim', style: { justifyContent: 'flex-start', paddingTop: '20px' } },
     h('div', { class: 'title', style: { marginBottom: '6px' } }, t('Jouer en multijoueur')),
-    h('div', { class: 'hint', style: { marginBottom: '10px', maxWidth: '620px', textAlign: 'center' } }, t('Lancez un serveur avec « npm run server » puis connectez-vous. Le serveur est autoritaire : blocs, créatures, temps et sauvegarde sont gérés par lui.')),
+    h(
+      'div',
+      { class: 'hint', style: { marginBottom: '10px', maxWidth: '640px', textAlign: 'center' } },
+      bridge
+        ? t('Sur le même Wi-Fi : un joueur ouvre sa partie (Échap → Ouvrir au réseau local), elle apparaît ici. Tout se passe en temps réel.')
+        : t('Rejoignez une partie avec l’adresse de l’hôte. Pour trouver les parties du Wi-Fi ou en héberger une, utilisez Voxerra.exe ou l’appli Android.'),
+    ),
     list,
     h('div', { style: { height: '10px' } }),
     addr,
     h(
       'div',
       { class: 'bottom-bar two-rows' },
-      h('div', { class: 'row' }, button(t('Rejoindre le serveur'), () => app.settings.servers[sel] && app.connect(app.settings.servers[sel].address, app.settings.playerName), 'half'), button(t('Connexion directe'), () => addr.value && app.connect(addr.value.trim(), app.settings.playerName), 'half')),
+      h('div', { class: 'row' }, button(t('Rejoindre'), () => {
+        const a = selected();
+        if (a) join(a);
+      }, 'half'), button(t('Connexion directe'), () => addr.value.trim() && join(addr.value.trim()), 'half')),
       h('div', { class: 'row' }, button(t('Ajouter'), () => {
         if (!addr.value.trim()) return;
         app.settings.servers.push({ name: t('Serveur {n}', { n: app.settings.servers.length + 1 }), address: addr.value.trim() });
         app.saveSettings();
         render();
       }, 'third'), button(t('Supprimer'), () => {
-        app.settings.servers.splice(sel, 1);
-        sel = 0;
+        if (!sel.startsWith('s:')) return;
+        app.settings.servers.splice(Number(sel.slice(2)), 1);
+        sel = '';
         app.saveSettings();
         render();
       }, 'third'), button(t('Retour'), () => app.ui.pop(), 'third')),
     ),
   );
   render();
-  return { el };
+  return { el, onClose: () => clearInterval(timer) };
 }
 
 export function modsScreen(app: AppApi): Screen {
@@ -658,7 +705,9 @@ export function helpScreen(app: AppApi): Screen {
 }
 
 // ---------------------------------------------------------------------------
-export function pauseScreen(app: AppApi, opts: { advancements: () => void; stats: () => void; saveQuit: () => void; lan: () => void; multiplayer: boolean }): Screen {
+/** `net` : partie solo, partie ouverte par ce joueur (hôte), ou partie rejointe (invité). */
+export function pauseScreen(app: AppApi, opts: { advancements: () => void; stats: () => void; saveQuit: () => void; lan: () => void; net: 'solo' | 'hote' | 'invite' }): Screen {
+  const lanLabel = { solo: t('Ouvrir au réseau local'), hote: t('Partie ouverte'), invite: t('Infos de la partie') }[opts.net];
   const el = h(
     'div',
     { class: 'screen dim' },
@@ -669,26 +718,9 @@ export function pauseScreen(app: AppApi, opts: { advancements: () => void; stats
       button(t('Retour au jeu'), () => app.ui.pop()),
       h('div', { class: 'row' }, button(t('Progrès'), opts.advancements, 'half'), button(t('Statistiques'), opts.stats, 'half')),
       h('div', { class: 'row' }, button(t('Aide et contrôles'), () => app.ui.push(helpScreen(app)), 'half'), button(t('Mods et contenu'), () => app.ui.push(modsScreen(app)), 'half')),
-      h('div', { class: 'row' }, button(t('Options...'), () => app.ui.push(optionsScreen(app, true)), 'half'), button(opts.multiplayer ? t('Infos du serveur') : t('Ouvrir au réseau'), opts.lan, 'half')),
-      button(opts.multiplayer ? t('Se déconnecter') : t('Sauvegarder et quitter vers le titre'), opts.saveQuit),
+      h('div', { class: 'row' }, button(t('Options...'), () => app.ui.push(optionsScreen(app, true)), 'half'), button(lanLabel, opts.lan, 'half')),
+      button(opts.net === 'invite' ? t('Se déconnecter') : opts.net === 'hote' ? t('Fermer la partie et quitter') : t('Sauvegarder et quitter vers le titre'), opts.saveQuit),
     ),
-  );
-  return { el, pauses: true };
-}
-
-export function lanInfoScreen(app: AppApi): Screen {
-  const el = h(
-    'div',
-    { class: 'screen dim' },
-    h('div', { class: 'title' }, t('Jouer à plusieurs')),
-    h('div', { class: 'stats-table' },
-      h('div', { class: 'srow' }, h('span', {}, t('1. Dans le dossier du projet :')), h('span', { style: { color: '#ffe080' } }, 'npm run server')),
-      h('div', { class: 'srow' }, h('span', {}, t('2. Port par défaut :')), h('span', {}, '25590 (WebSocket)')),
-      h('div', { class: 'srow' }, h('span', {}, t('3. Menu principal → Multijoueur')), h('span', {}, 'ws://IP:25590')),
-      h('div', { class: 'srow' }, h('span', {}, t('Monde du serveur :')), h('span', {}, t('saves/serveur (fichiers)'))),
-    ),
-    h('div', { style: { height: '14px' } }),
-    button(t('Retour'), () => app.ui.pop()),
   );
   return { el, pauses: true };
 }

@@ -48,6 +48,8 @@ public class MainActivity extends ComponentActivity {
 
     private WebView web;
     private Insets cutout = Insets.NONE;
+    /** Relais de la partie ouverte au réseau local. */
+    private LanRelay lan;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +63,12 @@ public class MainActivity extends ComponentActivity {
                     ? WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
                     : WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
             getWindow().setAttributes(lp);
+        }
+
+        try {
+            lan = new LanRelay(this);
+        } catch (Exception e) {
+            lan = null;
         }
 
         FrameLayout root = new FrameLayout(this);
@@ -186,6 +194,7 @@ public class MainActivity extends ComponentActivity {
 
     @Override
     protected void onDestroy() {
+        if (lan != null) lan.shutdown();
         web.destroy();
         super.onDestroy();
     }
@@ -195,6 +204,18 @@ public class MainActivity extends ComponentActivity {
         @JavascriptInterface
         public void quit() {
             runOnUiThread(() -> web.evaluateJavascript(SAVE_JS, r -> finishAndRemoveTask()));
+        }
+
+        /** Partie ouverte au réseau local : WebSocket de contrôle du relais. */
+        @JavascriptInterface
+        public String lanHostUrl() {
+            return "ws://127.0.0.1:" + LanRelay.CONTROL_PORT + "/hote";
+        }
+
+        /** Parties annoncées sur le Wi-Fi (JSON). */
+        @JavascriptInterface
+        public String lanGames() {
+            return lan != null ? lan.gamesJson() : "[]";
         }
     }
 }
