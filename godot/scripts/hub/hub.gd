@@ -942,9 +942,7 @@ func _screen_season_map(a: Dictionary) -> void:
 		cr.add_child(crv)
 		rw.add_child(cr)
 	side.add_child(rw)
-	var rr := K.panel(K.LIME, K.SKEW)
-	rr.add_child(K.label("RANG RECOMMANDÉ : %d" % int(race["rec_rank"]), 24, Color(0.05, 0.05, 0.05), "black", HORIZONTAL_ALIGNMENT_CENTER))
-	side.add_child(rr)
+	side.add_child(_rec_rank_bar(int(race["rec_rank"]), Game.best_owned_rank(race.get("class", "")), 24, HORIZONTAL_ALIGNMENT_CENTER, true, true))
 	var nxt := K.button("SUIVANT" if not locked_sel else "VERROUILLÉE", 36, "primary", Vector2(500, 90))
 	nxt.disabled = locked_sel
 	nxt.pressed.connect(func():
@@ -1007,17 +1005,44 @@ func _screen_car_select(a: Dictionary) -> void:
 	hdr.alignment = BoxContainer.ALIGNMENT_END
 	content.add_child(hdr)
 	if req.has("rec_rank"):
-		var rr := K.panel(K.LIME, K.SKEW)
-		rr.add_child(K.label("RANG RECOMMANDÉ : %d" % int(req["rec_rank"]), 24, Color(0.05, 0.05, 0.05), "black"))
-		hdr.add_child(rr)
+		# course adaptée à la voiture : comparée à la voiture sélectionnée, sinon à la meilleure possédée
+		var cmp := Game.car_rank(Game.save["selected_car"]) if req.has("rec_factor") else Game.best_owned_rank("" if any_class else cls)
+		hdr.add_child(_rec_rank_bar(Game.race_rec_rank(req, Game.save["selected_car"]), cmp, 24, HORIZONTAL_ALIGNMENT_LEFT, true))
 	if not any_class:
 		var cp := K.panel(Color(0.03, 0.01, 0.06, 0.9), K.SKEW)
 		cp.add_child(K.label("CLASSE %s UNIQUEMENT" % cls, 22, Game.class_color(cls), "black"))
 		hdr.add_child(cp)
-	_car_grid(list, func(id): _on_car_pick(id, req, "race"), Vector2(70, 190))
+	_car_grid(list, func(id): _on_car_pick(id, req, "race"), Vector2(70, 190), req)
 
 
-func _car_grid(list: Array, cb: Callable, pos: Vector2) -> void:
+## Barre « RANG RECOMMANDÉ » : verte si la voiture dépasse nettement le rang recommandé,
+## orange s'il en est presque au rang, rouge s'il le dépasse (voir Game.rank_status).
+const RANK_HINTS := ["RIVAUX NORMAUX", "RIVAUX PLUS DIFFICILES  ·  ONDE DE CHOC", "RIVAUX PLUS RAPIDES  ·  ULTRA NITRO"]
+
+
+func _rec_rank_bar(rec: int, car_rank_value: int, fs: int, align: int = HORIZONTAL_ALIGNMENT_CENTER, skew := true, hint := false) -> Control:
+	var status := Game.rank_status(car_rank_value, rec)
+	var col: Color = rank_status_color(status)
+	var txt_col := Color.WHITE if status == Game.RANK_OVER else Color(0.05, 0.05, 0.05)
+	var rr := K.panel(col, K.SKEW if skew else 0.0)
+	var v := K.vbox(0)
+	v.add_child(K.label("RANG RECOMMANDÉ : %d" % rec, fs, txt_col, "black", align))
+	if hint:
+		v.add_child(K.label(RANK_HINTS[status], maxi(fs - 6, 14), txt_col, "semi", align))
+	rr.add_child(v)
+	return rr
+
+
+func rank_status_color(status: int) -> Color:
+	match status:
+		Game.RANK_CLOSE:
+			return K.ORANGE
+		Game.RANK_OVER:
+			return K.RED
+	return K.LIME
+
+
+func _car_grid(list: Array, cb: Callable, pos: Vector2, req: Dictionary = {}) -> void:
 	var sc := ScrollContainer.new()
 	K.place(sc, Control.PRESET_FULL_RECT, pos, Vector2(-pos.x * 2.0, -pos.y - 40))
 	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
@@ -1035,14 +1060,14 @@ func _car_grid(list: Array, cb: Callable, pos: Vector2) -> void:
 		for c in cols:
 			var idx := c * rows + r
 			if idx < list.size():
-				grid.add_child(_car_card(list[idx]["id"], cb))
+				grid.add_child(_car_card(list[idx]["id"], cb, req))
 			else:
 				var sp := Control.new()
 				sp.custom_minimum_size = Vector2(560, 300)
 				grid.add_child(sp)
 
 
-func _car_card(id: String, cb: Callable) -> Button:
+func _car_card(id: String, cb: Callable, req: Dictionary = {}) -> Button:
 	var c := Game.car_def(id)
 	var st := Game.car_state(id)
 	var owned: bool = st["owned"]
@@ -1063,7 +1088,11 @@ func _car_card(id: String, cb: Callable) -> Button:
 	rank_box.position = Vector2(14, 8)
 	var rp := K.panel(Color(0.02, 0.01, 0.05, 0.9))
 	var rkh := K.hbox(0)
-	rkh.add_child(K.label(str(Game.car_rank(id)), 22, K.LIME if owned else Color(1, 1, 1, 0.6), "black"))
+	var rank_col := K.LIME if owned else Color(1, 1, 1, 0.6)
+	if owned and req.has("rec_rank"):
+		# en sélection de course : le rang prend la couleur de la difficulté avec cette voiture
+		rank_col = rank_status_color(Game.rank_status(Game.car_rank(id), Game.race_rec_rank(req, id)))
+	rkh.add_child(K.label(str(Game.car_rank(id)), 22, rank_col, "black"))
 	rkh.add_child(K.label("/%d" % Game.car_max_rank(id), 18, Color(1, 1, 1, 0.7), "black"))
 	rp.add_child(rkh)
 	rank_box.add_child(rp)
@@ -1238,9 +1267,7 @@ func _screen_car_detail(a: Dictionary) -> void:
 	rkp.add_child(K.class_badge(c["class"], 78))
 	rk.add_child(rkp)
 	if req.has("rec_rank"):
-		var rr := K.panel(K.LIME)
-		rr.add_child(K.label("RANG RECOMMANDÉ : %d" % int(req["rec_rank"]), 20, Color(0.05, 0.05, 0.05), "black", HORIZONTAL_ALIGNMENT_RIGHT))
-		rk.add_child(rr)
+		rk.add_child(_rec_rank_bar(Game.race_rec_rank(req, id), Game.car_rank(id), 20, HORIZONTAL_ALIGNMENT_RIGHT, false, true))
 
 	# barre d'actions
 	var bar_h := K.hbox(18)
@@ -1287,6 +1314,9 @@ func _screen_car_detail(a: Dictionary) -> void:
 			Audio.play("confirm")
 			var r := req.duplicate(true)
 			r["car"] = id
+			if r.has("rec_factor"):
+				r["rec_rank"] = Game.race_rec_rank(r, id)
+				r["class"] = Game.car_def(id)["class"]
 			var ret := "home"
 			var ret_args := {}
 			if r.has("chapter"):
@@ -1624,6 +1654,8 @@ func _start_event(ev: Dictionary) -> void:
 		"reward": {"credits": 6000, "plans": {}}, "reward_car": ev["reward_car"],
 		"barrel_heavy": ev.get("barrel_heavy", false),
 	}
+	if cls == "":
+		req["rec_factor"] = 1.0
 	open("car_select", {"req": req, "any_class": cls == ""})
 
 
@@ -1760,7 +1792,8 @@ func _screen_multi() -> void:
 	b.pressed.connect(func():
 		var req := Game.quick_race_request()
 		req["id"] = "multi"
-		req["rec_rank"] = int(Game.car_rank(Game.save["selected_car"]) * 1.03)
+		req["rec_factor"] = 1.0
+		req["rec_rank"] = Game.car_rank(Game.save["selected_car"])
 		req["reward"] = {"credits": 4000 + 500 * Game.CLASS_ORDER.find(Game.car_def(Game.save["selected_car"])["class"]), "plans": {}}
 		req["objective"] = {"type": "position", "value": 3}
 		open("car_select", {"req": req, "any_class": true}))

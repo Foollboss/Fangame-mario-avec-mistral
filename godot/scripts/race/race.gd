@@ -27,6 +27,8 @@ var _rewards: Dictionary = {}
 var _finish_shown := false
 var _test_ramp_x := 0.0
 var _shock_hint_shown := false
+var difficulty := 0          # Game.RANK_EASY / RANK_CLOSE / RANK_OVER (couleur du rang recommandé)
+var _diff_speed := 1.0       # bonus de vitesse des rivaux (rang recommandé rouge)
 
 
 func _ready() -> void:
@@ -107,10 +109,18 @@ func _spawn_racers() -> void:
 	var names := Game.AI_NAMES.duplicate()
 	_shuffle(names)
 	var rec := float(req.get("rec_rank", Game.car_rank(car_id)))
+	# difficulté selon le rang recommandé par rapport au rang de la voiture du joueur
+	difficulty = Game.rank_status(Game.car_rank(car_id), int(rec))
+	if Game.autotest.has("difficulty"):
+		difficulty = clampi(int(Game.autotest["difficulty"]), Game.RANK_EASY, Game.RANK_OVER)
+	var rank_rng: Array = [[0.9, 1.06], [0.95, 1.08], [1.0, 1.1]][difficulty]
+	var skill_rng: Array = [[0.55, 0.95], [0.72, 1.0], [0.82, 1.0]][difficulty]
+	var aggressive: float = [0.4, 0.55, 0.65][difficulty]
+	_diff_speed = [1.0, 1.0, 1.04][difficulty]
 	var n_ai := 5
 	for i in n_ai:
 		var c: Dictionary = pool[_rng.randi() % pool.size()]
-		var rank := rec * _rng.randf_range(0.9, 1.06)
+		var rank: float = rec * _rng.randf_range(rank_rng[0], rank_rng[1])
 		rank = clamp(rank, float(c["rank"][0]), float(c["rank"][1]))
 		var st := Game.race_stats(c["id"], int(rank))
 		var ai := Racer.new()
@@ -118,8 +128,14 @@ func _spawn_racers() -> void:
 		var paint_ai := ""
 		ai.setup(track, c["id"], st, false, names[i], paint_ai)
 		ai.autopilot = true
-		ai.ai_skill = _rng.randf_range(0.55, 0.95)
-		ai.ai_aggressive = _rng.randf() < 0.4
+		ai.ai_skill = _rng.randf_range(skill_rng[0], skill_rng[1])
+		ai.ai_aggressive = _rng.randf() < aggressive
+		# orange : onde de choc ; rouge : onde de choc + ultra nitro
+		ai.ai_shockwave = difficulty >= Game.RANK_CLOSE
+		ai.ai_ultra = difficulty >= Game.RANK_OVER
+		ai.ai_shock_ratio = [0.0, 0.5, 0.65][difficulty]
+		ai.ai_ultra_chance = 0.35 + 0.5 * ai.ai_skill if ai.ai_ultra else 0.0
+		ai._ai_save_shock = ai.ai_shockwave and _rng.randf() < ai.ai_shock_ratio
 		racers.append(ai)
 	# grille : 3 rangées de 2, le joueur part en dernière ligne
 	var slots := []
@@ -242,6 +258,11 @@ func _process(delta: float) -> void:
 				if Input.is_action_pressed("nitro") or touchdrive:
 					player.nitro = min(100.0, player.nitro + 25.0)
 					hud.push_message("DÉPART PARFAIT", "+NITRO")
+				if mode != "time_attack":
+					if difficulty == Game.RANK_CLOSE:
+						hud.push_message("RIVAUX DIFFICILES", "ONDE DE CHOC", UIKit.ORANGE)
+					elif difficulty == Game.RANK_OVER:
+						hud.push_message("RIVAUX TRÈS RAPIDES", "ULTRA NITRO", UIKit.RED)
 		"racing":
 			clock += dt
 			if not _shock_hint_shown and player.shockwave_ready():
@@ -303,14 +324,14 @@ func _drive(dt: float) -> void:
 		var gap: float = r.s - player.s
 		var mult := 1.0
 		if gap > 140.0:
-			mult = 0.9
+			mult = [0.9, 0.94, 0.97][difficulty]
 		elif gap > 60.0:
-			mult = 0.96
+			mult = [0.96, 0.98, 1.0][difficulty]
 		elif gap < -200.0:
 			mult = 1.1
 		elif gap < -80.0:
 			mult = 1.04
-		r.speed_mult = lerp(r.speed_mult, mult, dt * 0.5)
+		r.speed_mult = lerp(r.speed_mult, mult * _diff_speed, dt * 0.5)
 		r.think(dt, clock, racers, traffic.active_cars(), player)
 	for r in racers:
 		r.physics_step(dt, clock)
@@ -520,6 +541,9 @@ func _ultra_blast(r: Racer) -> void:
 		# pas de takedown pendant l'invincibilité qui suit une réapparition
 		if r.ghost > 0.0 or o == r or o.wrecked or o.ghost > 0.0 or o.finished:
 			continue
+		# l'explosion d'un rival n'élimine pas le joueur (seul un contact pendant l'ultra le fait)
+		if o == player:
+			continue
 		var ds2: float = o.s - r.s
 		if ds2 > -5.0 and ds2 < 16.0 and absf(o.x - r.x) < 4.0 and absf(o.h - r.h) < 2.0:
 			_takedown(r, o)
@@ -533,7 +557,15 @@ func _ultra_blast(r: Racer) -> void:
 func _on_stunt(r: Racer, kind: String, text: String, gain: float) -> void:
 	if kind == "ultra":
 		_ultra_blast(r)
+	if Game.autotest.has("log") and r != player and (kind == "shockwave" or kind == "ultra"):
+		print("RIVAL %s %s t=%.1f écart=%.0f m" % [r.display_name, kind, clock, r.s - player.s])
 	if r != player:
+		# un rival proche lance une onde de choc ou un ultra : on prévient le joueur
+		if (kind == "shockwave" or kind == "ultra") and absf(r.s - player.s) < 120.0 and state == "racing":
+			var ultra := kind == "ultra"
+			hud.push_message(r.display_name.to_upper(), text, UIKit.TURQUOISE if ultra else UIKit.VIOLET)
+			if absf(r.s - player.s) < 50.0:
+				Audio.play("ultra" if ultra else "shockwave", -12.0)
 		return
 	match kind:
 		"wreck":

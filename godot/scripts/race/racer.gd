@@ -97,6 +97,15 @@ var ai_target_x := 0.0
 var _ai_lane_timer := 0.0
 var _ai_nitro_timer := 0.0
 var _full_wait := 0.0
+# rivaux plus forts (rang recommandé orange / rouge) : onde de choc et ultra nitro
+var ai_shockwave := false
+var ai_ultra := false
+var ai_shock_ratio := 0.0     # part des nitros gardés pour une onde de choc (jauge pleine)
+var ai_ultra_chance := 0.0
+var _ai_save_shock := false
+var _ai_shock_seen := false
+var _ai_ultra_go := false
+var _ai_ultra_delay := 0.0
 var _ai_rng := RandomNumberGenerator.new()
 
 # statistiques de course
@@ -616,12 +625,25 @@ func think(dt: float, clock: float, racers: Array, traffic: Array, player: Racer
 			_full_wait = _full_wait + dt if shockwave_ready() else 0.0
 			if _full_wait > 3.0 and straight and started:
 				in_nitro = true
+		elif ai_shockwave and _ai_save_shock:
+			# garde la nitro jusqu'à la jauge pleine pour lancer une onde de choc
+			if nitro >= SHOCK_FULL and straight and started:
+				in_nitro = true
+				_ai_save_shock = _ai_rng.randf() < ai_shock_ratio
 		elif nitro > 40.0 and straight and _ai_nitro_timer <= 0.0 and started:
 			in_nitro = true
 			_ai_nitro_timer = 0.4
-	elif is_player and nitro_level == NITRO_NORMAL and _full_at_press and nitro_time < DOUBLE_TAP:
-		# 2e appui du double appui automatique : relâche une image puis ré-appuie
+			_ai_save_shock = ai_shockwave and _ai_rng.randf() < ai_shock_ratio
+	elif (is_player or ai_shockwave) and nitro_level == NITRO_NORMAL and _full_at_press and nitro_time < DOUBLE_TAP:
+		# 2e appui du double appui automatique (onde de choc) : relâche une image puis ré-appuie
 		in_nitro = not _prev_nitro
+	elif nitro_level == NITRO_SHOCK and ai_ultra and not is_player:
+		# rival : tente l'ultra nitro en appuyant dans la zone turquoise
+		if not _ai_shock_seen:
+			_ai_shock_seen = true
+			_ai_ultra_go = _ai_rng.randf() < ai_ultra_chance
+			_ai_ultra_delay = _ai_rng.randf_range(0.03, 0.3)
+		in_nitro = _ai_ultra_go and nitro_time >= ULTRA_A + _ai_ultra_delay and in_ultra_window() and not _prev_nitro
 	elif nitro_level == NITRO_NORMAL or nitro_level == NITRO_PERFECT:
 		var want_perfect := _ai_rng.randf() < (0.9 if is_player else ai_skill)
 		in_nitro = want_perfect and nitro_time > PERFECT_A + 0.08 and nitro_time < PERFECT_B - 0.05 and not _prev_nitro
@@ -629,3 +651,5 @@ func think(dt: float, clock: float, racers: Array, traffic: Array, player: Racer
 			in_nitro = false
 	else:
 		in_nitro = false
+	if nitro_level != NITRO_SHOCK:
+		_ai_shock_seen = false

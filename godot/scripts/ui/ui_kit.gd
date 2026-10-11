@@ -14,6 +14,7 @@ const RED := Color("#e8192c")
 const CYAN := Color("#36d6ff")
 # couleurs du nitro : parfait = bleu clair, onde de choc = violet, ultra = turquoise
 const NITRO_ORANGE := Color("#ffa72b")
+const ORANGE := Color("#ff9a1f")
 const SKY := Color("#6cc8ff")
 const VIOLET := Color("#a14dff")
 const TURQUOISE := Color("#19f2cf")

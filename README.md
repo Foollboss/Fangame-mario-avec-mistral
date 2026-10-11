@@ -57,6 +57,7 @@ Si le jeu se ferme tout seul :
 - **Rampes** et **rampes à tonneau** (inclinées : la voiture fait un **tonneau** en l'air), sauts sur les bosses de San Francisco, **360°** (double appui sur drift).
 - **Takedowns** (pousse les rivaux sur le côté ou percute-les par l'arrière), **épaves** au ralenti avec réapparition, **frôlements** de trafic.
 - 5 adversaires IA (changements de voie, rampes, nitro, agressivité, élastique) + trafic civil (berlines, taxis, SUV, vans, bus).
+- **Rang recommandé** comme dans Asphalt Legends Unite : la barre « RANG RECOMMANDÉ » est **verte** si ta voiture le dépasse nettement (rivaux normaux), **orange** si ta voiture est presque à ce rang (rivaux plus difficiles qui utilisent l'**onde de choc**) et **rouge** si le rang recommandé dépasse celui de ta voiture (rivaux plus rapides qui utilisent aussi l'**ultra nitro**). Le rang de chaque voiture prend la même couleur dans la sélection de voiture.
 - Séparations de voies sous autoroute surélevée, tunnels, arches START/FINISH, damier d'arrivée.
 - **TouchDrive** (pilotage assisté, touche T), 3 caméras (touche C), commandes tactiles sur mobile.
 - Moteur synthétisé en temps réel (le son suit les rapports), effets sonores et musique synthwave générés par le code.

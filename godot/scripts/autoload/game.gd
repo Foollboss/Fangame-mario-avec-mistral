@@ -463,6 +463,43 @@ func car_max_rank(id: String) -> int:
 	return int(car_def(id)["rank"][1])
 
 
+# Difficulté d'une course selon le rang recommandé (couleur de la barre « RANG RECOMMANDÉ ») :
+#   VERT   : la voiture dépasse nettement le rang recommandé -> rivaux normaux
+#   ORANGE : le rang recommandé est presque au rang de la voiture -> rivaux plus difficiles,
+#            ils utilisent l'onde de choc
+#   ROUGE  : le rang recommandé dépasse le rang de la voiture -> rivaux plus rapides,
+#            ils utilisent l'onde de choc et l'ultra nitro
+const RANK_EASY := 0
+const RANK_CLOSE := 1
+const RANK_OVER := 2
+const RANK_CLOSE_MARGIN := 0.08   # « presque » : moins de 8 % au-dessus du rang recommandé
+
+
+func rank_status(car_rank_value: int, rec_rank: int) -> int:
+	if rec_rank > car_rank_value:
+		return RANK_OVER
+	if car_rank_value - rec_rank <= maxi(int(rec_rank * RANK_CLOSE_MARGIN), 20):
+		return RANK_CLOSE
+	return RANK_EASY
+
+
+## Rang recommandé d'une course pour une voiture : les courses rapides, le multijoueur et
+## les événements toutes classes s'adaptent à la voiture choisie (rec_factor).
+func race_rec_rank(req: Dictionary, car_id: String) -> int:
+	if req.has("rec_factor"):
+		return int(round(car_rank(car_id) * float(req["rec_factor"])))
+	return int(req.get("rec_rank", car_rank(car_id)))
+
+
+## Meilleur rang parmi les voitures possédées (d'une classe, ou toutes si cls == "").
+func best_owned_rank(cls: String = "") -> int:
+	var best := 0
+	for c in cars:
+		if (cls == "" or c["class"] == cls) and is_owned(c["id"]):
+			best = maxi(best, car_rank(c["id"]))
+	return best
+
+
 func race_stats(id: String, rank_override: int = -1) -> Dictionary:
 	## Statistiques physiques utilisées en course.
 	var vals := []
@@ -623,7 +660,9 @@ func quick_race_request(theme: String = "", cls: String = "") -> Dictionary:
 		"length": rng.randf_range(2600.0, 3600.0),
 		"mode": "classic",
 		"class": cls,
-		"rec_rank": car_rank(car_id),
+		# course rapide : un peu sous le rang de la voiture (barre verte, rivaux normaux)
+		"rec_factor": 0.92,
+		"rec_rank": int(round(car_rank(car_id) * 0.92)),
 		"objective": {"type": "position", "value": 3},
 		"reward": {"credits": 2500, "plans": {}},
 		"car": car_id,
