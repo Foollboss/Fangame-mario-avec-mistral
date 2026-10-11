@@ -109,6 +109,9 @@ func _spawn_racers() -> void:
 	add_child(player)
 	player.setup(track, car_id, pstats, true, Game.save.get("name", "Joueur"), paint)
 	player.ai_aggressive = Game.autotest.has("hunt")  # test : l'autopilote cherche les takedowns
+	# objectif tonneaux : le TouchDrive va chercher les rampes à tonneau
+	if req.get("objective", {}).get("type", "") == "barrel":
+		player.ramp_bias = 2.6
 	racers.append(player)
 	if mode == "time_attack":
 		player.s = track.start_s

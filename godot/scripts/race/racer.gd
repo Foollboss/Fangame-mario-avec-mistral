@@ -94,6 +94,7 @@ var autopilot := false
 var ai_skill := 0.8
 var ai_aggressive := false
 var ai_target_x := 0.0
+var ramp_bias := 1.0          # attirance de l'autopilote pour les rampes à tonneau (objectif tonneaux)
 var _ai_lane_timer := 0.0
 var _ai_nitro_timer := 0.0
 var _full_wait := 0.0
@@ -578,7 +579,7 @@ func think(dt: float, clock: float, racers: Array, traffic: Array, player: Racer
 				var dr: float = r["s"] - s
 				if dr > 15.0 and dr < look and abs(r["x"] - lx) < 1.0:
 					if is_player or ai_skill > 0.55:
-						cost -= 25.0 if r["barrel"] else 14.0
+						cost -= 25.0 * ramp_bias if r["barrel"] else 14.0
 			var sp := track.next_split(s)
 			if not sp.is_empty() and sp["s0"] - s < look and abs(lx) < 2.5 and sp["s0"] - s > -1.0:
 				cost += 0.0  # les voies centrales passent de chaque côté de la séparation
