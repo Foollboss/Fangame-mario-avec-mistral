@@ -1,0 +1,30 @@
+{
+  "name": "voxelia",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Voxelia — jeu voxel 3D indépendant (bac à sable, survie, exploration) pour PC et Android",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "dev": "node tools/build.mjs --watch --serve",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "server": "node --experimental-strip-types server/index.ts",
+    "apk": "node tools/build.mjs && bash android/build-apk.sh",
+    "e2e": "node tools/e2e.mjs"
+  },
+  "dependencies": {
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@types/three": "^0.170.0",
+    "@types/ws": "^8.5.13",
+    "esbuild": "^0.24.0",
+    "playwright-core": "^1.56.1",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4",
+    "ws": "^8.18.0"
+  }
+}
