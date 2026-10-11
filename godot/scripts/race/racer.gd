@@ -1,8 +1,11 @@
 class_name Racer
 extends Node3D
-## Un concurrent (joueur ou IA). Physique arcade façon Asphalt en espace piste :
+## Un concurrent (joueur ou IA). Physique arcade façon Asphalt en espace route :
 ## accélération automatique, drift, nitro (normal / parfait / onde de choc / ultra), sauts,
 ## tonneaux sur rampes inclinées, 360°, takedowns, épaves et réapparition.
+## La voiture roule sur un tronçon du réseau routier (path) : la route principale ou un
+## itinéraire bis (toits, tunnel, viaduc, ruelle). Elle change de tronçon en franchissant
+## le bord ouvert d'un embranchement ou d'une jonction.
 
 signal stunt(racer: Racer, kind: String, text: String, nitro_gain: float)
 
@@ -27,6 +30,11 @@ const ULTRA_B := 1.12
 const ULTRA_BONUS := 15.0     # nitro rendu en déclenchant l'ultra
 
 var track: Track
+var path: RoadPath            # tronçon sur lequel roule la voiture
+var route_plan := {}          # id d'itinéraire bis -> le prendre ou non (IA, TouchDrive)
+var _fall := false            # épave par chute dans un vide (saut raté vers un toit)
+var _guided := {}             # saut guidé au-dessus d'un vide (rampe d'accès aux toits)
+const JUMP_MIN_SPEED := 30.0  # en dessous (108 km/h), la voiture n'atteint pas le toit
 var car_id := ""
 var display_name := ""
 var is_player := false
@@ -124,6 +132,7 @@ var near_miss_ids := {}
 
 func setup(p_track: Track, p_car_id: String, p_stats: Dictionary, p_player: bool, p_name: String, paint := "") -> void:
 	track = p_track
+	path = p_track.main
 	car_id = p_car_id
 	stats = p_stats
 	is_player = p_player
@@ -187,10 +196,28 @@ func physics_step(dt: float, clock: float) -> void:
 	if spin_time > 0.0 and not airborne:
 		v = max(0.0, v - 6.0 * dt)
 	scraping = max(0.0, scraping - dt)
+	# pente : on ralentit en montée, on accélère en descente
+	if started and not airborne and not finished:
+		v = maxf(0.0, v - Track.GRAVITY * path.slope_at(s) * 0.42 * dt)
 	s += v * dt
+	# marche de la chaussée (début du vide avant un toit) : la route « monte d'un coup »
+	var dy_step := path.step_between(prev_s, s)
+	if dy_step != 0.0:
+		# la rampe d'accès finit pile au bord du vide : décollage (avec l'aide au saut) avant la marche
+		if not on_ramp.is_empty() and not airborne:
+			h = float(on_ramp["h"])
+			_takeoff(on_ramp)
+			on_ramp = {}
+		h -= dy_step
+		if h < 0.0 and not airborne:
+			airborne = true
+			air_time = 0.0
+	# fin d'un itinéraire bis : on continue sur la route principale
+	if path.next != null and s > path.length:
+		_transfer(path.next)
 
 	# --- déplacement latéral ---
-	var k := track.curvature_at(s)
+	var k := path.curvature_at(s)
 	var lat_max: float = stats["lat_speed"] * (1.28 if drifting else 1.0)
 	var cf := -k * v * minf(v, 70.0) * (0.17 if drifting else 0.33)
 	var steer_eff := in_steer
@@ -201,11 +228,12 @@ func physics_step(dt: float, clock: float) -> void:
 	var resp := 2.0 if airborne else 7.5
 	vx = lerp(vx, target, 1.0 - exp(-resp * dt))
 	x += vx * dt
-	var limit := track.half_width - CAR_HALF_W
-	if abs(x) > limit:
+	var wl := path.wall_left(s) + CAR_HALF_W
+	var wr := path.wall_right(s) - CAR_HALF_W
+	if x > wr or x < wl:
 		var impact: float = abs(vx)
-		var side: float = sign(x)
-		x = side * limit
+		var side: float = 1.0 if x > wr else -1.0
+		x = clampf(x, wl, maxf(wl, wr))
 		vx = -side * min(impact * 0.25, 2.0)
 		if not airborne:
 			scraping = 0.25
@@ -213,33 +241,74 @@ func physics_step(dt: float, clock: float) -> void:
 				visual.emit_sparks(side)
 			if is_player and impact > 3.0:
 				Audio.play("scrape", -4.0)
+	# bord ouvert (embranchement / jonction) : la voiture passe sur l'autre route
+	if absf(x) > path.half_width + 0.3:
+		var to := path.link_at(s, 1 if x > 0.0 else -1)
+		if to != null:
+			_transfer(to)
 	_check_split()
 
-	# --- vertical : rampes, crêtes, sauts ---
-	var ramp := track.ramp_at(s, x)
-	if airborne:
+	# --- vertical : rampes, crêtes, sauts, vides ---
+	var ramp := path.ramp_at(s, x)
+	# vide entre deux toits : assez vite, la voiture le franchit en douceur
+	if _guided.is_empty() and path.in_gap(s) and v >= JUMP_MIN_SPEED and not wrecked:
+		for g in path.gaps:
+			if s > float(g["s0"]) and s < float(g["s1"]) and path.step_between(float(g["s0"]) - 1.0, float(g["s0"]) + 1.0) == 0.0:
+				_guided = {"s0": s, "s1": float(g["s1"]) + 3.0, "h0": h, "h1": 0.4, "bump": 1.2}
+				airborne = true
+				air_time = 0.0
+				break
+	if airborne and not _guided.is_empty():
+		# saut guidé : belle courbe jusqu'au bord du toit, quelle que soit la vitesse
 		air_time += dt
-		vy += (-Track.GRAVITY - v * v * track.elev_ss_at(s)) * dt
+		var gs0: float = _guided["s0"]
+		var gs1: float = _guided["s1"]
+		var u: float = clamp((s - gs0) / maxf(gs1 - gs0, 1.0), 0.0, 1.0)
+		var g_target: float = lerpf(float(_guided["h0"]), float(_guided["h1"]), smoothstep(0.0, 1.0, u)) + float(_guided["bump"]) * sin(PI * u)
+		var prev_h := h
+		h = g_target
+		vy = (h - prev_h) / maxf(dt, 0.001)
+		if rolling:
+			roll += roll_rate * dt
+		if s >= gs1:
+			_guided = {}
+	elif airborne:
+		air_time += dt
+		vy += (-Track.GRAVITY - v * v * path.elev_ss_at(s)) * dt
 		h += vy * dt
 		nitro = min(100.0, nitro + 7.0 * dt)
 		if rolling:
 			roll += roll_rate * dt
-		var gh := track.ground_height(s, x)
-		if h <= gh and vy <= 0.0:
+		# bord du toit atteint trop bas : la voiture percute la façade
+		for g in path.gaps:
+			if prev_s < float(g["s1"]) and s >= float(g["s1"]) and h < -0.7:
+				wreck("mur")
+				return
+		# chute dans le vide (saut raté) : la voiture touche le sol de la rue, loin en dessous
+		if h < -10.0:
+			_fall = true
+			wreck("chute")
+			return
+		var gh := path.ground_height(s, x)
+		if h <= gh and vy <= 0.0 and gh > -999.0:
 			_land(gh)
 	else:
 		if not ramp.is_empty():
-			var slope := track.ramp_height(ramp, s + 0.5, x) - track.ramp_height(ramp, s - 0.5, x)
-			h = track.ramp_height(ramp, s, x)
+			var slope := path.ramp_height(ramp, s + 0.5, x) - path.ramp_height(ramp, s - 0.5, x)
+			h = path.ramp_height(ramp, s, x)
 			vy = slope * v
 			on_ramp = ramp
 		elif not on_ramp.is_empty():
 			_takeoff(on_ramp)
 			on_ramp = {}
+		elif path.in_gap(s):
+			# plus de chaussée sous les roues : la voiture tombe
+			airborne = true
+			air_time = 0.0
 		else:
 			h = 0.0
 			vy = 0.0
-			var lift := -Track.GRAVITY - v * v * track.elev_ss_at(s)
+			var lift := -Track.GRAVITY - v * v * path.elev_ss_at(s)
 			if lift > 0.0 and v > 25.0 and started:
 				airborne = true
 				air_time = 0.0
@@ -412,10 +481,43 @@ func _gain(n: float) -> void:
 	nitro = min(100.0, nitro + n)
 
 
+## Passe sur un autre tronçon en gardant la même position dans le monde (pas de téléportation).
+func _transfer(to: RoadPath) -> void:
+	var wp := path.position_at(s, x, h)
+	var hint := to.s_for_main(path.progress(s)) if to != track.main else path.progress(s)
+	var loc := to.project(wp, hint, 50.0)
+	var from := path
+	path = to
+	s = loc.x
+	prev_s = s
+	x = loc.y
+	h = loc.z
+	if not airborne and absf(h) < 0.6:
+		h = 0.0
+	on_ramp = {}
+	if Game.autotest.has("log"):
+		print("%sROUTE %s -> %s s=%.0f x=%.1f h=%.1f" % ["" if is_player else "IA " + display_name + " ", from.kind, to.kind, s, x, h])
+
+
+## Rampe d'accès à un toit : si la voiture est assez rapide, le saut est guidé jusqu'au toit
+## (sinon elle tombe dans le vide : c'est le risque de cet itinéraire).
+func _launch_assist() -> void:
+	var g := {}
+	for gg in path.gaps:
+		if float(gg["s0"]) >= s - 2.0:
+			g = gg
+			break
+	if g.is_empty() or v < JUMP_MIN_SPEED:
+		return
+	var dy := path.step_between(float(g["s0"]) - 1.0, float(g["s0"]) + 1.0)
+	# hauteurs exprimées après la marche (par rapport au toit)
+	_guided = {"s0": s, "s1": float(g["s1"]) + 4.0, "h0": h - dy, "h1": 0.6, "bump": 3.2}
+
+
 func _check_split() -> void:
 	if airborne and h > 1.3:
 		return
-	for sp in track.splits:
+	for sp in path.splits:
 		if s < sp["s0"] or s > sp["s1"]:
 			continue
 		var lim := 1.0 + CAR_HALF_W
@@ -434,6 +536,8 @@ func _check_split() -> void:
 func _takeoff(r: Dictionary) -> void:
 	airborne = true
 	air_time = 0.0
+	if r.get("launch", false):
+		_launch_assist()
 	if r["barrel"] and vy > 2.0:
 		var t_air: float = max(0.55, (vy + sqrt(vy * vy + 2.0 * Track.GRAVITY * max(h, 0.0))) / Track.GRAVITY)
 		rolling = true
@@ -465,8 +569,11 @@ func _land(gh: float) -> void:
 func wreck(reason: String = "") -> void:
 	if wrecked or ghost > 0.0 or finished:
 		return
-	if is_player and Game.autotest.has("log"):
-		print("WRECK %s s=%.0f x=%.2f h=%.1f v=%.0f split=%s" % [reason, s, x, h, v * 3.6, track.in_split(s)])
+	if Game.autotest.has("log"):
+		if is_player:
+			print("WRECK %s route=%s s=%.0f x=%.2f h=%.1f v=%.0f split=%s" % [reason, path.kind, s, x, h, v * 3.6, path.in_split(s)])
+		else:
+			print("IA-WRECK %s %s route=%s s=%.0f v=%.0f" % [display_name, reason, path.kind, s, v * 3.6])
 	wrecked = true
 	wreck_timer = 2.1
 	wrecks += 1
@@ -478,6 +585,8 @@ func wreck(reason: String = "") -> void:
 	spin_time = 0.0
 	on_ramp = {}
 	var rng := _ai_rng
+	_fall = reason == "chute" or reason == "mur"
+	_guided = {}
 	_w_off = Vector3(0, h, 0)
 	_w_vel = Vector3(rng.randf_range(-5, 5), rng.randf_range(7, 11), -min(v, 40.0) * 0.15)
 	_w_rot = Vector3.ZERO
@@ -496,7 +605,7 @@ func _update_wreck(dt: float) -> void:
 	_w_vel.y -= Track.GRAVITY * dt
 	_w_off += _w_vel * dt
 	_w_rot += _w_spin * dt
-	if _w_off.y < 0.3:
+	if _w_off.y < 0.3 and not _fall and not path.in_gap(s):
 		_w_off.y = 0.3
 		if _w_vel.y < 0.0:
 			_w_vel.y = -_w_vel.y * 0.35
@@ -516,20 +625,30 @@ func _respawn() -> void:
 	airborne = false
 	_w_off = Vector3.ZERO
 	_w_rot = Vector3.ZERO
+	# chute dans un vide : on repart de la route principale, à la même hauteur de course
+	if path != track.main and (_fall or path.in_gap(s) or s > path.length - 50.0):
+		var sm := path.progress(minf(s, path.length))
+		path = track.main
+		s = sm
+		prev_s = s
+	_fall = false
+	if path.in_gap(s):
+		s = path.gaps[0]["s1"] + 4.0
+		prev_s = s
 	var best := 0
 	var bd := 1e9
-	for lane in Track.LANES:
-		var d: float = abs(track.lane_x(lane) - x)
+	for lane in path.lanes:
+		var d: float = abs(path.lane_x(lane) - x)
 		if d < bd:
 			bd = d
 			best = lane
-	x = track.lane_x(best)
+	x = path.lane_x(best)
 	if visual:
 		visual.transform = Transform3D.IDENTITY
 
 
 func _apply_transform(dt: float) -> void:
-	var tr := track.frame(s)
+	var tr := path.frame(s)
 	var pos := tr.origin + tr.basis.x * x + tr.basis.y * h
 	var yaw_target := atan2(vx, maxf(v, 5.0)) * 0.9
 	if drifting:
@@ -555,6 +674,41 @@ func _apply_transform(dt: float) -> void:
 # ---------------------------------------------------------------------------
 # Pilote automatique (IA et TouchDrive)
 # ---------------------------------------------------------------------------
+## Prend-on cet itinéraire bis ? Le TouchDrive du joueur ne choisit jamais à sa place
+## (sauf en test avec --route=type) ; les rivaux choisissent selon le type d'itinéraire.
+func _choose_route(br: RoadPath) -> bool:
+	# un seul itinéraire bis par carrefour
+	for fork in path.forks_ahead(s, 200.0):
+		var other: RoadPath = fork["to"]
+		if other != br and route_plan.get(other.id, false):
+			return false
+	if is_player:
+		var forced: String = Game.autotest.get("route", "")
+		return forced == br.kind or forced == "all"
+	var chance := 0.35
+	match br.kind:
+		"rooftop":
+			chance = 0.2 + 0.3 * ai_skill
+		"tunnel":
+			chance = 0.35
+		"viaduct":
+			chance = 0.3
+		"alley":
+			chance = 0.25 + 0.3 * ai_skill
+	return _ai_rng.randf() < chance
+
+
+## TouchDrive : le joueur braque vers un embranchement -> l'autopilote prend cet itinéraire.
+func note_manual_steer(dir: float) -> void:
+	for fork in path.forks_ahead(s, 150.0):
+		var br: RoadPath = fork["to"]
+		route_plan[br.id] = signf(dir) == float(fork["side"])
+
+
+## Distance équivalente sur la route principale (classement).
+func progress() -> float:
+	return path.progress(s)
+
 func think(dt: float, clock: float, racers: Array, traffic: Array, player: Racer) -> void:
 	if wrecked:
 		in_nitro = false
@@ -566,25 +720,23 @@ func think(dt: float, clock: float, racers: Array, traffic: Array, player: Racer
 		_ai_lane_timer = 0.22 if is_player else _ai_rng.randf_range(0.25, 0.5)
 		var best_cost := 1e9
 		var best_x := x
-		for lane in Track.LANES:
-			var lx := track.lane_x(lane)
+		var on_main := path == track.main
+		for lane in path.lanes:
+			var lx := path.lane_x(lane)
 			var cost: float = abs(lx - x) * 0.6
 			for t in traffic:
-				if not t.active or t.knocked:
+				if not on_main or not t.active or t.knocked:
 					continue
 				var ds: float = t.s - s
 				if ds > -3.0 and ds < look and abs(t.x - lx) < 2.6:
 					cost += 60.0 * (1.0 - ds / look) + 15.0
-			for r in track.ramps:
+			for r in path.ramps:
 				var dr: float = r["s"] - s
 				if dr > 15.0 and dr < look and abs(r["x"] - lx) < 1.0:
 					if is_player or ai_skill > 0.55:
 						cost -= 25.0 * ramp_bias if r["barrel"] else 14.0
-			var sp := track.next_split(s)
-			if not sp.is_empty() and sp["s0"] - s < look and abs(lx) < 2.5 and sp["s0"] - s > -1.0:
-				cost += 0.0  # les voies centrales passent de chaque côté de la séparation
 			for o in racers:
-				if o == self or o.wrecked:
+				if o == self or o.wrecked or o.path != path:
 					continue
 				var dso: float = o.s - s
 				if dso > 2.0 and dso < 30.0 and abs(o.x - lx) < 2.0:
@@ -598,11 +750,27 @@ func think(dt: float, clock: float, racers: Array, traffic: Array, player: Racer
 				best_x = lx
 		ai_target_x = best_x
 	# séparation centrale : rester d'un côté
-	var spn := track.next_split(s)
+	var spn := path.next_split(s)
 	if not spn.is_empty() and spn["s0"] - s < 60.0 and abs(ai_target_x) < 2.2:
-		ai_target_x = track.lane_x(1) if x < 0.0 else track.lane_x(2)
+		ai_target_x = path.lane_x(1) if x < 0.0 else path.lane_x(2)
+	# embranchement : choix de l'itinéraire (l'IA décide ; le TouchDrive suit le choix du joueur)
+	for fork in path.forks_ahead(s, 190.0):
+		var br: RoadPath = fork["to"]
+		if not route_plan.has(br.id):
+			route_plan[br.id] = _choose_route(br)
+		if route_plan[br.id]:
+			var side: int = fork["side"]
+			if s < float(fork["s0"]) + 6.0:
+				ai_target_x = path.lane_x(path.lanes - 1 if side > 0 else 0)
+			else:
+				ai_target_x = side * (path.half_width + 2.6)
+			break
+	# fin d'itinéraire bis : rejoindre la route principale du bon côté
+	for l in path.links:
+		if l["to"] == track.main and not l.get("fork", false) and s > float(l["s0"]) - 30.0 and float(l["s0"]) > 10.0:
+			ai_target_x = int(l["side"]) * (path.half_width + 2.6) if s > float(l["s0"]) + 4.0 else path.lane_x(path.lanes - 1 if int(l["side"]) > 0 else 0)
 	# direction : vitesse latérale souhaitée -> braquage
-	var k := track.curvature_at(s + v * 0.25)
+	var k := path.curvature_at(s + v * 0.25)
 	var lat_max: float = stats["lat_speed"]
 	var cf := -k * v * minf(v, 70.0) * 0.33
 	var vx_des: float = clamp((ai_target_x - x) * 2.2, -lat_max, lat_max)

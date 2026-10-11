@@ -27,6 +27,8 @@ var _rewards: Dictionary = {}
 var _finish_shown := false
 var _test_ramp_x := 0.0
 var _shock_hint_shown := false
+var _last_path: RoadPath = null
+const ROUTE_COLORS := {"rooftop": Color(1.0, 0.55, 0.1), "tunnel": Color(0.3, 0.6, 1.0), "viaduct": Color(0.2, 0.85, 0.4), "alley": Color(0.9, 0.3, 0.85)}
 var difficulty := 0          # Game.RANK_EASY / RANK_CLOSE / RANK_OVER (couleur du rang recommandé)
 var _diff_speed := 1.0       # bonus de vitesse des rivaux (rang recommandé rouge)
 var _band_far := 0.9         # élastique : vitesse des rivaux loin devant (> 140 m)
@@ -50,7 +52,8 @@ func _ready() -> void:
 	var obj: Dictionary = req.get("objective", {})
 	var min_barrels: int = int(obj.get("value", 0)) * 2 + 1 if obj.get("type", "") == "barrel" else 0
 	track.generate(req.get("theme", "sf"), int(req.get("seed", 1)), float(req.get("length", 3000.0)),
-		{"quality": quality, "barrel_heavy": req.get("barrel_heavy", false), "min_barrels": min_barrels})
+		{"quality": quality, "barrel_heavy": req.get("barrel_heavy", false), "min_barrels": min_barrels,
+		 "network": req.get("network", Game.autotest.get("network", "auto"))})
 	track.build_visuals()
 
 	world_env = WorldEnvironment.new()
@@ -210,7 +213,7 @@ func _shuffle(a: Array) -> void:
 
 # ---------------------------------------------------------------------------
 func debug_state() -> String:
-	return "(course %s, %s, chrono %.1f s, position %d, %.0f m)" % [req.get("theme", "?"), state, clock, player.race_pos if player else 0, player.s if player else 0.0]
+	return "(course %s, %s, chrono %.1f s, position %d, %.0f m, route %s)" % [req.get("theme", "?"), state, clock, player.race_pos if player else 0, player.progress() if player else 0.0, player.path.kind if player else "?"]
 
 
 func _notification(what: int) -> void:
@@ -316,15 +319,20 @@ func _process(delta: float) -> void:
 				_finish_shown = true
 				_show_results()
 	_drive(dt)
+	# itinéraire bis : on annonce la route prise
+	if player.path != _last_path:
+		if _last_path != null and player.path != track.main:
+			hud.push_message(player.path.label, "ITINÉRAIRE BIS", ROUTE_COLORS.get(player.path.kind, UIKit.YELLOW))
+		_last_path = player.path
 	cam.update(dt)
 	_update_order()
 	var total := racers.size()
-	var dist: float = clamp((player.s - track.start_s) / (track.finish_s - track.start_s), 0.0, 1.0)
+	var dist: float = clamp((player.progress() - track.start_s) / (track.finish_s - track.start_s), 0.0, 1.0)
 	hud.update_hud(dt, player, player.race_pos, total, dist, clock, touchdrive)
 	hud.update_board(order, player)
 	Audio.set_engine(player.v, player.stats["top_speed"], 1.0 if player.started else 0.3, player.nitro_level)
 	if Game.autotest.has("log") and int(clock * 2.0) != int((clock - dt) * 2.0):
-		print("t=%.1f s=%.0f x=%.1f h=%.1f v=%.0fkmh pos=%d nitro=%.0f lvl=%d wrecks=%d td=%d rolls=%d jumps=%d" % [clock, player.s, player.x, player.h, player.v * 3.6, player.race_pos, player.nitro, player.nitro_level, player.wrecks, player.takedowns, player.barrel_rolls, player.jumps])
+		print("t=%.1f s=%.0f x=%.1f h=%.1f v=%.0fkmh pos=%d nitro=%.0f lvl=%d wrecks=%d td=%d rolls=%d jumps=%d route=%s alt=%.1f" % [clock, player.progress(), player.x, player.h, player.v * 3.6, player.race_pos, player.nitro, player.nitro_level, player.wrecks, player.takedowns, player.barrel_rolls, player.jumps, player.path.kind, player.global_position.y])
 	if _slowmo > 0.0:
 		_slowmo -= delta / max(Engine.time_scale, 0.1)
 		Engine.time_scale = 0.35 if _slowmo > 0.0 else 1.0
@@ -340,8 +348,11 @@ func _drive(dt: float) -> void:
 			player.v = 75.0
 	elif not player.finished:
 		if touchdrive:
-			player.think(dt, clock, racers, traffic.active_cars(), player)
 			var manual := Input.get_axis("steer_left", "steer_right")
+			if abs(manual) > 0.2:
+				# braquer vers un embranchement = choisir cet itinéraire (le TouchDrive suit)
+				player.note_manual_steer(manual)
+			player.think(dt, clock, racers, traffic.active_cars(), player)
 			if abs(manual) > 0.2:
 				player.in_steer = manual
 			if Input.is_action_pressed("nitro"):
@@ -356,11 +367,13 @@ func _drive(dt: float) -> void:
 		player.think(dt, clock, racers, traffic.active_cars(), player)
 	if Game.autotest.has("nitrotest") and state == "racing" and not player.finished:
 		_nitro_test()
+	if Game.autotest.has("route_shots") and state == "racing":
+		_route_shots()
 	# IA + élastique (rubber band)
 	for r in racers:
 		if r == player:
 			continue
-		var gap: float = r.s - player.s
+		var gap: float = r.progress() - player.progress()
 		var mult := 1.0
 		if gap > 140.0:
 			mult = _band_far
@@ -376,15 +389,63 @@ func _drive(dt: float) -> void:
 		r.think(dt, clock, racers, traffic.active_cars(), player)
 	for r in racers:
 		r.physics_step(dt, clock)
-	traffic.update(dt, player.s)
+	traffic.update(dt, player.progress())
 	_collisions()
 	# arrivées
 	for r in racers:
-		if not r.finished and r.s >= track.finish_s and state != "intro" and state != "countdown":
+		if not r.finished and r.path == track.main and r.s >= track.finish_s and state != "intro" and state != "countdown":
 			r.finished = true
 			r.finish_time = clock
 			if r == player:
 				_on_player_finished()
+
+
+## Test du réseau routier (--route_shots=/chemin/prefixe) : captures aux moments clés
+## (carrefour, entrée d'itinéraire, toit, tunnel, viaduc, passage sous le viaduc).
+var _rs_done := {}
+var _rs_path: RoadPath
+var _rs_t := 0.0
+var _rs_pending: Array = []
+
+
+func _route_shots() -> void:
+	var pre := String(Game.autotest["route_shots"])
+	var p: RoadPath = player.path
+	var want: Array = []
+	if p != _rs_path:
+		_rs_path = p
+		_rs_t = clock
+		if p != track.main:
+			want.append([p.kind + "_entree", 1.0])
+	if p == track.main and not p.forks_ahead(player.s, 45.0).is_empty():
+		want.append(["carrefour_%d" % int(player.s / 400.0), 0.0])
+	if p.kind == "rooftop" and p.h_rel[clampi(int(player.s / RoadPath.STEP), 0, p.n - 1)] > 8.0 and not p.in_gap(player.s):
+		want.append(["toit", 0.6])
+	if p.in_tunnel(player.s):
+		for tn in p.tunnels:
+			if player.s - float(tn["s0"]) > 70.0 and player.s < float(tn["s1"]):
+				want.append(["tunnel", 0.0])
+	if p.kind == "viaduct":
+		var pr := track.main.project(player.global_position, player.progress(), 40.0)
+		if absf(pr.y) < 4.0 and pr.z > 6.0:
+			want.append(["viaduc_au_dessus", 0.0])
+	if p == track.main:
+		for b: RoadPath in track.branches:
+			if b.kind != "viaduct":
+				continue
+			var pv := b.project(player.global_position, b.s_for_main(player.s), 40.0)
+			if absf(pv.y) < 6.0 and pv.z < -6.0 and pv.x > 5.0 and pv.x < b.length - 5.0:
+				want.append(["sous_viaduc", 0.0])
+	for w in want:
+		if not _rs_done.has(w[0]):
+			_rs_done[w[0]] = true
+			_rs_pending.append([clock + float(w[1]), w[0]])
+	for i in range(_rs_pending.size() - 1, -1, -1):
+		if clock >= _rs_pending[i][0]:
+			print("route_shot %s : route=%s s=%.0f alt=%.1f h=%.1f" % [_rs_pending[i][1], player.path.kind, player.s, player.global_position.y, player.h])
+			if pre != "1":
+				Game._shot("%s_%s.png" % [pre, _rs_pending[i][1]])
+			_rs_pending.remove_at(i)
 
 
 ## Test automatique du nitro (--nitrotest=/chemin/prefixe) : appuis scriptés pour vérifier
@@ -437,7 +498,7 @@ func _update_order() -> void:
 			return a.finish_time < b.finish_time
 		if a.finished != b.finished:
 			return a.finished
-		return a.s > b.s)
+		return a.progress() > b.progress())
 	for i in order.size():
 		order[i].race_pos = i + 1
 
@@ -451,7 +512,7 @@ func _collisions() -> void:
 			_pair(racers[i], racers[j])
 	var cars := traffic.active_cars()
 	for r in racers:
-		if r.wrecked:
+		if r.wrecked or r.path != track.main:
 			continue
 		for t in cars:
 			_vs_traffic(r, t)
@@ -459,6 +520,9 @@ func _collisions() -> void:
 
 func _pair(a: Racer, b: Racer) -> void:
 	if a.wrecked or b.wrecked or a.ghost > 0.0 or b.ghost > 0.0:
+		return
+	# deux voitures ne se touchent que sur le même tronçon (viaduc / route du dessous)
+	if a.path != b.path:
 		return
 	var ds := b.s - a.s
 	var dx := b.x - a.x
@@ -570,7 +634,7 @@ const ULTRA_AURA := 1.5
 ## Ultra nitro : explosion turquoise au déclenchement, éjecte le trafic et les rivaux proches.
 func _ultra_blast(r: Racer) -> void:
 	var knocked := 0
-	for t in traffic.active_cars():
+	for t in (traffic.active_cars() if r.path == track.main else []):
 		if t.knocked:
 			continue
 		var ds: float = t.s - r.s
@@ -584,6 +648,8 @@ func _ultra_blast(r: Racer) -> void:
 			continue
 		# l'explosion d'un rival n'élimine pas le joueur (seul un contact pendant l'ultra le fait)
 		if o == player:
+			continue
+		if o.path != r.path:
 			continue
 		var ds2: float = o.s - r.s
 		if ds2 > -5.0 and ds2 < 16.0 and absf(o.x - r.x) < 4.0 and absf(o.h - r.h) < 2.0:
@@ -599,13 +665,13 @@ func _on_stunt(r: Racer, kind: String, text: String, gain: float) -> void:
 	if kind == "ultra":
 		_ultra_blast(r)
 	if Game.autotest.has("log") and r != player and (kind == "shockwave" or kind == "ultra"):
-		print("RIVAL %s %s t=%.1f écart=%.0f m" % [r.display_name, kind, clock, r.s - player.s])
+		print("RIVAL %s %s t=%.1f écart=%.0f m" % [r.display_name, kind, clock, r.progress() - player.progress()])
 	if r != player:
 		# un rival proche lance une onde de choc ou un ultra : on prévient le joueur
-		if (kind == "shockwave" or kind == "ultra") and absf(r.s - player.s) < 120.0 and state == "racing":
+		if (kind == "shockwave" or kind == "ultra") and absf(r.progress() - player.progress()) < 120.0 and state == "racing":
 			var ultra := kind == "ultra"
 			hud.push_message(r.display_name.to_upper(), text, UIKit.TURQUOISE if ultra else UIKit.VIOLET)
-			if absf(r.s - player.s) < 50.0:
+			if absf(r.progress() - player.progress()) < 50.0:
 				Audio.play("ultra" if ultra else "shockwave", -12.0)
 		return
 	match kind:
@@ -661,7 +727,7 @@ func _show_results() -> void:
 	# temps estimés pour les concurrents non arrivés
 	for r in racers:
 		if not r.finished:
-			var remaining: float = max(0.0, track.finish_s - r.s)
+			var remaining: float = max(0.0, track.finish_s - r.progress())
 			r.finish_time = clock + remaining / max(r.stats["top_speed"] * 0.85, 10.0)
 	var final := racers.duplicate()
 	final.sort_custom(func(a, b): return a.finish_time < b.finish_time)

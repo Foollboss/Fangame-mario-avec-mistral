@@ -14,6 +14,8 @@ var _dist := 6.5
 var _wreck_pos := Vector3.ZERO
 var _rel := Vector3(0, 2, 6)
 var _rng := RandomNumberGenerator.new()
+var _off := Vector3.ZERO      # position de la caméra relative à la voiture (lissée)
+var _off_ok := false
 
 
 func _ready() -> void:
@@ -29,7 +31,7 @@ func set_state(st: String) -> void:
 	if target:
 		_rel = global_position - target.global_position
 	if st == "wreck" and target:
-		var tr := track.frame(target.s)
+		var tr := target.path.frame(target.s)
 		_wreck_pos = target.global_position + tr.basis.z * 12.0 + tr.basis.y * 4.0 + tr.basis.x * (4.0 if target.x < 0.0 else -4.0)
 
 
@@ -47,7 +49,7 @@ func update(dt: float) -> void:
 		"intro":
 			var a := -0.9 + _t * 0.45
 			var center := target.global_position + Vector3.UP * 0.8
-			var tr := track.frame(target.s)
+			var tr := target.path.frame(target.s)
 			var dir := (tr.basis.z * cos(a) + tr.basis.x * sin(a)).normalized()
 			global_position = center + dir * (7.5 - _t * 0.6) + Vector3.UP * (1.2 + _t * 0.25)
 			look_at(center, Vector3.UP)
@@ -59,7 +61,7 @@ func update(dt: float) -> void:
 			fov = lerp(fov, 55.0, dt * 2.0)
 		"finish":
 			var center2 := target.global_position + Vector3.UP * 0.7
-			var tr2 := track.frame(target.s)
+			var tr2 := target.path.frame(target.s)
 			var a2 := _t * 0.35
 			var dir2 := (tr2.basis.z * cos(a2) - tr2.basis.x * sin(a2)).normalized()
 			_rel = _rel.lerp(dir2 * 8.0 + Vector3.UP * 2.3, 1.0 - exp(-2.0 * dt))
@@ -94,14 +96,24 @@ func _chase(dt: float, ratio: float) -> void:
 	_cam_x = lerp(_cam_x, target.x * (0.82 if mode != 2 else 1.0), 1.0 - exp(-6.0 * dt))
 	var h_follow: float = target.h if mode == 2 else target.h * 0.75
 	_cam_h = lerp(_cam_h, h_follow, 1.0 - exp(-5.0 * dt))
+	var road: RoadPath = target.path
 	if mode == 2:
-		var tr := track.frame(target.s)
+		var tr := road.frame(target.s)
 		global_position = target.global_position + target.global_transform.basis.y * 1.15 - target.global_transform.basis.z * 0.3
-		look_at(track.position_at(target.s + 20.0, target.x, 1.0 + target.h), tr.basis.y)
+		look_at(road.position_at(target.s + 20.0, target.x, 1.0 + target.h), tr.basis.y)
+		_off_ok = false
 	else:
-		global_position = track.position_at(target.s - _dist, _cam_x, height + _cam_h)
-		var look := track.position_at(target.s + 9.0, target.x * 0.6, 1.0 + target.h * 0.85)
-		var up := track.frame(target.s).basis.y
+		# position voulue derrière la voiture, sur la route qu'elle suit ; le décalage par
+		# rapport à la voiture est lissé pour adoucir les changements de route et les marches
+		var want := road.position_at(target.s - _dist, _cam_x, height + _cam_h)
+		var rel := want - target.global_position
+		if not _off_ok:
+			_off = rel
+			_off_ok = true
+		_off = _off.lerp(rel, 1.0 - exp(-7.0 * dt))
+		global_position = target.global_position + _off
+		var look := road.position_at(target.s + 9.0, target.x * 0.6, 1.0 + target.h * 0.85)
+		var up := road.frame(target.s).basis.y
 		look_at(look, up)
 	fov = lerp(fov, 66.0 + ratio * 9.0 + nitro_k * 9.0, 1.0 - exp(-3.0 * dt))
 	if target.nitro_level == Racer.NITRO_SHOCK:

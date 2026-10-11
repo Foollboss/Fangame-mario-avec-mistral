@@ -1608,12 +1608,12 @@ func _screen_events() -> void:
 	content.add_child(h)
 	for ev in Game.SPECIAL_EVENTS:
 		var p := K.panel(Color(0.3, 0.08, 0.55, 0.92), 0.0, K.PURPLE_LIGHT, 2)
-		p.custom_minimum_size = Vector2(420, 640)
+		p.custom_minimum_size = Vector2(340, 640)
 		var v := K.vbox(12)
 		var img := K.thumb(ev.get("image", ev["reward_car"]))
-		img.custom_minimum_size = Vector2(400, 230)
+		img.custom_minimum_size = Vector2(320, 184)
 		v.add_child(img)
-		v.add_child(K.outlined(K.label(ev["name"], 34, Color.WHITE, "black"), 4))
+		v.add_child(K.outlined(K.label(ev["name"], 30, Color.WHITE, "black"), 4))
 		var loc := ""
 		for l in Game.LOCATIONS:
 			if l["theme"] == ev["theme"]:
@@ -1621,7 +1621,7 @@ func _screen_events() -> void:
 		v.add_child(K.label(loc, 20, K.YELLOW, "black"))
 		var d := K.label(ev["desc"], 18, Color(1, 1, 1, 0.85), "semi")
 		d.autowrap_mode = TextServer.AUTOWRAP_WORD
-		d.custom_minimum_size = Vector2(390, 80)
+		d.custom_minimum_size = Vector2(320, 80)
 		v.add_child(d)
 		var cl := "CLASSE %s" % ev["class"] if ev["class"] != "" else "TOUTES CLASSES"
 		v.add_child(K.label(cl, 20, Color.WHITE, "black"))
@@ -1629,7 +1629,7 @@ func _screen_events() -> void:
 		v.add_child(K.label(Game.objective_text(obj) if obj["type"] != "time" else "BATS LE TEMPS CIBLE", 18, K.LIME, "black"))
 		v.add_child(K.label("Victoires : %d" % int(Game.save["events"].get(ev["id"], 0)), 18, Color(1, 1, 1, 0.7), "semi"))
 		v.add_child(K.spacer(false))
-		var b := K.button("PARTICIPER", 28, "primary", Vector2(400, 70))
+		var b := K.button("PARTICIPER", 28, "primary", Vector2(320, 70))
 		var evc: Dictionary = ev
 		b.pressed.connect(func(): _start_event(evc))
 		v.add_child(b)
@@ -1653,11 +1653,14 @@ func _start_event(ev: Dictionary) -> void:
 			rank = mini(rank, int(pc["rank"][0]))
 	var req := {
 		"id": ev["id"], "event": ev["id"], "name": loc, "theme": ev["theme"],
-		"seed": hash(ev["id"] + Game._today()), "length": 3000.0, "mode": ev["mode"],
+		"seed": int(ev.get("seed", hash(ev["id"] + Game._today()))), "length": 3000.0, "mode": ev["mode"],
 		"class": cls, "rec_rank": rank, "objective": ev["obj"].duplicate(),
 		"reward": {"credits": 6000, "plans": {}}, "reward_car": ev["reward_car"],
 		"barrel_heavy": ev.get("barrel_heavy", false),
+		"network": ev.get("network", "auto"),
 	}
+	if ev.has("length"):
+		req["length"] = float(ev["length"])
 	if cls == "":
 		req["rec_factor"] = 1.0
 	open("car_select", {"req": req, "any_class": cls == ""})

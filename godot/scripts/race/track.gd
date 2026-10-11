@@ -82,6 +82,18 @@ var finish_s := 0.0
 
 var _lamp_positions: Array = []
 
+# réseau routier 3D : route principale + itinéraires bis (toits, tunnel, viaduc, ruelle)
+var main: RoadPath
+var branches: Array = []
+var paths: Array = []
+var branch_zones: Array = []     # portions de la route principale réservées aux embranchements
+var branch_spans: Array = []     # portions entre un embranchement et sa jonction
+var planned_sites: Array = []    # embranchements prévus avant le tracé
+var _straight: Array = []        # portions à garder droites et sans bosse
+var extra_buildings: Array = []  # [Transform3D, Color] : immeubles qui portent la route des toits
+var builder: RoadBuilder
+var _branch_grid := {}           # cases de 24 m -> points des itinéraires bis (pour écarter les décors)
+
 
 # ---------------------------------------------------------------------------
 # Génération du tracé
@@ -94,11 +106,62 @@ func generate(p_theme: String, seed_value: int, p_length: float, opts: Dictionar
 	length = p_length + 260.0  # marge après la ligne d'arrivée
 	finish_s = p_length + 40.0
 	n = int(length / STEP) + 1
+	planned_sites = RoadNetwork.plan(theme_id, opts.get("network", "auto"), start_s, finish_s, seed_value)
+	_straight = RoadNetwork.straight_zones(planned_sites)
 	_build_curvature()
 	_build_points()
 	_build_frames()
+	_make_main()
+	branch_zones = []
+	branch_spans = []
+	branches = RoadNetwork.build(self, {"seed": seed_value, "network": opts.get("network", "auto")})
 	_place_ramps(opts.get("barrel_heavy", false), int(opts.get("min_barrels", 0)))
 	_place_splits_and_tunnels()
+	main.ramps = ramps
+	main.splits = splits
+	main.tunnels = tunnels
+	paths = [main]
+	paths.append_array(branches)
+
+
+## La route principale est aussi un RoadPath (mêmes données) : la physique des voitures
+## passe par le tronçon sur lequel elles roulent.
+func _make_main() -> void:
+	main = RoadPath.new()
+	main.id = 0
+	main.kind = "main"
+	main.half_width = half_width
+	main.lanes = LANES
+	main.lane_w = LANE_W
+	main.pts = pts
+	main.fwds = fwds
+	main.rights = rights
+	main.ups = ups
+	main.curv = curv
+	main.elev_ss = elev_ss
+	main.n = n
+	main.length = (n - 1) * STEP
+
+
+func _in_straight(a: float, b: float) -> bool:
+	for z in _straight:
+		if b > z[0] and a < z[1]:
+			return true
+	return false
+
+
+func in_branch_zone(a: float, b: float) -> bool:
+	for z in branch_zones:
+		if b > z[0] and a < z[1]:
+			return true
+	return false
+
+
+func in_branch_span(a: float, b: float) -> bool:
+	for z in branch_spans:
+		if b > z[0] and a < z[1]:
+			return true
+	return false
 
 
 func _build_curvature() -> void:
@@ -134,6 +197,10 @@ func _build_curvature() -> void:
 					raw[i + j] = -k2 * dir
 			heading -= k2 * dir * cnt2 * STEP
 			i += cnt2
+	# embranchements et jonctions sur des portions droites
+	for z in _straight:
+		for ii in range(maxi(int((z[0] - 40.0) / STEP), 0), mini(int((z[1] + 40.0) / STEP), n)):
+			raw[ii] = 0.0
 	# lissage (entrée progressive des virages)
 	curv = _smooth(_smooth(raw, 18), 12)
 
@@ -170,7 +237,15 @@ func _build_points() -> void:
 	var n_crests: int = theme["crests"]
 	for c in n_crests:
 		var cs := rng.randf_range(450.0, finish_s - 300.0)
-		crest_list.append({"s": cs, "len": rng.randf_range(55.0, 80.0), "h": rng.randf_range(2.6, 4.2)})
+		var cl := rng.randf_range(55.0, 80.0)
+		var ch := rng.randf_range(2.6, 4.2)
+		# pas de bosse sur un embranchement ou une jonction
+		var tries := 0
+		while _in_straight(cs - 40.0, cs + cl + 40.0) and tries < 12:
+			cs = rng.randf_range(450.0, finish_s - 300.0)
+			tries += 1
+		if tries < 12:
+			crest_list.append({"s": cs, "len": cl, "h": ch})
 	for i in n:
 		var s := i * STEP
 		var y := 0.0
@@ -182,6 +257,19 @@ func _build_points() -> void:
 			if u > 0.0 and u < 1.0:
 				y += c["h"] * sin(PI * u) * sin(PI * u)
 		heights[i] = y
+	# embranchements et jonctions : pente régulière (pas de bosse au milieu d'un carrefour)
+	for z in _straight:
+		var a := maxi(int((float(z[0]) - 30.0) / STEP), 0)
+		var b := mini(int((float(z[1]) + 30.0) / STEP), n - 1)
+		if b - a < 4:
+			continue
+		var ha := heights[a]
+		var hb := heights[b]
+		for i in range(a, b + 1):
+			var u := float(i - a) / float(b - a)
+			var lin := lerpf(ha, hb, u)
+			var wgt: float = smoothstep(0.0, 0.18, u) * smoothstep(0.0, 0.18, 1.0 - u)
+			heights[i] = lerpf(heights[i], lin, wgt)
 	pts.resize(n)
 	var yaw := 0.0
 	var p := Vector3.ZERO
@@ -225,6 +313,8 @@ func _place_ramps(barrel_heavy: bool, min_barrels: int = 0) -> void:
 		for c in crest_list:
 			if abs(s - c["s"]) < 160.0:
 				ok = false
+		if in_branch_zone(s - 30.0, s + 110.0):
+			ok = false
 		if not ok:
 			s += 40.0
 			continue
@@ -316,6 +406,8 @@ func _ensure_barrels(count: int) -> void:
 
 
 func _barrel_spot_ok(s: float, curv_limit: float) -> bool:
+	if in_branch_zone(s - 30.0, s + 110.0):
+		return false
 	for r in ramps:
 		if absf(r["s"] - s) < 150.0:
 			return false
@@ -350,6 +442,9 @@ func _place_splits_and_tunnels() -> void:
 
 
 func _zone_free(a: float, b: float, check_splits := false) -> bool:
+	# ni séparation centrale ni tunnel sur la route principale près des itinéraires bis
+	if in_branch_span(a - 60.0, b + 60.0) or in_branch_zone(a, b):
+		return false
 	for r in ramps:
 		if r["s"] > a - 30.0 and r["s"] < b:
 			return false
@@ -498,21 +593,53 @@ func build_visuals() -> void:
 	var walk_prof := [Vector2(hw + 0.65, 0.0), Vector2(hw + 0.66, 0.2), Vector2(hw + 6.5, 0.2)] if urban else [Vector2(hw + 0.65, 0.0), Vector2(hw + 6.5, 0.05)]
 	var ground_prof := [Vector2(hw + 6.5, 0.2 if urban else 0.05), Vector2(hw + 28.0, 0.0), Vector2(hw + 75.0, -1.5), Vector2(hw + 76.0, -45.0)]
 
+	# réseau routier 3D : matériaux partagés, découpe des bas-côtés près des autres routes
+	var deck_mat := StandardMaterial3D.new()
+	deck_mat.albedo_color = Color(0.55, 0.55, 0.57) if theme["night"] < 0.5 else Color(0.36, 0.36, 0.4)
+	deck_mat.roughness = 0.85
+	deck_mat.albedo_texture = _noise_tex(0.05)
+	deck_mat.uv1_triplanar = true
+	deck_mat.uv1_world_triplanar = true
+	deck_mat.uv1_scale = Vector3(0.2, 0.2, 0.2)
+	var t_wall := StandardMaterial3D.new()
+	t_wall.albedo_color = Color(0.55, 0.55, 0.58)
+	t_wall.roughness = 0.7
+	var t_light := StandardMaterial3D.new()
+	t_light.albedo_color = Color(1, 0.95, 0.85)
+	t_light.emission_enabled = true
+	t_light.emission = Color(1.0, 0.9, 0.75)
+	t_light.emission_energy_multiplier = 1.4
+	var cushion := StandardMaterial3D.new()
+	cushion.albedo_color = Color(1.0, 0.8, 0.0)
+	cushion.emission_enabled = true
+	cushion.emission = Color(1.0, 0.7, 0.0)
+	cushion.emission_energy_multiplier = 1.5
+	builder = RoadBuilder.new(self, {"concrete": concrete, "neon": neon, "side": side_mat, "ground": ground_mat,
+		"deck": deck_mat, "tunnel_wall": t_wall, "tunnel_light": t_light, "cushion": cushion})
+	builder.compute_clips()
+	_make_branch_grid()
+
 	var c := 0
 	while c < n - 1:
 		var i0 := c
 		var i1: int = min(c + CHUNK, n - 1)
 		var mesh := ArrayMesh.new()
 		_add_surface(mesh, road_prof, i0, i1, road_mat, false, true)
-		_add_surface(mesh, barrier_prof, i0, i1, concrete, true)
-		_add_surface(mesh, neon_prof, i0, i1, neon, true)
-		_add_surface(mesh, walk_prof, i0, i1, side_mat, true)
-		_add_surface(mesh, ground_prof, i0, i1, ground_mat, true)
+		for side in [-1, 1]:
+			# garde-corps sauf sur les bords ouverts (embranchements / jonctions)
+			var bdraw := func(i): return not RoadBuilder.is_open(main, side, i)
+			builder.strip(mesh, main, i0, i1, func(_i): return RoadBuilder.side_prof(barrier_prof, side, 1e6), concrete, false, bdraw)
+			builder.strip(mesh, main, i0, i1, func(_i): return RoadBuilder.side_prof(neon_prof, side, 1e6), neon, false, bdraw)
+			# trottoir et sol : s'arrêtent avant une route voisine au même niveau
+			var lim := func(i): return maxf(builder.clip_at(main, side, i), hw + 0.66)
+			builder.strip(mesh, main, i0, i1, func(i): return RoadBuilder.side_prof(walk_prof, side, lim.call(i)), side_mat, false, Callable(), true)
+			builder.strip(mesh, main, i0, i1, func(i): return RoadBuilder.side_prof(ground_prof, side, lim.call(i)), ground_mat, false, Callable(), true)
 		var mi := MeshInstance3D.new()
 		mi.mesh = mesh
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		add_child(mi)
 		c = i1
+	builder.build_branches()
 	# grand sol lointain
 	var far := MeshInstance3D.new()
 	var pm := PlaneMesh.new()
@@ -521,8 +648,9 @@ func build_visuals() -> void:
 	far.material_override = ground_mat
 	var center := (pts[0] + pts[n - 1]) * 0.5
 	var min_y := 0.0
-	for p in pts:
-		min_y = min(min_y, p.y)
+	for pth: RoadPath in paths:
+		for p in pth.pts:
+			min_y = min(min_y, p.y)
 	far.position = Vector3(center.x, min_y - 6.0, center.z)
 	add_child(far)
 
@@ -820,7 +948,7 @@ func _build_buildings() -> void:
 			var flat_f := Vector3(fwds[i].x, 0, fwds[i].z).normalized()
 			var center: Vector3 = pts[i] + flat_r * side * off
 			var radius: float = max(w, d) * 0.5
-			if not _clear_of_track(center, i, radius * 0.85):
+			if not _clear_of_track(center, i, radius * 0.85) or not _clear_of_branches(center, radius * 0.85):
 				continue
 			var basis := Basis(flat_r * d, Vector3.UP * h, -flat_f * w)
 			if style == "rocks":
@@ -848,6 +976,9 @@ func _build_buildings() -> void:
 			xforms.append(Transform3D(basis, Vector3(center.x, pts[i].y - 2.0 + h * 0.5, center.z)))
 			var col2 := Color(palette[rng.randi() % palette.size()]).darkened(0.25)
 			customs.append(Color(col2.r, col2.g, col2.b, rng.randf()))
+	for eb in extra_buildings:
+		xforms.append(eb[0])
+		customs.append(eb[1])
 	if xforms.is_empty():
 		return
 	var mm := MultiMesh.new()
@@ -882,6 +1013,43 @@ func _build_buildings() -> void:
 			bmat.set_shader_parameter("win_w", 1.9)
 		mmi.material_override = bmat
 	add_child(mmi)
+
+
+## Points des itinéraires bis par case de 24 m (pas les tunnels : on peut construire au-dessus).
+func _make_branch_grid() -> void:
+	_branch_grid = {}
+	for b: RoadPath in branches:
+		var i := 0
+		while i < b.n:
+			if not b.in_tunnel(i * STEP):
+				var key := Vector2i(int(floor(b.pts[i].x / 24.0)), int(floor(b.pts[i].z / 24.0)))
+				if not _branch_grid.has(key):
+					_branch_grid[key] = []
+				_branch_grid[key].append(Vector3(b.pts[i].x, b.pts[i].z, b.half_width))
+			i += 2
+
+
+func _clear_of_branches(p: Vector3, radius: float) -> bool:
+	var cx := int(floor(p.x / 24.0))
+	var cz := int(floor(p.z / 24.0))
+	var reach := int(ceil((radius + 14.0) / 24.0))
+	for dx in range(-reach, reach + 1):
+		for dz in range(-reach, reach + 1):
+			var key := Vector2i(cx + dx, cz + dz)
+			if not _branch_grid.has(key):
+				continue
+			for q in _branch_grid[key]:
+				if Vector2(p.x - q.x, p.z - q.y).length() < q.z + 6.8 + radius:
+					return false
+	return true
+
+
+## Décor de bord de route : pas sur un bord ouvert ni trop près d'une route voisine.
+func _side_free(s: float, side: float, need: float) -> bool:
+	var i := int(clamp(s / STEP, 0, n - 1))
+	if RoadBuilder.is_open(main, int(side), i):
+		return false
+	return builder.clip_at(main, int(side), i) > half_width + need
 
 
 func _far_from_track(p: Vector3, dist: float) -> bool:
@@ -955,7 +1123,7 @@ func _build_props() -> void:
 		if _in_tunnel(s):
 			s += spacing
 			continue
-		if props.get("lamp", 0.0) > 0.0 and rng.randf() < props["lamp"]:
+		if props.get("lamp", 0.0) > 0.0 and rng.randf() < props["lamp"] and _side_free(s, flip, 3.0):
 			lamp_x.append(_side_xform(s, flip, 1.3))
 			_lamp_positions.append(position_at(s, flip * (half_width - 1.5), 8.5))
 		flip = -flip
@@ -963,7 +1131,7 @@ func _build_props() -> void:
 	s = 10.0
 	while s < length:
 		for side in [-1.0, 1.0]:
-			if _in_tunnel(s):
+			if _in_tunnel(s) or not _side_free(s, side, 7.0):
 				continue
 			if props.get("palm", 0.0) > 0.0 and rng.randf() < props["palm"] * 0.8:
 				palm_x.append(_side_xform(s + rng.randf_range(-3, 3), side, rng.randf_range(2.5, 5.5), rng.randf() * TAU, rng.randf_range(0.85, 1.25)))
@@ -975,14 +1143,15 @@ func _build_props() -> void:
 		if props.get("billboard", 0.0) > 0.0 and rng.randf() < props["billboard"] and not _in_tunnel(s):
 			var side := 1.0 if rng.randf() < 0.5 else -1.0
 			var x := _side_xform(s, side, 9.0, PI * 0.5 * side * 0.6, 1.3)
-			if _clear_of_track(x.origin, int(s / STEP), 4.0):
+			if _clear_of_track(x.origin, int(s / STEP), 4.0) and _clear_of_branches(x.origin, 4.0) and _side_free(s, side, 14.0):
 				bill_x.append(x)
 		s += rng.randf_range(90.0, 180.0)
 	if props.get("cone", 0.0) > 0.0:
 		s = 60.0
 		while s < length:
 			for side in [-1.0, 1.0]:
-				cone_x.append(_side_xform(s, side, 1.2))
+				if _side_free(s, side, 2.0):
+					cone_x.append(_side_xform(s, side, 1.2))
 			s += 12.0
 	_multimesh(_mesh_from("res://assets/props/lamp.glb"), lamp_x)
 	_multimesh(_mesh_from("res://assets/props/palm.glb"), palm_x)

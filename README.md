@@ -62,6 +62,13 @@ Si le jeu se ferme tout seul :
 - **TouchDrive** (pilotage assisté, touche T), 3 caméras (touche C), commandes tactiles sur mobile.
 - Moteur synthétisé en temps réel (le son suit les rapports), effets sonores et musique synthwave générés par le code.
 
+**Réseau routier 3D** : chaque course a de vrais itinéraires bis qui se séparent de la route principale et la rejoignent plus loin. Aux carrefours (2 ou 3 directions, avec portiques « ◀ TUNNEL », « TOITS ▶ », etc.), **braque vers le panneau** pour changer de route — le TouchDrive ne choisit jamais à ta place, il suit la direction que tu braques :
+  - **TOITS** : une rampe d'accès projette la voiture sur une route posée sur le toit d'une rangée d'immeubles (avec un second saut entre deux toits), puis une descente ramène en ville. Trop lent ? La voiture tombe dans le vide (épave) et repart de la route principale.
+  - **TUNNEL** : la rue plonge dans une tranchée, passe sous un quartier puis remonte.
+  - **VIADUC** : bretelle surélevée qui passe **au-dessus** de la route principale (passage à deux niveaux, pas un croisement) et la rejoint de l'autre côté.
+  - **RUELLE** : rue étroite et sinueuse entre les immeubles.
+  Chaque route a sa propre chaussée : une voiture sur le viaduc ne touche pas celles d'en dessous. Les pentes ralentissent en montée et accélèrent en descente. Événement **ZONE DE TEST 3D** (Événements spéciaux) : un tracé fixe à San Francisco avec tous ces éléments.
+
 **5 villes** générées procéduralement (chaque course est différente) : San Francisco (collines, rails de tram, maisons victoriennes), Los Angeles (coucher de soleil, palmiers), Tokyo (nuit, néons, route mouillée), Nevada (désert, mesas), New York (crépuscule, gratte-ciel, taxis).
 
 **Menus façon Asphalt Legends Unite** : Accueil avec showroom 3D néon, Carrière (5 chapitres, 20 saisons, 120 courses avec drapeaux, « REQUIS : n », objectifs, plans en récompense, rang recommandé), Sélection de voiture, Fiche voiture (Vitesse max / Accélération / Maniabilité / Nitro, rang, AMÉLIORER, peinture), Garage, Boutique, Événements spéciaux, Objectifs quotidiens, Pass Unite (30 paliers), Multijoueur (contre des bots, ligues), Profil, Réglages. Sauvegarde automatique.

@@ -83,8 +83,9 @@ func _ready() -> void:
 	if is_touch():
 		hint_text = "◀ ▶  DIRIGER    NITRO    DRIFT (x2 = 360°)    TOUCHDRIVE : TOUCHE LE CADRE EN HAUT À GAUCHE"
 	hint_text += "\nNITRO : ré-appuie dans la zone BLEU CLAIR = PARFAIT  ·  jauge pleine + double appui = ONDE DE CHOC  ·  pendant l'onde, zone TURQUOISE = ULTRA NITRO"
+	hint_text += "\nCARREFOURS : braque vers un panneau (TOITS, TUNNEL, VIADUC, RUELLE) pour prendre un autre itinéraire"
 	hint = K.outlined(K.label(hint_text, 18, Color(1, 1, 1, 0.85), "semi", HORIZONTAL_ALIGNMENT_CENTER), 5)
-	K.place(hint, Control.PRESET_CENTER_BOTTOM, Vector2(-760, -84), Vector2(1520, 64))
+	K.place(hint, Control.PRESET_CENTER_BOTTOM, Vector2(-760, -110), Vector2(1520, 92))
 	root.add_child(hint)
 
 	fps_label = K.label("", 16, Color(0.7, 1, 0.7), "upright")

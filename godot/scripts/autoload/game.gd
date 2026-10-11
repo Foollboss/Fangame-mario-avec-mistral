@@ -59,6 +59,8 @@ const CHAPTERS := [
 ]
 
 const SPECIAL_EVENTS := [
+	{"id": "ev_zone3d", "name": "ZONE DE TEST 3D", "desc": "Carrefour à 3 directions : rampe vers les toits ou tunnel. Puis un viaduc qui passe au-dessus de la route et une ruelle. Choisis ton itinéraire au volant !",
+	 "class": "", "mode": "classic", "theme": "sf", "reward_car": "", "image": "bmw_m5", "obj": {"type": "position", "value": 3}, "network": "test", "length": 3400.0, "seed": 4242},
 	{"id": "ev_m5", "name": "COUPE M5", "desc": "Course classique, classe B. Récompense : plans BMW M5.",
 	 "class": "B", "mode": "classic", "theme": "newyork", "reward_car": "bmw_m5", "obj": {"type": "position", "value": 3}},
 	{"id": "ev_barrel", "name": "DÉFI TONNEAUX", "desc": "Enchaîne les rampes à tonneau à Los Angeles.",
@@ -881,6 +883,8 @@ func _parse_cmdline() -> void:
 			req["mode"] = autotest["mode"]
 		if autotest.has("length"):
 			req["length"] = float(autotest["length"])
+		if autotest.has("seed"):
+			req["seed"] = int(autotest["seed"])  # tests reproductibles (même tracé)
 		call_deferred("start_race", req)
 	if autotest.has("quit-after"):
 		var t := get_tree().create_timer(float(autotest["quit-after"]), true, false, true)
