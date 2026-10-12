@@ -157,6 +157,11 @@ export class Villager extends Mob {
     this.refreshTrades();
   }
 
+  /** Nom affiché du métier. */
+  get professionName(): string {
+    return PROFESSIONS[this.profession]?.name ?? 'Villageois';
+  }
+
   refreshTrades(): void {
     const p = PROFESSIONS[this.profession];
     const known = new Map(this.trades.map((t) => [t.sell[0] + t.buy[0], t]));

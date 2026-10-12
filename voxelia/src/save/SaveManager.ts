@@ -8,6 +8,20 @@ import { COLUMN_VOLUME } from '../world/constants';
 import type { SavedChunk } from '../world/ChunkManager';
 import type { BlockEntity } from '../world/Chunk';
 import type { WorldTemplate } from '../world/gen/terrain';
+import { deserializeStack, serializeStack } from '../items/items';
+
+/** Les piles d'objets des blocs (coffres, fours) sont stockées par clé d'objet, pas par numéro. */
+function encodeBlockEntity(e: BlockEntity): BlockEntity {
+  if (!Array.isArray(e.items)) return e;
+  return { ...e, items: (e.items as unknown[]).map((s) => serializeStack((s as never) ?? null)), keyed: 1 };
+}
+
+function decodeBlockEntity(e: BlockEntity): BlockEntity {
+  if (!Array.isArray(e.items) || !e.keyed) return e;
+  const { keyed: _k, ...rest } = e;
+  void _k;
+  return { ...rest, type: e.type, items: (e.items as unknown[]).map((s) => deserializeStack(s)) };
+}
 
 export type GameMode = 'survival' | 'creative' | 'adventure' | 'spectator';
 export type Difficulty = 'peaceful' | 'easy' | 'normal' | 'hard';
@@ -226,7 +240,7 @@ export class SaveManager {
       const bytes = await inflate(rec.r, rec.z);
       const rle = new Uint16Array(bytes.buffer, bytes.byteOffset, bytes.byteLength >> 1);
       const blocks = rleDecode(rle.slice(), COLUMN_VOLUME);
-      return { blocks, biomes: rec.b, blockEntities: rec.be };
+      return { blocks, biomes: rec.b, blockEntities: rec.be?.map(([k, e]) => [k, decodeBlockEntity(e)] as [number, BlockEntity]) };
     } catch (e) {
       // Tronçon corrompu : on le régénère plutôt que de planter.
       console.error('Tronçon corrompu, régénération', key, e);
@@ -238,7 +252,7 @@ export class SaveManager {
   async encodeChunk(blocks: Uint16Array, biomes: Uint8Array, be: Map<number, BlockEntity>): Promise<ChunkRecord> {
     const rle = rleEncode(blocks);
     const { z, data } = await deflate(new Uint8Array(rle.buffer));
-    return { r: data, z, b: biomes.slice(), be: be.size ? [...be.entries()] : undefined, v: 1 };
+    return { r: data, z, b: biomes.slice(), be: be.size ? [...be.entries()].map(([k, e]) => [k, encodeBlockEntity(e)] as [number, BlockEntity]) : undefined, v: 1 };
   }
 
   /** Sauvegarde atomique : métadonnées, joueur, tronçons et entités en une transaction. */

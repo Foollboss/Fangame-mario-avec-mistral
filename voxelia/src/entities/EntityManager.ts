@@ -464,6 +464,30 @@ export class EntityManager {
     if (this.lightningFlash > 0) this.lightningFlash = Math.max(0, this.lightningFlash - dt * 3);
   }
 
+  /** Rendu d'une entité tenue hors de la liste (joueur local vu à la troisième personne). */
+  renderDetached(e: Entity, alpha: number, dt: number, host: EntityHost, visible: boolean): void {
+    let v = this.views.get(e.id);
+    if (!v) {
+      v = this.createView(e);
+      this.views.set(e.id, v);
+      this.group.add(v.obj);
+    }
+    v.obj.visible = visible && !e.removed;
+    if (!v.obj.visible) return;
+    v.obj.position.set(e.prevPos.x + (e.pos.x - e.prevPos.x) * alpha, e.prevPos.y + (e.pos.y - e.prevPos.y) * alpha, e.prevPos.z + (e.pos.z - e.prevPos.z) * alpha);
+    const p = v.obj.position;
+    const light = brightness(host.world.skyLight(Math.floor(p.x), Math.floor(p.y + 1), Math.floor(p.z)), host.world.blockLight(Math.floor(p.x), Math.floor(p.y + 1), Math.floor(p.z)), host.daylight);
+    this.animate(e, v, alpha, dt, Math.min(1, light));
+  }
+
+  /** Supprime la vue d'une entité détachée (changement d'apparence, départ d'un joueur). */
+  dropView(e: Entity): void {
+    const v = this.views.get(e.id);
+    if (!v) return;
+    this.disposeView(v);
+    this.views.delete(e.id);
+  }
+
   private modelKeyFor(e: Entity): string {
     if (e.type === 'player' || e.type === 'remote_player') return (e as unknown as { skinKey?: string }).skinKey ?? this.playerSkin;
     if (e instanceof Villager) return MODELS['villager_' + e.profession] ? 'villager_' + e.profession : 'villager';

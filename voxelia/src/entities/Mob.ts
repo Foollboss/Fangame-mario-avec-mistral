@@ -34,6 +34,8 @@ export class Mob extends Entity {
   fuse = -1;
   sheared = false;
   saddled = false;
+  /** Commandes du cavalier (renseignées par le jeu quand un joueur est en selle). */
+  riderCtl: { f: number; s: number; jump: boolean; yaw: number } | null = null;
   tamed = false;
   temper = 0;
   sizeScale = 1;
@@ -134,8 +136,13 @@ export class Mob extends Entity {
     this.forward = 0;
     this.strafe = 0;
     this.jumpWanted = false;
-    this.ai(host);
-    this.physics(host);
+    if (this.passenger && this.riderCtl) {
+      const c = this.riderCtl;
+      this.ride(c.f, c.s, c.jump, c.yaw, host);
+    } else {
+      this.ai(host);
+      this.physics(host);
+    }
     this.walkSpeed = Math.min(1, Math.hypot(this.pos.x - this.prevPos.x, this.pos.z - this.prevPos.z) * 4);
     this.walkAnim += this.walkSpeed * 0.6;
   }
@@ -603,9 +610,13 @@ export class Mob extends Entity {
           host.audio('horse', this.pos);
         }
       }
+      this.physics(host);
       return;
     }
-    if (!this.saddled) return;
+    if (!this.saddled) {
+      this.physics(host);
+      return;
+    }
     this.yaw = yaw;
     this.forward = forward;
     this.strafe = strafe * 0.5;
