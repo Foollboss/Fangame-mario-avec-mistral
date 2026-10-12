@@ -46,7 +46,9 @@ export type ClientMsg =
   | { t: 'chat'; text: string; system?: boolean }
   | { t: 'time'; time: number; day: number }
   | { t: 'save'; data: unknown }
-  | { t: 'ping'; n: number };
+  | { t: 'ping'; n: number }
+  /** Interrogation sans connexion (liste des serveurs) : le serveur répond « status » puis ferme. */
+  | { t: 'status' };
 
 export type ServerMsg =
   | { t: 'welcome'; id: number; world: WorldInfo; player: unknown; permission: Permission }
@@ -60,7 +62,8 @@ export type ServerMsg =
   | { t: 'time'; time: number; day: number }
   | { t: 'denied'; x: number; y: number; z: number; dim: number; raw: number }
   | { t: 'error'; message: string }
-  | { t: 'pong'; n: number };
+  | { t: 'pong'; n: number }
+  | { t: 'status'; name: string; motd: string; players: number; max: number; version: number; needsInvite: boolean };
 
 /** Index d'un bloc dans une colonne (identique à colIndex). */
 export function localIndex(x: number, y: number, z: number): number {
