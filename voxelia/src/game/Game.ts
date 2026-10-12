@@ -335,6 +335,17 @@ export class Game implements EntityHost {
 
   /** Attend que les tronçons autour du joueur soient générés et maillés. */
   private async waitForChunks(label: string): Promise<void> {
+    this.waitingChunks = true;
+    try {
+      await this.waitForChunksInner(label);
+    } finally {
+      this.waitingChunks = false;
+    }
+  }
+
+  private waitingChunks = false;
+
+  private async waitForChunksInner(label: string): Promise<void> {
     const p = this.player;
     const radius = Math.min(3, this.chunks.renderDistance);
     const start = performance.now();
@@ -485,7 +496,7 @@ export class Game implements EntityHost {
       p.pitch = Math.max(-Math.PI / 2 + 0.001, Math.min(Math.PI / 2 - 0.001, p.pitch - st.lookDY));
     }
     // Simulation à pas fixe
-    const paused = this.uiOpen && !this.net && this.app.ui.current?.modalGame !== true && this.pausesGame();
+    const paused = this.waitingChunks || this.changingDim || (this.uiOpen && !this.net && this.app.ui.current?.modalGame !== true && this.pausesGame());
     if (!paused) {
       this.tickAcc += Math.min(dt, 0.25);
       let n = 0;

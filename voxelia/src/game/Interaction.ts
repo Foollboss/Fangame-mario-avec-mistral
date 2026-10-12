@@ -179,11 +179,11 @@ export class Interaction {
       const s = meta & 8 ? -1 : 1;
       if (g.world.id(x + dx * s, y, z + dz * s) === id) g.world.set(x + dx * s, y, z + dz * s, 0, 0, 'player');
     }
+    // Contenu des coffres / fours (à lire avant de retirer le bloc, qui efface ses données)
+    const be = g.world.blockEntity(x, y, z);
     // Les blocs contenant de l'eau laissent de l'eau
     const leaveWater = def.waterlogged && def.key !== 'water';
     g.world.set(x, y, z, leaveWater ? B.water : def.key === 'ice' && !p.creative && BLOCKS[g.world.id(x, y - 1, z)]?.solid ? B.water : 0, 0, 'player');
-    // Contenu des coffres / fours
-    const be = g.world.blockEntity(x, y, z);
     if (be) {
       for (const s of (be.items as Array<ItemStack | null>) ?? []) if (s) g.dropItem(x + 0.5, y + 0.5, z + 0.5, s);
       g.world.setBlockEntity(x, y, z, null);
@@ -271,7 +271,7 @@ export class Interaction {
     if (t && !(p.sneaking && held)) {
       if (this.interactBlock(t)) return;
     }
-    if (def?.use && this.useItem(held!, def.use, t)) return;
+    if ((def?.use || def?.armor) && this.useItem(held!, def.use ?? '', t)) return;
     if (!t) return;
     // Pose de bloc
     const blockToPlace = held ? def?.block : undefined;
@@ -664,7 +664,7 @@ export class Interaction {
       case 'facing':
         if (def.shape === 'stairs') meta = d | (t.face === 3 || (t.face !== 2 && fracY > 0.5) ? 4 : 0);
         else if (def.shape === 'ladder') {
-          if (t.face < 2 || t.face > 5 || t.face === 2 || t.face === 3) return;
+          if (t.face === 2 || t.face === 3) return;
           meta = dirOf(-n[0], -n[2]);
         } else if (def.shape === 'trapdoor') meta = ((d + 2) % 4) | (t.face === 3 || (t.face !== 2 && fracY > 0.5) ? 8 : 0);
         else if (def.shape === 'door' || def.shape === 'bed') meta = d;

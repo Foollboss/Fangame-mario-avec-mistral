@@ -29,7 +29,8 @@ export function tickFurnace(f: FurnaceData): boolean {
   const canSmelt = !!res && (!out || (out.id === res.id && out.count < maxStack(out)));
   if (f.burn > 0) f.burn--;
   if (f.burn <= 0 && canSmelt && fuel) {
-    const v = ITEMS[fuel.id]?.fuel ?? 0;
+    // Valeur de combustible exprimée en secondes (charbon : 80 s = 8 cuissons)
+    const v = Math.round((ITEMS[fuel.id]?.fuel ?? 0) * 20);
     if (v > 0) {
       f.burn = f.burnMax = v;
       if (ITEMS[fuel.id]?.key === 'lava_bucket') f.items[1] = { id: ITEM_BY_KEY.get('bucket')!.id, count: 1 };
