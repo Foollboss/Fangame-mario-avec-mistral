@@ -207,7 +207,7 @@ export function touchSection(ctx: SectionCtx): HTMLElement[] {
     h(
       'div',
       { class: 'section st-note' },
-      'Glisser sur l’écran : regarder autour de soi. Appui court : utiliser ou poser. Appui long : casser ou attaquer. Pousser le joystick tout en haut : courir.',
+      'Glisser sur l’écran : regarder autour de soi. Appui court : utiliser ou poser. Appui long : casser ou attaquer. Bouton Sprint : courir.',
     ),
   ];
 }

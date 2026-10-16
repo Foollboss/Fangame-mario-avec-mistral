@@ -191,7 +191,6 @@ export class TouchControls {
         this.input.touch.moveZ = 0;
         this.knob.style.left = '50%';
         this.knob.style.top = '50%';
-        if (!this.toggles.has('sprint')) this.input.touch.sprint = false;
         continue;
       }
       const bid = this.btnTouches.get(t.identifier);
@@ -224,9 +223,6 @@ export class TouchControls {
     const ny = -dy / max;
     this.input.touch.moveX = Math.abs(nx) < 0.15 ? 0 : nx;
     this.input.touch.moveZ = Math.abs(ny) < 0.15 ? 0 : ny;
-    // Pousser le joystick au bord : sprint automatique
-    if (ny > 0.95 && !this.toggles.has('sneak')) this.input.touch.sprint = true;
-    else if (!this.toggles.has('sprint')) this.input.touch.sprint = false;
   }
 
   private press(id: string, down: boolean): void {
