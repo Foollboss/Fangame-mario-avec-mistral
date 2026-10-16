@@ -1,9 +1,12 @@
 /**
  * Icônes d'inventaire : blocs en perspective isométrique (dessus + deux côtés ombrés),
- * plantes et objets en image plate. Régénérées quand un pack de ressources change.
+ * plantes et objets en image plate. Régénérées quand un pack de ressources change
+ * (textures de blocs, icônes d'objets du pack, couleurs de biome).
  */
 import { BLOCKS, Tint, type BlockDef } from '../world/blocks';
 import { ITEMS, type ItemDef } from '../items/items';
+import { FOLIAGE_COLORS, GRASS_COLORS, ICON_BIOME, WATER_COLORS } from '../world/biomes';
+import { clearItemTextures, itemOverridePixels, onItemTexturesChange, setItemTexture } from '../packs/itemOverrides';
 import { paintItemIcon } from './textures/itemTextures';
 import type { TextureAtlas } from './TextureAtlas';
 
@@ -21,6 +24,37 @@ export class ItemIcons {
       this.texCanvas.clear();
       this.version++;
     });
+    onItemTexturesChange(() => {
+      this.cache.clear();
+      this.version++;
+    });
+  }
+
+  /** Remplace l'icône d'un objet (clé d'objet ou d'icône) par une image 16x16. */
+  setItemTexture(key: string, img: ImageData | HTMLCanvasElement | Uint8Array | Uint8ClampedArray): void {
+    if (img instanceof Uint8Array || img instanceof Uint8ClampedArray) {
+      setItemTexture(key, img);
+      return;
+    }
+    const c = document.createElement('canvas');
+    c.width = c.height = 16;
+    const g = c.getContext('2d')!;
+    g.imageSmoothingEnabled = false;
+    if (img instanceof HTMLCanvasElement) g.drawImage(img, 0, 0, 16, 16);
+    else if (img.width === 16 && img.height === 16) g.putImageData(img, 0, 0);
+    else {
+      const t = document.createElement('canvas');
+      t.width = img.width;
+      t.height = img.height;
+      t.getContext('2d')!.putImageData(img, 0, 0);
+      g.drawImage(t, 0, 0, 16, 16);
+    }
+    setItemTexture(key, g.getImageData(0, 0, 16, 16).data);
+  }
+
+  /** Revient aux icônes d'origine pour tous les objets. */
+  clearOverrides(): void {
+    clearItemTextures();
   }
 
   /** Texture d'un bloc en canvas 16x16 (éventuellement teintée et ombrée). */
@@ -48,21 +82,32 @@ export class ItemIcons {
   }
 
   /** Côté du bloc d'herbe : terre + bordure teintée. */
-  private grassSide(shade: number): HTMLCanvasElement {
+  private grassSide(shade: number, tint: number): HTMLCanvasElement {
     const c = document.createElement('canvas');
     c.width = c.height = 16;
     const g = c.getContext('2d')!;
     g.drawImage(this.tex('grass_side', 0xffffff, shade), 0, 0);
-    g.drawImage(this.tex('grass_side_overlay', 0x91bd59, shade), 0, 0);
+    g.drawImage(this.tex('grass_side_overlay', tint, shade), 0, 0);
     return c;
   }
 
+  /** Teinte d'une icône : couleurs du biome de référence (suivent les palettes des packs). */
   private tintOf(b: BlockDef): number {
-    if (b.tint === Tint.Grass) return 0x91bd59;
-    if (b.tint === Tint.Foliage) return 0x77ab2f;
-    if (b.tint === Tint.Water) return 0x44aff5;
+    if (b.tint === Tint.Grass) return GRASS_COLORS[ICON_BIOME];
+    if (b.tint === Tint.Foliage) return FOLIAGE_COLORS[ICON_BIOME];
+    if (b.tint === Tint.Water) return WATER_COLORS[ICON_BIOME];
     if (b.tint === Tint.Fixed) return b.tintColor;
     return 0xffffff;
+  }
+
+  /** Image 16x16 agrandie en icône (icônes plates). */
+  private flat(g: CanvasRenderingContext2D, px: Uint8ClampedArray): void {
+    const tc = document.createElement('canvas');
+    tc.width = tc.height = 16;
+    const img = tc.getContext('2d')!.createImageData(16, 16);
+    img.data.set(px.subarray(0, 1024));
+    tc.getContext('2d')!.putImageData(img, 0, 0);
+    g.drawImage(tc, 0, 0, ICON, ICON);
   }
 
   get(itemId: number, data?: Record<string, unknown>): string {
@@ -82,14 +127,15 @@ export class ItemIcons {
     c.width = c.height = ICON;
     const g = c.getContext('2d')!;
     g.imageSmoothingEnabled = false;
+    // Icône fournie par un pack de ressources (prioritaire).
+    const pack = itemOverridePixels(def);
+    if (pack) {
+      this.flat(g, pack);
+      return c.toDataURL();
+    }
     const painted = paintItemIcon(def.icon ?? def.key, def.data);
     if (painted && !(def.block !== undefined && def.block === def.id)) {
-      const tc = document.createElement('canvas');
-      tc.width = tc.height = 16;
-      const img = tc.getContext('2d')!.createImageData(16, 16);
-      img.data.set(painted.data);
-      tc.getContext('2d')!.putImageData(img, 0, 0);
-      g.drawImage(tc, 0, 0, ICON, ICON);
+      this.flat(g, painted.data);
       return c.toDataURL();
     }
     const b = def.block !== undefined ? BLOCKS[def.block] : undefined;
@@ -119,14 +165,15 @@ export class ItemIcons {
     const proj = (x: number, y: number, z: number): [number, number] => [cx + (x - z) * k * 0.866, cy + (x + z - 16) * k * 0.5 - (y - 8) * k];
     const boxes = this.iconBoxes(b);
     const tint = this.tintOf(b);
-    const topTint = b.key === 'grass_block' ? 0x91bd59 : tint;
-    const sideTint = b.key === 'grass_block' ? 0xffffff : tint;
+    const grass = b.key === 'grass_block';
+    const topTint = tint;
+    const sideTint = grass ? 0xffffff : tint;
     for (const [x0, y0, z0, x1, y1, z1] of boxes) {
       // Face +Z (gauche à l'écran)
-      const south = b.key === 'grass_block' ? this.grassSide(0.8) : this.tex(b.tex.south, sideTint, 0.8);
+      const south = grass ? this.grassSide(0.8, tint) : this.tex(b.tex.south, sideTint, 0.8);
       this.face(g, south, proj(x0, y1, z1), proj(x0 + 1, y1, z1), proj(x0, y1 - 1, z1), x0, 16 - y1, x1 - x0, y1 - y0);
       // Face +X (droite)
-      const east = b.key === 'grass_block' ? this.grassSide(0.62) : this.tex(b.front && b.orient === 'facing' ? b.tex.east : b.tex.east, sideTint, 0.62);
+      const east = grass ? this.grassSide(0.62, tint) : this.tex(b.tex.east, sideTint, 0.62);
       this.face(g, east, proj(x1, y1, z1), proj(x1, y1, z1 - 1), proj(x1, y1 - 1, z1), 16 - z1, 16 - y1, z1 - z0, y1 - y0);
       // Dessus
       const top = this.tex(b.tex.top, topTint, 1);

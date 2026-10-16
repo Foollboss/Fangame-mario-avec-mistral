@@ -43,7 +43,7 @@ import type { GameMode, GameRules, Difficulty, WorldMeta, PlayerSave } from '../
 import type { BlockEntity } from '../world/Chunk';
 import type { Renderer } from '../render/Renderer';
 import type { AudioManager } from '../audio/AudioManager';
-import type { InputManager } from '../input/InputManager';
+import type { InputManager, InputState } from '../input/InputManager';
 import type { TouchControls } from '../input/TouchControls';
 import type { SettingsManager } from '../core/Settings';
 import type { SaveManager } from '../save/SaveManager';
@@ -392,9 +392,23 @@ export class Game implements EntityHost {
     const x = Math.floor(p.pos.x);
     const z = Math.floor(p.pos.z);
     if (surface && this.dimension === 0) {
-      let y = this.world.height(x, z);
-      while (y > 0 && (IS_LIQUID[this.world.id(x, y, z)] || !this.world.def(x, y, z).solid) && y > SEA_LEVEL - 4) y--;
-      p.pos.y = Math.max(y, this.world.height(x, z)) + 1;
+      // Colonne proche dont le sommet est un vrai sol (pas une cime d'arbre, ni de l'eau)
+      const good = (cx: number, cz: number) => {
+        const top = this.world.height(cx, cz);
+        const d = BLOCKS[this.world.id(cx, top, cz)];
+        return !!d && d.solid && !IS_LIQUID[d.id] && !d.key.endsWith('_leaves') && !d.key.endsWith('_log') && d.key !== 'cactus' && top > SEA_LEVEL - 2;
+      };
+      search: for (let r = 0; r <= 12; r++)
+        for (let dz = -r; dz <= r; dz++)
+          for (let dx = -r; dx <= r; dx++) {
+            if (Math.max(Math.abs(dx), Math.abs(dz)) !== r) continue;
+            if (good(x + dx, z + dz)) {
+              p.pos.x = x + dx + 0.5;
+              p.pos.z = z + dz + 0.5;
+              break search;
+            }
+          }
+      p.pos.y = this.world.height(Math.floor(p.pos.x), Math.floor(p.pos.z)) + 1;
       return;
     }
     for (let y = Math.max(2, Math.floor(p.pos.y)); y < WORLD_HEIGHT - 2; y++) {
@@ -488,6 +502,16 @@ export class Game implements EntityHost {
     input.active = !this.uiOpen && !this.player.dead;
     input.poll(dt);
     const st = input.state;
+    try {
+      this.frameInner(dt, st, t0);
+    } finally {
+      // Toujours consommer les actions de l'image, même si une erreur survient,
+      // sinon elles seraient rejouées à chaque image (menus qui s'ouvrent en boucle).
+      st.clearFrame();
+    }
+  }
+
+  private frameInner(dt: number, st: InputState, t0: number): void {
     this.handleActions();
     // Regard
     const p = this.player;
@@ -511,7 +535,6 @@ export class Game implements EntityHost {
     if (!paused) this.interaction.frame(dt, st);
     this.render(dt, alpha);
     this.updateHud(dt);
-    st.clearFrame();
     this.lastFrameMs = performance.now() - t0;
     this.fpsFrames++;
     this.fpsTime += dt;

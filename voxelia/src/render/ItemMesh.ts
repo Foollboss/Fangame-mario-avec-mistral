@@ -1,11 +1,14 @@
 /**
  * Modèles 3D des objets tenus en main ou posés au sol :
  *  - blocs : petit cube texturé (faces ombrées) ;
- *  - objets : image 16x16 extrudée en volume (pixel par pixel).
+ *  - objets : image 16x16 extrudée en volume (pixel par pixel), icône du pack de
+ *    ressources actif en priorité.
  */
 import * as THREE from 'three';
 import { BLOCKS, Tint, type BlockDef } from '../world/blocks';
 import { ITEMS } from '../items/items';
+import { FOLIAGE_COLORS, GRASS_COLORS, ICON_BIOME } from '../world/biomes';
+import { itemOverridePixels, onItemTexturesChange } from '../packs/itemOverrides';
 import { paintItemIcon } from './textures/itemTextures';
 import type { TextureAtlas } from './TextureAtlas';
 
@@ -16,10 +19,12 @@ export class ItemMeshFactory {
   private geoCache = new Map<string, { geo: THREE.BufferGeometry; tex: THREE.Texture | THREE.Texture[] }>();
 
   constructor(private atlas: TextureAtlas) {
-    atlas.onChange(() => {
+    const flush = () => {
       this.texCache.clear();
       this.geoCache.clear();
-    });
+    };
+    atlas.onChange(flush);
+    onItemTexturesChange(flush);
   }
 
   private pixels(name: string, tint = 0xffffff): Uint8ClampedArray {
@@ -55,8 +60,8 @@ export class ItemMeshFactory {
   }
 
   private tintOf(b: BlockDef): number {
-    if (b.tint === Tint.Grass) return 0x91bd59;
-    if (b.tint === Tint.Foliage) return 0x77ab2f;
+    if (b.tint === Tint.Grass) return GRASS_COLORS[ICON_BIOME];
+    if (b.tint === Tint.Foliage) return FOLIAGE_COLORS[ICON_BIOME];
     if (b.tint === Tint.Fixed) return b.tintColor;
     return 0xffffff;
   }
@@ -87,7 +92,7 @@ export class ItemMeshFactory {
     const texs = names.map((n, i) => {
       if (b.key === 'grass_block' && i !== 2 && i !== 3) {
         const base = this.pixels('grass_side');
-        const ov = this.pixels('grass_side_overlay', 0x91bd59);
+        const ov = this.pixels('grass_side_overlay', tint);
         for (let k = 0; k < base.length; k += 4)
           if (ov[k + 3] > 127) {
             base[k] = ov[k];
@@ -97,7 +102,7 @@ export class ItemMeshFactory {
           }
         return this.texture('grass_side_mix', base);
       }
-      const tt = b.key === 'grass_block' && i === 2 ? 0x91bd59 : b.key === 'grass_block' ? 0xffffff : tint;
+      const tt = b.key === 'grass_block' && i !== 2 ? 0xffffff : tint;
       return this.texture(n + '|' + tt, this.pixels(n, tt));
     });
     const shades = [0.62, 0.62, 1, 0.5, 0.8, 0.8];
@@ -113,8 +118,8 @@ export class ItemMeshFactory {
     const def = ITEMS[itemId];
     let px: Uint8ClampedArray;
     let key = 'item:' + itemId;
-    const painted = def ? paintItemIcon(def.icon ?? def.key, def.data) : null;
-    if (painted) px = painted.data;
+    const painted = def ? (itemOverridePixels(def) ?? paintItemIcon(def.icon ?? def.key, def.data)?.data ?? null) : null;
+    if (painted) px = painted;
     else {
       const b = def?.block !== undefined ? BLOCKS[def.block] : undefined;
       let name = b ? b.tex.top : 'stone';

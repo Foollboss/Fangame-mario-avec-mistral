@@ -19,6 +19,7 @@ if (!existsSync(join(dist, 'game.js'))) {
 }
 
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.ttf': 'font/ttf' };
+// Toute ressource manquante est une erreur (404 compris).
 const server = createServer(async (req, res) => {
   let p = decodeURIComponent((req.url || '/').split('?')[0]);
   if (p === '/') p = '/index.html';
@@ -73,6 +74,21 @@ try {
   await page.waitForTimeout(4000);
   await page.screenshot({ path: join(out, '01-titre.png') });
   check('écran titre affiché', true);
+
+  // Tous les modèles 3D (joueur, créatures, boss, véhicules) doivent se construire
+  const badModels = await page.evaluate(() => {
+    const mf = window.voxelia.models;
+    const bad = [];
+    for (const k of Object.keys(mf.defs)) {
+      try {
+        mf.create(k).dispose();
+      } catch (e) {
+        bad.push(k + ' : ' + e.message);
+      }
+    }
+    return bad;
+  });
+  check('tous les modèles 3D se construisent', badModels.length === 0, badModels.join(' | '));
 
   await clickText(page, /^Jouer$/);
   await page.waitForTimeout(800);
@@ -163,9 +179,10 @@ try {
   await t.page.locator('.title-screen').waitFor({ timeout: 30000 });
   await t.page.waitForTimeout(3000);
   await t.page.screenshot({ path: join(out, '09-titre-mobile.png') });
+  // Nouveau contexte = stockage vide : on crée un monde au doigt.
   await t.page.locator('#ui').getByText(/^Jouer$/).first().tap();
-  await t.page.locator('.world-row').first().waitFor({ timeout: 10000 });
-  await t.page.locator('.world-row').first().tap();
+  await t.page.locator('#ui').getByText(/Créer un nouveau monde/i).first().tap();
+  await t.page.locator('#ui').getByText(/^CRÉER$/i).first().tap();
   await waitGame(t.page);
   await t.page.waitForTimeout(4000);
   const touchVisible = await t.page.evaluate(() => getComputedStyle(document.querySelector('.touch-layer')).display !== 'none');
@@ -175,6 +192,12 @@ try {
   await t.ctx.close();
 } catch (e) {
   check('scénario complet', false, String(e?.message ?? e).split('\n')[0]);
+  for (const c of browser.contexts())
+    for (const p of c.pages()) {
+      const st = await p.evaluate(() => ({ depth: window.voxelia?.ui.depth, screen: window.voxelia?.ui.current?.el?.className, dead: window.voxelia?.game?.player.dead, ui: document.getElementById('ui')?.innerText.slice(0, 300) })).catch(() => null);
+      console.log('état au moment de l’échec :', JSON.stringify(st));
+      await p.screenshot({ path: join(out, 'erreur.png') }).catch(() => undefined);
+    }
 } finally {
   await browser.close();
   server.close();

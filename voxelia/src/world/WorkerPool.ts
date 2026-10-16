@@ -11,6 +11,19 @@ export interface Job {
   key?: string;
 }
 
+/** Pools vivants et état partagé à rejouer pour chaque nouveau pool (packs de ressources). */
+const livePools = new Set<WorkerPool>();
+const sharedState = new Map<string, Record<string, unknown>>();
+
+/**
+ * Envoie un état global (couleurs de biomes, teintes de blocs…) à tous les workers,
+ * y compris ceux des pools créés plus tard. Un seul message conservé par type.
+ */
+export function broadcastShared(msg: Record<string, unknown> & { type: string }): void {
+  sharedState.set(msg.type, msg);
+  for (const p of livePools) p.broadcast(msg);
+}
+
 export class WorkerPool {
   private workers: Worker[] = [];
   private busy: number[] = [];
@@ -29,6 +42,8 @@ export class WorkerPool {
       this.workers.push(w);
       this.busy.push(0);
     }
+    livePools.add(this);
+    for (const m of sharedState.values()) this.broadcast(m);
   }
 
   /** Envoie un message à tous les workers (initialisation, textures). */
@@ -97,6 +112,7 @@ export class WorkerPool {
   }
 
   terminate(): void {
+    livePools.delete(this);
     for (const w of this.workers) w.terminate();
     this.workers = [];
     for (const j of this.queue) j.reject(new Error('terminé'));

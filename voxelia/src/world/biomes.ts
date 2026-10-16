@@ -142,3 +142,112 @@ for (let i = 0; i < BIOME_COUNT; i++) {
   FOLIAGE_COLORS[i] = b.foliage;
   WATER_COLORS[i] = b.water;
 }
+/** Couleurs d'origine (sans pack de ressources). */
+export const DEFAULT_GRASS_COLORS = GRASS_COLORS.slice();
+export const DEFAULT_FOLIAGE_COLORS = FOLIAGE_COLORS.slice();
+/** Biome de référence pour les icônes d'inventaire (herbe, feuilles). */
+export const ICON_BIOME = 5;
+
+// ---------------------------------------------------------------- palettes des packs de ressources
+
+/**
+ * Climat (température, humidité) utilisé pour lire les palettes « grass.png » et
+ * « foliage.png » d'un pack, comme le jeu de référence. null = couleurs fixes conservées
+ * (marécage, canyons, cerisiers, biomes propres à Voxelia). Les biomes fantastiques
+ * gardent toujours leurs couleurs. Avec la palette d'origine, ces climats redonnent
+ * exactement les couleurs ci-dessus.
+ */
+const CLIMATES: Record<string, [number, number] | null> = {
+  ocean: [0.5, 0.5],
+  deep_ocean: [0.5, 0.5],
+  warm_ocean: [0.5, 0.5],
+  frozen_ocean: [0, 0.5],
+  beach: [0.8, 0.4],
+  plains: [0.8, 0.4],
+  flower_meadow: [0.5, 0.8],
+  forest: [0.7, 0.8],
+  birch_forest: [0.6, 0.6],
+  dark_forest: [0.7, 0.8],
+  jungle: [0.95, 0.9],
+  desert: [2, 0],
+  savanna: [2, 0],
+  taiga: [0.25, 0.8],
+  snowy_plains: [0, 0.5],
+  snowy_taiga: [-0.5, 0.4],
+  ice_spikes: [0, 0.5],
+  mountains: [0.2, 0.3],
+  snowy_peaks: [-0.7, 0.9],
+  mushroom_fields: [0.9, 1],
+  river: [0.5, 0.5],
+  frozen_river: [0, 0.5],
+  stony_shore: [0.2, 0.3],
+  tropical_islands: [0.95, 0.9],
+  meadow: [0.5, 0.8],
+  ember_wastes: [2, 0],
+  basalt_deltas: [2, 0],
+  ash_dunes: [2, 0],
+};
+
+/** Climat d'un biome pour les palettes (null = couleurs fixes). */
+export function biomeClimate(b: BiomeDef): [number, number] | null {
+  if (b.fantasy) return null;
+  return CLIMATES[b.key] ?? null;
+}
+
+/** Palette de couleurs (image RGBA, 256x256 en principe). */
+export interface ColorMap {
+  width: number;
+  height: number;
+  data: Uint8Array;
+}
+
+/** Couleur d'une palette pour un climat, selon la formule du jeu de référence. */
+export function sampleColormap(map: ColorMap, temperature: number, downfall: number): number {
+  const t = Math.min(1, Math.max(0, temperature));
+  const d = Math.min(1, Math.max(0, downfall)) * t;
+  const x = Math.min(map.width - 1, Math.floor((1 - t) * (map.width - 1)));
+  const y = Math.min(map.height - 1, Math.floor((1 - d) * (map.height - 1)));
+  const i = (y * map.width + x) * 4;
+  return (map.data[i] << 16) | (map.data[i + 1] << 8) | map.data[i + 2];
+}
+
+/** Herbe de la forêt sombre : couleur de palette mélangée à un vert foncé. */
+function darkForestGrass(c: number): number {
+  return ((c & 0xfefefe) + 0x28340a) >> 1;
+}
+
+/**
+ * Calcule les couleurs d'herbe et de feuillage de chaque biome à partir des palettes
+ * d'un pack (null = couleurs d'origine pour cette palette).
+ */
+export function biomeColorsFromColormaps(grass: ColorMap | null, foliage: ColorMap | null): { grass: Int32Array; foliage: Int32Array } {
+  const g = DEFAULT_GRASS_COLORS.slice();
+  const f = DEFAULT_FOLIAGE_COLORS.slice();
+  for (let i = 0; i < BIOME_COUNT; i++) {
+    const b = BIOMES[i] ?? BIOMES[5];
+    const c = biomeClimate(b);
+    if (!c) continue;
+    if (grass) {
+      const v = sampleColormap(grass, c[0], c[1]);
+      g[i] = b.key === 'dark_forest' ? darkForestGrass(v) : v;
+    }
+    if (foliage) f[i] = sampleColormap(foliage, c[0], c[1]);
+  }
+  return { grass: g, foliage: f };
+}
+
+/**
+ * Installe des tables de couleurs (maillage) et met à jour les définitions de biomes
+ * (carte, icônes). Appelé sur le fil principal et dans chaque worker.
+ */
+export function setBiomeColorTables(grass: ArrayLike<number>, foliage: ArrayLike<number>): void {
+  for (let i = 0; i < BIOME_COUNT; i++) {
+    GRASS_COLORS[i] = grass[i] ?? DEFAULT_GRASS_COLORS[i];
+    FOLIAGE_COLORS[i] = foliage[i] ?? DEFAULT_FOLIAGE_COLORS[i];
+  }
+  for (const b of BIOMES) {
+    if (!b) continue;
+    b.grass = GRASS_COLORS[b.id];
+    b.foliage = FOLIAGE_COLORS[b.id];
+  }
+}

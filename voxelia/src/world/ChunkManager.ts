@@ -63,6 +63,13 @@ export class ChunkManager {
   readonly root = new THREE.Group();
   stats = { meshes: 0, visibleSections: 0, quads: 0 };
   private generationEpoch = 0;
+  /** La visibilité n'est recalculée que si la caméra change de section ou si des maillages changent. */
+  private visDirty = true;
+  private lastCull = '';
+  private allDesiredLoaded = false;
+  private cullQueue = new Int32Array(0);
+  private cullVisited = new Uint8Array(0);
+  private cullGrid: Array<Chunk | undefined> = [];
 
   constructor(
     private pool: WorkerPool,
@@ -94,6 +101,8 @@ export class ChunkManager {
     this.hasSky = hasSky;
     this.lastCenter = '';
     this.generationEpoch++;
+    this.visDirty = true;
+    this.allDesiredLoaded = false;
   }
 
   /** Remaille tout (changement d'options graphiques ou de textures). */
@@ -125,8 +134,10 @@ export class ChunkManager {
           this.hooks.onUnload?.(c);
           c.dispose();
           this.chunks.delete(k);
+          this.visDirty = true;
         }
       }
+      this.allDesiredLoaded = false;
       this.pool.cancel((j) => {
         if (j.msg.type !== 'gen') return false;
         const dx = (j.msg.cx as number) - pcx;
@@ -144,13 +155,18 @@ export class ChunkManager {
       });
     }
 
-    // Chargements
-    const maxLoads = this.pool.size * 3;
-    for (const [cx, cz, d] of this.desired) {
-      if (this.loading.size >= maxLoads) break;
-      const k = this.key(cx, cz);
-      if (this.chunks.has(k) || this.loading.has(k)) continue;
-      this.requestLoad(cx, cz, d);
+    // Chargements (on arrête de parcourir la liste quand tout est chargé)
+    if (!this.allDesiredLoaded) {
+      const maxLoads = this.pool.size * 3;
+      let missing = 0;
+      for (const [cx, cz, d] of this.desired) {
+        const k = this.key(cx, cz);
+        if (this.chunks.has(k)) continue;
+        missing++;
+        if (this.loading.has(k) || this.loading.size >= maxLoads) continue;
+        this.requestLoad(cx, cz, d);
+      }
+      if (missing === 0) this.allDesiredLoaded = true;
     }
 
     // Maillages
@@ -215,12 +231,14 @@ export class ChunkManager {
       })
       .catch((e: Error) => {
         this.loading.delete(k);
+        this.allDesiredLoaded = false;
         if (e.message !== 'annulé' && e.message !== 'terminé') console.error('Chargement du tronçon', cx, cz, e);
       });
   }
 
   private addChunk(c: Chunk, fresh: boolean, markers: GenMarker[]): void {
     this.chunks.set(this.key(c.cx, c.cz), c);
+    this.visDirty = true;
     this.root.add(c.group);
     this.hooks.onLoaded?.(c, fresh, markers);
     // Les voisins déjà maillés doivent être remaillés pour fermer les bords et la lumière.
@@ -309,6 +327,7 @@ export class ChunkManager {
   }
 
   private applyMesh(c: Chunk, sections: SectionMesh[]): void {
+    this.visDirty = true;
     for (const s of sections) {
       const sec = c.sections[s.sy];
       if (s.vis & 0x10000) {
@@ -343,6 +362,10 @@ export class ChunkManager {
     const ccz = Math.floor(cam.z / 16);
     let csy = Math.floor(cam.y / 16);
     const R = this.renderDistance + 1;
+    const key = ccx + ',' + ccz + ',' + csy + ',' + R;
+    if (!this.visDirty && key === this.lastCull) return;
+    this.visDirty = false;
+    this.lastCull = key;
     // Hors du monde verticalement : tout est visible.
     if (csy < 0 || csy > 15 || !this.get(ccx, ccz)?.meshedOnce) {
       let quads = 0;
@@ -358,26 +381,44 @@ export class ChunkManager {
         }
       this.stats.visibleSections = vis;
       this.stats.quads = quads;
+      // Le tronçon de la caméra n'est pas encore maillé : on réessaiera.
+      this.visDirty = true;
       return;
     }
     csy = Math.max(0, Math.min(15, csy));
-    // Marquage des sections visitées : clé locale dans une grille (2R+1)² x 16
+    // Grille locale (2R+1)² des tronçons, marquage des sections visitées et file sans allocation
     const W = 2 * R + 1;
-    const visited = new Uint8Array(W * W * 16);
-    const queue: number[] = [];
-    const enc = (dx: number, sy: number, dz: number, from: number, dirs: number) => {
-      queue.push(dx + R, sy, dz + R, from, dirs);
-    };
+    const cells = W * W * 16;
+    if (this.cullVisited.length !== cells) {
+      this.cullVisited = new Uint8Array(cells);
+      this.cullQueue = new Int32Array(cells * 5);
+    }
+    const visited = this.cullVisited;
+    visited.fill(0);
+    const grid = this.cullGrid;
+    grid.length = W * W;
+    grid.fill(undefined);
+    for (const c of this.chunks.values()) {
+      const gx = c.cx - ccx + R;
+      const gz = c.cz - ccz + R;
+      if (gx >= 0 && gz >= 0 && gx < W && gz < W) grid[gz * W + gx] = c;
+    }
+    const queue = this.cullQueue;
+    let tail = 0;
     visited[(R * W + R) * 16 + csy] = 1;
-    enc(0, csy, 0, -1, 0);
+    queue[tail++] = R;
+    queue[tail++] = csy;
+    queue[tail++] = R;
+    queue[tail++] = -1;
+    queue[tail++] = 0;
     let head = 0;
-    while (head < queue.length) {
+    while (head < tail) {
       const gx = queue[head++];
       const sy = queue[head++];
       const gz = queue[head++];
       const from = queue[head++];
       const dirs = queue[head++];
-      const c = this.get(ccx + gx - R, ccz + gz - R);
+      const c = grid[gz * W + gx];
       const vis = c && c.meshedOnce ? c.sections[sy].vis : 0x7fff;
       for (let f = 0; f < 6; f++) {
         // Ne jamais revenir en arrière
@@ -391,7 +432,11 @@ export class ChunkManager {
         const vi = (nz * W + nx) * 16 + ny;
         if (visited[vi]) continue;
         visited[vi] = 1;
-        queue.push(nx, ny, nz, OPP[f], dirs | (1 << f));
+        queue[tail++] = nx;
+        queue[tail++] = ny;
+        queue[tail++] = nz;
+        queue[tail++] = OPP[f];
+        queue[tail++] = dirs | (1 << f);
       }
     }
     let quads = 0;

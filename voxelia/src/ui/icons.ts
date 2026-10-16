@@ -88,7 +88,9 @@ export function icon(name: string): string {
   if (url) return url;
   const d = DEFS[name];
   if (!d) return '';
-  url = render(d[0], d[1]);
+  // Les icônes de statut (cœurs, faim, armure, bulles) remplissent leur case : canevas 9×9.
+  const stat = /^(heart|hunger|armor|bubble)/.test(name);
+  url = render(d[0], d[1], stat ? 9 : 16);
   cache.set(name, url);
   return url;
 }

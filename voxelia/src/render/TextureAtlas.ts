@@ -11,6 +11,20 @@ import type { TextureInfo } from '../world/mesher';
 
 export const TEX_SIZE = 16;
 
+/**
+ * Images d'animation réservées en plus pour les packs de ressources : l'atlas joue
+ * 10 images par seconde, ce qui reproduit la vitesse des liquides et du feu des packs
+ * (32 images de 2 ticks pour l'eau, 32 images d'1 tick pour le feu…). Les textures
+ * procédurales répètent simplement leur cycle.
+ */
+export const PACK_FRAME_SLOTS: Record<string, number> = {
+  water_still: 32,
+  water_flow: 32,
+  lava_still: 32,
+  lava_flow: 32,
+  fire: 16,
+};
+
 export class TextureAtlas {
   readonly info: Record<string, TextureInfo> = {};
   readonly names: string[] = [];
@@ -28,7 +42,7 @@ export class TextureAtlas {
     // Calque 0 : texture manquante
     let layer = 1;
     for (const n of names) {
-      const frames = ANIMATED[n] ?? 1;
+      const frames = Math.max(ANIMATED[n] ?? 1, PACK_FRAME_SLOTS[n] ?? 1);
       this.info[n] = { layer, frames };
       this.names.push(n);
       layer += frames;
@@ -39,8 +53,9 @@ export class TextureAtlas {
     this.writeLayer(0, missingTexture());
     for (const n of names) {
       const { layer: l, frames } = this.info[n];
+      const painted = ANIMATED[n] ?? 1;
       for (let f = 0; f < frames; f++) {
-        const p = paintBlockTexture(n, f) ?? missingTexture();
+        const p = paintBlockTexture(n, f % painted) ?? missingTexture();
         this.writeLayer(l + f, p);
         if (f === 0) this.averages.set(n, p.average());
       }
@@ -85,6 +100,35 @@ export class TextureAtlas {
     return true;
   }
 
+  /**
+   * Remplace toutes les images d'une texture (pack de ressources) : `frames[f]` va dans
+   * l'image f de l'atlas ; s'il y en a moins que d'images d'atlas, on boucle.
+   */
+  setFrames(name: string, frames: Array<Uint8Array | Uint8ClampedArray>): boolean {
+    const i = this.info[name];
+    if (!i || !frames.length) return false;
+    const px = TEX_SIZE * TEX_SIZE * 4;
+    for (let f = 0; f < i.frames; f++) this.data.set(frames[f % frames.length].subarray(0, px), (i.layer + f) * px);
+    this.updateAverage(name);
+    return true;
+  }
+
+  private updateAverage(name: string): void {
+    const px = this.pixels(name);
+    let r = 0,
+      g = 0,
+      b = 0,
+      k = 0;
+    for (let j = 0; j < px.length; j += 4)
+      if (px[j + 3] > 127) {
+        r += px[j];
+        g += px[j + 1];
+        b += px[j + 2];
+        k++;
+      }
+    if (k) this.averages.set(name, [r / k, g / k, b / k]);
+  }
+
   /** Lecture des pixels actuels d'une texture (icônes, particules). */
   pixels(name: string, frame = 0): Uint8Array {
     const i = this.info[name];
@@ -98,24 +142,11 @@ export class TextureAtlas {
     for (const l of this.listeners) l();
   }
 
-  resetToOriginal(): void {
+  /** Revient aux textures procédurales ; `notify = false` laisse l'appelant faire commit(). */
+  resetToOriginal(notify = true): void {
     this.data.set(this.original);
-    for (const n of this.names) {
-      const px = this.pixels(n);
-      let r = 0,
-        g = 0,
-        b = 0,
-        k = 0;
-      for (let j = 0; j < px.length; j += 4)
-        if (px[j + 3] > 127) {
-          r += px[j];
-          g += px[j + 1];
-          b += px[j + 2];
-          k++;
-        }
-      if (k) this.averages.set(n, [r / k, g / k, b / k]);
-    }
-    this.commit();
+    for (const n of this.names) this.updateAverage(n);
+    if (notify) this.commit();
   }
 
   onChange(fn: () => void): void {

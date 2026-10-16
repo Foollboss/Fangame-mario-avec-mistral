@@ -116,6 +116,26 @@ export class InventoryScreen implements Screen {
     this.unsub.push(inv.onChange(() => this.onInventoryChanged()));
     this.renderLeft();
     this.refreshAll();
+    requestAnimationFrame(() => this.fit(wrap));
+    this.onResize = () => this.fit(wrap);
+    window.addEventListener('resize', this.onResize);
+  }
+
+  private onResize: (() => void) | null = null;
+
+  /** Réduit l'échelle de l'interface si les panneaux dépassent de l'écran (petits écrans larges). */
+  private fit(wrap: HTMLElement): void {
+    this.el.style.removeProperty('--u');
+    // Mesure la taille naturelle (sans la limite de hauteur de .inv-wrap)
+    const prevMax = wrap.style.maxHeight;
+    wrap.style.maxHeight = 'none';
+    const r = wrap.getBoundingClientRect();
+    wrap.style.maxHeight = prevMax;
+    const k = Math.min(1, (window.innerHeight * 0.97) / Math.max(1, r.height), (window.innerWidth * 0.98) / Math.max(1, r.width));
+    if (k < 1) {
+      const u = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--u')) || 2;
+      this.el.style.setProperty('--u', (u * k).toFixed(3) + 'px');
+    }
   }
 
   // ------------------------------------------------------------------ construction
@@ -711,6 +731,7 @@ export class InventoryScreen implements Screen {
   }
 
   destroy(): void {
+    if (this.onResize) window.removeEventListener('resize', this.onResize);
     hideTooltip();
     clearTimeout(this.longTimer);
     const g = this.g;

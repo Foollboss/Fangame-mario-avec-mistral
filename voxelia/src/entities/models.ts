@@ -325,14 +325,14 @@ MODELS.horse = quad({ body: [10, 10, 22], leg: [4, 14, 4], head: [6, 6, 11], nec
     for (const k of ['front', 'back', 'left', 'right'] as const) s.rect(l[k][0], l[k][1] + 11, l[k][2], 3, 0xe8e0d0);
   }
 });
-const deerPaint = (c: number, belly: number, antler: number) => (s: Skin, f: FaceFn) => {
+const deerPaint = (c: number, belly: number, antler: number, antlerCount = 4) => (s: Skin, f: FaceFn) => {
   paintPart(s, f, 'body', c, 0.05, { bottom: belly });
   paintPart(s, f, 'neck', c, 0.05);
   const head = paintPart(s, f, 'head', c, 0.05);
   s.rect(head.front[0], head.front[1] + 3, head.front[2], 2, 0x2a1a10);
   eyes(s, head.left, 1, 0x1a1a1a, 0x1a1a1a, 3, 1);
   eyes(s, head.right, 1, 0x1a1a1a, 0x1a1a1a, 3, 1);
-  for (const a of ['antler0', 'antler1', 'antler2', 'antler3']) paintPart(s, f, a, antler, 0.05);
+  for (let i = 0; i < antlerCount; i++) paintPart(s, f, 'antler' + i, antler, 0.05);
   paintPart(s, f, 'tail', belly);
   for (let i = 0; i < 4; i++) paintPart(s, f, 'leg' + i, shade(c, 0.85));
 };
@@ -344,7 +344,7 @@ const antlers: PartSpec[] = [
 ];
 MODELS.deer = quad({ body: [8, 9, 18], leg: [3, 14, 3], head: [5, 5, 8], neck: [4, 9, 4], tail: [3, 4, 2], extras: antlers }, deerPaint(0x9a6a40, 0xe8dcc8, 0xd8c8a0));
 MODELS.golden_stag = quad({ body: [8, 9, 18], leg: [3, 14, 3], head: [5, 5, 8], neck: [4, 9, 4], tail: [3, 4, 2], extras: antlers }, deerPaint(0xe8c040, 0xfff0b0, 0xffffff), 1.1);
-MODELS.goat = quad({ body: [8, 9, 14], leg: [3, 10, 3], head: [5, 6, 7], neck: [4, 6, 4], tail: [2, 3, 2], extras: antlers.slice(0, 2) }, deerPaint(0xe8e4dc, 0xd8d0c4, 0x8a8a7a));
+MODELS.goat = quad({ body: [8, 9, 14], leg: [3, 10, 3], head: [5, 6, 7], neck: [4, 6, 4], tail: [2, 3, 2], extras: antlers.slice(0, 2) }, deerPaint(0xe8e4dc, 0xd8d0c4, 0x8a8a7a, 2));
 MODELS.fox = quad({ body: [6, 6, 12], leg: [2, 6, 2], head: [7, 6, 6], headY: 5, tail: [4, 4, 9], extras: [
   { name: 'ear0', parent: 'head', size: [2, 2, 1], pivot: [2, 3, -2], offset: [-1, 0, 0] },
   { name: 'ear1', parent: 'head', size: [2, 2, 1], pivot: [-2, 3, -2], offset: [-1, 0, 0] },

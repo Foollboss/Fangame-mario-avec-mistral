@@ -6,6 +6,8 @@ import { OverworldGenerator, type GeneratedColumn } from '../world/gen/overworld
 import { EmberGenerator, SkyGenerator } from '../world/gen/otherDims';
 import { TerrainMesher, type TextureInfo } from '../world/mesher';
 import type { GenOptions } from '../world/gen/terrain';
+import { setBiomeColorTables } from '../world/biomes';
+import { BLOCKS } from '../world/blocks';
 
 interface Gen {
   generate(cx: number, cz: number): GeneratedColumn;
@@ -31,6 +33,18 @@ ctx.onmessage = (e: MessageEvent) => {
       }
       case 'textures':
         mesher.setTextures(m.textures as Record<string, TextureInfo>);
+        break;
+      // Packs de ressources : couleurs d'herbe/feuillage par biome et teintes de blocs.
+      case 'biomeColors':
+        setBiomeColorTables(m.grass as Int32Array, m.foliage as Int32Array);
+        break;
+      case 'blockTints':
+        for (const [id, tint, color] of m.tints as Array<[number, number, number]>) {
+          const b = BLOCKS[id];
+          if (!b) continue;
+          b.tint = tint;
+          b.tintColor = color;
+        }
         break;
       case 'gen': {
         const g = gens[m.dim] ?? gens[0];

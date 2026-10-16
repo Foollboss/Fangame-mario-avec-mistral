@@ -27,21 +27,26 @@ export class HandRenderer {
     this.scene.add(this.pivot);
   }
 
+  /** Placement du bras (réglable) : position et rotation dans le repère du pivot. */
+  armPos = new THREE.Vector3(0.1, -0.16, 0.06);
+  armRot = new THREE.Euler(2.25, 0.12, 0.12, 'YXZ');
+
   setSkin(key: string): void {
     if (key === this.armKey) return;
     this.arm?.dispose();
+    this.pivot.children.filter((c) => c.userData.isArm).forEach((c) => this.pivot.remove(c));
     this.arm = this.models.create(key);
     this.armKey = key;
-    for (const [name, g] of this.arm.parts) if (name !== 'rightArm') g.children.forEach((c) => (c.visible = false));
-    // On ne garde que le bras droit, placé dans le champ de vision.
-    const arm = this.arm.parts.get('rightArm')!;
-    this.arm.root.updateMatrixWorld(true);
+    // On reprend uniquement la géométrie et la peau du bras droit du modèle du joueur.
+    const src = this.arm.parts.get('rightArm');
+    const mesh = src?.children.find((c) => (c as THREE.Mesh).isMesh) as THREE.Mesh | undefined;
+    if (!mesh) return;
     const holder = new THREE.Group();
-    holder.add(this.arm.root);
-    this.arm.root.position.set(-0.32, -1.25, 0.1);
-    this.arm.root.rotation.set(0, 0, 0);
-    void arm;
-    this.pivot.children.filter((c) => c.userData.isArm).forEach((c) => this.pivot.remove(c));
+    const m = new THREE.Mesh(mesh.geometry, this.arm.material);
+    m.scale.setScalar(1 / 16);
+    holder.add(m);
+    holder.position.copy(this.armPos);
+    holder.rotation.copy(this.armRot);
     holder.userData.isArm = true;
     this.pivot.add(holder);
   }
@@ -57,13 +62,13 @@ export class HandRenderer {
     const g = new THREE.Group();
     g.add(m);
     if (m.userData.isBlock) {
-      m.scale.setScalar(0.4);
+      m.scale.setScalar(0.3);
       m.rotation.set(0, Math.PI / 4, 0);
-      g.position.set(0.1, -0.12, -0.2);
+      g.position.set(0.07, -0.1, -0.16);
     } else {
-      m.scale.setScalar(0.62);
+      m.scale.setScalar(0.5);
       m.rotation.set(0, -Math.PI / 2 + 0.3, 0.6);
-      g.position.set(0.12, 0.02, -0.15);
+      g.position.set(0.07, 0.02, -0.14);
     }
     this.item = g;
     this.pivot.add(g);
@@ -91,20 +96,29 @@ export class HandRenderer {
       p.rotation.set(0, -1.2, 0.2);
     }
     if (this.arm) this.arm.setLight(light, false);
+    for (const c of this.pivot.children)
+      if (c.userData.isArm) {
+        c.position.copy(this.armPos);
+        c.rotation.copy(this.armRot);
+      }
     this.item?.traverse((o) => {
       const m = (o as THREE.Mesh).material;
       if (!m) return;
       for (const mm of Array.isArray(m) ? m : [m]) (mm as THREE.MeshBasicMaterial).color?.setScalar(light);
     });
-    // Le bras n'apparaît que sans objet (comme dans le jeu de référence, bras + objet sont visibles)
+    // La main nue est visible ; un objet tenu la remplace (il serait sinon dessiné à travers le bras).
     p.children.forEach((c) => {
-      if (c.userData.isArm) c.visible = true;
+      if (c.userData.isArm) c.visible = !this.item;
     });
   }
 
   render(r: THREE.WebGLRenderer): void {
     if (!this.visible) return;
+    // Dessin par-dessus le monde : on efface seulement la profondeur, pas l'image.
+    const auto = r.autoClear;
+    r.autoClear = false;
     r.clearDepth();
     r.render(this.scene, this.camera);
+    r.autoClear = auto;
   }
 }
