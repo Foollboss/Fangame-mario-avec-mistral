@@ -1452,6 +1452,8 @@ export class Game implements EntityHost {
   /** Objets connus (recettes débloquées) — tous en créatif. */
   knownItems(): Set<string> {
     if (this.player.creative) return new Set(ITEMS.filter(Boolean).map((i) => i.key));
+    // Tout objet présent dans l'inventaire compte comme découvert (coffres, commandes, échanges…)
+    for (const s of this.player.inventory.slots) if (s) this.player.noteItem(s);
     return this.player.seenItems;
   }
 }

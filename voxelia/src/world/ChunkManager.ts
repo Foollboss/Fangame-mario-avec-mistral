@@ -468,8 +468,11 @@ export class ChunkManager {
     const pcz = Math.floor(pz / 16);
     let done = 0;
     let total = 0;
+    // Même disque que celui où les tronçons sont maillés (les coins d'un carré ne le sont pas)
+    const r2 = Math.min(radius + 0.5, this.renderDistance + 0.5) ** 2;
     for (let dz = -radius; dz <= radius; dz++)
       for (let dx = -radius; dx <= radius; dx++) {
+        if (dx * dx + dz * dz > r2) continue;
         total++;
         const c = this.get(pcx + dx, pcz + dz);
         if (c && c.meshedOnce) done++;

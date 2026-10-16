@@ -128,17 +128,19 @@ interface Layout {
 export function detectLayout(src: PackSource): Layout | null {
   const names = src.names;
   let javaRoot: string | null = null;
-  let legacy = false;
+  const dirs = new Map<string, Set<string>>();
   for (const n of names) {
-    const m = /^(.*?)assets\/minecraft\/textures\/(block|blocks|item|items)\//.exec(n);
+    const m = /^(.*?)assets\/minecraft\/textures\/(block|blocks|item|items|colormap|entity)\//.exec(n);
     if (!m) continue;
     const root = m[1];
-    if (javaRoot === null || root.length < javaRoot.length) {
-      javaRoot = root;
-      legacy = m[2] === 'blocks' || m[2] === 'items';
-    } else if (root === javaRoot && (m[2] === 'block' || m[2] === 'item')) legacy = false;
+    if (!dirs.has(root)) dirs.set(root, new Set());
+    dirs.get(root)!.add(m[2]);
+    if (javaRoot === null || root.length < javaRoot.length) javaRoot = root;
   }
   if (javaRoot !== null) {
+    // Ancien format (avant 1.13) : dossiers au pluriel uniquement.
+    const d = dirs.get(javaRoot)!;
+    const legacy = (d.has('blocks') || d.has('items')) && !d.has('block') && !d.has('item');
     const base = javaRoot + 'assets/minecraft/textures/';
     const blockDir = base + (legacy ? 'blocks/' : 'block/');
     const itemDir = base + (legacy ? 'items/' : 'item/');
@@ -160,7 +162,7 @@ export function detectLayout(src: PackSource): Layout | null {
   // Bedrock : manifeste ou dossier textures/blocks à la racine (ou dans un sous-dossier).
   let bedRoot: string | null = null;
   for (const n of names) {
-    const m = /^(.*?)textures\/(blocks|items)\//.exec(n);
+    const m = /^(.*?)textures\/(blocks|items|colormap)\//.exec(n);
     if (m && (bedRoot === null || m[1].length < bedRoot.length)) bedRoot = m[1];
   }
   if (bedRoot === null) return null;

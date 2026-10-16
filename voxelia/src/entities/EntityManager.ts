@@ -520,7 +520,7 @@ export class EntityManager {
         m2.position.set(0.06, 0.04, 0.05);
         obj.add(m2);
       }
-      return { obj, mats: [mesh.material as THREE.MeshBasicMaterial] };
+      return { obj, mats: (Array.isArray(mesh.material) ? mesh.material : [mesh.material]) as THREE.MeshBasicMaterial[] };
     }
     if (e instanceof XpOrb) {
       const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.xpTexture, transparent: true, depthWrite: false }));
