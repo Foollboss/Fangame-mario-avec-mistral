@@ -236,7 +236,10 @@ export class ParticleSystem {
     const tex = def.tex.north || def.tex.top;
     const info = this.atlas.info[tex];
     const layer = info ? info.layer : 0;
-    const tint = blockId === 2 ? 0xffffff : def.tint ? (def.tint === 4 ? def.tintColor : def.tint === 3 ? 0x44aff5 : 0x77ab2f) : 0xffffff;
+    // Teinte du biome réel (couleurs mises à jour par les palettes des packs de ressources)
+    const bio = this.world()?.biome(Math.floor(x), Math.floor(z));
+    const biomeTint = def.tint === 1 ? (bio?.grass ?? 0x77ab2f) : def.tint === 2 ? (bio?.foliage ?? 0x77ab2f) : (bio?.water ?? 0x44aff5);
+    const tint = blockId === 2 ? 0xffffff : def.tint ? (def.tint === 4 ? def.tintColor : biomeTint) : 0xffffff;
     const n = Math.round((few ? 2 : 32) * this.density);
     for (let i = 0; i < n; i++) {
       let px = x + Math.random();

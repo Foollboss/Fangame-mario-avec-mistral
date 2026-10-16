@@ -729,6 +729,7 @@ export class CreditsScreen implements Screen {
     const libs = [
       'Three.js — moteur de rendu 3D (licence MIT)',
       'ws — serveur WebSocket du mode multijoueur (licence MIT)',
+      'fflate — lecture des archives des packs de ressources (licence MIT)',
       'TypeScript (licence Apache 2.0) et esbuild (licence MIT) — outils de développement',
     ];
     return [
