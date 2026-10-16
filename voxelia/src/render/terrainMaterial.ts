@@ -126,7 +126,7 @@ void main() {
   float blk = curve(vLight.y);
   vec3 skyCol = sky * uSkyTint;
   vec3 blkCol = blk * vec3(1.0, 0.86, 0.68);
-  vec3 light = max(skyCol, blkCol) + 0.035 + uFlash * 0.6 * curve(vLight.x);
+  vec3 light = max(skyCol, blkCol) + 0.05 + uFlash * 0.6 * curve(vLight.x);
   color *= light * vShade;
 
   float fog = smoothstep(uFogNear, uFogFar, vFogDepth);

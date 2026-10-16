@@ -203,11 +203,11 @@ export class Sky {
       moonMat.needsUpdate = true;
     }
 
-    // Lumière du jour (0.18 la nuit, 1 le jour)
+    // Lumière du jour (0.26 la nuit, 1 le jour)
     let day = THREE.MathUtils.clamp(elev * 2.4 + 0.45, 0, 1);
     const dimDay = state.dimension === 1 ? 0.55 : state.dimension === 2 ? 1 : day;
     const rainDark = 1 - state.rain * 0.35 - state.thunder * 0.25;
-    this.daylight = Math.max(state.dimension === 0 ? 0.16 : 0.5, dimDay * rainDark);
+    this.daylight = Math.max(state.dimension === 0 ? 0.26 : 0.5, dimDay * rainDark);
     day = state.dimension === 0 ? day : dimDay;
 
     const top = new THREE.Color();

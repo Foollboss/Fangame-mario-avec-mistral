@@ -650,7 +650,7 @@ export class Game implements EntityHost {
     const angle = (this.meta.time / 24000) * Math.PI * 2;
     const day = Math.min(1, Math.max(0, Math.sin(angle) * 2.4 + 0.45));
     const rain = 1 - this.weather.rain * 0.35 - this.weather.thunder * 0.25;
-    return Math.max(0.16, day * rain);
+    return Math.max(0.26, day * rain); // la nuit reste lisible ; ciel 15 × 0.26 ≈ 4 : les monstres apparaissent encore
   }
 
   // ------------------------------------------------------------------ rendu
