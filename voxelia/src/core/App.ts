@@ -375,9 +375,7 @@ export class App implements AppContext, GameApp {
       this.closeLoading();
       this.ui.clear();
       if (!this.touchMode) this.input.requestPointerLock();
-      // Mémorise le serveur
-      const servers = this.settings.data.servers;
-      if (!servers.some((s) => s.address === address)) this.settings.set('servers', [...servers, { name: w.name, address, invite }]);
+      // Les écrans décident d'enregistrer le serveur ; on retient seulement le dernier utilisé.
       this.settings.set('lastServer', address);
     } catch (e) {
       console.error(e);

@@ -279,6 +279,10 @@ export class SaveManager {
     await this.db.batch(ops);
   }
 
+  async savePlayer(worldId: string, save: PlayerSave, playerKey = 'local'): Promise<void> {
+    await this.db.batch([{ store: 'players', key: worldId + '|' + playerKey, value: save }]);
+  }
+
   async loadPlayer(worldId: string, playerKey = 'local'): Promise<PlayerSave | undefined> {
     return this.db.get<PlayerSave>('players', worldId + '|' + playerKey);
   }

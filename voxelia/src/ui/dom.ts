@@ -64,7 +64,13 @@ export function toggle(value: boolean, onChange: (v: boolean) => void, disabled 
   };
   t.addEventListener('click', flip);
   t.addEventListener('keydown', (e) => {
-    if ((e as KeyboardEvent).code === 'Enter' || (e as KeyboardEvent).code === 'Space') flip();
+    const k = e as KeyboardEvent;
+    if (k.code === 'Enter' || k.code === 'Space') {
+      // Empêche la navigation clavier globale de « cliquer » une seconde fois.
+      k.preventDefault();
+      k.stopPropagation();
+      flip();
+    }
   });
   return t;
 }
