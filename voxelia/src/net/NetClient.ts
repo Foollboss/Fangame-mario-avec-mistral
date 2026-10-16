@@ -235,7 +235,17 @@ export class NetClient {
     switch (m.t) {
       case 'chunk': {
         const key = `${m.dim}|${m.cx},${m.cz}`;
-        if (m.blocks.length || m.be.length) this.diffs.set(key, { blocks: m.blocks, be: m.be });
+        if (m.blocks.length || m.be.length) {
+          // Les modifications reçues entre-temps (plus récentes) gardent la priorité
+          const prev = this.diffs.get(key);
+          const blocks = new Map<number, number>(m.blocks);
+          const be = new Map<number, unknown>(m.be);
+          if (prev) {
+            for (const [i, r] of prev.blocks) blocks.set(i, r);
+            for (const [i, d] of prev.be) be.set(i, d);
+          }
+          this.diffs.set(key, { blocks: [...blocks], be: [...be] });
+        }
         const w = this.chunkWaiters.get(key);
         this.chunkWaiters.delete(key);
         w?.forEach((f) => f());
@@ -243,15 +253,22 @@ export class NetClient {
       }
       case 'block':
         if (g && m.dim === g.dimension && g.world.isLoaded(m.x, m.z)) g.world.setRaw(m.x, m.y, m.z, m.raw, 'remote');
+        else this.stash(m.dim, m.x, m.y, m.z, m.raw, undefined);
         break;
       case 'denied':
         if (g && m.dim === g.dimension) {
-          g.world.setRaw(m.x, m.y, m.z, m.raw, 'remote');
-          g.message('Action refusée par le serveur.');
+          // -1 : le serveur ne connaît pas ce bloc (terrain d'origine) — on garde l'état local.
+          if (m.raw >= 0) g.world.setRaw(m.x, m.y, m.z, m.raw, 'remote');
+          const now = performance.now();
+          if (now - this.lastDenied > 3000) {
+            this.lastDenied = now;
+            g.message('Action refusée par le serveur.');
+          }
         }
         break;
       case 'be':
-        if (g && m.dim === g.dimension) g.world.setBlockEntity(m.x, m.y, m.z, m.data as never);
+        if (g && m.dim === g.dimension && g.world.isLoaded(m.x, m.z)) g.world.setBlockEntity(m.x, m.y, m.z, m.data as never);
+        else this.stash(m.dim, m.x, m.y, m.z, undefined, m.data);
         break;
       case 'join':
         this.players.set(m.id, { state: null, name: m.name, skin: m.skin, entity: null });
@@ -286,6 +303,28 @@ export class NetClient {
       case 'error':
         g?.message('Serveur : ' + m.message);
         break;
+    }
+  }
+
+  private lastDenied = 0;
+
+  /** Modification reçue pour un tronçon pas encore chargé : appliquée à sa génération. */
+  private stash(dim: number, x: number, y: number, z: number, raw: number | undefined, be: unknown): void {
+    const cx = Math.floor(x / 16);
+    const cz = Math.floor(z / 16);
+    const key = `${dim}|${cx},${cz}`;
+    let d = this.diffs.get(key);
+    if (!d) {
+      d = { blocks: [], be: [] };
+      this.diffs.set(key, d);
+    }
+    const idx = (y << 8) | ((z & 15) << 4) | (x & 15);
+    if (raw !== undefined) {
+      d.blocks = d.blocks.filter((b) => b[0] !== idx);
+      d.blocks.push([idx, raw]);
+    } else {
+      d.be = d.be.filter((b) => b[0] !== idx);
+      d.be.push([idx, be]);
     }
   }
 

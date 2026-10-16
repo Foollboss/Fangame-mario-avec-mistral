@@ -188,6 +188,68 @@ try {
   }, base);
   check('attaquer une créature lui inflige des dégâts', fight.spawned && fight.hp < fight.hp0, JSON.stringify(fight));
 
+  // ---------------------------------------------------------------- bateau : poser sur l'eau, monter, avancer
+  const boat = await run(async () => {
+    const g = window.voxelia.game;
+    const p = g.player;
+    for (const e of g.entities.list) if (e.living) e.remove();
+    const x0 = Math.floor(p.pos.x);
+    const y0 = Math.floor(p.pos.y);
+    const z0 = Math.floor(p.pos.z);
+    // Bassin de 7 × 14 : fond de pierre, une couche d'eau, air au-dessus
+    for (let dx = -3; dx <= 3; dx++)
+      for (let dz = -12; dz <= 1; dz++) {
+        g.world.set(x0 + dx, y0 - 2, z0 + dz, 1);
+        g.world.set(x0 + dx, y0 - 1, z0 + dz, 9);
+        for (let dy = 0; dy < 4; dy++) g.world.set(x0 + dx, y0 + dy, z0 + dz, 0);
+      }
+    p.inventory.clear();
+    g.submitChat('/give oak_boat 1');
+    p.inventory.selected = 0;
+    p.pos.set(x0 + 0.5, y0 + 0.2, z0 + 1.5);
+    p.prevPos.copy(p.pos);
+    p.yaw = 0;
+    p.pitch = -0.9;
+    await new Promise((r) => setTimeout(r, 600));
+    window.voxelia.input.state.usePressed = true;
+    await new Promise((r) => setTimeout(r, 600));
+    const v = g.entities.list.find((e) => e.type === 'boat');
+    if (!v) return { placed: false };
+    g.mount(p, v);
+    const z1 = v.pos.z;
+    window.voxelia.input.touch.moveZ = 1;
+    await new Promise((r) => setTimeout(r, 3000));
+    window.voxelia.input.touch.moveZ = 0;
+    const res = { placed: true, riding: p.vehicle === v, moved: +(z1 - v.pos.z).toFixed(2) };
+    g.dismount(p);
+    v.remove();
+    return res;
+  }, base);
+  check('bateau posé sur l’eau, monté et dirigé', boat.placed && boat.riding && boat.moved > 2, JSON.stringify(boat));
+
+  // ---------------------------------------------------------------- boss
+  const boss = await run(async (b) => {
+    const g = window.voxelia.game;
+    const p = g.player;
+    p.gameMode = 'survival';
+    p.health = 20;
+    g.meta.difficulty = 'normal';
+    g.applyModeRules();
+    const m = g.spawnMob('ancient_golem', b.x0 + 0.5, b.y0, b.z0 + 4.5, { persistent: true, force: true });
+    if (!m) return { spawned: false };
+    const t0 = performance.now();
+    let bar = false;
+    while (performance.now() - t0 < 15000 && p.health >= 20) {
+      await new Promise((r) => setTimeout(r, 300));
+      bar = bar || !document.querySelector('.bossbar')?.classList.contains('hidden');
+    }
+    const res = { spawned: true, bar, playerHp: p.health, bossHp: m.health };
+    m.remove();
+    p.health = 20;
+    return res;
+  }, base);
+  check('boss : barre de vie affichée et attaque du joueur', boss.spawned && boss.bar && boss.playerHp < 20, JSON.stringify(boss));
+
   // ---------------------------------------------------------------- mort et réapparition
   // Retire les créatures du test de combat avant de mourir (sinon elles frappent à la réapparition)
   await run(() => {

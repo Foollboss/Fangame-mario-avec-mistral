@@ -8,11 +8,13 @@
   "scripts": {
     "build": "node tools/build.mjs",
     "dev": "node tools/build.mjs --watch --serve",
-    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc -p server/tsconfig.json",
     "test": "vitest run",
     "server": "node --experimental-strip-types server/index.ts",
     "apk": "node tools/build.mjs && bash android/build-apk.sh",
-    "e2e": "node tools/e2e.mjs"
+    "e2e": "node tools/e2e.mjs",
+    "server:test": "node tools/server-smoke.mjs",
+    "gameplay": "node tools/gameplay-test.mjs"
   },
   "dependencies": {
     "fflate": "^0.8.2",

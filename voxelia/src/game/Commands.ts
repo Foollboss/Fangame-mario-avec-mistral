@@ -159,6 +159,7 @@ export function runCommand(g: Game, line: string): string[] {
     case 'kill': {
       const target = parts[0] ?? '@s';
       if (target === '@s' || target === '@p') {
+        p.invulnerable = 0; // /kill ignore l'invulnérabilité qui suit un coup
         p.hurt(1000, { type: 'void' });
         return ['Vous vous êtes éliminé'];
       }

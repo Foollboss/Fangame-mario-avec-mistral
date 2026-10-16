@@ -598,7 +598,8 @@ export class Game implements EntityHost {
     const input = this.app.input.state;
     const meta = this.meta;
     // Temps
-    if (meta.rules.daylightCycle && !this.net) {
+    // En multijoueur, l'heure avance aussi localement (le serveur la recale toutes les 5 s)
+    if (meta.rules.daylightCycle) {
       meta.time++;
       if (meta.time >= 24000) {
         meta.time -= 24000;
