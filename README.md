@@ -67,7 +67,7 @@ Si le jeu se ferme tout seul :
   - **TUNNEL** : la rue plonge dans une tranchée, passe sous un quartier puis remonte.
   - **VIADUC** : bretelle surélevée qui passe **au-dessus** de la route principale (passage à deux niveaux, pas un croisement) et la rejoint de l'autre côté.
   - **RUELLE** : rue étroite et sinueuse entre les immeubles.
-  Chaque route a sa propre chaussée : une voiture sur le viaduc ne touche pas celles d'en dessous. Les pentes ralentissent en montée et accélèrent en descente. Événement **ZONE DE TEST 3D** (Événements spéciaux) : un tracé fixe à San Francisco avec tous ces éléments.
+  Chaque route a sa propre chaussée : une voiture sur le viaduc ne touche pas celles d'en dessous. Les pentes ralentissent en montée et accélèrent en descente. On n'arrive jamais à un carrefour en plein saut (profil adouci avant chaque embranchement) et le trafic libère la voie qui mène à la bretelle. Événement **ZONE DE TEST 3D** (Événements spéciaux) : un tracé fixe à San Francisco avec tous ces éléments.
 
 **5 villes** générées procéduralement (chaque course est différente) : San Francisco (collines, rails de tram, maisons victoriennes), Los Angeles (coucher de soleil, palmiers), Tokyo (nuit, néons, route mouillée), Nevada (désert, mesas), New York (crépuscule, gratte-ciel, taxis).
 

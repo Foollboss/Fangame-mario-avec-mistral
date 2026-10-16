@@ -193,6 +193,7 @@ func _make_fx() -> void:
 		p.lifetime = 0.16
 		p.local_coords = false
 		p.emitting = false
+		p.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		var qm := QuadMesh.new()
 		qm.size = Vector2(0.42, 0.42)
 		var mat := _particle_mat(Color(1, 1, 1, 1))
@@ -224,9 +225,12 @@ func _make_fx() -> void:
 		sm.lifetime = 1.1
 		sm.local_coords = false
 		sm.emitting = false
+		# les particules ne projettent pas d'ombre
+		sm.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		var qm2 := QuadMesh.new()
-		qm2.size = Vector2(1.6, 1.6)
-		qm2.material = _particle_mat(Color(0.85, 0.85, 0.9, 0.35), false)
+		qm2.size = Vector2(1.4, 1.4)
+		# mélange additif : en mode « mix », le rendu Compatibility affichait la fumée en noir
+		qm2.material = _particle_mat(Color(1, 1, 1, 1))
 		sm.mesh = qm2
 		sm.direction = Vector3(0, 1, 0.5)
 		sm.spread = 40.0
@@ -240,10 +244,11 @@ func _make_fx() -> void:
 		sc2.add_point(Vector2(1, 1.6))
 		sm.scale_amount_curve = sc2
 		var g2 := Gradient.new()
-		g2.set_color(0, Color(0.9, 0.9, 0.95, 0.22))
-		g2.set_color(1, Color(0.9, 0.9, 0.95, 0.0))
+		g2.set_color(0, Color(0.75, 0.75, 0.8, 0.09))
+		g2.set_color(1, Color(0.75, 0.75, 0.8, 0.0))
 		sm.color_ramp = g2
-		sm.position = Vector3(side * width * 0.42, 0.25, length * 0.3)
+		# un peu au-dessus de la route : les particules ne sont pas coupées par la chaussée
+		sm.position = Vector3(side * width * 0.42, 0.7, length * 0.3)
 		body_root.add_child(sm)
 		smoke.append(sm)
 	# étincelles (frottement contre les murs)
@@ -252,6 +257,7 @@ func _make_fx() -> void:
 	sparks.lifetime = 0.45
 	sparks.local_coords = false
 	sparks.emitting = false
+	sparks.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var qm3 := QuadMesh.new()
 	qm3.size = Vector2(0.12, 0.12)
 	qm3.material = _particle_mat(Color(1, 1, 1, 1))

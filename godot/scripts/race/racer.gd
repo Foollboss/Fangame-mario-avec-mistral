@@ -102,6 +102,7 @@ var autopilot := false
 var ai_skill := 0.8
 var ai_aggressive := false
 var ai_target_x := 0.0
+var _ai_free_x := 0.0          # meilleure voie sans tenir compte des carrefours (évitement du trafic)
 var ramp_bias := 1.0          # attirance de l'autopilote pour les rampes à tonneau (objectif tonneaux)
 var _ai_lane_timer := 0.0
 var _ai_nitro_timer := 0.0
@@ -698,9 +699,20 @@ func _choose_route(br: RoadPath) -> bool:
 	return _ai_rng.randf() < chance
 
 
+## Une voiture de trafic occupe la voie lx juste devant ?
+func _lane_blocked(lx: float, traffic: Array, ahead: float) -> bool:
+	for t in traffic:
+		if not t.active or t.knocked:
+			continue
+		var ds: float = t.s - s
+		if ds > -4.0 and ds < ahead and absf(t.x - lx) < 2.6:
+			return true
+	return false
+
+
 ## TouchDrive : le joueur braque vers un embranchement -> l'autopilote prend cet itinéraire.
 func note_manual_steer(dir: float) -> void:
-	for fork in path.forks_ahead(s, 150.0):
+	for fork in path.forks_ahead(s, maxf(150.0, v * 2.4)):
 		var br: RoadPath = fork["to"]
 		route_plan[br.id] = signf(dir) == float(fork["side"])
 
@@ -749,21 +761,32 @@ func think(dt: float, clock: float, racers: Array, traffic: Array, player: Racer
 				best_cost = cost
 				best_x = lx
 		ai_target_x = best_x
+		_ai_free_x = best_x
 	# séparation centrale : rester d'un côté
 	var spn := path.next_split(s)
 	if not spn.is_empty() and spn["s0"] - s < 60.0 and abs(ai_target_x) < 2.2:
 		ai_target_x = path.lane_x(1) if x < 0.0 else path.lane_x(2)
 	# embranchement : choix de l'itinéraire (l'IA décide ; le TouchDrive suit le choix du joueur)
-	for fork in path.forks_ahead(s, 190.0):
+	# (anticipation selon la vitesse : à 450 km/h, le bord ouvert défile en moins d'une demi-seconde)
+	for fork in path.forks_ahead(s, maxf(190.0, v * 2.8)):
 		var br: RoadPath = fork["to"]
 		if not route_plan.has(br.id):
 			route_plan[br.id] = _choose_route(br)
 		if route_plan[br.id]:
 			var side: int = fork["side"]
-			if s < float(fork["s0"]) + 6.0:
-				ai_target_x = path.lane_x(path.lanes - 1 if side > 0 else 0)
+			var edge_lane := path.lane_x(path.lanes - 1 if side > 0 else 0)
+			var edge_x := edge_lane + side * 0.6
+			var near_edge := s >= float(fork["s0"]) - 2.0
+			# voie du bord encombrée : on double par la voie voisine (au plus près de la bretelle)
+			# puis on se rabat ; sur le bord ouvert, on ne renonce que devant un obstacle imminent
+			var blocked := path == track.main and _lane_blocked(edge_lane, traffic, 18.0 if near_edge else clampf(v * 0.9, 25.0, 60.0))
+			if blocked and s < float(fork["s1"]) - 10.0:
+				var adj := edge_lane - side * path.lane_w
+				ai_target_x = adj if not _lane_blocked(adj, traffic, 30.0) else _ai_free_x
+			elif not near_edge:
+				ai_target_x = edge_x
 			else:
-				ai_target_x = side * (path.half_width + 2.6)
+				ai_target_x = side * (path.half_width + 4.0)
 			break
 	# fin d'itinéraire bis : rejoindre la route principale du bon côté
 	for l in path.links:

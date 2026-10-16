@@ -239,9 +239,10 @@ func _build_points() -> void:
 		var cs := rng.randf_range(450.0, finish_s - 300.0)
 		var cl := rng.randf_range(55.0, 80.0)
 		var ch := rng.randf_range(2.6, 4.2)
-		# pas de bosse sur un embranchement ou une jonction
+		# pas de bosse sur un embranchement ou une jonction, ni juste avant (on ne doit pas
+		# arriver en plein saut au carrefour : le vol peut durer une centaine de mètres)
 		var tries := 0
-		while _in_straight(cs - 40.0, cs + cl + 40.0) and tries < 12:
+		while _in_straight(cs - 40.0, cs + cl + 170.0) and tries < 12:
 			cs = rng.randf_range(450.0, finish_s - 300.0)
 			tries += 1
 		if tries < 12:
@@ -258,18 +259,36 @@ func _build_points() -> void:
 				y += c["h"] * sin(PI * u) * sin(PI * u)
 		heights[i] = y
 	# embranchements et jonctions : pente régulière (pas de bosse au milieu d'un carrefour)
+	# (raccords longs : à pleine vitesse, une cassure de pente ferait décoller la voiture
+	# juste au moment de choisir sa route)
 	for z in _straight:
-		var a := maxi(int((float(z[0]) - 30.0) / STEP), 0)
-		var b := mini(int((float(z[1]) + 30.0) / STEP), n - 1)
+		var a := maxi(int((float(z[0]) - 110.0) / STEP), 0)
+		var b := mini(int((float(z[1]) + 110.0) / STEP), n - 1)
 		if b - a < 4:
 			continue
 		var ha := heights[a]
 		var hb := heights[b]
+		var ua := (float(z[0]) / STEP - a) / float(b - a)
+		var ub := (float(z[1]) / STEP - a) / float(b - a)
 		for i in range(a, b + 1):
 			var u := float(i - a) / float(b - a)
 			var lin := lerpf(ha, hb, u)
-			var wgt: float = smoothstep(0.0, 0.18, u) * smoothstep(0.0, 0.18, 1.0 - u)
+			var wgt: float = smoothstep(0.0, ua, u) * smoothstep(0.0, 1.0 - ub, 1.0 - u)
 			heights[i] = lerpf(heights[i], lin, wgt)
+	# à l'approche d'un embranchement : sommets arrondis (pas de décollage jusqu'à ~330 km/h)
+	var k_max := 0.003 * STEP * STEP
+	for site in planned_sites:
+		var a := maxi(int((float(site["s"]) - 220.0) / STEP), 1)
+		var b := mini(int((float(site["s"]) + RoadNetwork.PAR_LEN + 70.0) / STEP), n - 2)
+		for _pass in 300:
+			var moved := false
+			for i in range(a, b + 1):
+				var top := (heights[i - 1] + heights[i + 1] + k_max) * 0.5
+				if heights[i] > top + 0.0001:
+					heights[i] = top
+					moved = true
+			if not moved:
+				break
 	pts.resize(n)
 	var yaw := 0.0
 	var p := Vector3.ZERO
@@ -313,7 +332,8 @@ func _place_ramps(barrel_heavy: bool, min_barrels: int = 0) -> void:
 		for c in crest_list:
 			if abs(s - c["s"]) < 160.0:
 				ok = false
-		if in_branch_zone(s - 30.0, s + 110.0):
+		# pas de saut qui retomberait sur un carrefour (le choix de route se fait au sol)
+		if in_branch_zone(s - 30.0, s + 200.0):
 			ok = false
 		if not ok:
 			s += 40.0
@@ -423,7 +443,16 @@ func _barrel_spot_ok(s: float, curv_limit: float) -> bool:
 func _place_splits_and_tunnels() -> void:
 	splits = []
 	tunnels = []
+	# le tunnel d'abord (il lui faut plus de place entre les carrefours du réseau routier)
 	var tries := 0
+	if theme.get("tunnel", false):
+		while tunnels.is_empty() and tries < 120:
+			tries += 1
+			var t0 := rng.randf_range(400.0, finish_s - 400.0)
+			var t1 := t0 + rng.randf_range(150.0, 240.0)
+			if _tunnel_ok(t0, t1):
+				tunnels.append({"s0": t0, "s1": t1})
+	tries = 0
 	var wanted := 2 if length > 2600.0 else 1
 	while splits.size() < wanted and tries < 40:
 		tries += 1
@@ -431,20 +460,29 @@ func _place_splits_and_tunnels() -> void:
 		var s1 := s0 + rng.randf_range(130.0, 220.0)
 		if _zone_free(s0 - 80.0, s1 + 120.0):
 			splits.append({"s0": s0, "s1": s1})
-	if theme.get("tunnel", false):
-		tries = 0
-		while tunnels.is_empty() and tries < 40:
-			tries += 1
-			var t0 := rng.randf_range(400.0, finish_s - 400.0)
-			var t1 := t0 + rng.randf_range(160.0, 260.0)
-			if _zone_free(t0 - 120.0, t1 + 20.0, true):
-				tunnels.append({"s0": t0, "s1": t1})
 
 
-func _zone_free(a: float, b: float, check_splits := false) -> bool:
-	# ni séparation centrale ni tunnel sur la route principale près des itinéraires bis
-	if in_branch_span(a - 60.0, b + 60.0) or in_branch_zone(a, b):
+func _tunnel_ok(t0: float, t1: float) -> bool:
+	# loin des carrefours (le portique de direction est 70 m avant l'embranchement) et des
+	# itinéraires bis qui longent ou croisent la route principale de près (murs, toit)
+	if in_branch_zone(t0 - 50.0, t1 + 80.0) or not _branches_clear(t0 - 60.0, t1 + 60.0):
 		return false
+	for r in ramps:
+		if r["s"] > t0 - 150.0 and r["s"] < t1:
+			return false
+	for c in crest_list:
+		if c["s"] + c["len"] > t0 - 180.0 and c["s"] < t1 + 80.0:
+			return false
+	return true
+
+
+func _zone_free(a: float, b: float) -> bool:
+	# pas de séparation centrale près d'un embranchement ou d'une jonction, ni dans un tunnel
+	if in_branch_zone(a, b) or not _branches_clear(a - 60.0, b + 60.0):
+		return false
+	for tn in tunnels:
+		if tn["s1"] > a and tn["s0"] < b:
+			return false
 	for r in ramps:
 		if r["s"] > a - 30.0 and r["s"] < b:
 			return false
@@ -454,6 +492,18 @@ func _zone_free(a: float, b: float, check_splits := false) -> bool:
 	for sp in splits:
 		if sp["s1"] > a and sp["s0"] < b:
 			return false
+	return true
+
+
+func _branches_clear(a: float, b: float) -> bool:
+	for br: RoadPath in branches:
+		for j in range(0, br.n, 3):
+			var sm: float = br.main_s[j]
+			if sm < a or sm > b:
+				continue
+			var pr := main.project(br.pts[j], sm, 30.0)
+			if absf(pr.y) < half_width + br.half_width + 8.0 and pr.z > -12.0 and pr.z < 14.0:
+				return false
 	return true
 
 
@@ -591,7 +641,13 @@ func build_visuals() -> void:
 	var barrier_prof := [Vector2(hw - 0.02, 0.0), Vector2(hw + 0.06, 0.28), Vector2(hw + 0.2, 0.95), Vector2(hw + 0.45, 0.95), Vector2(hw + 0.58, 0.28), Vector2(hw + 0.65, 0.0)]
 	var neon_prof := [Vector2(hw + 0.2, 0.96), Vector2(hw + 0.45, 0.96)]
 	var walk_prof := [Vector2(hw + 0.65, 0.0), Vector2(hw + 0.66, 0.2), Vector2(hw + 6.5, 0.2)] if urban else [Vector2(hw + 0.65, 0.0), Vector2(hw + 6.5, 0.05)]
-	var ground_prof := [Vector2(hw + 6.5, 0.2 if urban else 0.05), Vector2(hw + 28.0, 0.0), Vector2(hw + 75.0, -1.5), Vector2(hw + 76.0, -45.0)]
+	var ground_prof := [Vector2(hw + 6.5, 0.2 if urban else 0.05), Vector2(hw + 28.0, 0.0), Vector2(hw + 75.0, -1.5)]
+	# bord du sol : falaise au loin, ou mur de soutènement en béton là où il est découpé
+	# (route voisine en contrebas) ; il part de la hauteur du sol à l'endroit de la découpe
+	var side_full: Array = walk_prof + ground_prof
+	var curtain := func(lim: float) -> Array:
+		var x0 := minf(hw + 75.0, lim)
+		return [Vector2(x0, RoadBuilder.prof_y(side_full, x0)), Vector2(minf(hw + 76.0, lim), -45.0)]
 
 	# réseau routier 3D : matériaux partagés, découpe des bas-côtés près des autres routes
 	var deck_mat := StandardMaterial3D.new()
@@ -632,8 +688,9 @@ func build_visuals() -> void:
 			builder.strip(mesh, main, i0, i1, func(_i): return RoadBuilder.side_prof(neon_prof, side, 1e6), neon, false, bdraw)
 			# trottoir et sol : s'arrêtent avant une route voisine au même niveau
 			var lim := func(i): return maxf(builder.clip_at(main, side, i), hw + 0.66)
-			builder.strip(mesh, main, i0, i1, func(i): return RoadBuilder.side_prof(walk_prof, side, lim.call(i)), side_mat, false, Callable(), true)
-			builder.strip(mesh, main, i0, i1, func(i): return RoadBuilder.side_prof(ground_prof, side, lim.call(i)), ground_mat, false, Callable(), true)
+			builder.strip(mesh, main, i0, i1, func(i): return RoadBuilder.side_prof(walk_prof, side, lim.call(i), true), side_mat, false, Callable(), true)
+			builder.strip(mesh, main, i0, i1, func(i): return RoadBuilder.side_prof(ground_prof, side, lim.call(i), true), ground_mat, false, Callable(), true)
+			builder.strip(mesh, main, i0, i1, func(i): return RoadBuilder.side_prof(curtain.call(lim.call(i)), side, 1e6), concrete, false, Callable(), true)
 		var mi := MeshInstance3D.new()
 		mi.mesh = mesh
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -828,8 +885,8 @@ func _build_tunnels(concrete: Material) -> void:
 		var i1 := int(tn["s1"] / STEP)
 		var hw := half_width + 0.7
 		var mesh := ArrayMesh.new()
-		# murs et plafond vus de l'intérieur
-		_add_surface(mesh, [Vector2(hw + 0.01, 8.5), Vector2(hw, 0.0)], i0, i1, wall_mat, true)
+		# murs et plafond vus de l'intérieur (normales vers la chaussée)
+		_add_surface(mesh, [Vector2(hw, 0.0), Vector2(hw + 0.01, 8.5)], i0, i1, wall_mat, true)
 		_add_surface(mesh, [Vector2(hw, 8.5), Vector2(-hw, 8.5)], i0, i1, concrete, false)
 		_add_surface(mesh, [Vector2(-hw, 8.6), Vector2(hw, 8.6), Vector2(hw + 2.0, 8.6), Vector2(hw + 2.0, 0.0)], i0, i1, concrete, false)
 		_add_surface(mesh, [Vector2(-hw - 2.0, 0.0), Vector2(-hw - 2.0, 8.6), Vector2(-hw, 8.6)], i0, i1, concrete, false)

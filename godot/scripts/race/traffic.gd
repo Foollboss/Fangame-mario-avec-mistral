@@ -78,6 +78,8 @@ func _lane_free(s: float, lane_x: float, gap: float) -> bool:
 	for sp in track.splits:
 		if s > sp["s0"] - 15.0 and s < sp["s0"] + 10.0:
 			return false
+	if _at_fork_edge(s, lane_x):
+		return false
 	if s < track.start_s + 160.0 or s > track.finish_s - 30.0:
 		return false
 	return true
@@ -146,8 +148,27 @@ func update(dt: float, focus_s: float) -> void:
 			c.model.transform = Transform3D(Basis.from_euler(c.k_rot), c.k_off)
 
 
+## Voie du bord à l'approche d'une bretelle : le trafic la laisse libre (sinon il bloque
+## l'entrée de l'itinéraire bis à pleine vitesse).
+func _at_fork_edge(s: float, lane_x: float) -> bool:
+	if absf(lane_x) < track.half_width * 0.5:
+		return false
+	for l in track.main.links:
+		if l.get("fork", false) and signf(lane_x) == float(l["side"]) and s > float(l["s0"]) - 150.0 and s < float(l["s1"]) + 5.0:
+			return true
+	return false
+
+
 func _clear_landing(c: TrafficCar) -> void:
-	# libère la zone d'atterrissage des rampes (loin devant le joueur, donc invisible)
+	# loin devant le joueur (donc invisible) : voie du bord libérée devant les bretelles
+	if _at_fork_edge(c.s, c.x):
+		var inner := c.x - signf(c.x) * Track.LANE_W
+		if _lane_free_simple(c, inner):
+			c.x = inner
+		else:
+			c.s += 220.0
+		return
+	# libère la zone d'atterrissage des rampes
 	for r in track.ramps:
 		if c.s > r["s"] - 20.0 and c.s < r["s"] + r["len"] + 130.0 and abs(r["x"] - c.x) < r["w"] * 0.5 + 1.6:
 			for lane in Track.LANES:

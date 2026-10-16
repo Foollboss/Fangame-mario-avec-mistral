@@ -49,9 +49,14 @@ func _clip_against(p: RoadPath, q: RoadPath) -> void:
 		var pr := p.project(q.pts[j], hint, 40.0)
 		var i := int(round(pr.x / STEP))
 		var lateral := pr.y
-		var dh := pr.z
+		# hauteur de q par rapport aux bas-côtés de p (p en tranchée : le haut de ses murs)
+		var top := 0.0
+		if i >= 0 and i < p.h_rel.size() and p.h_rel[i] < 1.2:
+			top = maxf(0.0, -p.h_rel[i])
+		var dh := pr.z - top
 		# à côté (même niveau ou tranchée peu profonde) : le sol de p s'arrête avant q
-		if dh > -7.6 and dh < 3.0 and absf(lateral) < p.half_width + 90.0 and absf(lateral) > p.half_width - 0.5 and i >= 0 and i < p.n:
+		# (pas au-dessus d'un tunnel : le sol de la ville le recouvre)
+		if not q.in_tunnel(j * STEP) and dh > -7.6 and dh < 3.0 and absf(lateral) < p.half_width + 90.0 and absf(lateral) > p.half_width - 0.5 and i >= 0 and i < p.n:
 			var mid: float = maxf(p.half_width, (p.half_width + absf(lateral) - q.half_width) * 0.5)
 			var arr: PackedFloat32Array = cr if lateral > 0.0 else cl
 			for k in range(maxi(i - 3, 0), mini(i + 4, p.n)):
@@ -132,17 +137,36 @@ func _vtx(p: RoadPath, i: int, v: Vector2, flat_far: bool) -> Vector3:
 
 
 ## Profil d'un côté (défini pour le côté droit, x croissant) : miroir pour la gauche,
-## et découpe à la limite lim (aucun point au-delà).
-static func side_prof(prof: Array, side: int, lim: float) -> Array:
+## et découpe à la limite lim (aucun point au-delà). interp : les points au-delà prennent
+## la hauteur du profil en lim (pas de marche verticale au bord de la découpe).
+static func side_prof(prof: Array, side: int, lim: float, interp := false) -> Array:
+	var yl := prof_y(prof, lim) if interp else 0.0
+	var src: Array = []
+	for v: Vector2 in prof:
+		if v.x <= lim:
+			src.append(v)
+		else:
+			src.append(Vector2(lim, yl if interp else v.y))
 	var out: Array = []
 	if side > 0:
-		for v in prof:
-			out.append(Vector2(minf(v.x, lim), v.y))
+		out = src
 	else:
-		for k in range(prof.size() - 1, -1, -1):
-			var v: Vector2 = prof[k]
-			out.append(Vector2(-minf(v.x, lim), v.y))
+		for k in range(src.size() - 1, -1, -1):
+			var v: Vector2 = src[k]
+			out.append(Vector2(-v.x, v.y))
 	return out
+
+
+## Hauteur d'un profil (x croissant) à l'abscisse x.
+static func prof_y(prof: Array, x: float) -> float:
+	if x <= prof[0].x:
+		return prof[0].y
+	for k in range(prof.size() - 1):
+		var a: Vector2 = prof[k]
+		var b: Vector2 = prof[k + 1]
+		if x <= b.x:
+			return lerpf(a.y, b.y, (x - a.x) / maxf(b.x - a.x, 0.0001))
+	return prof[prof.size() - 1].y
 
 
 func _add_mesh(mesh: ArrayMesh, shadows := false) -> void:
@@ -201,15 +225,25 @@ func _build_branch(b: RoadPath) -> void:
 			strip(mesh, b, i0, i1, bp, concrete, false, bdraw)
 			strip(mesh, b, i0, i1, func(i): return side_prof(neon_p, side, 1e6), neon, false, bdraw)
 			# au sol ou en tranchée : mur de soutènement + trottoir + sol, découpés près des autres routes
-			var gprof := func(i):
+			var gfull := func(i) -> Array:
 				var top: float = maxf(0.2, -b.h_rel[i] + 0.3)
-				var prof := [Vector2(hw + 0.65, 0.0), Vector2(hw + 0.66, top), Vector2(hw + 6.0, top),
-					Vector2(hw + 26.0, top - 0.1), Vector2(hw + 60.0, top - 1.5), Vector2(hw + 61.0, top - 40.0)]
+				var prof := [Vector2(hw + 0.66, top), Vector2(hw + 6.0, top), Vector2(hw + 26.0, top - 0.1), Vector2(hw + 60.0, top - 1.5)]
 				if not urban:
-					prof[1] = Vector2(hw + 0.66, top - 0.15)
-				return side_prof(prof, side, maxf(clip_at(b, side, i), hw + 0.66))
+					prof[0] = Vector2(hw + 0.66, top - 0.15)
+				return prof
+			var glim := func(i): return maxf(clip_at(b, side, i), hw + 0.66)
+			var gprof := func(i): return side_prof(gfull.call(i), side, glim.call(i), true)
 			var gdraw := func(i): return b.h_rel[i] < 1.2 and not b.in_tunnel(i * STEP) and not _gap_at(b, i) and not is_open(b, side, i)
 			strip(mesh, b, i0, i1, gprof, side_mat if urban else ground_mat, false, gdraw, true)
+			# mur de soutènement de la tranchée (béton), puis bord du sol là où il est découpé
+			var wprof := func(i): return side_prof([Vector2(hw + 0.65, 0.0), Vector2(hw + 0.66, gfull.call(i)[0].y)], side, 1e6)
+			strip(mesh, b, i0, i1, wprof, concrete, false, gdraw)
+			var cprof := func(i):
+				var lim: float = glim.call(i)
+				var x0 := minf(hw + 60.0, lim)
+				var full: Array = gfull.call(i)
+				return side_prof([Vector2(x0, prof_y(full, x0)), Vector2(minf(hw + 61.0, lim), full[0].y - 40.0)], side, 1e6)
+			strip(mesh, b, i0, i1, cprof, concrete, false, gdraw, true)
 			# ouvrage en hauteur : flancs du tablier
 			var fprof := func(i): return side_prof([Vector2(hw + 0.65, 0.0), Vector2(hw + 0.7, -DECK_H)], side, 1e6)
 			var fdraw := func(i): return b.h_rel[i] >= 1.2 and not _gap_at(b, i)
@@ -337,8 +371,9 @@ func _build_tunnel(b: RoadPath) -> void:
 		var i0 := int(float(tn["s0"]) / STEP)
 		var i1 := int(float(tn["s1"]) / STEP)
 		var mesh := ArrayMesh.new()
-		strip(mesh, b, i0, i1, func(_i): return [Vector2(hw + 0.01, 7.6), Vector2(hw, 0.0)], wall_mat)
-		strip(mesh, b, i0, i1, func(_i): return [Vector2(-hw, 0.0), Vector2(-hw - 0.01, 7.6)], wall_mat)
+		# murs tournés vers l'intérieur du tunnel (visibles depuis la route)
+		strip(mesh, b, i0, i1, func(_i): return [Vector2(hw, 0.0), Vector2(hw + 0.01, 7.6)], wall_mat)
+		strip(mesh, b, i0, i1, func(_i): return [Vector2(-hw - 0.01, 7.6), Vector2(-hw, 0.0)], wall_mat)
 		strip(mesh, b, i0, i1, func(_i): return [Vector2(hw, 7.6), Vector2(-hw, 7.6)], concrete)
 		strip(mesh, b, i0, i1, func(_i): return [Vector2(0.45, 7.55), Vector2(-0.45, 7.55)], light_mat)
 		strip(mesh, b, i0, i1, func(_i): return [Vector2(-hw - 1.5, 7.7), Vector2(hw + 1.5, 7.7)], concrete)

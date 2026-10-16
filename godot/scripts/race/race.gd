@@ -421,10 +421,12 @@ func _route_shots() -> void:
 		want.append(["carrefour_%d" % int(player.s / 400.0), 0.0])
 	if p.kind == "rooftop" and p.h_rel[clampi(int(player.s / RoadPath.STEP), 0, p.n - 1)] > 8.0 and not p.in_gap(player.s):
 		want.append(["toit", 0.6])
+		if not p.gaps.is_empty() and player.s > float(p.gaps[0]["s1"]) + 30.0 and not player.airborne:
+			want.append(["toit_apres_saut", 0.0])
 	if p.in_tunnel(player.s):
 		for tn in p.tunnels:
 			if player.s - float(tn["s0"]) > 70.0 and player.s < float(tn["s1"]):
-				want.append(["tunnel", 0.0])
+				want.append(["tunnel" if p != track.main else "tunnel_principal", 0.0])
 	if p.kind == "viaduct":
 		var pr := track.main.project(player.global_position, player.progress(), 40.0)
 		if absf(pr.y) < 4.0 and pr.z > 6.0:
