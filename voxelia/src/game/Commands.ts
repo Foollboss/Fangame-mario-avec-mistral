@@ -8,6 +8,10 @@ import { BLOCK_BY_KEY } from '../world/blocks';
 import { BIOMES } from '../world/biomes';
 import { MOB_DEFS, resolveMob } from '../entities/mobDefs';
 import { OverworldShaper } from '../world/gen/terrain';
+import { OverworldGenerator } from '../world/gen/overworld';
+import { EmberGenerator, SkyGenerator } from '../world/gen/otherDims';
+import { locateStructure, structureKindKey, STRUCTURE_KINDS } from '../world/gen/structures';
+import { locateDimStructure } from '../world/gen/dimStructures';
 import { DIMENSION_NAMES } from '../world/constants';
 import { EFFECT_NAMES } from '../player/Player';
 import type { GameMode, GameRules, Difficulty } from '../save/SaveManager';
@@ -53,7 +57,7 @@ export const COMMAND_HELP: Array<[string, string]> = [
   ['/fill <x1> <y1> <z1> <x2> <y2> <z2> <bloc>', 'Remplit une zone (32 768 blocs max)'],
   ['/gamerule <règle> [valeur]', 'Lit ou modifie une règle'],
   ['/spawnpoint', 'Définit le point d’apparition ici'],
-  ['/locate <biome>', 'Trouve le biome le plus proche'],
+  ['/locate <biome|structure>', 'Trouve le biome ou la structure la plus proche (village, donjon, forteresse…)'],
   ['/dimension <surface|braise|ciel>', 'Change de dimension'],
 ];
 
@@ -233,10 +237,32 @@ export function runCommand(g: Game, line: string): string[] {
       return [`Point d’apparition défini en ${s.map(Math.floor).join(', ')}`];
     }
     case 'locate': {
-      if (g.dimension !== 0) return ['Disponible uniquement à la Surface'];
       const key = (parts[0] ?? '').toLowerCase();
+      const opts = g.genOptions();
+      const px0 = Math.floor(p.pos.x);
+      const pz0 = Math.floor(p.pos.z);
+      const dist = (x: number, z: number) => Math.round(Math.hypot(x - px0, z - pz0));
+      // Structures des dimensions
+      if (['forteresse', 'fortress', 'temple_celeste', 'temple', 'sky_temple'].includes(key)) {
+        const kind = key.startsWith('fort') ? 'fortress' : 'sky_temple';
+        const dim = kind === 'fortress' ? 1 : 2;
+        if (g.dimension !== dim) return [kind === 'fortress' ? 'Les forteresses se trouvent dans les Terres de braise.' : 'Le temple céleste se trouve dans le Royaume céleste.'];
+        const gen = dim === 1 ? new EmberGenerator(opts) : new SkyGenerator(opts);
+        const r = locateDimStructure(gen, kind, px0, pz0, 20000);
+        return r ? [`${kind === 'fortress' ? 'Forteresse' : 'Temple céleste'} la plus proche : ${r.x}, ~, ${r.z} (${dist(r.x, r.z)} blocs)`] : ['Aucune structure trouvée'];
+      }
+      // Structures de la Surface
+      const sk = structureKindKey(key);
+      if (sk) {
+        if (g.dimension !== 0) return ['Disponible uniquement à la Surface'];
+        if (!g.meta.structures) return ['Les structures sont désactivées dans ce monde.'];
+        const r = locateStructure(new OverworldGenerator(opts), sk, px0, pz0, 6000);
+        const name = STRUCTURE_KINDS.find((k) => k.key === sk)?.name ?? sk;
+        return r ? [`${name} le plus proche : ${r.x}, ${r.y}, ${r.z} (${dist(r.x, r.z)} blocs)`] : [`Aucun(e) ${name} trouvé(e) à moins de 6000 blocs`];
+      }
+      if (g.dimension !== 0) return ['Disponible uniquement à la Surface'];
       const biome = BIOMES.find((b) => b && (b.key === key || b.name.toLowerCase() === key));
-      if (!biome) return [`Biomes : ${BIOMES.filter(Boolean).map((b) => b.key).join(', ')}`];
+      if (!biome) return [`Structures : ${STRUCTURE_KINDS.map((k) => k.key).join(', ')}, forteresse, temple`, `Biomes : ${BIOMES.filter(Boolean).map((b) => b.key).join(', ')}`];
       const shaper = new OverworldShaper({ seed: g.meta.seed, template: g.meta.template, caves: g.meta.caves, structures: g.meta.structures, fantasyBiomes: g.meta.experiments.fantasyBiomes, drop3: g.meta.experiments.drop3, dimensions: g.meta.experiments.dimensions });
       const px = Math.floor(p.pos.x);
       const pz = Math.floor(p.pos.z);

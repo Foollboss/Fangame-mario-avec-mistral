@@ -19,6 +19,9 @@ export const JAVA_BLOCKS: Record<string, string[]> = {
   smooth_stone_slab_side: ['smooth_stone_slab_side', 'stone_slab_side'],
   kelp: ['kelp_plant', 'kelp'],
   lever_handle: ['lever'],
+  // Noms des versions 1.13 à 1.16.
+  dirt_path_top: ['dirt_path_top', 'grass_path_top'],
+  dirt_path_side: ['dirt_path_side', 'grass_path_side'],
   // Équivalents Voxelia de blocs du jeu de référence (même rôle, même aspect).
   palm_log: ['jungle_log'],
   palm_log_top: ['jungle_log_top'],
@@ -156,6 +159,15 @@ export const LEGACY_BLOCKS: Record<string, string[]> = {
   dark_oak_sapling: ['sapling_roofed_oak', 'dark_oak_sapling'],
   palm_sapling: ['sapling_jungle', 'jungle_sapling'],
   lever_handle: ['lever'],
+};
+
+/**
+ * Différences propres aux packs Bedrock : le côté d'herbe « grass_side.tga » utilise son
+ * canal alpha comme masque de teinte (spécifique au moteur Bedrock) ; on prend la version
+ * « portée » déjà colorée, sans superposition.
+ */
+export const BEDROCK_BLOCKS: Record<string, string[]> = {
+  grass_side: ['grass_side_carried'],
 };
 
 const COLORS = ['white', 'orange', 'magenta', 'light_blue', 'yellow', 'lime', 'pink', 'gray', 'light_gray', 'cyan', 'purple', 'blue', 'brown', 'green', 'red', 'black'];

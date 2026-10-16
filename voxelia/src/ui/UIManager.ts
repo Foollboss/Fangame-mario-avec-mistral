@@ -39,6 +39,11 @@ export class UIManager {
     return this.stack[this.stack.length - 1];
   }
 
+  /** Vrai si au moins un écran de la pile vérifie la condition. */
+  some(pred: (s: Screen) => boolean): boolean {
+    return this.stack.some(pred);
+  }
+
   get depth(): number {
     return this.stack.length;
   }

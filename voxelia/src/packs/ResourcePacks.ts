@@ -92,7 +92,7 @@ export class ResourcePackManager {
     const rows = await this.saves.listPacks();
     const out: PackInfo[] = [];
     for (const r of rows) {
-      const rec = await this.load(r.id);
+      const rec = await this.load(r.id).catch(() => undefined);
       out.push({ id: r.id, name: r.name, description: r.description, icon: r.icon, count: rec?.count ?? r.count });
     }
     return out.sort((a, b) => a.name.localeCompare(b.name, 'fr'));
@@ -125,7 +125,7 @@ export class ResourcePackManager {
     const fileName = typeof (file as File).name === 'string' ? (file as File).name.replace(/\.(zip|mcpack|mcaddon)$/i, '') : '';
     const rec: PackRecord = {
       name: (converted.title || name?.trim() || fileName || 'Pack sans nom').slice(0, 80),
-      description: converted.description.slice(0, 300),
+      description: describe(converted),
       icon: makeIcon(converted.icon),
       textures: converted.textures,
       items: converted.items,
@@ -358,6 +358,14 @@ function isUseful(rel: string): boolean {
   if (/^assets\/minecraft\/(models\/block|blockstates)\/.*\.json$/.test(l)) return true;
   if (/^textures\/flipbook_textures\.json$/.test(l) || /^texts\/(en_us|fr_fr)\.lang$/.test(l)) return true;
   return false;
+}
+
+/** Description du pack, complétée des remarques d'import (textures réduites, illisibles). */
+function describe(c: ConvertedPack): string {
+  const notes: string[] = [];
+  if (c.resized) notes.push(c.resized > 1 ? `${c.resized} textures réduites en 16×16` : '1 texture réduite en 16×16');
+  if (c.broken.length) notes.push(c.broken.length > 1 ? `${c.broken.length} images illisibles ignorées` : '1 image illisible ignorée');
+  return [c.description.slice(0, 300), ...notes].filter(Boolean).join(' — ');
 }
 
 /** Clés d'icônes à chercher dans les packs (icônes d'objets et œufs par créature). */

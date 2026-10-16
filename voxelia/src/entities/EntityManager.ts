@@ -425,15 +425,20 @@ export class EntityManager {
     for (const mk of markers) {
       const id = `${mk.kind}:${Math.floor(mk.x)},${Math.floor(mk.y)},${Math.floor(mk.z)}`;
       if (alreadySpawned.has(id)) continue;
-      alreadySpawned.add(id);
       if (mk.kind === 'chest' || mk.kind === 'spawner') {
+        alreadySpawned.add(id);
         fillChest(Math.floor(mk.x), Math.floor(mk.y), Math.floor(mk.z), mk.id);
         chunk.modified = true;
         continue;
       }
       const opts: Record<string, unknown> = { persistent: true, ...(mk.data ?? {}) };
-      const m = this.spawnMob(host, mk.id, mk.x, mk.y, mk.z, opts);
-      if (m) chunk.modified = true;
+      // Passe par l'hôte : il applique les options du monde (expérience « Boss »…)
+      const m = host.spawnMob(mk.id, mk.x, mk.y, mk.z, opts);
+      // Si l'apparition échoue (créatures désactivées, mode paisible…), on réessaiera au prochain chargement.
+      if (m) {
+        alreadySpawned.add(id);
+        chunk.modified = true;
+      }
     }
   }
 

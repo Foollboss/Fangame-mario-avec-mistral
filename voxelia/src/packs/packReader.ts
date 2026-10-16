@@ -8,7 +8,7 @@
  * précises du jeu de référence ; on garde toujours les fichiers de base du pack.
  */
 import { blankImage, compose, crop, decodeImage, lerpPixels, meanSaturation, multiply, resizeBox, type RGBAImage } from './images';
-import { BLOCK_RECIPES, FLOW_TEXTURES, JAVA_BLOCKS, JAVA_ITEMS, LEATHER_COLOR, LEATHER_PIECES, LEGACY_BLOCKS, LEGACY_ITEMS, SPAWN_EGG_NAMES, type Recipe } from './textureNames';
+import { BEDROCK_BLOCKS, BLOCK_RECIPES, FLOW_TEXTURES, JAVA_BLOCKS, JAVA_ITEMS, LEATHER_COLOR, LEATHER_PIECES, LEGACY_BLOCKS, LEGACY_ITEMS, SPAWN_EGG_NAMES, type Recipe } from './textureNames';
 import { chestPart, bedPart } from './entityTextures';
 
 export const TEX = 16;
@@ -224,7 +224,7 @@ export async function readPack(src: PackSource, opts: ReadOptions): Promise<Conv
   readMeta(src, layout, out);
   const progress = opts.onProgress ?? (() => undefined);
   const flipbooks = layout.format === 'bedrock' ? readFlipbooks(src, layout) : new Map<string, AnimInfo>();
-  const aliases = layout.format === 'java' ? JAVA_BLOCKS : LEGACY_BLOCKS;
+  const aliases = layout.format === 'java' ? JAVA_BLOCKS : layout.format === 'bedrock' ? { ...LEGACY_BLOCKS, ...BEDROCK_BLOCKS } : LEGACY_BLOCKS;
   const total = opts.blockTextures.length + opts.itemKeys.length + 4;
   let done = 0;
   const tick = async () => {

@@ -520,7 +520,7 @@ export class Game implements EntityHost {
       p.pitch = Math.max(-Math.PI / 2 + 0.001, Math.min(Math.PI / 2 - 0.001, p.pitch - st.lookDY));
     }
     // Simulation à pas fixe
-    const paused = this.waitingChunks || this.changingDim || (this.uiOpen && !this.net && this.app.ui.current?.modalGame !== true && this.pausesGame());
+    const paused = this.waitingChunks || this.changingDim || (this.uiOpen && !this.net && this.pausesGame());
     if (!paused) {
       this.tickAcc += Math.min(dt, 0.25);
       let n = 0;
@@ -555,8 +555,8 @@ export class Game implements EntityHost {
 
   /** Les écrans d'inventaire ne mettent pas le jeu en pause ; le menu pause, si. */
   private pausesGame(): boolean {
-    const cur = this.app.ui.current as unknown as { pausesGame?: boolean } | undefined;
-    return !!cur?.pausesGame;
+    // Un menu pause ouvert sous d'autres écrans (paramètres…) garde la partie en pause.
+    return this.app.ui.some((sc) => !!(sc as unknown as { pausesGame?: boolean }).pausesGame);
   }
 
   private handleActions(): void {
@@ -930,6 +930,8 @@ export class Game implements EntityHost {
   }
 
   private lastDeathMessage = '';
+  /** Niveau d'expérience au moment de la mort (affiché sur l'écran de mort). */
+  deathScore = 0;
 
   private onPlayerDeath(src: DamageSource): void {
     const p = this.player;
@@ -943,6 +945,7 @@ export class Game implements EntityHost {
     this.deathShown = false;
     this.deathTimer = 0;
     this.interaction.reset();
+    this.deathScore = p.xpLevel;
     if (!this.meta.rules.keepInventory && !p.creative) {
       for (const s of p.takeDrops()) {
         const v = new THREE.Vector3((Math.random() - 0.5) * 0.4, 0.2 + Math.random() * 0.2, (Math.random() - 0.5) * 0.4);
