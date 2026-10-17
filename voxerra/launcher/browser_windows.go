@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -10,8 +11,17 @@ import (
 )
 
 // Fenêtre d'application Edge (présent sur Windows 10 et 11), sinon Chrome,
-// sinon le navigateur par défaut.
+// sinon le navigateur par défaut : affichage de secours sans WebView2.
 func openWindow(url string) error {
+	return openApp(url, 1280, 760)
+}
+
+// Ancienne fenêtre (transfert des mondes) : le même navigateur que l'ancienne version, donc le même profil.
+func openOldWindow(url string) error {
+	return openApp(url, 560, 360)
+}
+
+func openApp(url string, w, h int) error {
 	var candidates []string
 	for _, env := range []string{"ProgramFiles(x86)", "ProgramFiles", "LocalAppData"} {
 		base := os.Getenv(env)
@@ -30,7 +40,7 @@ func openWindow(url string) error {
 		if _, err := os.Stat(c); err == nil {
 			args := append([]string{
 				"--app=" + url,
-				"--window-size=1280,760",
+				fmt.Sprintf("--window-size=%d,%d", w, h),
 				"--no-first-run",
 				"--no-default-browser-check",
 				"--autoplay-policy=no-user-gesture-required",
@@ -49,8 +59,26 @@ func openWindow(url string) error {
 	return nil
 }
 
+// Profils où l'ancienne version a pu ranger les mondes (Edge, sinon Chrome).
+func oldUserDataDirs() []string {
+	base := os.Getenv("LocalAppData")
+	if base == "" {
+		return nil
+	}
+	return []string{
+		filepath.Join(base, `Microsoft\Edge\User Data`),
+		filepath.Join(base, `Google\Chrome\User Data`),
+	}
+}
+
+var user32 = syscall.NewLazyDLL("user32.dll")
+
+// Autorise l'instance déjà lancée à passer au premier plan.
+func allowForeground() {
+	user32.NewProc("AllowSetForegroundWindow").Call(^uintptr(0)) // ASFW_ANY
+}
+
 func fail(msg string) {
-	user32 := syscall.NewLazyDLL("user32.dll")
 	box := user32.NewProc("MessageBoxW")
 	t, _ := syscall.UTF16PtrFromString(msg)
 	c, _ := syscall.UTF16PtrFromString("Voxerra")

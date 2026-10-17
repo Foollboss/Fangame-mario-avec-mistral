@@ -10,6 +10,8 @@ import { t, tr, locale, getLang, LANGS, type Lang } from '../../i18n/i18n';
 import { pixelIcon } from '../pixelIcons';
 import { skinScreen } from './skinScreen';
 import { lanBridge, type LanGame } from '../../net/lanHost';
+import { pickTextFile, saveFile } from '../../app/files';
+import { canRetryTransfer, retryTransfer } from '../../app/transfer';
 
 const MODE_LABEL = (m: GameMode): string => ({ survie: t('Mode survie'), creatif: t('Mode créatif'), hardcore: t('Mode hardcore'), spectateur: t('Mode spectateur') })[m] ?? m;
 const DIFF = (): string[] => [t('Paisible'), t('Facile'), t('Normale'), t('Difficile')];
@@ -319,8 +321,7 @@ function editWorld(app: AppApi, meta: WorldMeta, refresh: () => void): Screen {
     }),
     button(t('Exporter (JSON des paramètres)'), () => {
       const blob = new Blob([JSON.stringify({ name: meta.name, seed: meta.seedText, mode: meta.gameMode }, null, 2)], { type: 'application/json' });
-      const a = h('a', { href: URL.createObjectURL(blob), download: `${meta.id}.json` });
-      a.click();
+      void saveFile(`${meta.id}.json`, blob);
     }),
     button(t('Annuler'), () => app.ui.pop()),
   );
@@ -421,6 +422,8 @@ export function optionsScreen(app: AppApi, inGame: boolean): Screen {
     cycle(t('Afficher les IPS'), YES_NO(true, false, false), s.showFps, (v) => ((s.showFps = v), save())),
     cycle(t('Résolution'), [{ v: 0.75, t: t('Performance') }, { v: 1, t: t('Normale') }, { v: 1.5, t: t('Haute') }], s.pixelRatio, (v) => ((s.pixelRatio = v), save())),
     cycle(t('Taille de l’interface'), [{ v: 0.85, t: t('Petite') }, { v: 1, t: t('Normale') }, { v: 1.2, t: t('Grande') }], s.guiScale, (v) => ((s.guiScale = v), save())),
+    // lanceur Windows : reprendre les mondes restés dans l'ancienne fenêtre Edge
+    !inGame && canRetryTransfer() ? button(t('Récupérer les mondes de l’ancienne version'), () => void retryTransfer()) : null,
   );
   const nameIn = h('input', { class: 'input', value: s.playerName, maxlength: 16 }) as HTMLInputElement;
   nameIn.addEventListener('change', () => {
@@ -636,6 +639,13 @@ export function multiplayerScreen(app: AppApi): Screen {
 export function modsScreen(app: AppApi): Screen {
   const list = h('div', { class: 'world-list', style: { height: '280px' } });
   const status = h('div', { class: 'hint', style: { margin: '6px' } });
+  // un pack ajouté ou retiré ne compte qu'au prochain lancement : le jeu se relance lui-même
+  // (dans les applis, il n'y a pas de bouton « Recharger la page »)
+  const restart = button(t('Relancer le jeu'), async () => {
+    if (app.game) await app.quitToTitle();
+    location.reload();
+  }, 'small');
+  restart.style.display = 'none';
   const render = () => {
     clear(list);
     for (const m of app.mods) {
@@ -645,7 +655,8 @@ export function modsScreen(app: AppApi): Screen {
         del.addEventListener('click', (e) => {
           e.stopPropagation();
           app.removeMod(m.id);
-          status.textContent = t('Mod retiré. Redémarrez la page pour appliquer.');
+          status.textContent = t('Mod retiré. Relancez le jeu pour appliquer.');
+          restart.style.display = '';
           render();
         });
         item.appendChild(del);
@@ -654,13 +665,14 @@ export function modsScreen(app: AppApi): Screen {
     }
     if (!app.mods.length) list.appendChild(h('div', { class: 'list-empty' }, t('Aucun mod chargé.')));
   };
-  const file = h('input', { type: 'file', accept: '.json,application/json', style: { display: 'none' } }) as HTMLInputElement;
-  file.addEventListener('change', async () => {
-    const f = file.files?.[0];
+  const importPack = async () => {
+    const f = await pickTextFile('.json,application/json');
     if (!f) return;
-    status.textContent = await app.importMod(await f.text());
+    const before = app.mods;
+    status.textContent = await app.importMod(f.text);
+    if (app.mods !== before) restart.style.display = '';
     render();
-  });
+  };
   const el = h(
     'div',
     { class: 'screen dim', style: { justifyContent: 'flex-start', paddingTop: '20px' } },
@@ -668,8 +680,8 @@ export function modsScreen(app: AppApi): Screen {
     h('div', { class: 'hint', style: { maxWidth: '620px', textAlign: 'center', marginBottom: '10px' } }, t('Les mods sont des packs JSON : blocs, objets, textures procédurales, recettes, créatures, butins, progrès, biomes. Aucun code n’est exécuté.')),
     list,
     status,
-    file,
-    h('div', { class: 'bottom-bar' }, button(t('Importer un pack JSON…'), () => file.click(), 'half'), button(t('Retour'), () => app.ui.pop(), 'half')),
+    restart,
+    h('div', { class: 'bottom-bar' }, button(t('Importer un pack JSON…'), () => void importPack(), 'half'), button(t('Retour'), () => app.ui.pop(), 'half')),
   );
   render();
   return { el };

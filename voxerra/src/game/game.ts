@@ -32,6 +32,7 @@ import type { UIManager, Screen } from '../ui/ui';
 import { Hud } from '../ui/hud';
 import { ChatLog, chatInput } from '../ui/chat';
 import type { Settings } from '../app/settings';
+import { saveFile } from '../app/files';
 import type { AudioEngine, Mood } from '../audio/audio';
 import { PlayerInventoryScreen, WorkbenchScreen, ChestScreen, FurnaceScreen, CreativeScreen, type InvContext } from '../ui/inventoryUI';
 import { blockContainer, type FurnaceData, type ChestData } from '../sim/furnace';
@@ -967,9 +968,7 @@ export class Game {
 
   private screenshot(): void {
     const url = this.host.renderer.domElement.toDataURL('image/png');
-    const a = h('a', { href: url, download: `voxerra-${Date.now()}.png` });
-    a.click();
-    this.chat.add(t('Capture d’écran enregistrée.'), '#a0ffa0');
+    void saveFile(`voxerra-${Date.now()}.png`, url).then((ok) => ok && this.chat.add(t('Capture d’écran enregistrée.'), '#a0ffa0'));
   }
 
   private captureThumbnail(): void {

@@ -25,12 +25,15 @@ fermer ; en plein écran (`F11`) et dans les versions Windows, `Ctrl+W` est simp
 
 | Plateforme | Fichier | Construire | Détails |
 |---|---|---|---|
-| Windows 10/11 (64 bits) | `Voxerra.exe` (≈ 7 Mo, s'affiche dans une fenêtre Microsoft Edge) | `npm run build:launcher` | [`launcher/README.md`](launcher/README.md) |
+| Windows 10/11 (64 bits) | `Voxerra.exe` (≈ 8 Mo, sa propre fenêtre grâce à WebView2, le moteur d'Edge intégré à Windows) | `npm run build:launcher` | [`launcher/README.md`](launcher/README.md) |
 | Windows 10/11 (64 bits) | `Voxerra-1.0.0-Windows.exe` (≈ 90 Mo, Chromium intégré, portable) | `npm run build:exe` | [`desktop/README.md`](desktop/README.md) |
 | Android 7+ | `app-release.apk` (≈ 2,5 Mo) | `npm run build:apk` | [`android/README.md`](android/README.md) |
 
 Toutes embarquent le même fichier `Voxerra.html`. Dans ces versions, **Quitter le jeu** ferme l'application et le
-monde en cours est sauvegardé à la fermeture (ou quand l'appli Android passe en arrière-plan). Les fichiers produits
+monde en cours est sauvegardé à la fermeture (ou quand l'appli Android passe en arrière-plan). Les mondes créés avec
+une ancienne version de `Voxerra.exe` (affichée dans une fenêtre Edge) sont récupérés au premier lancement.
+Sur Android, **Mods et contenu → Importer un pack JSON…** ouvre le sélecteur de fichiers du téléphone, et
+**Relancer le jeu** active le pack aussitôt. Les fichiers produits
 ne sont pas versionnés (trop lourds) : ils sont dans `launcher/dist/`, `desktop/dist/` et
 `android/app/build/outputs/apk/release/`. Les exécutables ne sont pas signés : Windows SmartScreen peut demander
 **Informations complémentaires → Exécuter quand même** ; sur Android, autoriser l'installation d'applis inconnues.
@@ -207,7 +210,7 @@ ici tout reste en texte, modifiable, testable et exécutable en une commande.
 ```
 voxerra/
 ├─ index.html, package.json, tsconfig.json, vite.config.ts
-├─ launcher/               Voxerra.exe léger (Go) : sert le jeu en local et l'ouvre dans une fenêtre Edge
+├─ launcher/               Voxerra.exe léger (Go) : sert le jeu en local et l’affiche dans sa fenêtre (WebView2)
 ├─ desktop/                version Windows autonome (Electron) : fenêtre, pont « Quitter », icônes, essai automatique
 ├─ android/                version Android (Gradle) : activité WebView plein écran, icônes, clé de signature
 ├─ public/mods/            mods « données » chargés au démarrage (index.json + lucioles.json d'exemple)
@@ -407,7 +410,7 @@ Aucune image ni aucun son n'est fourni : tout est produit au lancement.
 
 ## Tests
 
-`npm test` exécute 63 tests :
+`npm test` exécute 65 tests :
 
 | Fichier | Couverture |
 |---|---|
@@ -424,6 +427,7 @@ Aucune image ni aucun son n'est fourni : tout est produit au lancement.
 | `skin.test.ts` | code court aller-retour (préréglages et skins au hasard), codes mal formés, pièces du modèle |
 | `eau.test.ts` | animaux qui nagent dans chaque eau, recul horizontal près d'une berge |
 | `mods.test.ts` | mod d'exemple complet, validation des packs |
+| `transfer.test.ts` | récupération des mondes de l'ancienne version : données IndexedDB (tableaux typés…) en JSON et retour |
 | `i18n.test.ts` | chaque texte et chaque nom traduit en anglais et en espagnol, changement de langue à chaud |
 | `content.test.ts` | textures, butins, modèles et autels cohérents |
 

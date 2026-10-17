@@ -1,12 +1,17 @@
 package io.github.fullboss971.voxerra;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.OpenableColumns;
+import android.util.Base64;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -14,10 +19,19 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.FrameLayout;
 
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 import androidx.activity.ComponentActivity;
 import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -50,6 +64,21 @@ public class MainActivity extends ComponentActivity {
     private Insets cutout = Insets.NONE;
     /** Relais de la partie ouverte au réseau local. */
     private LanRelay lan;
+
+    // Fichiers : la WebView ne sait pas télécharger, et son sélecteur de fichiers dépend de l'appli.
+    // Le jeu passe par openTextFile / saveFile (pont voxerraHost) ; un <input type="file"> passe par
+    // onShowFileChooser. Un seul sélecteur à la fois.
+    private static final int MAX_FILE = 16 << 20;
+    private ValueCallback<Uri[]> inputFiles;
+    private int openId;
+    private int saveId;
+    private byte[] saveData;
+    private final ActivityResultLauncher<Intent> openDoc = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            r -> onOpened(r.getResultCode() == RESULT_OK && r.getData() != null ? r.getData().getData() : null));
+    private final ActivityResultLauncher<Intent> createDoc = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            r -> onCreated(r.getResultCode() == RESULT_OK && r.getData() != null ? r.getData().getData() : null));
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,7 +162,16 @@ public class MainActivity extends ComponentActivity {
                 return true;
             }
         });
-        web.setWebChromeClient(new WebChromeClient());
+        web.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
+                cancelOpen();
+                inputFiles = callback;
+                if (launchOpen()) return true;
+                inputFiles = null;
+                return false;
+            }
+        });
         web.addJavascriptInterface(new Host(), "voxerraHost");
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
@@ -199,6 +237,122 @@ public class MainActivity extends ComponentActivity {
         super.onDestroy();
     }
 
+    // ------------------------------------------------------------------ fichiers
+
+    /** Sélecteur de documents du système (tous les types : selon les gestionnaires, un .json n'a pas toujours le bon). */
+    private boolean launchOpen() {
+        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType("*/*");
+        try {
+            openDoc.launch(i);
+            return true;
+        } catch (ActivityNotFoundException e) {
+            Intent g = new Intent(Intent.ACTION_GET_CONTENT);
+            g.addCategory(Intent.CATEGORY_OPENABLE);
+            g.setType("*/*");
+            try {
+                openDoc.launch(Intent.createChooser(g, null));
+                return true;
+            } catch (ActivityNotFoundException e2) {
+                return false;
+            }
+        }
+    }
+
+    /** Annule le choix en cours (un nouveau commence). */
+    private void cancelOpen() {
+        if (inputFiles != null) inputFiles.onReceiveValue(null);
+        inputFiles = null;
+        if (openId != 0) callJs("__voxerraFichier", openId, null, null);
+        openId = 0;
+    }
+
+    private void onOpened(Uri uri) {
+        if (inputFiles != null) {
+            inputFiles.onReceiveValue(uri != null ? new Uri[]{uri} : null);
+            inputFiles = null;
+            return;
+        }
+        final int id = openId;
+        openId = 0;
+        if (id == 0) return;
+        if (uri == null) {
+            callJs("__voxerraFichier", id, null, null);
+            return;
+        }
+        new Thread(() -> {
+            String name = null, text = null;
+            try {
+                name = displayName(uri);
+                text = readText(uri);
+            } catch (Exception ignored) {
+            }
+            final String n = name, tx = text;
+            runOnUiThread(() -> callJs("__voxerraFichier", id, n, tx));
+        }, "voxerra-fichier").start();
+    }
+
+    private String displayName(Uri uri) {
+        try (Cursor c = getContentResolver().query(uri, new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null)) {
+            if (c != null && c.moveToFirst() && !c.isNull(0)) return c.getString(0);
+        } catch (Exception ignored) {
+        }
+        String last = uri.getLastPathSegment();
+        return last != null ? last : "";
+    }
+
+    private String readText(Uri uri) throws IOException {
+        try (InputStream in = getContentResolver().openInputStream(uri)) {
+            if (in == null) throw new IOException("illisible");
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buf = new byte[65536];
+            int n;
+            while ((n = in.read(buf)) > 0) {
+                out.write(buf, 0, n);
+                if (out.size() > MAX_FILE) throw new IOException("trop gros");
+            }
+            String s = new String(out.toByteArray(), StandardCharsets.UTF_8);
+            return s.startsWith("\uFEFF") ? s.substring(1) : s;
+        }
+    }
+
+    private void onCreated(Uri uri) {
+        final int id = saveId;
+        final byte[] data = saveData;
+        saveId = 0;
+        saveData = null;
+        if (id == 0) return;
+        if (uri == null || data == null) {
+            callJs("__voxerraEnregistre", id, false);
+            return;
+        }
+        new Thread(() -> {
+            boolean ok = false;
+            try (OutputStream out = getContentResolver().openOutputStream(uri, "wt")) {
+                if (out != null) {
+                    out.write(data);
+                    ok = true;
+                }
+            } catch (Exception ignored) {
+            }
+            final boolean done = ok;
+            runOnUiThread(() -> callJs("__voxerraEnregistre", id, done));
+        }, "voxerra-enregistrement").start();
+    }
+
+    /** Appelle window.<fn>(…) dans la page, si elle existe ; les textes sont passés en littéraux JSON. */
+    private void callJs(String fn, Object... args) {
+        if (web == null) return;
+        StringBuilder js = new StringBuilder("window.").append(fn).append("&&window.").append(fn).append('(');
+        for (int i = 0; i < args.length; i++) {
+            if (i > 0) js.append(',');
+            Object a = args[i];
+            js.append(a == null ? "null" : a instanceof String ? JSONObject.quote((String) a) : String.valueOf(a));
+        }
+        web.evaluateJavascript(js.append(')').toString(), null);
+    }
+
     /** Pont appelé par le jeu (window.voxerraHost). */
     private class Host {
         @JavascriptInterface
@@ -216,6 +370,47 @@ public class MainActivity extends ComponentActivity {
         @JavascriptInterface
         public String lanGames() {
             return lan != null ? lan.gamesJson() : "[]";
+        }
+
+        /** Choisir un fichier texte (pack de mod…) : réponse par window.__voxerraFichier(id, nom, texte). */
+        @JavascriptInterface
+        public void openTextFile(int id) {
+            runOnUiThread(() -> {
+                cancelOpen();
+                openId = id;
+                if (!launchOpen()) {
+                    openId = 0;
+                    callJs("__voxerraFichier", id, null, null);
+                }
+            });
+        }
+
+        /** « Enregistrer sous » (export, capture d'écran) : réponse par window.__voxerraEnregistre(id, ok). */
+        @JavascriptInterface
+        public void saveFile(int id, String name, String mime, String base64) {
+            byte[] data;
+            try {
+                data = Base64.decode(base64, Base64.DEFAULT);
+            } catch (Exception e) {
+                runOnUiThread(() -> callJs("__voxerraEnregistre", id, false));
+                return;
+            }
+            runOnUiThread(() -> {
+                if (saveId != 0) callJs("__voxerraEnregistre", saveId, false);
+                saveId = id;
+                saveData = data;
+                Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                i.addCategory(Intent.CATEGORY_OPENABLE);
+                i.setType(mime == null || mime.isEmpty() ? "application/octet-stream" : mime);
+                i.putExtra(Intent.EXTRA_TITLE, name == null || name.isEmpty() ? "voxerra" : name.replaceAll("[\\\\/:*?\"<>|]", "_"));
+                try {
+                    createDoc.launch(i);
+                } catch (ActivityNotFoundException e) {
+                    saveId = 0;
+                    saveData = null;
+                    callJs("__voxerraEnregistre", id, false);
+                }
+            });
         }
     }
 }

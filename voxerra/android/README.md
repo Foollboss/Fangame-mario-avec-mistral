@@ -12,6 +12,11 @@ les sauvegardes (IndexedDB) et les workers fonctionnent comme dans un navigateur
 - Tout l'écran, y compris sous l'encoche de la caméra : l'appli transmet sa taille au jeu (variables CSS
   `--app-inset-*`), qui en écarte le joystick, les boutons et les textes des coins.
 - Le clavier du téléphone réduit la zone de jeu : la saisie de la discussion reste visible.
+- Fichiers : **Importer un pack JSON…** ouvre le sélecteur de documents d'Android (tous les types de fichiers
+  sont proposés, car un `.json` n'a pas toujours le bon type selon le gestionnaire) ; l'export d'un monde et
+  les captures d'écran passent par **Enregistrer sous** (la WebView ne sait pas télécharger). Le jeu les demande
+  à l'appli par le pont `voxerraHost.openTextFile` / `saveFile` ([`src/app/files.ts`](../src/app/files.ts)) ;
+  un `<input type="file">` ordinaire est aussi pris en charge.
 - **Ouvrir au réseau local** (menu pause) : l'appli relaie les amis du même Wi-Fi vers le serveur intégré à la
   page du jeu ([`LanRelay.java`](app/src/main/java/io/github/fullboss971/voxerra/LanRelay.java), même protocole
   que le lanceur Windows : PC et téléphones jouent ensemble). Port 25590 (WebSocket) ouvert le temps de la partie,
@@ -35,6 +40,9 @@ Le relais réseau s'essaie sur la JVM, sans téléphone (doublures des classes A
 ```bash
 android/relay-test/run.sh   # après un premier « npm run build:apk » (bibliothèques dans le cache Gradle)
 ```
+
+Le pont « fichiers », vu du jeu (pack importé puis actif après **Relancer le jeu**, choix annulé, export,
+capture d'écran) : `npm run build:html && node android/test-pont-fichiers.mjs`.
 
 ## Signature
 

@@ -181,12 +181,12 @@ export class App implements AppApi {
       this.game?.save();
       this.lanHost?.server.save();
     });
-    // Navigateur, lanceur Windows : fermer pendant une partie demande confirmation (la croix, ou Ctrl+W dans un
-    // onglet classique, où le navigateur se réserve ce raccourci ; ailleurs, InputManager le bloque).
-    // (L'application de bureau gère elle-même la fermeture et la sauvegarde.)
+    // Navigateur, fenêtre Edge du lanceur : fermer pendant une partie demande confirmation (la croix, ou Ctrl+W
+    // dans un onglet classique, où le navigateur se réserve ce raccourci ; ailleurs, InputManager le bloque).
+    // (L'application de bureau et la fenêtre native du lanceur gèrent elles-mêmes la fermeture et la sauvegarde.)
     addEventListener('beforeunload', (e) => {
-      const host = (globalThis as { voxerraHost?: { platform?: string } }).voxerraHost;
-      if (!this.game || host?.platform === 'desktop') return;
+      const host = (globalThis as { voxerraHost?: { platform?: string; nativeWindow?: boolean } }).voxerraHost;
+      if (!this.game || host?.platform === 'desktop' || host?.nativeWindow) return;
       this.game.save();
       e.preventDefault();
       e.returnValue = '';
@@ -449,7 +449,7 @@ export class App implements AppApi {
     if (typeof r === 'string') return t('Erreur : {msg}', { msg: r });
     this.mods = this.mods.filter((m) => m.id !== r.info.id);
     this.mods.push(r.info);
-    return t('Mod « {name} » importé ({summary}). Rechargez la page pour l’activer.', { name: r.info.name, summary: r.info.summary });
+    return t('Mod « {name} » importé ({summary}). Relancez le jeu pour l’activer.', { name: r.info.name, summary: r.info.summary });
   }
 
   removeMod(id: string): void {

@@ -46,6 +46,7 @@ await host.waitForFunction(() => window.voxerra && document.querySelector('.menu
 await host.evaluate(() => {
   window.voxerra.setLanguage('fr');
   window.voxerra.settings.playerName = 'Alba';
+  window.voxerra.settings.renderDistance = 4; // rendu logiciel (sans carte graphique) : terrain réduit
   window.voxerra.showMainMenu();
 });
 for (const l of ['Solo', 'Créer un nouveau monde', 'Créer le nouveau monde']) {
@@ -86,6 +87,7 @@ check(
 await friend.evaluate(() => {
   window.voxerra.setLanguage('fr');
   window.voxerra.settings.playerName = 'Brune';
+  window.voxerra.settings.renderDistance = 4;
 });
 // Multijoueur : la partie d'Alba apparaît dans la liste, on la rejoint
 await friend.locator('button:visible', { hasText: 'Multijoueur' }).click();
@@ -102,6 +104,10 @@ const ids = await host.evaluate(() => ({ alba: window.voxerra.game.player.id }))
 const seen = (page, name) => page.evaluate((n) => [...window.voxerra.game.sim.entities.list].find((e) => e.kind === 'player' && e.displayName === n), name);
 check(await until(async () => !!(await seen(friend, 'Alba'))), 'Brune voit Alba');
 check(await until(async () => !!(await seen(host, 'Brune'))), 'Alba voit Brune');
+// mesurer une fois le terrain chargé des deux côtés (sans carte graphique, construire les maillages occupe la page)
+const settled = () => window.voxerra.game.streamer.pendingMeshes === 0 && window.voxerra.game.streamer.loadingCount === 0;
+await until(() => host.evaluate(settled), 60000);
+await until(() => friend.evaluate(settled), 60000);
 const albaPos = await host.evaluate(() => {
   const p = window.voxerra.game.player;
   p.gameMode = 'creatif';
@@ -114,6 +120,15 @@ const moved = await until(async () => {
   const e = await friend.evaluate(() => [...window.voxerra.game.sim.entities.list].find((x) => x.kind === 'player' && x.displayName === 'Alba'));
   return e && Math.abs(e.body?.x ?? e.x) > 0 && Math.hypot((e.body?.x ?? 0) - albaPos.x, (e.body?.z ?? 0) - albaPos.z) < 0.6;
 }, 5000);
+if (!moved)
+  console.log(
+    'diagnostic :',
+    await host.evaluate(() => {
+      const v = window.voxerra, s = v.lanHost.server, a = s.clients.find((c) => c.name === 'Alba')?.player;
+      return JSON.stringify({ tick: s.sim.tickCount, alba: a && [a.x, a.y, a.z], local: [v.game.player.x, v.game.player.y, v.game.player.z], meshes: v.game.streamer?.pendingMeshes, loading: v.game.streamer?.loadingCount });
+    }),
+    await friend.evaluate(() => JSON.stringify([...window.voxerra.game.sim.entities.list].filter((x) => x.kind === 'player').map((x) => [x.displayName, x.x, x.y, x.z]))),
+  );
 check(moved, `Brune voit Alba se déplacer en temps réel (${Date.now() - t0} ms)`);
 
 // infos de la partie côté hôte (adresse et joueurs)
@@ -143,14 +158,22 @@ await wait(2500);
 await shot(friend, '4-brune-voit-alba');
 
 // 4) un bloc posé par Brune apparaît chez Alba
-const placed = await friend.evaluate(async () => {
+// posée au sol (à portée du bloc à poser : le serveur refuse ce qui est trop loin), et on attend que
+// le serveur l'y voie : juste avant, elle volait 14 blocs plus haut
+const ground = await friend.evaluate(() => {
   const g = window.voxerra.game, p = g.player, w = g.sim.world(p.dim);
   p.inventory.set(0, { id: 'bloc_or', count: 3 });
   g.remote.syncInventory();
-  // posée au sol (à portée du bloc à poser : le serveur refuse ce qui est trop loin)
   p.flying = false;
   p.setPos(p.x, w.findGround(Math.floor(p.x), Math.floor(p.z)) + 1, p.z);
-  await new Promise((r) => setTimeout(r, 600));
+  return p.y;
+});
+check(
+  await until(() => host.evaluate((y) => Math.abs((window.voxerra.lanHost.server.clients.find((c) => c.name === 'Brune')?.player?.y ?? -1e9) - y) < 1.5, ground), 10000),
+  'le serveur voit Brune revenue au sol',
+);
+const placed = await friend.evaluate(async () => {
+  const g = window.voxerra.game, p = g.player, w = g.sim.world(p.dim);
   const x = Math.floor(p.x) + 1, z = Math.floor(p.z);
   const y = w.findGround(x, z);
   g.remote.place({ x, y, z, face: 2, dist: 2, px: x + 0.5, py: y + 1, pz: z + 0.5 }, 0);
