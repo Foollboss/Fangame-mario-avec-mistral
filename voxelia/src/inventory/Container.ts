@@ -143,6 +143,11 @@ export class PlayerInventory extends Container {
     for (const s of this.armor.slots) if (s) p += ITEMS[s.id]?.armor?.points ?? 0;
     return p;
   }
+
+  /** Les quatre pièces d'armure portées sont-elles de ce matériau (bonus d'ensemble) ? */
+  fullSet(material: string): boolean {
+    return this.armor.slots.every((s) => !!s && ITEMS[s.id]?.armor?.material === material);
+  }
 }
 
 // ------------------------------------------------------------------ clics

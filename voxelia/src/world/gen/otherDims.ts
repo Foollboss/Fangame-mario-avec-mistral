@@ -17,6 +17,17 @@ import { generateEmberStructures, generateSkyStructures } from './dimStructures'
 
 export const EMBER_LAVA_LEVEL = 40;
 
+/**
+ * Minerais rares, un voxel isolé dans la roche hôte : graine dérivée propre (distincte de
+ * celles des autres minerais) et probabilité par voxel. Mesuré sur plusieurs graines :
+ * ≈ 6 étherium par tronçon (≈ 11 000 voxels de pierre de braise) et ≈ 2 à 3,5 célestine
+ * par tronçon contenant une île (≈ 3 000 voxels de pierre céleste).
+ */
+const ETHERIUM_SEED = 0x37e10000;
+const ETHERIUM_CHANCE = 0.0005;
+const CELESTINE_SEED = 0x2c5e0000;
+const CELESTINE_CHANCE = 0.001;
+
 export class EmberGenerator {
   private height: Fbm;
   private ridge: Fbm;
@@ -67,6 +78,7 @@ export class EmberGenerator {
           let id = y > h - 3 ? (y === h ? top : filler) : B.ember_stone;
           if (y < h - 3 && y > 8 && grid.get(lx, y, lz) > 0.42) id = y < 20 ? B.lava : AIR;
           if (id === B.ember_stone && rand2(this.seed + y, x, z) < 0.012) id = B.ember_ore;
+          if (id === B.ember_stone && rand2((this.seed ^ ETHERIUM_SEED) + y, x, z) < ETHERIUM_CHANCE) id = B.etherium_ore;
           if (id === B.ember_stone && y < 30 && rand2(this.seed ^ y, z, x) < 0.004) id = B.obsidian;
           blocks[colIndex(lx, y, lz)] = packBlock(id);
         }
@@ -161,6 +173,7 @@ export class SkyGenerator {
             else if (y > top - 4) id = B.sky_dirt;
             else if (rand2(this.seed + y, x, z) < 0.01) id = B.crystal_block;
             else if (rand2(this.seed ^ y, z, x) < 0.006) id = B.gold_ore;
+            else if (rand2((this.seed ^ CELESTINE_SEED) + y, x, z) < CELESTINE_CHANCE) id = B.celestine_ore;
             blocks[colIndex(lx, y, lz)] = packBlock(id);
           }
           const r = rand2(this.seed ^ 0x99, x, z);

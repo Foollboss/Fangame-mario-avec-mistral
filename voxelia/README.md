@@ -26,7 +26,7 @@ tactile et à la manette. L'interface reprend l'ergonomie des menus « à blocs 
 - **Rendu** : WebGL 2 (Three.js), lumière du ciel et des blocs, occlusion ambiante, cycle jour/nuit
   avec soleil, lune (phases), étoiles et nuages, brouillard, pluie, orages, neige, tempêtes de sable,
   eau et lave animées, élimination des sections invisibles, qualité réglable (bas → ultra).
-- **228 blocs**, **385 objets**, **183 recettes** d'artisanat (2×2 et établi 3×3) et **37 cuissons**
+- **232 blocs**, **410 objets**, **205 recettes** d'artisanat (2×2 et établi 3×3) et **38 cuissons**
   au four ; outils avec durabilité et niveaux de minage, armures, nourriture, seaux, arc, canne à
   pêche, briquet, poudre d'os, houe, carte, boussole, œufs d'apparition.
 - **Survie** : vie, faim, saturation, oxygène, armure, effets, dégâts de chute, de feu, de lave, de
@@ -42,6 +42,11 @@ tactile et à la manette. L'interface reprend l'ergonomie des menus « à blocs 
 - **Dimensions et portails** : cadre d'obsidienne allumé au briquet (Terres de braise, échelle 1:8),
   cadre de blocs de cristal activé par la clé céleste (Royaume céleste) ; portail de retour construit
   automatiquement.
+- **Matériaux des dimensions** : l'**étherium**, minerai rare de la pierre des Terres de braise (pioche
+  en diamant requise, fondu en lingots au four), et la **célestine**, gemme rare des îles du Royaume
+  céleste. Chacun donne 5 outils, 4 pièces d'armure et un bloc de stockage (9 lingots ou gemmes).
+  Ensemble complet d'étherium : insensible au feu (flammes, brûlure, magma), dégâts de la lave
+  réduits de moitié. Ensemble complet de célestine : aucun dégât de chute.
 - **Véhicules et déplacements** : bateaux, wagonnets et rails (dont rails propulseurs), chevaux à
   apprivoiser et seller, tapis volant, planeur, ascenseurs, vol en mode créatif.
 - **Mécanismes** : leviers, boutons, plaques de pression, fils d'énergie, lampes, portes, TNT.
@@ -97,7 +102,8 @@ et le feuillage gardent les bonnes teintes selon le biome. Activez ensuite le pa
 
 Exemple mesuré avec un pack 16×16 de 371 textures : 250 des 288 textures de blocs et 116 des 147
 icônes d'objets remplacées, palettes de biomes appliquées, import en moins d'une seconde sur PC.
-Les blocs propres à Voxelia (mythril, portails, blocs célestes…) gardent leurs textures.
+Les blocs propres à Voxelia (mythril, étherium, célestine, portails, blocs célestes…) gardent leurs
+textures.
 
 ## Multijoueur
 
@@ -108,11 +114,12 @@ Toutes les options : [server/README.md](server/README.md).
 ## Tests
 
 ```bash
-npm test                # tests unitaires (sauvegarde, recettes, inventaire, collisions, portails, four…)
+npm test                # tests unitaires (sauvegarde, recettes, inventaire, collisions, portails, four, matériaux…)
 npm run typecheck       # TypeScript (jeu + serveur)
 npm run build
 npm run e2e             # partie complète dans Chromium sans écran (menu, création, sauvegarde/rechargement, tactile)
 npm run gameplay        # miner, ramasser, fabriquer, poser, combattre, bateau, boss, mort, portail, dimensions
+npm run materials       # étherium et célestine en survie : minage selon la pioche, four, établi, bonus d'ensemble
 npm run server:test     # 60 contrôles du serveur
 node tools/multiplayer-test.mjs   # serveur + deux navigateurs : blocs, coffres, chat, reconnexion
 ```

@@ -162,6 +162,8 @@ const compact: Array<[string, string]> = [
   ['sapphire_block', 'sapphire'],
   ['energy_block', 'energy_dust'],
   ['mythril_block', 'mythril_ingot'],
+  ['etherium_block', 'etherium_ingot'],
+  ['celestine_block', 'celestine'],
   ['hay_block', 'wheat'],
   ['bone_block', 'bone_meal'],
 ];
@@ -216,6 +218,7 @@ smelt('raw_iron', 'iron_ingot', 0.7);
 smelt('raw_gold', 'gold_ingot', 1);
 smelt('raw_copper', 'copper_ingot', 0.7);
 smelt('raw_mythril', 'mythril_ingot', 2);
+smelt('raw_etherium', 'etherium_ingot', 2);
 smelt('iron_ore', 'iron_ingot', 0.7);
 smelt('gold_ore', 'gold_ingot', 1);
 smelt('copper_ore', 'copper_ingot', 0.7);

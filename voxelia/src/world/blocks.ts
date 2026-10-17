@@ -516,6 +516,11 @@ def(233, 'ash_grass', 'Herbe cendrée', { hardness: 0.6, tool: 'shovel', sound: 
 def(234, 'dry_shrub', 'Arbuste sec', { ...PLANT, replaceable: true, drop: 'stick', dropCount: [0, 1] });
 def(235, 'stripped_oak_log', 'Bûche de chêne écorcée', { ...WOOD, orient: 'axis', tex: { side: 'stripped_oak_log', end: 'stripped_oak_log_top' } });
 def(236, 'abyss_stone', 'Pierre des abysses', { ...STONE, hardness: 4, category: 'nature' });
+// Minerais rares des dimensions : étherium (Terres de braise) et célestine (Royaume céleste).
+def(237, 'etherium_ore', "Minerai d'étherium", ORE(3, 'raw_etherium', [4, 8], { hardness: 5, light: 5 }));
+def(238, 'etherium_block', "Bloc d'étherium", { ...STONE, hardness: 7, level: 3, sound: 'metal', light: 4 });
+def(239, 'celestine_ore', 'Minerai de célestine', ORE(3, 'celestine', [5, 10], { hardness: 5, light: 6, dropCount: [1, 2] }));
+def(240, 'celestine_block', 'Bloc de célestine', { ...STONE, hardness: 7, level: 3, sound: 'glass', light: 8 });
 
 /** Nombre maximal d'identifiants (taille des tables de recherche). */
 export const BLOCK_ID_COUNT = 1024;

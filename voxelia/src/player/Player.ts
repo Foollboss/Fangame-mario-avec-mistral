@@ -141,6 +141,10 @@ export class Player extends Entity {
     if (src.type === 'fall' && !this.fallDamageEnabled) return false;
     if (src.type === 'drown' && !this.drowningEnabled) return false;
     if ((src.type === 'fire' || src.type === 'lava') && (!this.fireDamageEnabled || this.hasEffect('fire_resistance'))) return false;
+    // Bonus d'ensemble : étherium (feu ignoré, lave réduite de moitié), célestine (pas de chute).
+    if (src.type === 'fire' && this.inventory.fullSet('etherium')) return false;
+    if (src.type === 'lava' && this.inventory.fullSet('etherium')) amount /= 2;
+    if (src.type === 'fall' && this.inventory.fullSet('celestine')) return false;
     // Difficulté
     if (src.type === 'attack' || src.type === 'projectile' || src.type === 'explosion') {
       if (this.difficulty === 'peaceful') return false;
@@ -267,6 +271,7 @@ export class Player extends Entity {
       this.contactTimer = 0;
       const b = this.box;
       let dmg = 0;
+      let burn = 0;
       for (let x = Math.floor(b.x0 - 0.05); x <= Math.floor(b.x1 + 0.05); x++)
         for (let z = Math.floor(b.z0 - 0.05); z <= Math.floor(b.z1 + 0.05); z++)
           for (let y = Math.floor(b.y0 - 0.1); y <= Math.floor(b.y1); y++) {
@@ -279,9 +284,13 @@ export class Player extends Entity {
               }
               this.fireTicks = Math.max(this.fireTicks, 160);
             }
-            dmg = Math.max(dmg, d.damage);
+            if (d.key === 'fire' || d.key === 'campfire' || d.key === 'magma') burn = Math.max(burn, d.damage);
+            else dmg = Math.max(dmg, d.damage);
           }
-      if (dmg) this.hurt(dmg, { type: 'contact' });
+      // Les blocs brûlants infligent des dégâts de feu ; s'ils sont ignorés (résistance au feu,
+      // ensemble d'étherium), un cactus voisin pique quand même.
+      const burnt = burn > 0 && burn >= dmg && this.hurt(burn, { type: 'fire' });
+      if (!burnt && dmg) this.hurt(dmg, { type: 'contact' });
     }
   }
 

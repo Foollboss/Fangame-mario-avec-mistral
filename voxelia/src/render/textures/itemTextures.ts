@@ -42,6 +42,8 @@ const MATS: Record<string, { H: RGB; L: RGB; D: RGB }> = {
   golden: { H: hex(0xf6d23c), L: hex(0xfffb9a), D: hex(0xc08a18) },
   diamond: { H: hex(0x4be0e0), L: hex(0xd0fffc), D: hex(0x1a9a9a) },
   mythril: { H: hex(0x30d0b8), L: hex(0xb8fff4), D: hex(0x167a6a) },
+  etherium: { H: hex(0xa64cf0), L: hex(0xf0c8ff), D: hex(0x5a1a8a) },
+  celestine: { H: hex(0xa8d8ff), L: hex(0xf4f0ff), D: hex(0x3a78c0) },
   leather: { H: hex(0xa0602a), L: hex(0xc47c40), D: hex(0x6a3e1a) },
 };
 const STICK = { S: hex(0x8a6a3a), s: hex(0x5e4626) };
@@ -84,6 +86,7 @@ ingot('iron_ingot', 0xd4d4d4, 0xffffff, 0x8a8a8a);
 ingot('gold_ingot', 0xf6d23c, 0xfffb9a, 0xb08010);
 ingot('copper_ingot', 0xd07a50, 0xf0a070, 0x8a4a2a);
 ingot('mythril_ingot', 0x30d0b8, 0xb8fff4, 0x167a6a);
+ingot('etherium_ingot', 0xa64cf0, 0xf0c8ff, 0x5a1a8a);
 ingot('brick', 0xa0503a, 0xc06a50, 0x6a3020);
 const gem = (k: string, H: number, L: number, D: number) => P.set(k, draw(GEM, { H: hex(H), L: hex(L), D: hex(D) }));
 gem('diamond', 0x4be0e0, 0xe0fffc, 0x16908e);
@@ -92,6 +95,8 @@ gem('sapphire', 0x3060e0, 0xb0c8ff, 0x10308a);
 gem('crystal_shard', 0x8ad0f0, 0xe8faff, 0x4a90c0);
 gem('ember_shard', 0xff8a20, 0xfff070, 0xb03a00);
 gem('abyss_pearl', 0x2a5a8a, 0x9ad0ff, 0x0a2040);
+// Célestine : taille brillant vue de dessus (table nacrée) et petite étoile, pour la distinguer des autres gemmes.
+P.set('celestine', draw(['................', '.............W..', '............WWW.', '.....LLLHHH..W..', '....WLLLHHHL....', '...LLWLLHHLHM...', '...HHHWWLLMMM...', '...HHHWLLLMMM...', '...HHMLLLNMMD...', '...HMMLLNNMDD...', '...MMHMMDDMDD...', '....HMMMDDDM....', '.....MMDDDD.....', '................', '................', '................'], { W: hex(0xffffff), L: hex(0xeaf8ff), N: hex(0xe0d0ff), H: hex(0xa8d8ff), M: hex(0x7ec8ff), D: hex(0x2f6fb0) }));
 P.set('iron_nugget', draw(NUGGET, { H: hex(0xd4d4d4), L: hex(0xffffff), D: hex(0x8a8a8a) }));
 P.set('gold_nugget', draw(NUGGET, { H: hex(0xf6d23c), L: hex(0xfffb9a), D: hex(0xb08010) }));
 const raw = (k: string, H: number, L: number, D: number) => P.set(k, draw(RAW, { H: hex(H), L: hex(L), D: hex(D) }));
@@ -99,6 +104,7 @@ raw('raw_iron', 0xc8a088, 0xe0c0a8, 0x8a6a58);
 raw('raw_gold', 0xe8b830, 0xfff080, 0xa07010);
 raw('raw_copper', 0xc8744c, 0xe8986a, 0x4a9c7c);
 raw('raw_mythril', 0x40c8b0, 0xa8fff0, 0x1a6a5a);
+raw('raw_etherium', 0x9440d8, 0xd8a0ff, 0x4a1478);
 raw('coal', 0x2e2e2e, 0x4a4a4a, 0x151515);
 raw('charcoal', 0x3a3028, 0x5a4a3a, 0x1a1410);
 raw('flint', 0x3a3a3a, 0x6a6a6a, 0x1a1a1a);

@@ -159,6 +159,8 @@ const TABLES: Record<string, Table> = {
       ['saddle', 1, 1, 4],
       ['flint_and_steel', 1, 1, 3],
       ['mythril_ingot', 1, 2, 3],
+      ['raw_etherium', 1, 3, 3],
+      ['etherium_ingot', 1, 2, 2],
     ],
   },
   sky_temple: {
@@ -172,6 +174,7 @@ const TABLES: Record<string, Table> = {
       ['glider', 1, 1, 3],
       ['flying_carpet', 1, 1, 2],
       ['cloud', 4, 12, 6],
+      ['celestine', 1, 2, 3],
     ],
   },
   bonus_chest: {

@@ -537,6 +537,8 @@ export class InventoryScreen implements Screen {
   private renderLeft(): void {
     const body = this.leftBody;
     if (!body) return;
+    // Les cases remplacées ne reçoivent plus pointerleave : l'infobulle resterait affichée.
+    hideTooltip();
     body.textContent = '';
     if (this.mode === 'trade') return this.renderTrades(body);
     if (this.mode === 'creative') return this.renderCatalog(body);

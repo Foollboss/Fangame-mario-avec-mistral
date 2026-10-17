@@ -19,6 +19,8 @@ export const ANIMATED: Record<string, number> = {
   fire: 8,
   campfire_fire: 8,
   mythril_block: 8,
+  etherium_block: 8,
+  celestine_block: 8,
 };
 
 const reg = (names: string | string[], fn: Painter) => {
@@ -65,6 +67,24 @@ function ore(p: Pixmap, base: (q: Pixmap) => void, c: RGB, dark: RGB, light?: RG
       p.set(cx + dx, cy + dy, shade);
     }
     if (light) p.set(cx, cy, light);
+  }
+}
+
+/** Minerai en éclats : un cristal par quart de bloc (pointe claire, face éclairée, face d'ombre). */
+function shardOre(p: Pixmap, base: (q: Pixmap) => void, c: RGB, dark: RGB, light: RGB): void {
+  base(p);
+  const rng = p.rng;
+  for (let q = 0; q < 4; q++) {
+    const x = (q % 2) * 8 + 2 + Math.floor(rng.next() * 4);
+    const y = Math.floor(q / 2) * 8 + 4 + Math.floor(rng.next() * 3);
+    const h = 3 + Math.floor(rng.next() * 2);
+    const lean = rng.next() < 0.5 ? 0 : rng.next() < 0.5 ? -1 : 1;
+    for (let k = 0; k < h; k++) {
+      const dx = k >= 2 ? lean : 0;
+      p.set(x + dx, y - k, c);
+      p.set(x + dx + 1, y - k, dark);
+    }
+    p.set(x + lean, y - h, light);
   }
 }
 
@@ -658,6 +678,8 @@ reg('deepslate_gold_ore', (p) => ore(p, deepFn, hex(0xfcee4b), hex(0xd8b81e), he
 reg('deepslate_diamond_ore', (p) => ore(p, deepFn, hex(0x5decf5), hex(0x1aa5ad), hex(0xd2fbff)));
 reg('deepslate_energy_ore', (p) => ore(p, deepFn, hex(0xe01010), hex(0x8a0000), hex(0xff6060)));
 reg('ember_ore', (p) => ore(p, (q) => P.get('ember_stone')!(q, 0), hex(0xffa020), hex(0xd05a00), hex(0xfff070)));
+reg('etherium_ore', (p) => shardOre(p, (q) => P.get('ember_stone')!(q, 0), hex(0xc060ff), hex(0x7a2ac0), hex(0xf0c8ff)));
+reg('celestine_ore', (p) => shardOre(p, (q) => P.get('sky_stone')!(q, 0), hex(0x7ec8ff), hex(0x2f6fb0), hex(0xffffff)));
 reg('coal_block', (p) => {
   p.noise(hex(0x161616), 0.15);
   p.bevel(1.4, 0.7);
@@ -682,6 +704,28 @@ reg('mythril_block', (p, f) => {
   for (let y = 0; y < 16; y++) {
     const x = Math.floor((y + k) % 16);
     p.set(x, y, hex(0xc8fff4));
+  }
+});
+// Étherium : métal violet gravé d'un losange d'énergie qui pulse.
+reg('etherium_block', (p, f) => {
+  metalBlock(p, hex(0x9a44e8));
+  const glow = mix(hex(0x5a1a8a), hex(0xf0c8ff), 0.5 + 0.5 * Math.cos((f / 8) * Math.PI * 2));
+  for (let y = 0; y < 16; y++)
+    for (let x = 0; x < 16; x++) {
+      const d = Math.abs(x - 7.5) + Math.abs(y - 7.5);
+      if (d === 4) p.set(x, y, glow);
+      else if (d === 1) p.set(x, y, mix(glow, hex(0xffffff), 0.4));
+    }
+});
+// Célestine : gemme nacrée (reflets lavande sur les arêtes) où scintillent quelques étoiles.
+reg('celestine_block', (p, f) => {
+  gemBlock(p, hex(0x9ccff8));
+  for (let y = 1; y < 15; y++)
+    for (let x = 1; x < 15; x++) if ((x + y) % 5 === 0 && (x - y + 16) % 6 < 2) p.set(x, y, hex(0xe6d8ff));
+  for (const [x, y, ph] of [[3, 4, 0], [11, 3, 3], [7, 9, 5], [12, 12, 2], [4, 12, 6]]) {
+    const k = (f + ph) % 8;
+    p.set(x, y, k < 3 ? hex(0xffffff) : hex(0xd8f0ff));
+    if (k === 1) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) p.set(x + dx, y + dy, hex(0xf4fbff));
   }
 });
 reg('metal_panel', (p) => {

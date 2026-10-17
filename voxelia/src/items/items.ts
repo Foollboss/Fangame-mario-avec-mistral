@@ -142,6 +142,7 @@ interface Material {
   durability: number;
   dmg: number;
   ingredient: string;
+  rarity?: ItemDef['rarity'];
 }
 export const TOOL_MATERIALS: Material[] = [
   { key: 'wooden', fr: 'en bois', level: 0, speed: 2, durability: 59, dmg: 0, ingredient: 'planks' },
@@ -149,7 +150,7 @@ export const TOOL_MATERIALS: Material[] = [
   { key: 'iron', fr: 'en fer', level: 2, speed: 6, durability: 250, dmg: 2, ingredient: 'iron_ingot' },
   { key: 'golden', fr: 'en or', level: 0, speed: 12, durability: 32, dmg: 0, ingredient: 'gold_ingot' },
   { key: 'diamond', fr: 'en diamant', level: 3, speed: 8, durability: 1561, dmg: 3, ingredient: 'diamond' },
-  { key: 'mythril', fr: 'en mythril', level: 4, speed: 10, durability: 2600, dmg: 4, ingredient: 'mythril_ingot' },
+  { key: 'mythril', fr: 'en mythril', level: 4, speed: 10, durability: 2600, dmg: 4, ingredient: 'mythril_ingot', rarity: 'rare' },
 ];
 const TOOL_KINDS: Array<{ k: string; fr: string; type: Tool; dmg: number }> = [
   { k: 'sword', fr: 'Épée', type: 'sword', dmg: 4 },
@@ -158,8 +159,8 @@ const TOOL_KINDS: Array<{ k: string; fr: string; type: Tool; dmg: number }> = [
   { k: 'shovel', fr: 'Pelle', type: 'shovel', dmg: 2.5 },
   { k: 'hoe', fr: 'Houe', type: 'hoe', dmg: 1 },
 ];
-for (const m of TOOL_MATERIALS)
-  for (const t of TOOL_KINDS) {
+function addTools(m: Material): void {
+  for (const t of TOOL_KINDS)
     add({
       key: `${m.key}_${t.k}`,
       name: `${t.fr} ${m.fr}`,
@@ -168,9 +169,10 @@ for (const m of TOOL_MATERIALS)
       tool: { type: t.type, level: m.level, speed: m.speed, damage: t.dmg + m.dmg, durability: m.durability },
       use: t.k === 'hoe' ? 'hoe' : undefined,
       fuel: m.key === 'wooden' ? 10 : undefined,
-      rarity: m.key === 'mythril' ? 'rare' : undefined,
+      rarity: m.rarity,
     });
-  }
+}
+for (const m of TOOL_MATERIALS) addTools(m);
 add({ key: 'shears', name: 'Cisailles', maxStack: 1, category: 'equipment', tool: { type: 'shears', level: 0, speed: 5, damage: 1, durability: 238 }, use: 'shears' });
 add({ key: 'flint_and_steel', name: 'Briquet', maxStack: 1, category: 'equipment', use: 'flint_and_steel', tool: { type: 'none', level: 0, speed: 1, damage: 1, durability: 64 }, desc: 'Allume le feu et les portails de braise' });
 add({ key: 'sky_key', name: 'Clé céleste', maxStack: 1, category: 'equipment', use: 'sky_key', rarity: 'rare', desc: 'Active un cadre de portail en blocs de cristal' });
@@ -193,12 +195,22 @@ add({ key: 'iron_door_item', name: 'Porte en fer', maxStack: 64, category: 'cons
 add({ key: 'bed', name: 'Lit', maxStack: 1, category: 'items', block: BLOCK_BY_KEY.get('red_bed')!.id });
 
 // ------------------------------------------------------------------ armures
-const ARMOR_MATS = [
+interface ArmorMaterial {
+  key: string;
+  fr: string;
+  mult: number;
+  pts: number[];
+  ingredient: string;
+  rarity?: ItemDef['rarity'];
+  /** Bonus d'ensemble (les quatre pièces portées), affiché dans l'infobulle. */
+  setBonus?: string;
+}
+const ARMOR_MATS: ArmorMaterial[] = [
   { key: 'leather', fr: 'en cuir', mult: 5, pts: [1, 3, 2, 1], ingredient: 'leather' },
   { key: 'iron', fr: 'en fer', mult: 15, pts: [2, 6, 5, 2], ingredient: 'iron_ingot' },
   { key: 'golden', fr: 'en or', mult: 7, pts: [2, 5, 3, 1], ingredient: 'gold_ingot' },
   { key: 'diamond', fr: 'en diamant', mult: 33, pts: [3, 8, 6, 3], ingredient: 'diamond' },
-  { key: 'mythril', fr: 'en mythril', mult: 40, pts: [4, 9, 7, 4], ingredient: 'mythril_ingot' },
+  { key: 'mythril', fr: 'en mythril', mult: 40, pts: [4, 9, 7, 4], ingredient: 'mythril_ingot', rarity: 'rare' },
 ];
 export const ARMOR_MATERIALS = ARMOR_MATS;
 const ARMOR_PIECES: Array<{ k: string; fr: string; slot: ArmorSlot; dur: number }> = [
@@ -207,7 +219,7 @@ const ARMOR_PIECES: Array<{ k: string; fr: string; slot: ArmorSlot; dur: number 
   { k: 'leggings', fr: 'Jambières', slot: 'legs', dur: 15 },
   { k: 'boots', fr: 'Bottes', slot: 'feet', dur: 13 },
 ];
-for (const m of ARMOR_MATS)
+function addArmor(m: ArmorMaterial): void {
   ARMOR_PIECES.forEach((p, i) =>
     add({
       key: `${m.key}_${p.k}`,
@@ -215,9 +227,12 @@ for (const m of ARMOR_MATS)
       maxStack: 1,
       category: 'equipment',
       armor: { slot: p.slot, points: m.pts[i], durability: p.dur * m.mult, material: m.key },
-      rarity: m.key === 'mythril' ? 'rare' : undefined,
+      rarity: m.rarity,
+      desc: m.setBonus && `Ensemble complet : ${m.setBonus}`,
     }),
   );
+}
+for (const m of ARMOR_MATS) addArmor(m);
 
 // ------------------------------------------------------------------ nourriture
 const food = (key: string, name: string, hunger: number, saturation: number, extra: Partial<ItemDef> = {}) =>
@@ -284,6 +299,31 @@ export const SPAWNABLE = [
   ['sky_dragon', 'Dragon des cieux'],
 ] as const;
 for (const [k, fr] of SPAWNABLE) add({ key: `spawn_${k}`, name: `Œuf : ${fr}`, maxStack: 64, category: 'items', use: 'spawn_egg', data: k, icon: 'spawn_egg' });
+
+// ------------------------------------------------------------------ étherium et célestine
+// Ajoutés après tous les autres objets : les identifiants sont attribués dans l'ordre,
+// ceux des objets existants ne doivent pas bouger. Les recettes (recipes.ts) parcourent
+// TOOL_MATERIALS et ARMOR_MATERIALS après ce module : les nouveaux matériaux y sont inclus.
+mat('raw_etherium', 'Étherium brut', { rarity: 'rare' });
+mat('etherium_ingot', "Lingot d'étherium", { rarity: 'rare' });
+mat('celestine', 'Célestine', { rarity: 'epic' });
+const LATE_TOOL_MATS: Material[] = [
+  { key: 'etherium', fr: 'en étherium', level: 4, speed: 9, durability: 2300, dmg: 4, ingredient: 'etherium_ingot', rarity: 'rare' },
+  { key: 'celestine', fr: 'en célestine', level: 4, speed: 12, durability: 3100, dmg: 5, ingredient: 'celestine', rarity: 'epic' },
+];
+for (const m of LATE_TOOL_MATS) {
+  TOOL_MATERIALS.push(m);
+  addTools(m);
+}
+// Bonus d'ensemble appliqués dans Player.hurt (PlayerInventory.fullSet).
+const LATE_ARMOR_MATS: ArmorMaterial[] = [
+  { key: 'etherium', fr: 'en étherium', mult: 37, pts: [3, 8, 6, 3], ingredient: 'etherium_ingot', rarity: 'rare', setBonus: 'insensible au feu, dégâts de la lave réduits de moitié' },
+  { key: 'celestine', fr: 'en célestine', mult: 45, pts: [4, 9, 7, 4], ingredient: 'celestine', rarity: 'epic', setBonus: 'aucun dégât de chute' },
+];
+for (const m of LATE_ARMOR_MATS) {
+  ARMOR_MATS.push(m);
+  addArmor(m);
+}
 
 export const ITEM_COUNT = nextId;
 
