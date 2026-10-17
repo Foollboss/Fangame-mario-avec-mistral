@@ -9,6 +9,8 @@ import { Villager } from './Villager';
 import { BOSS_CLASSES } from './bosses';
 import { MOB_DEFS } from './mobDefs';
 import { ModelFactory, type ModelInstance } from './BoxModel';
+import { EquipmentLayer } from './equipment';
+import { applyHumanoidPose, type PoseInput } from './humanoidPose';
 import { MODELS } from './models';
 import { Boat, FallingBlock, FlyingCarpet, ItemEntity, Lightning, Minecart, PrimedTnt, Projectile, Vehicle, XpOrb, type ProjectileKind } from './misc';
 import { ItemMeshFactory, brightness } from '../render/ItemMesh';
@@ -16,6 +18,8 @@ import { deserializeStack, serializeStack, ITEM_BY_KEY, type ItemStack } from '.
 import { biomeById } from '../world/biomes';
 import { BLOCKS, OPAQUE, WATERLOGGED } from '../world/blocks';
 import { blockId, blockMeta, SEA_LEVEL } from '../world/constants';
+import { RemotePlayer } from '../net/NetClient';
+import { Player } from '../player/Player';
 import type { EntityHost } from './host';
 import type { EntitySave } from '../save/SaveManager';
 import type { Chunk } from '../world/Chunk';
@@ -26,7 +30,16 @@ interface View {
   model?: ModelInstance;
   mats?: THREE.MeshBasicMaterial[];
   modelKey?: string;
+  /** Armure, citrouille et planeur portés (joueurs) ; wing : déploiement lissé des ailes. */
+  equip?: EquipmentLayer;
+  wing?: number;
+  /** Nom affiché au-dessus d'un joueur distant (suit la hauteur de sa pose). */
+  tag?: THREE.Sprite;
 }
+
+/** Joueurs (local et distants) : les seules entités qui portent de l'équipement et prennent des poses. */
+type Wearer = Player | RemotePlayer;
+const isWearer = (e: Entity): e is Wearer => e instanceof Player || e instanceof RemotePlayer;
 
 export class EntityManager {
   readonly list: Entity[] = [];
@@ -41,6 +54,8 @@ export class EntityManager {
   private spawnTimer = 0;
   playerSkin = 'player_explorer';
   lightningFlash = 0;
+  /** Entrées de applyHumanoidPose, réutilisées à chaque image (aucune allocation). */
+  private readonly poseIn: PoseInput = { t: 0, walk: 0, amp: 0, pitch: 0, swing: 0 };
 
   constructor(private items: ItemMeshFactory) {
     this.models = new ModelFactory(MODELS);
@@ -510,8 +525,10 @@ export class EntityManager {
         const model = this.models.create(key);
         const obj = new THREE.Group();
         obj.add(model.root);
-        if (e.type === 'remote_player') obj.add(this.nameTag((e as unknown as { name: string }).name));
-        return { obj, model, modelKey: key };
+        const tag = e instanceof RemotePlayer ? this.nameTag(e.name) : undefined;
+        if (tag) obj.add(tag);
+        const equip = isWearer(e) ? new EquipmentLayer(model) : undefined;
+        return { obj, model, modelKey: key, equip, wing: 0, tag };
       }
     }
     if (e instanceof ItemEntity) {
@@ -637,23 +654,52 @@ export class EntityManager {
     // Changement de modèle (mouton tondu…)
     const key = this.modelKeyFor(e);
     if (key !== v.modelKey && MODELS[key]) {
+      v.equip?.dispose();
       model.dispose();
       const nm = this.models.create(key);
       obj.add(nm.root);
       v.model = nm;
       v.modelKey = key;
+      if (v.equip) v.equip = new EquipmentLayer(nm);
       return;
     }
     const mob = e instanceof Mob ? e : null;
     model.root.rotation.set(0, yaw, 0);
     const s = mob ? mob.sizeScale : 1;
     model.root.scale.setScalar(s);
-    model.setLight(light, e.hurtTime > 5 || (mob?.fuse ?? -1) > 0 && Math.floor((mob!.fuse) / 3) % 2 === 0);
+    const hurt = e.hurtTime > 5 || ((mob?.fuse ?? -1) > 0 && Math.floor(mob!.fuse / 3) % 2 === 0);
+    model.setLight(light, hurt);
+    const wearer = isWearer(e) ? e : null;
+    if (wearer && v.equip) {
+      // Ailes du planeur : déploiement lissé quand le joueur se met à planer ou se pose.
+      const target = wearer.pose === 'glide' ? 1 : 0;
+      let wing = v.wing ?? 0;
+      wing += (target - wing) * Math.min(1, dt * 8);
+      if (Math.abs(target - wing) < 0.01) wing = target;
+      v.wing = wing;
+      v.equip.update(wearer.wornArmor(), wing);
+      v.equip.setLight(light, hurt);
+    }
+    if (wearer && model.parts.has('body')) {
+      // Joueurs : tout le corps est posé (marche, accroupi, nage, flottaison, planeur, vol),
+      // avec un fondu entre deux poses ; mort : debout puis bascule sur le côté.
+      const o = this.poseIn;
+      o.t = performance.now() / 1000;
+      o.walk = wearer.walkDist * 3;
+      o.amp = Math.min(1, Math.hypot(e.pos.x - e.prevPos.x, e.pos.z - e.prevPos.z) * 5);
+      o.pitch = e.pitch;
+      o.swing = Math.sin(wearer.swingTime * Math.PI);
+      applyHumanoidPose(model, e.dead ? 'stand' : wearer.pose, o);
+      if (e.dead) model.root.rotation.z = Math.min(Math.PI / 2, (e.deathTime + alpha) / 10);
+      // Le nom descend avec le joueur qui nage ou s'accroupit (hauteur de sa boîte + 0,35).
+      if (v.tag) v.tag.position.y += (e.height + 0.35 - v.tag.position.y) * Math.min(1, dt * 10);
+      return;
+    }
     if (e.dead) {
       model.root.rotation.z = Math.min(Math.PI / 2, (e.deathTime + alpha) / 10);
       return;
     }
-    const walk = mob ? mob.walkAnim : (e as unknown as { walkDist: number }).walkDist * 3 || 0;
+    const walk = mob ? mob.walkAnim : 0;
     const amp = mob ? mob.walkSpeed : Math.min(1, Math.hypot(e.pos.x - e.prevPos.x, e.pos.z - e.prevPos.z) * 5);
     const sw = Math.sin(walk) * 0.8 * amp;
     const t = performance.now() / 1000;
@@ -662,7 +708,7 @@ export class EntityManager {
       model.pose('rightLeg', sw);
       model.pose('leftLeg', -sw);
       const zombie = mob && (mob.type === 'zombie' || mob.type === 'husk');
-      const swing = mob ? Math.sin((mob.swing / 8) * Math.PI) : Math.sin(((e as unknown as { swingTime: number }).swingTime ?? 0) * Math.PI);
+      const swing = mob ? Math.sin((mob.swing / 8) * Math.PI) : 0;
       model.pose('rightArm', (zombie ? 0 : -sw) - swing * 1.2 + Math.sin(t * 1.2) * 0.03, 0, Math.sin(t) * 0.04);
       model.pose('leftArm', (zombie ? 0 : sw) + Math.sin(t * 1.1) * 0.03, 0, -Math.sin(t) * 0.04);
       if (mob instanceof Villager && mob.sleeping) model.root.rotation.z = Math.PI / 2;
@@ -715,6 +761,7 @@ export class EntityManager {
   }
 
   private disposeView(v: View): void {
+    v.equip?.dispose();
     v.model?.dispose();
     v.obj.removeFromParent();
     v.obj.traverse((o) => {

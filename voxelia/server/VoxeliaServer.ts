@@ -8,7 +8,7 @@ import { WebSocket, WebSocketServer, type RawData } from 'ws';
 import type { ClientMsg, Permission, PlayerState, PROTOCOL_VERSION as PROTO, ServerMsg } from '../src/net/protocol.ts';
 import type { ServerConfig } from './config.ts';
 import { MAX_CHUNK, MAX_DIM, type PlayerRecord, type WorldStore } from './storage.ts';
-import { cleanIp, cleanName, errorText, isInt, isNum, isObject, jsonSize, log, nameKey, numberedName, sameCode, sanitizeChat, sanitizeName, sanitizeSkin, TokenBucket, warn } from './util.ts';
+import { cleanIp, cleanName, errorText, isInt, isNum, isObject, jsonSize, log, nameKey, numberedName, sameCode, sanitizeArmor, sanitizeChat, sanitizeName, sanitizePose, sanitizeSkin, TokenBucket, warn } from './util.ts';
 import { DAY_TICKS, worldInfo } from './world.ts';
 
 /** Version du protocole (doit rester égale à PROTOCOL_VERSION de src/net/protocol.ts : vérifié par tsc). */
@@ -715,6 +715,8 @@ export class VoxeliaServer {
       this.stats.invalidFields++;
       return;
     }
+    // Champ par champ : rien d'autre que ces valeurs vérifiées n'est relayé ni conservé.
+    const sneaking = st.sneaking === true;
     const state: PlayerState = {
       id: s.id,
       name: s.name,
@@ -724,8 +726,10 @@ export class VoxeliaServer {
       pitch: st.pitch,
       dim: st.dim,
       held: isInt(st.held, -1, 1e7) ? st.held : -1,
-      sneaking: st.sneaking === true,
+      sneaking,
       swing: isNum(st.swing, 0, 1) ? st.swing : 0,
+      pose: sanitizePose(st.pose, sneaking),
+      armor: sanitizeArmor(st.armor),
     };
     s.state = state;
     s.stateChanged = true;

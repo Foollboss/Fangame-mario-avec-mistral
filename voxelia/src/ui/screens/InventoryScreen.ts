@@ -724,7 +724,8 @@ export class InventoryScreen implements Screen {
       const r = this.doll.getBoundingClientRect();
       const lx = Math.max(-1, Math.min(1, (this.mouse.x - (r.left + r.width / 2)) / 200));
       const ly = Math.max(-1, Math.min(1, (this.mouse.y - (r.top + r.height * 0.25)) / 200));
-      this.preview.draw(this.doll, this.g.entities.playerSkin, lx * 0.5, this.time, lx * 0.6, -ly, 0);
+      // La poupée porte l'armure équipée (relue à chaque image : elle suit les changements d'emplacement).
+      this.preview.draw(this.doll, this.g.entities.playerSkin, lx * 0.5, this.time, lx * 0.6, -ly, 0, this.g.player.wornArmor());
     }
   }
 

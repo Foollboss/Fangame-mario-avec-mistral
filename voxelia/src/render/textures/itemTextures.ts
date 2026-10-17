@@ -48,6 +48,11 @@ const MATS: Record<string, { H: RGB; L: RGB; D: RGB }> = {
 };
 const STICK = { S: hex(0x8a6a3a), s: hex(0x5e4626) };
 
+/** Couleurs (teinte, reflet, ombre) d'un matériau d'outil ou d'armure : sert aussi à peindre l'armure portée. */
+export function materialPalette(key: string): { H: RGB; L: RGB; D: RGB } | undefined {
+  return Object.prototype.hasOwnProperty.call(MATS, key) ? MATS[key] : undefined;
+}
+
 const SWORD = ['.............LL.', '............LHD.', '...........LHD..', '..........LHD...', '.........LHD....', '........LHD.....', '.......LHD......', '..D...LHD.......', '..DD.LHD........', '...DLHD.........', '....DD..........', '...SsDD.........', '..Ss...D........', '.Ss.............', 'sS..............', '................'];
 const PICK = ['................', '....LLHHHHD.....', '..LH.......HD...', '.L.......sS.HD..', '........sS...H..', '.......sS....D..', '......sS........', '.....sS.........', '....sS..........', '...sS...........', '..sS............', '.sS.............', '................', '................', '................', '................'];
 const AXE = ['................', '......LHH.......', '.....LHHHD......', '....LHHHsSD.....', '.....LHsS.D.....', '......sS........', '.....sS.........', '....sS..........', '...sS...........', '..sS............', '.sS.............', '................', '................', '................', '................', '................'];

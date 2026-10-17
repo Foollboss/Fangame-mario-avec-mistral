@@ -24,6 +24,12 @@ export interface WorldInfo {
   motd: string;
 }
 
+/** Poses du corps transmises (mêmes valeurs que HumanPose de src/entities/humanoidPose.ts). */
+export const HUMAN_POSES = ['stand', 'sneak', 'swim', 'tread', 'glide', 'fly'] as const;
+export type HumanPose = (typeof HUMAN_POSES)[number];
+/** Clé d'apparence d'une pièce d'armure (matériau, « glider », « pumpkin »). */
+export const ARMOR_KEY_RE = /^[a-z_]{1,24}$/;
+
 export interface PlayerState {
   id: number;
   name: string;
@@ -35,6 +41,10 @@ export interface PlayerState {
   held: number;
   sneaking: boolean;
   swing: number;
+  /** Pose du corps (absente chez les anciens clients : « sneak » s'il est accroupi, sinon « stand »). */
+  pose?: HumanPose;
+  /** Armure portée [tête, torse, jambes, pieds] : clé d'apparence ou null (absente chez les anciens clients). */
+  armor?: (string | null)[];
 }
 
 export type ClientMsg =
@@ -64,6 +74,18 @@ export type ServerMsg =
   | { t: 'error'; message: string }
   | { t: 'pong'; n: number }
   | { t: 'status'; name: string; motd: string; players: number; max: number; version: number; needsInvite: boolean };
+
+/** Pose reçue validée : valeur inconnue → « stand » ; absente (ancien client) → déduite de « sneaking ». */
+export function cleanPose(v: unknown, sneaking = false): HumanPose {
+  if (v === undefined) return sneaking ? 'sneak' : 'stand';
+  return typeof v === 'string' && (HUMAN_POSES as readonly string[]).includes(v) ? (v as HumanPose) : 'stand';
+}
+
+/** Armure reçue validée : exactement 4 cases, chacune null ou une clé valide ; sinon 4 cases vides. */
+export function cleanArmor(v: unknown): (string | null)[] {
+  if (Array.isArray(v) && v.length === 4 && v.every((a) => a === null || (typeof a === 'string' && ARMOR_KEY_RE.test(a)))) return v.slice() as (string | null)[];
+  return [null, null, null, null];
+}
 
 /** Index d'un bloc dans une colonne (identique à colIndex). */
 export function localIndex(x: number, y: number, z: number): number {

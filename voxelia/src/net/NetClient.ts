@@ -4,7 +4,7 @@
  * Les créatures restent simulées localement par chaque joueur (limite connue).
  */
 import { Entity } from '../entity/Entity';
-import { PROTOCOL_VERSION, type ClientMsg, type PlayerState, type Permission, type ServerMsg, type WorldInfo } from './protocol';
+import { PROTOCOL_VERSION, cleanArmor, cleanPose, type ClientMsg, type HumanPose, type PlayerState, type Permission, type ServerMsg, type WorldInfo } from './protocol';
 import type { SavedChunk } from '../world/ChunkManager';
 import type { PlayerSave } from '../save/SaveManager';
 import type { Game } from '../game/Game';
@@ -19,6 +19,9 @@ export class RemotePlayer extends Entity {
   private targetYaw = 0;
   private targetPitch = 0;
   dim = 0;
+  /** Pose du corps et armure portée [tête, torse, jambes, pieds], reçues du serveur (validées). */
+  pose: HumanPose = 'stand';
+  armor: (string | null)[] = [null, null, null, null];
 
   constructor(
     readonly netId: number,
@@ -37,7 +40,11 @@ export class RemotePlayer extends Entity {
     this.targetYaw = s.yaw;
     this.targetPitch = s.pitch;
     this.dim = s.dim;
-    this.sneaking = s.sneaking;
+    this.sneaking = s.sneaking === true;
+    // Les anciens clients n'envoient ni pose ni armure : debout (ou accroupi) et sans armure.
+    this.pose = cleanPose(s.pose, this.sneaking);
+    this.armor = cleanArmor(s.armor);
+    this.height = this.pose === 'swim' ? 0.6 : this.pose === 'sneak' ? 1.5 : 1.8;
     if (s.swing > 0) this.swingTime = 1;
     if (this.age === 0) {
       this.pos.set(s.p[0], s.p[1], s.p[2]);
@@ -46,6 +53,11 @@ export class RemotePlayer extends Entity {
   }
 
   sneaking = false;
+
+  /** Même convention que Player.wornArmor(). */
+  wornArmor(): (string | null)[] {
+    return this.armor;
+  }
 
   tick(): void {
     this.age++;
@@ -206,7 +218,7 @@ export class NetClient {
     if (this.tickN % 2 === 0) {
       this.send({
         t: 'state',
-        s: { p: [round(p.pos.x), round(p.pos.y), round(p.pos.z)], yaw: round(p.yaw), pitch: round(p.pitch), dim: game.dimension, held: p.heldItem()?.id ?? -1, sneaking: p.sneaking, swing: p.swingTime > 0 ? 1 : 0 },
+        s: { p: [round(p.pos.x), round(p.pos.y), round(p.pos.z)], yaw: round(p.yaw), pitch: round(p.pitch), dim: game.dimension, held: p.heldItem()?.id ?? -1, sneaking: p.sneaking, swing: p.swingTime > 0 ? 1 : 0, pose: p.pose, armor: p.wornArmor() },
       });
     }
     if (this.tickN % 200 === 0) this.send({ t: 'save', data: p.serialize() });

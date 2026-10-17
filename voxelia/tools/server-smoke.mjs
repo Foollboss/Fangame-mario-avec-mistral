@@ -175,6 +175,35 @@ async function phase1(port) {
   A.send({ t: 'state', s: { p: [NaN, 64, 0], yaw: 0, pitch: 0, dim: 0, held: 0, sneaking: false, swing: 0 } });
   A.send({ t: 'state', s: { p: [1e400, 64, 0], yaw: 0, pitch: 0, dim: 0, held: 0, sneaking: false, swing: 0 } });
   ok(await B.none((m) => m.t === 'state' && m.s.id === A.welcome.id), 'états invalides (NaN, infini) ignorés');
+  ok(stA.s.pose === 'stand' && JSON.stringify(stA.s.armor) === '[null,null,null,null]', 'état sans pose ni armure (ancien client) accepté : debout, sans armure');
+
+  // Apparence : pose du corps et armure portée
+  const look = { p: [0.5, 64, 0.5], yaw: 1, pitch: 0, dim: 0, held: 3, sneaking: false, swing: 0 };
+  A.send({ t: 'state', s: { ...look, pose: 'swim', armor: ['diamond', 'glider', null, 'iron'] } });
+  const sw = await B.next((m) => m.t === 'state' && m.s.id === A.welcome.id, 'état avec pose et armure');
+  ok(sw.s.pose === 'swim' && JSON.stringify(sw.s.armor) === '["diamond","glider",null,"iron"]', 'pose et armure valides relayées');
+  const E = await connect(url, 'Eve', INVITE);
+  const stE = await E.next((m) => m.t === 'state' && m.s.id === A.welcome.id, 'état d’Alice pour la nouvelle venue');
+  ok(stE.s.pose === 'swim' && stE.s.armor[1] === 'glider', 'pose et armure conservées pour les joueurs qui arrivent ensuite');
+  await E.close();
+  await B.next((m) => m.t === 'leave' && m.name === 'Eve', 'départ d’Eve');
+  const injected = [
+    [{ pose: 'voler', armor: ['iron'] }, 'pose inconnue, armure de 1 case'],
+    [{ pose: 42, armor: ['DIAMOND', null, null, null] }, 'pose non textuelle, majuscules'],
+    [{ pose: ['swim'], armor: ['a'.repeat(25), null, null, null] }, 'pose en tableau, clé trop longue'],
+    [{ pose: '__proto__', armor: [{ x: 1 }, null, null, null] }, 'pose « __proto__ », objet dans l’armure'],
+    [{ pose: 'glide', armor: ['iron', null, null, null, 'gold'] }, 'armure de 5 cases'],
+    [{ pose: 'tread', armor: 'diamond' }, 'armure non tableau'],
+    [{ pose: 'fly', armor: ['<img src=x>', null, null, null] }, 'balise dans l’armure'],
+  ];
+  for (const [extra, label] of injected) {
+    A.send({ t: 'state', s: { ...look, ...extra, admin: true, name: 'Pirate', skin: '../x', id: 999 } });
+    const r = await B.next((m) => m.t === 'state' && m.s.id === A.welcome.id, 'état injecté : ' + label);
+    const expectPose = ['glide', 'tread', 'fly'].includes(extra.pose) ? extra.pose : 'stand';
+    ok(r.s.pose === expectPose && JSON.stringify(r.s.armor) === '[null,null,null,null]' && r.s.admin === undefined && r.s.name === 'Alice' && r.s.skin === 'explorer' && r.s.id === A.welcome.id, 'apparence invalide neutralisée (' + label + '), champs injectés ignorés');
+  }
+  A.send({ t: 'state', s: { ...look, sneaking: true } });
+  ok((await B.next((m) => m.t === 'state' && m.s.id === A.welcome.id, 'état accroupi sans pose')).s.pose === 'sneak', 'ancien client accroupi : pose « sneak »');
 
   // Blocs
   const raw = 5 | (2 << 10);

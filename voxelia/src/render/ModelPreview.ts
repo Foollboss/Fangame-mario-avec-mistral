@@ -4,12 +4,14 @@
  */
 import * as THREE from 'three';
 import type { ModelFactory, ModelInstance } from '../entities/BoxModel';
+import { EquipmentLayer, NO_ARMOR } from '../entities/equipment';
 
 export class ModelPreview {
   private renderer: THREE.WebGLRenderer | null = null;
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera(30, 2 / 3, 0.1, 50);
   private model: ModelInstance | null = null;
+  private equip: EquipmentLayer | null = null;
   private key = '';
   private w = 160;
   private h = 240;
@@ -35,20 +37,27 @@ export class ModelPreview {
     return this.renderer;
   }
 
-  /** Dessine le modèle dans un canvas 2D (lookX/lookY : orientation de la tête, -1..1). */
-  draw(target: HTMLCanvasElement, key: string, yaw: number, time: number, lookX = 0, lookY = 0, walk = 0): void {
+  /**
+   * Dessine le modèle dans un canvas 2D (lookX/lookY : orientation de la tête, -1..1 ;
+   * armor : équipement porté, tête, torse, jambes, pieds, comme Player.wornArmor()).
+   */
+  draw(target: HTMLCanvasElement, key: string, yaw: number, time: number, lookX = 0, lookY = 0, walk = 0, armor: readonly (string | null)[] = NO_ARMOR): void {
     const r = this.ensure();
     if (!r || !this.models.has(key)) return;
     if (key !== this.key) {
+      this.equip?.dispose();
       this.model?.dispose();
       if (this.model) this.scene.remove(this.model.root);
       this.model = this.models.create(key);
+      this.equip = new EquipmentLayer(this.model);
       this.scene.add(this.model.root);
       this.key = key;
     }
     const m = this.model!;
     m.root.rotation.set(0, yaw, 0);
     m.setLight(1, false);
+    this.equip!.update(armor, 0);
+    this.equip!.setLight(1, false);
     const sw = Math.sin(time * 6) * 0.6 * walk;
     if (m.parts.has('rightLeg')) {
       m.pose('rightLeg', sw);

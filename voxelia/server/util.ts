@@ -4,6 +4,7 @@
  */
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { networkInterfaces } from 'node:os';
+import type { HumanPose } from '../src/net/protocol.ts';
 
 // ------------------------------------------------------------------ journal
 
@@ -115,6 +116,28 @@ export const DEFAULT_SKIN = 'explorer';
 
 export function sanitizeSkin(raw: unknown): string {
   return typeof raw === 'string' && SKIN_RE.test(raw) ? raw : DEFAULT_SKIN;
+}
+
+// ------------------------------------------------------------------ pose et armure (apparence)
+
+/** Poses connues (doivent rester égales à HUMAN_POSES de src/net/protocol.ts : vérifié par tsc). */
+const POSE_LIST = ['stand', 'sneak', 'swim', 'tread', 'glide', 'fly'] as const satisfies readonly HumanPose[];
+const ALL_POSES_LISTED: [Exclude<HumanPose, (typeof POSE_LIST)[number]>] extends [never] ? true : never = true;
+void ALL_POSES_LISTED;
+const POSES: ReadonlySet<string> = new Set(POSE_LIST);
+
+/** Pose du corps : inconnue → « stand » ; absente (ancien client) → « sneak » s'il est accroupi, sinon « stand ». */
+export function sanitizePose(raw: unknown, sneaking: boolean): HumanPose {
+  if (raw === undefined) return sneaking ? 'sneak' : 'stand';
+  return typeof raw === 'string' && POSES.has(raw) ? (raw as HumanPose) : 'stand';
+}
+
+const ARMOR_RE = /^[a-z_]{1,24}$/;
+
+/** Armure portée : exactement 4 cases (tête, torse, jambes, pieds), chacune null ou une clé courte ; sinon 4 cases vides. */
+export function sanitizeArmor(raw: unknown): (string | null)[] {
+  if (Array.isArray(raw) && raw.length === 4 && raw.every((a) => a === null || (typeof a === 'string' && ARMOR_RE.test(a)))) return raw.slice() as (string | null)[];
+  return [null, null, null, null];
 }
 
 export const CHAT_MAX = 256;

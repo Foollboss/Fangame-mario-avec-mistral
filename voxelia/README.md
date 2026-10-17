@@ -49,6 +49,11 @@ tactile et à la manette. L'interface reprend l'ergonomie des menus « à blocs 
   réduits de moitié. Ensemble complet de célestine : aucun dégât de chute.
 - **Véhicules et déplacements** : bateaux, wagonnets et rails (dont rails propulseurs), chevaux à
   apprivoiser et seller, tapis volant, planeur, ascenseurs, vol en mode créatif.
+- **Personnage** : l'armure portée (cuir, fer, or, diamant, mythril, étherium, célestine, pièces
+  dépareillées comprises), la citrouille et le planeur sont dessinés sur le personnage, vu à la
+  troisième personne, dans la poupée de l'inventaire et chez les autres joueurs. Animations : marche,
+  accroupi, nage (corps à l'horizontale, bras en crawl), flottaison, vol plané (ailes du planeur
+  déployées en V, repliées au sol), vol créatif, avec des transitions adoucies entre les poses.
 - **Mécanismes** : leviers, boutons, plaques de pression, fils d'énergie, lampes, portes, TNT.
 - **Modes** : Survie, Créatif (catalogue par catégories + recherche), Aventure, Spectateur ;
   difficulté Paisible → Difficile ; règles du jeu ; commandes (`/help`, `/time`, `/gamemode`,
@@ -59,7 +64,8 @@ tactile et à la manette. L'interface reprend l'ergonomie des menus « à blocs 
   l'application passe en arrière-plan), écritures atomiques, copie de secours des métadonnées,
   export / import de mondes (`.voxelia`).
 - **Multijoueur** : serveur Node.js inclus (`server/`), invitations par code, permissions
-  visiteur / membre / opérateur, blocs, coffres, chat et heure synchronisés.
+  visiteur / membre / opérateur, blocs, coffres, chat et heure synchronisés ; on voit la pose et
+  l'équipement (armure, planeur) des autres joueurs.
 
 ## Jouer sur PC
 
@@ -114,15 +120,20 @@ Toutes les options : [server/README.md](server/README.md).
 ## Tests
 
 ```bash
-npm test                # tests unitaires (sauvegarde, recettes, inventaire, collisions, portails, four, matériaux…)
+npm test                # tests unitaires (sauvegarde, recettes, inventaire, collisions, portails, four, matériaux, poses, armure portée…)
 npm run typecheck       # TypeScript (jeu + serveur)
 npm run build
 npm run e2e             # partie complète dans Chromium sans écran (menu, création, sauvegarde/rechargement, tactile)
 npm run gameplay        # miner, ramasser, fabriquer, poser, combattre, bateau, boss, mort, portail, dimensions
 npm run materials       # étherium et célestine en survie : minage selon la pioche, four, établi, bonus d'ensemble
-npm run server:test     # 60 contrôles du serveur
-node tools/multiplayer-test.mjs   # serveur + deux navigateurs : blocs, coffres, chat, reconnexion
+npm run appearance      # personnage en survie : 7 armures, poupée, nage, flottaison, planeur, accroupi, bulles d'air
+npm run server:test     # 71 contrôles du serveur
+node tools/multiplayer-test.mjs   # serveur + deux navigateurs : blocs, coffres, chat, reconnexion, armure et nage d'un autre joueur
 ```
+
+Les tests dans Chromium enregistrent leurs captures dans `test-results/` ; ceux des matériaux, de
+l'apparence et du multijoueur acceptent un autre dossier en argument
+(`node tools/appearance-test.mjs captures/`).
 
 ## Architecture
 
@@ -149,10 +160,12 @@ tools/         compilation, tests de bout en bout, outils de vérification
 ## Limites connues
 
 - L'APK est une application **WebView** (le jeu est en TypeScript/WebGL 2) : il a été compilé et
-  signé, et le jeu a été testé dans Chromium (même moteur que la WebView Android), mais **pas sur un
-  téléphone réel** pendant le développement. Les performances dépendent du GPU ; baissez la
-  distance d'affichage ou la qualité si besoin.
-- Multijoueur : le monde (blocs, coffres), les joueurs, le chat et l'heure sont synchronisés ;
+  signé ; les tests automatiques tournent dans Chromium (même moteur que la WebView Android). Il a
+  été lancé sur un téléphone Android par un joueur (menus, monde, Terres de braise, tactile), mais
+  aucune mesure de performance n'a été faite sur téléphone. Les performances dépendent du GPU ;
+  baissez la distance d'affichage ou la qualité si besoin.
+- Multijoueur : le monde (blocs, coffres), les joueurs (position, pose, équipement porté), le chat
+  et l'heure sont synchronisés ;
   **les créatures, objets au sol, projectiles et la météo restent simulés par chaque joueur**.
   Pas d'authentification des noms (protégez le serveur par un code d'invitation).
 - Les packs importés remplacent uniquement les textures (pas les modèles 3D, sons, interfaces ni

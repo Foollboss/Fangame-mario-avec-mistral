@@ -46,7 +46,7 @@ export class Hud {
   private effectsEl: HTMLElement;
   readonly mapCanvas: HTMLCanvasElement;
   readonly topButtons: HTMLElement;
-  private last = { hp: -1, food: -1, armor: -1, air: -1, xp: -1, lvl: -1, sel: -1, inv: '', poison: false, hunger: false };
+  private last = { hp: -1, food: -1, armor: -1, air: -2, xp: -1, lvl: -1, sel: -1, held: -2, inv: '', effects: '', poison: false, hunger: false };
   private heldTimer = 0;
   private titleTimer = 0;
   hidden = false;
@@ -193,10 +193,12 @@ export class Hud {
       this.armorRow.style.display = ar > 0 ? 'flex' : 'none';
       for (let i = 0; i < 10; i++) this.setIcon(this.armor[i], ar >= (i + 1) * 2 ? 'armor' : ar === i * 2 + 1 ? 'armor_half' : 'armor_empty');
     }
-    const air = Math.ceil(Math.max(0, p.air) / 30);
+    // La clé du cache inclut la visibilité de la rangée : de 295 à 300 d'air, il reste 10 bulles
+    // mais la rangée doit disparaître (-1 = rangée masquée).
+    const air = p.air < 300 ? Math.ceil(Math.max(0, p.air) / 30) : -1;
     if (air !== this.last.air) {
       this.last.air = air;
-      this.bubbleRow.style.display = p.air < 300 ? 'flex' : 'none';
+      this.bubbleRow.style.display = air >= 0 ? 'flex' : 'none';
       for (let i = 0; i < 10; i++) this.bubbles[i].style.visibility = 9 - i < air ? 'visible' : 'hidden';
       for (let i = 0; i < 10; i++) this.setIcon(this.bubbles[i], 'bubble');
     }
@@ -212,11 +214,14 @@ export class Hud {
       this.last.inv = sig;
       for (let i = 0; i < 9; i++) this.renderSlot(this.slots[i], p.inventory.get(i));
     }
-    if (p.inventory.selected !== this.last.sel) {
+    // Le nom affiché suit l'objet tenu, même si la case choisie ne change pas (objet ramassé, épuisé…).
+    const held = p.heldItem();
+    const heldId = held ? held.id : -1;
+    if (p.inventory.selected !== this.last.sel || heldId !== this.last.held) {
       this.slots[this.last.sel]?.classList.remove('sel');
       this.last.sel = p.inventory.selected;
+      this.last.held = heldId;
       this.slots[this.last.sel].classList.add('sel');
-      const held = p.heldItem();
       this.heldName.textContent = held ? itemName(held) : '';
       this.heldTimer = held ? 2.5 : 0;
     }
@@ -235,9 +240,11 @@ export class Hud {
     if (opts.debug) this.debugEl.textContent = opts.debug;
     this.coordsEl.classList.toggle('hidden', !opts.showCoords || !!opts.debug);
     if (opts.showCoords) this.coordsEl.textContent = `Position : ${Math.floor(p.pos.x)}, ${Math.floor(p.pos.y)}, ${Math.floor(p.pos.z)}`;
-    // Effets
+    // Effets (comparés à la dernière liste affichée : textContent n'ayant pas de retours à la
+    // ligne, la liste était reconstruite à chaque image dès deux effets)
     const eff = [...p.effects.values()].map((e) => `${EFFECT_NAMES[e.id] ?? e.id} ${Math.ceil(e.time / 20)}s`).join('\n');
-    if (this.effectsEl.textContent !== eff) {
+    if (eff !== this.last.effects) {
+      this.last.effects = eff;
       this.effectsEl.textContent = '';
       for (const line of eff.split('\n').filter(Boolean)) this.effectsEl.appendChild(h('div', null, line));
     }

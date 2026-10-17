@@ -4,6 +4,7 @@
  */
 import * as THREE from 'three';
 import { Entity, type DamageSource } from '../entity/Entity';
+import type { HumanPose } from '../entities/humanoidPose';
 import { PlayerInventory } from '../inventory/Container';
 import { ITEMS, deserializeStack, serializeStack, type ItemStack } from '../items/items';
 import type { Difficulty, GameMode, PlayerSave } from '../save/SaveManager';
@@ -28,6 +29,8 @@ export const EFFECT_NAMES: Record<string, string> = {
   jump_boost: 'Saut amélioré',
   slow_falling: 'Chute lente',
 };
+
+const ARMOR_SLOTS = ['head', 'chest', 'legs', 'feet'] as const;
 
 export class Player extends Entity {
   readonly type = 'player';
@@ -58,6 +61,11 @@ export class Player extends Entity {
   walkDist = 0;
   prevWalkDist = 0;
   bob = 0;
+  /** Flottaison (pose « tread ») : tics passés dans l'eau sans appui / hors de l'eau ou au sol. */
+  private floatTicks = 0;
+  private settledTicks = 0;
+  private treading = false;
+  private readonly worn: (string | null)[] = [null, null, null, null];
   private hungerTimer = 0;
   private drownTimer = 0;
   private fireTimer = 0;
@@ -87,6 +95,54 @@ export class Player extends Entity {
 
   heldItem(): ItemStack | null {
     return this.inventory.held();
+  }
+
+  /**
+   * Pose du corps affichée (troisième personne, poupée, autres joueurs) : planeur, nage rapide,
+   * vol créatif, flottaison, accroupi ou debout. Mort ou en véhicule : debout.
+   */
+  get pose(): HumanPose {
+    if (this.dead || this.vehicle) return 'stand';
+    if (this.gliding) return 'glide';
+    if (this.swimming) return 'swim';
+    if (this.flying) return 'fly';
+    if (this.treading) return 'tread';
+    if (this.sneaking) return 'sneak';
+    return 'stand';
+  }
+
+  /**
+   * Hystérésis de la flottaison (appelée à chaque tic par le contrôleur) : on flotte après 6 tics
+   * dans l'eau sans toucher le fond, et on cesse après 4 tics au sol ou hors de l'eau. Un saut
+   * dans une flaque ou un contact bref avec le fond ne fait donc pas clignoter la pose.
+   */
+  updatePose(): void {
+    const afloat = this.fluid.water && !this.onGround && !this.climbing && !this.vehicle && !this.flying && !this.gliding && !this.dead;
+    if (afloat) {
+      this.floatTicks = Math.min(100, this.floatTicks + 1);
+      this.settledTicks = 0;
+    } else {
+      this.settledTicks = Math.min(100, this.settledTicks + 1);
+      this.floatTicks = 0;
+    }
+    if (!this.treading && this.floatTicks >= 6) this.treading = true;
+    else if (this.treading && this.settledTicks >= 4) this.treading = false;
+  }
+
+  /**
+   * Apparence de l'armure portée [tête, torse, jambes, pieds] : matériau (« iron », « diamond »…),
+   * « glider » pour le planeur, « pumpkin » pour une citrouille sur la tête, sinon null.
+   * Lu à chaque image : le tableau renvoyé est réutilisé (le copier pour le conserver).
+   */
+  wornArmor(): (string | null)[] {
+    const out = this.worn;
+    for (let i = 0; i < 4; i++) {
+      const s = this.inventory.armor.get(i);
+      const def = s ? ITEMS[s.id] : undefined;
+      if (def?.armor && def.armor.slot === ARMOR_SLOTS[i]) out[i] = def.armor.material;
+      else out[i] = i === 0 && def?.key === 'pumpkin' ? 'pumpkin' : null;
+    }
+    return out;
   }
 
   /** Ajoute de la fatigue (sprint, sauts, combat, minage…). */
@@ -306,6 +362,10 @@ export class Player extends Entity {
     this.fallDistance = 0;
     this.effects.clear();
     this.vel.set(0, 0, 0);
+    this.swimming = false;
+    this.gliding = false;
+    this.treading = false;
+    this.floatTicks = 0;
   }
 
   /** Objets perdus à la mort (vidés de l'inventaire). */

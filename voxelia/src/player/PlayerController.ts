@@ -31,6 +31,7 @@ export class PlayerController {
     p.baseTick();
     if (p.dead) return;
     p.updateEnvironment();
+    p.updatePose();
     if (p.fluid.water && !this.wasInWater && p.vel.y < -0.2) this.onSplash?.();
     this.wasInWater = p.fluid.water;
 
